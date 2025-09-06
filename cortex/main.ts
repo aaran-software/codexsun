@@ -83,8 +83,8 @@ async function registerDynamicApps(registry: RouteRegistery) {
  */
 export async function registerAppsAndRoutes(registry: RouteRegistery) {
     // 1) Initialize master DB (moved from index.ts)
-    await initDb();
-    console.log("✅ Master DB initialized and core schema ready");
+    // await initDb();
+    // console.log("✅ Master DB initialized and core schema ready");
 
     // 2) Register built-in routes (moved from index.ts)
     registry.addProvider(welcome.routes);
