@@ -142,6 +142,23 @@ function makeHandler(routes: RouteDef[], opts?: ServerOptions) {
         const reqEx = req as IncomingMessage & RequestExtras;   // ← widen here
         const start = Date.now();
 
+        // IMPROVEMENT: Track response bytes for logging (non-breaking, just additive).
+        let responseBytes = 0;
+        const originalWrite = res.write.bind(res);
+        res.write = (chunk: any, ...args: any[]) => {
+            if (chunk) {
+                responseBytes += Buffer.byteLength(chunk);
+            }
+            return originalWrite(chunk, ...args);
+        };
+        const originalEnd = res.end.bind(res);
+        res.end = (chunk: any, ...args: any[]) => {
+            if (chunk) {
+                responseBytes += Buffer.byteLength(chunk);
+            }
+            return originalEnd(chunk, ...args);
+        };
+
         try {
             const method = (req.method || "GET").toUpperCase();
             const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -162,6 +179,9 @@ function makeHandler(routes: RouteDef[], opts?: ServerOptions) {
             const route = routes.find((r) => matchRoute(r, method, pathname));
             if (!route) { json(res, { error: "Not Found", path: pathname }, 404); return; }
 
+            // IMPROVEMENT: Log route match (at info level, non-breaking).
+            logger?.info?.(`Route matched: ${route.name || route.path.toString()}`);
+
             // 3) route-level middlewares
             const routeMW = route.middlewares || [];
             let ri = -1;
@@ -181,7 +201,16 @@ function makeHandler(routes: RouteDef[], opts?: ServerOptions) {
             const m = (req.method || "GET").toUpperCase();
             const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
             const path = url.pathname + (url.search || "");
-            logger?.access?.(`${m} ${path}`, { ip, ua, ms });
+            // IMPROVEMENT: Enhanced access log with status and bytes (uses AccessLogRecord for better formatting).
+            logger?.access?.({
+                method: m,
+                path,
+                status: res.statusCode,
+                duration_ms: ms,
+                bytes: responseBytes,
+                ip,
+                ua,
+            });
         }
     };
 }

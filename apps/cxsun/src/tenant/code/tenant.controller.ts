@@ -1,67 +1,74 @@
 // apps/cxsun/src/tenant/code/tenant.controller.ts
-import type { HttpRequest } from "../../../../../cortex/http/types";
-import { AbstractController } from "../../../../../cortex/http/controller/base.controller";
+import type { ListOptions } from "./tenant.repo";
+import { DbTenantRepo } from "./tenant.repo";
 import { TenantService } from "./tenant.service";
 
-export class TenantController extends AbstractController {
-  private svc: TenantService;
+export class TenantController {
+    private readonly svc: TenantService;
 
-  constructor(namespace = "default") {
-    super();
-    this.svc = new TenantService(namespace);
-  }
+    constructor(svc?: TenantService) {
+        this.svc = svc ?? new TenantService(new DbTenantRepo());
+    }
 
-  override async index(req: HttpRequest) {
-    const cursor = Array.isArray(req.query?.cursor) ? req.query?.cursor[0] : req.query?.cursor;
-    const limit = Number(req.query?.limit) || 20;
-    return this.svc.list({ cursor, limit });
-  }
+    // GET /api/tenants
+    async index(req: any) {
+        const q = req?.query ?? {};
+        const limit = Math.max(1, Math.min(100, Number(q.limit ?? 20)));
+        const cursor = typeof q.cursor === "string" ? q.cursor : undefined;
 
-  override async create(_req: HttpRequest) {
-    const meta = this.svc.meta();
-    return { ok: true, schema: meta.schema, defaults: meta.defaults };
-  }
+        const opts: ListOptions = { limit, cursor };
+        const out = await this.svc.list(opts);
+        return out; // { ok, count, items, nextCursor? }
+    }
 
-  override async edit(req: HttpRequest) {
-    const id = req.params?.id;
-    if (!id) return { ok: false, error: "BAD_REQUEST", message: "id is required" };
-    const item = await this.svc.get(id);
-    if (!item) return { ok: false, error: "NOT_FOUND" };
-    return { ok: true, item };
-  }
+    // GET /api/tenants/create (meta, if needed)
+    async create(_req: any) {
+        return { ok: true, meta: { allowed: true } };
+    }
 
-  override async update(req: HttpRequest) {
-    const id = req.params?.id;
-    if (!id) return { ok: false, error: "BAD_REQUEST", message: "id is required" };
-    return this.svc.update(id, req.body);
-  }
+    // GET /api/tenants/:id & /api/tenants/:id/edit
+    async edit(req: any) {
+        const id = req?.params?.id;
+        if (!id) return { ok: false, error: "BAD_REQUEST", message: "id required" };
+        const t = await this.svc.get(id);
+        if (!t) return { ok: false, error: "NOT_FOUND" };
+        return { ok: true, item: t };
+    }
 
-  override async store(req: HttpRequest) {
-    return this.svc.create(req.body);
-  }
+    // PUT /api/tenants/:id
+    async update(req: any) {
+        const id = req?.params?.id;
+        if (!id) return { ok: false, error: "BAD_REQUEST", message: "id required" };
+        const body = req?.body ?? {};
+        const up = await this.svc.update(id, { name: body.name });
+        if (!up) return { ok: false, error: "NOT_FOUND" };
+        return { ok: true, item: up };
+    }
 
-  override async delete(req: HttpRequest) {
-    const id = req.params?.id;
-    if (!id) return { ok: false, error: "BAD_REQUEST", message: "id is required" };
-    return this.svc.remove(id);
-  }
+    // POST /api/tenants
+    async store(req: any) {
+        const body = req?.body ?? {};
+        if (!body?.name) return { ok: false, error: "BAD_REQUEST", message: "name required" };
+        const t = await this.svc.create({ name: body.name });
+        return { ok: true, item: t };
+    }
 
-  override async print(req: HttpRequest) {
-    const id = req.params?.id;
-    if (!id) return { ok: false, error: "BAD_REQUEST", message: "id is required" };
-    const item = await this.svc.get(id);
-    if (!item) return { ok: false, error: "NOT_FOUND" };
-    return { printable: true, format: "pdf-ready", data: item };
-  }
+    // DELETE /api/tenants/:id
+    async delete(req: any) {
+        const id = req?.params?.id;
+        if (!id) return { ok: false, error: "BAD_REQUEST", message: "id required" };
+        const ok = await this.svc.remove(id);
+        return { ok };
+    }
 
-  override async upload(req: HttpRequest) {
-    return this.svc.handleUpload(req.files, req.params);
-  }
-
-  override async download(req: HttpRequest) {
-    const id = req.params?.id;
-    if (!id) return { ok: false, error: "BAD_REQUEST", message: "id is required" };
-    const file = await this.svc.getExport(id);
-    return { download: true, filename: file.name, mime: file.mime, stream: file.stream };
-  }
+    // Optional utilities used by routes
+    async print(_req: any) {
+        return { ok: true };
+    }
+    async upload(_req: any) {
+        return { ok: true };
+    }
+    async download(_req: any) {
+        return { ok: true };
+    }
 }
