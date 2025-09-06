@@ -1,75 +1,81 @@
 // apps/cxsun/src/tenant/code/tenant.service.ts
-import type { ListOptions, ListResult, TenantRepo } from "./tenant.repo";
-import { InMemoryTenantRepo } from "./tenant.repo";
-import type { Tenant } from "./tenant.model";
-import { TenantValidator } from "./tenant.validator";
 
-export class TenantService {
-  private namespace: string;
-  private repo: TenantRepo;
+import type { Tenant, TenantID } from "./tenant.model";
+import type { ListResult } from "./tenant.repo";
+import { DbTenantRepo } from "./tenant.repo";
 
-  constructor(namespace: string) {
-    this.namespace = namespace;
-    // swap with real repo (e.g., SQL/Prisma) later
-    this.repo = new InMemoryTenantRepo();
-  }
+/**
+ * Toggle service-level logs with SERVICE_TENANT_DEBUG=1
+ */
+const DEBUG = String(process.env.SERVICE_TENANT_DEBUG ?? "").trim() === "1";
+const log = (...args: any[]) => { if (DEBUG) console.log("[tenant.service]", ...args); };
 
-  async init(): Promise<void> {
-    // initialize connections if needed
-  }
-
-  list(opts: ListOptions): Promise<ListResult<Tenant>> {
-    return this.repo.list(opts);
-  }
-
-  async get(id: string): Promise<Tenant | null> {
-    return this.repo.get(id);
-  }
-
-  async create(data: any): Promise<{ ok: true; item: Tenant } | { ok: false; error: string }> {
-    const v = TenantValidator.create(data);
-    if (!v.ok) return { ok: false, error: v.error };
-    const item = await this.repo.create(v.value);
-    return { ok: true, item };
-  }
-
-  async update(id: string, data: any): Promise<{ ok: true; item: Tenant } | { ok: false; error: string }> {
-    const v = TenantValidator.update(data);
-    if (!v.ok) return { ok: false, error: v.error };
-    const updated = await this.repo.update(id, v.value);
-    if (!updated) return { ok: false, error: "not_found" };
-    return { ok: true, item: updated };
-  }
-
-  async remove(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
-    const removed = await this.repo.remove(id);
-    return removed ? { ok: true } : { ok: false, error: "not_found" };
-  }
-
-  meta() {
-    // could be generated from zod/joi later
-    return {
-      schema: {
-        name: "string",
-        email: "string?",
-        status: "'active'|'inactive'?",
-      },
-      defaults: {
-        status: "active",
-      },
-    };
-  }
-
-  async handleUpload(files: any, params?: any): Promise<{ ok: true; uploaded: number; params?: any }> {
-    const uploaded = Array.isArray(files) ? files.length : (files ? 1 : 0);
-    return { ok: true, uploaded, params };
-  }
-
-  async getExport(id: string) {
-    const t = await this.repo.get(id);
-    const name = `tenant-${id}.json`;
-    const mime = "application/json";
-    const stream = Buffer.from(JSON.stringify(t ?? { id, missing: true }, null, 2));
-    return { name, mime, stream };
-  }
+/**
+ * Public input shape for listing tenants
+ */
+export interface TenantListInput {
+    cursor?: string;
+    limit?: number;
 }
+
+/**
+ * Public output for single-tenant fetch
+ */
+export interface TenantGetResult {
+    ok: true;
+    item: Tenant | null;
+}
+
+/**
+ * Service orchestrates business logic on top of the repo.
+ * Keep it thin for now: only list + index (get).
+ */
+export class TenantService {
+    constructor(private readonly repo = new DbTenantRepo()) {}
+
+    /**
+     * List tenants with cursor pagination.
+     * Clamps limit safely; keeps DTO identical to repo ListResult<Tenant>.
+     */
+    async list(input: TenantListInput = {}): Promise<ListResult<Tenant>> {
+        const limit = clampLimit(input.limit);
+        log("list()", { cursor: input.cursor, limit });
+
+        // Delegate to repo
+        const res = await this.repo.list({ cursor: input.cursor, limit });
+
+        // Optionally transform/augment here if needed
+        log("list() ->", { count: res.count, nextCursor: res.nextCursor });
+        return res;
+    }
+
+    /**
+     * Get a single tenant by id.
+     * Returns { ok: true, item: Tenant | null } — no throw for not-found.
+     */
+    async index(id: TenantID): Promise<TenantGetResult> {
+        if (!id || typeof id !== "string") {
+            throw new Error("tenant.service.index: 'id' must be a non-empty string");
+        }
+        log("index()", { id });
+
+        const item = await this.repo.get(id);
+        log("index() ->", { found: !!item });
+        return { ok: true, item };
+    }
+}
+
+/* --------------------------------- helpers -------------------------------- */
+
+function clampLimit(n?: number) {
+    const v = Number.isFinite(n as any) ? Number(n) : 50;
+    return Math.max(1, Math.min(200, Math.floor(v)));
+}
+
+/* ------------------------------ singleton export --------------------------- */
+/**
+ * Most callers can import the ready-to-use singleton service.
+ * For tests, prefer constructing your own instance for isolation.
+ */
+export const tenantService = new TenantService();
+export default tenantService;

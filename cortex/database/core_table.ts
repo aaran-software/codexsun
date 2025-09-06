@@ -39,23 +39,26 @@ async function recordMeta(
     await engine.execute(
         `INSERT INTO __core_meta (id, name, version, hash, status, protected, installed_at)
          VALUES (?, ?, '1.0', ?, 'applied', ?, datetime('now'))
-         ON CONFLICT(name) DO UPDATE SET
+             ON CONFLICT(name) DO UPDATE SET
             version = '1.0',
-            hash = excluded.hash,
-            status = 'applied',
-            protected = excluded.protected,
-            installed_at = datetime('now')`,
+                                      hash = excluded.hash,
+                                      status = 'applied',
+                                      protected = excluded.protected,
+                                      installed_at = datetime('now')`,
         [genId(), name, hash, protectedCore ? 1 : 0]
     );
 }
 
 /* ------------------------------------------------------------------------------------------------
- * Logging wrapper
+ * Conditional logging wrapper (opt-in via DB_SQL_DEBUG=1)
  * ---------------------------------------------------------------------------------------------- */
 
-function withLogging(engine: Engine): Engine {
+const DEBUG_SQL = String(process.env.DB_SQL_DEBUG ?? "").trim() === "1";
+
+function maybeWrapLogging(engine: Engine): Engine {
+    if (!DEBUG_SQL) return engine; // silent by default
     return {
-        ...engine, // keep all original properties
+        ...engine,
         execute: async (sql: string, params?: any[]) => {
             console.log("[SQL EXECUTE]", sql.trim(), params ?? []);
             return engine.execute(sql, params);
@@ -78,81 +81,77 @@ function withLogging(engine: Engine): Engine {
 let ensured = false;
 
 /* ------------------------------ __core_meta ------------------------------ */
-async function ensureCoreMeta(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureCoreMeta(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS __core_meta (
-                                                   id             TEXT PRIMARY KEY,
-                                                   name           TEXT UNIQUE NOT NULL,
-                                                   version        TEXT,
-                                                   hash           TEXT,
-                                                   status         TEXT,
-                                                   protected      INTEGER DEFAULT 1,
-                                                   installed_at   TEXT DEFAULT (datetime('now')),
-            rolled_back_at TEXT
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS __core_meta (
+      id             TEXT PRIMARY KEY,
+      name           TEXT UNIQUE NOT NULL,
+      version        TEXT,
+      hash           TEXT,
+      status         TEXT,
+      protected      INTEGER DEFAULT 1,
+      installed_at   TEXT DEFAULT (datetime('now')),
+      rolled_back_at TEXT
+    );
+  `;
     await db.execute(ddl);
     await recordMeta(db, "__core_meta", ddl, true);
 }
 
 /* ------------------------------ tenants ------------------------------ */
-async function ensureTenants(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureTenants(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS tenants (
-                                               id TEXT PRIMARY KEY,
-                                               name TEXT UNIQUE NOT NULL,
-                                               reference TEXT,
-                                               mobile TEXT,
-                                               email TEXT,
-                                               driver TEXT NOT NULL CHECK (driver IN ('postgres','mysql','mariadb','sqlite','mongodb')),
-            host TEXT,
-            port INTEGER,
-            db_name TEXT NOT NULL,
-            ssl INTEGER DEFAULT 0,
-            params_json TEXT,
-            pool_min INTEGER,
-            pool_max INTEGER,
-            pool_idle_ms INTEGER,
-            pool_acquire_timeout_ms INTEGER,
-            is_active INTEGER DEFAULT 1,
-            updated_at TEXT DEFAULT (datetime('now'))
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS tenants (
+      id TEXT PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      reference TEXT,
+      mobile TEXT,
+      email TEXT,
+      driver TEXT NOT NULL CHECK (driver IN ('postgres','mysql','mariadb','sqlite','mongodb')),
+      host TEXT,
+      port INTEGER,
+      db_name TEXT NOT NULL,
+      ssl INTEGER DEFAULT 0,
+      params_json TEXT,
+      pool_min INTEGER,
+      pool_max INTEGER,
+      pool_idle_ms INTEGER,
+      pool_acquire_timeout_ms INTEGER,
+      is_active INTEGER DEFAULT 1,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `;
     await db.execute(ddl);
 
     const driver =
-        process.env.DB_DRIVER && process.env.DB_DRIVER.trim() !== ""
-            ? process.env.DB_DRIVER
-            : "sqlite";
+        process.env.DB_DRIVER && process.env.DB_DRIVER.trim() !== "" ? process.env.DB_DRIVER : "sqlite";
     const host = process.env.DB_HOST && process.env.DB_HOST.trim() !== "" ? process.env.DB_HOST : null;
     const port = process.env.DB_PORT ? Number(process.env.DB_PORT) : null;
     const dbName =
-        process.env.DB_NAME && process.env.DB_NAME.trim() !== ""
-            ? process.env.DB_NAME
-            : "codexsun_db";
+        process.env.DB_NAME && process.env.DB_NAME.trim() !== "" ? process.env.DB_NAME : "codexsun_db";
     const ssl = process.env.DB_SSL === "true" ? 1 : 0;
     const user = process.env.DB_USER ?? null;
     const pass = process.env.DB_PASS ?? null;
     const params = JSON.stringify({ user, pass });
 
-    console.log("[TENANTS ENV]", { driver, host, port, dbName, ssl, user, pass });
+    if (DEBUG_SQL) {
+        console.log("[TENANTS ENV]", { driver, host, port, dbName, ssl, user, pass });
+    }
 
     const id = "tenant_default"; // fixed ID for default tenant
     await db.execute(
         `INSERT INTO tenants (id, name, driver, host, port, db_name, ssl, params_json, is_active, updated_at)
-         VALUES (?, 'Default Tenant', ?, ?, ?, ?, ?, ?, 1, datetime('now'))
-             ON CONFLICT(id) DO UPDATE SET
-            name = excluded.name,
-                                    driver = excluded.driver,
-                                    host = excluded.host,
-                                    port = excluded.port,
-                                    db_name = excluded.db_name,
-                                    ssl = excluded.ssl,
-                                    params_json = excluded.params_json,
-                                    is_active = 1,
-                                    updated_at = datetime('now')`,
+     VALUES (?, 'Default Tenant', ?, ?, ?, ?, ?, ?, 1, datetime('now'))
+     ON CONFLICT(id) DO UPDATE SET
+       name = excluded.name,
+       driver = excluded.driver,
+       host = excluded.host,
+       port = excluded.port,
+       db_name = excluded.db_name,
+       ssl = excluded.ssl,
+       params_json = excluded.params_json,
+       is_active = 1,
+       updated_at = datetime('now')`,
         [id, driver, host, port, dbName, ssl, params]
     );
 
@@ -160,18 +159,17 @@ async function ensureTenants(): Promise<void> {
 }
 
 /* ------------------------------ features ------------------------------ */
-async function ensureFeatures(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureFeatures(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS features (
-                                                id          TEXT PRIMARY KEY,
-                                                name        TEXT NOT NULL,
-                                                description TEXT,
-                                                meta_json   TEXT,
-                                                is_active   INTEGER DEFAULT 1,
-                                                updated_at  TEXT DEFAULT (datetime('now'))
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS features (
+      id          TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      description TEXT,
+      meta_json   TEXT,
+      is_active   INTEGER DEFAULT 1,
+      updated_at  TEXT DEFAULT (datetime('now'))
+    );
+  `;
     await db.execute(ddl);
     await backfillIds(db, "features", "id");
 
@@ -188,20 +186,19 @@ async function ensureFeatures(): Promise<void> {
 }
 
 /* ------------------------------ plans ------------------------------ */
-async function ensurePlans(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensurePlans(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS plans (
-                                             id          TEXT PRIMARY KEY,
-                                             name        TEXT NOT NULL,
-                                             description TEXT,
-                                             features_id TEXT,
-                                             meta_json   TEXT,
-                                             is_active   INTEGER DEFAULT 1,
-                                             updated_at  TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (features_id) REFERENCES features(id)
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS plans (
+      id          TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      description TEXT,
+      features_id TEXT,
+      meta_json   TEXT,
+      is_active   INTEGER DEFAULT 1,
+      updated_at  TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (features_id) REFERENCES features(id)
+    );
+  `;
     await db.execute(ddl);
     await backfillIds(db, "plans", "id");
 
@@ -220,24 +217,23 @@ async function ensurePlans(): Promise<void> {
 }
 
 /* ------------------------------ subscriptions ------------------------------ */
-async function ensureSubscriptions(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureSubscriptions(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS subscriptions (
-                                                     id            TEXT PRIMARY KEY,
-                                                     tenant_id     TEXT NOT NULL,
-                                                     plan_id       TEXT,
-                                                     status        TEXT NOT NULL,
-                                                     trial_end     TEXT,
-                                                     period_start  TEXT,
-                                                     period_end    TEXT,
-                                                     meta_json     TEXT,
-                                                     is_active     INTEGER DEFAULT 1,
-                                                     updated_at    TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (tenant_id) REFERENCES tenants(id),
-            FOREIGN KEY (plan_id)   REFERENCES plans(id)
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id            TEXT PRIMARY KEY,
+      tenant_id     TEXT NOT NULL,
+      plan_id       TEXT,
+      status        TEXT NOT NULL,
+      trial_end     TEXT,
+      period_start  TEXT,
+      period_end    TEXT,
+      meta_json     TEXT,
+      is_active     INTEGER DEFAULT 1,
+      updated_at    TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (plan_id)   REFERENCES plans(id)
+    );
+  `;
     await db.execute(ddl);
     await backfillIds(db, "subscriptions", "id");
 
@@ -256,18 +252,17 @@ async function ensureSubscriptions(): Promise<void> {
 }
 
 /* ------------------------------ app_settings ------------------------------ */
-async function ensureAppSettings(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureAppSettings(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS app_settings (
-                                                    id          TEXT PRIMARY KEY,
-                                                    key         TEXT UNIQUE,
-                                                    value_json  TEXT,
-                                                    value_text  TEXT,
-                                                    is_active   INTEGER DEFAULT 1,
-                                                    updated_at  TEXT DEFAULT (datetime('now'))
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS app_settings (
+      id          TEXT PRIMARY KEY,
+      key         TEXT UNIQUE,
+      value_json  TEXT,
+      value_text  TEXT,
+      is_active   INTEGER DEFAULT 1,
+      updated_at  TEXT DEFAULT (datetime('now'))
+    );
+  `;
     await db.execute(ddl);
     await backfillIds(db, "app_settings", "id");
 
@@ -289,27 +284,26 @@ async function ensureAppSettings(): Promise<void> {
 }
 
 /* ------------------------------ activations ------------------------------ */
-async function ensureActivations(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureActivations(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS activations (
-                                                   id             TEXT PRIMARY KEY,
-                                                   activation_key TEXT UNIQUE
-                                                   CHECK (
-                                                   substr(activation_key, 1, 1) = '+'
-            AND length(activation_key) = 16
-            AND replace(activation_key, '+', '') GLOB '[0-9]*'
-            ),
-            tenant_id      TEXT NOT NULL,
-            status         TEXT NOT NULL DEFAULT 'issued',
-            issued_at      TEXT DEFAULT (datetime('now')),
-            activated_at   TEXT,
-            expires_at     TEXT,
-            meta_json      TEXT,
-            is_active      INTEGER DEFAULT 1,
-            FOREIGN KEY (tenant_id) REFERENCES tenants(id)
-            );
-    `;
+    CREATE TABLE IF NOT EXISTS activations (
+      id             TEXT PRIMARY KEY,
+      activation_key TEXT UNIQUE
+      CHECK (
+        substr(activation_key, 1, 1) = '+'
+        AND length(activation_key) = 16
+        AND replace(activation_key, '+', '') GLOB '[0-9]*'
+      ),
+      tenant_id      TEXT NOT NULL,
+      status         TEXT NOT NULL DEFAULT 'issued',
+      issued_at      TEXT DEFAULT (datetime('now')),
+      activated_at   TEXT,
+      expires_at     TEXT,
+      meta_json      TEXT,
+      is_active      INTEGER DEFAULT 1,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+    );
+  `;
     await db.execute(ddl);
     await backfillIds(db, "activations", "id");
 
@@ -317,21 +311,20 @@ async function ensureActivations(): Promise<void> {
 }
 
 /* ------------------------------ audit_logs ------------------------------ */
-async function ensureAuditLogs(): Promise<void> {
-    const db = withLogging(await cm.prepareEngine("default"));
+async function ensureAuditLogs(db: Engine): Promise<void> {
     const ddl = `
-        CREATE TABLE IF NOT EXISTS audit_logs  (
-                                                   id             TEXT PRIMARY KEY,
-                                                   table_name     TEXT NOT NULL,
-                                                   action         TEXT NOT NULL,
-                                                   record_id      TEXT NOT NULL,
-                                                   tenant_id      TEXT,
-                                                   user_id        TEXT,
-                                                   old_data       TEXT,
-                                                   new_data       TEXT,
-                                                   created_at     TEXT NOT NULL
-        );
-    `;
+    CREATE TABLE IF NOT EXISTS audit_logs  (
+      id             TEXT PRIMARY KEY,
+      table_name     TEXT NOT NULL,
+      action         TEXT NOT NULL,
+      record_id      TEXT NOT NULL,
+      tenant_id      TEXT,
+      user_id        TEXT,
+      old_data       TEXT,
+      new_data       TEXT,
+      created_at     TEXT NOT NULL
+    );
+  `;
     await db.execute(ddl);
     await backfillIds(db, "audit_logs", "id");
 
@@ -344,26 +337,30 @@ async function ensureAuditLogs(): Promise<void> {
 
 export async function run(): Promise<void> {
     if (ensured) return;
-    const db = withLogging(await cm.prepareEngine("default"));
 
+    // Prepare once, reuse the same Engine instance across all ensure* calls.
+    const base = await cm.prepareEngine("default");
+    const db = maybeWrapLogging(base);
+
+    // Best-effort foreign keys for SQLite; harmless no-op on others.
     try {
         await db.execute("PRAGMA foreign_keys = ON");
     } catch {
         // ignore for non-SQLite
     }
 
-    await ensureCoreMeta();
-    await ensureTenants();
-    await ensureFeatures();
-    await ensurePlans();
-    await ensureSubscriptions();
-    await ensureAppSettings();
-    await ensureActivations();
-    await ensureAuditLogs();
+    await ensureCoreMeta(db);
+    await ensureTenants(db);
+    await ensureFeatures(db);
+    await ensurePlans(db);
+    await ensureSubscriptions(db);
+    await ensureAppSettings(db);
+    await ensureActivations(db);
+    await ensureAuditLogs(db);
 
     try {
         const fkErrors = await db.fetchAll<any>("PRAGMA foreign_key_check");
-        if (fkErrors.length > 0) {
+        if (Array.isArray(fkErrors) && fkErrors.length > 0) {
             throw new Error("Foreign key violations detected:\n" + JSON.stringify(fkErrors, null, 2));
         }
     } catch {

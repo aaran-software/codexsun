@@ -175,10 +175,69 @@ function buildEngine(cfg: DBConfig): Engine {
 }
 
 /* ------------------------------------------------------------------------------------------------
+ * Core bootstrap (run once per process, optionally skippable)
+ * ---------------------------------------------------------------------------------------------- */
+
+// Set DB_SKIP_CORE_BOOTSTRAP=1 to bypass core.run() entirely (e.g., some tests)
+const SKIP_CORE_BOOTSTRAP =
+    String(process.env.DB_SKIP_CORE_BOOTSTRAP ?? "").trim() === "1";
+
+// Set DB_SILENCE_BOOTSTRAP_SQL=1 to suppress engine SQL logs during core.run()
+const SILENCE_BOOTSTRAP_SQL =
+    String(process.env.DB_SILENCE_BOOTSTRAP_SQL ?? "").trim() === "1";
+
+// Memoized promise so multiple callers share the same bootstrap
+let __coreReadyPromise: Promise<void> | null = null;
+
+/** Ensures core tables/seeds are applied at most once per process. */
+async function ensureCoreOnce(): Promise<void> {
+    if (SKIP_CORE_BOOTSTRAP) return;
+    if (!__coreReadyPromise) {
+        __coreReadyPromise = (async () => {
+            // Optionally silence "[SQL ...]" logs while bootstrapping
+            let restore: (() => void) | null = null;
+            if (SILENCE_BOOTSTRAP_SQL) {
+                const origLog = console.log;
+                const origInfo = console.info;
+                const origWarn = console.warn;
+                const origError = console.error;
+                const filter = (fn: (...args: any[]) => void) =>
+                    (...args: any[]) => {
+                        try {
+                            const first = args?.[0];
+                            if (typeof first === "string" && /^\[SQL (EXECUTE|FETCH|QUERY)/.test(first)) {
+                                return;
+                            }
+                        } catch {}
+                        fn(...args);
+                    };
+                (console as any).log = filter(origLog);
+                (console as any).info = filter(origInfo);
+                (console as any).warn = origWarn;   // keep warnings
+                (console as any).error = origError; // keep errors
+                restore = () => {
+                    (console as any).log = origLog;
+                    (console as any).info = origInfo;
+                    (console as any).warn = origWarn;
+                    (console as any).error = origError;
+                };
+            }
+
+            try {
+                await core.run();
+            } finally {
+                if (restore) restore();
+            }
+        })();
+    }
+    return __coreReadyPromise;
+}
+
+/* ------------------------------------------------------------------------------------------------
  * Shared facade
  * ---------------------------------------------------------------------------------------------- */
 export async function withShared<T>(fn: (conn: ConnFacade) => Promise<T>): Promise<T> {
-    await core.run();
+    await ensureCoreOnce();
     const sem = getSemaphore("shared", true);
     return sem.run(async () => {
         const engine = await cm.prepareEngine("default");
@@ -203,6 +262,7 @@ export async function withShared<T>(fn: (conn: ConnFacade) => Promise<T>): Promi
 export async function withTenant<T>(tenantId: string, fn: (conn: ConnFacade) => Promise<T>): Promise<T>;
 export async function withTenant<T>(fn: (conn: ConnFacade) => Promise<T>): Promise<T>;
 export async function withTenant<T>(a: any, b?: any): Promise<T> {
+    await ensureCoreOnce();
     const tenantId = typeof a === "string" ? a : mustTenantId(undefined);
     const fn: (conn: ConnFacade) => Promise<T> = typeof a === "string" ? b : a;
     const sem = getSemaphore(`tenant:${tenantId}`, false);
@@ -259,7 +319,7 @@ const db = {
  * ---------------------------------------------------------------------------------------------- */
 export async function initDb() {
     const engine = await cm.prepareEngine("default");
-    await core.run(); // seeds app_settings too
+    await ensureCoreOnce();
     return engine;
 }
 
@@ -270,7 +330,9 @@ export async function initDb() {
     try {
         const shared = getDbConfig("default");
         if (shared.driver !== "sqlite") {
-            console.warn(`[db.ts] Master DB driver is '${shared.driver}'. For dev, use MDB_DRIVER=sqlite with MDB_FILE=./data/dev.sqlite`);
+            console.warn(
+                `[db.ts] Master DB driver is '${shared.driver}'. For dev, use MDB_DRIVER=sqlite with MDB_FILE=./data/dev.sqlite`
+            );
         }
     } catch {}
 })();
