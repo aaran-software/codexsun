@@ -35,3 +35,14 @@ pnpm add -D reflect-metadata -w
 
 grep -R "const mdb" cortex/database to find dupicates
 
+set npm_config_build_from_source=true
+pnpm install
+
+>Ignored build scripts: @swc/core, @tailwindcss/oxide, core-js, cpu-features, esbuild, sqlite3, ssh2.   │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts
+
+pnpm approve-builds
+
+then
+
+pnpm install

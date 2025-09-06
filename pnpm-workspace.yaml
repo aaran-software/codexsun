@@ -1,6 +1,15 @@
 packages:
-  - "apps/**"
-  - "sites/**"
-  - "cortex"
-  - "cortex/**"
-  - "task"
+  - apps/**
+  - sites/**
+  - cortex
+  - cortex/**
+  - task
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - core-js
+  - cpu-features
+  - esbuild
+  - sqlite3
+  - ssh2

@@ -4,6 +4,7 @@ import { existsSync, readdirSync } from "fs";
 import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import type { RouteRegistery } from "./http/route_registery"; // adjust if your path differs
+import { aiRoutes } from "../apps/ai/src/aiRoutes";
 
 // Built-in routes & DB init are centralized here now
 import * as welcome from "./http/routes/welcome";
@@ -89,6 +90,7 @@ export async function registerAppsAndRoutes(registry: RouteRegistery) {
     // 2) Register built-in routes (moved from index.ts)
     registry.addProvider(welcome.routes);
     registry.addProvider(health.routes);
+    registry.addProvider(aiRoutes);
 
     // 3) Discover and register dynamic apps
     await registerDynamicApps(registry);
