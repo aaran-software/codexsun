@@ -1,0 +1,12 @@
+packages:
+  - cortex
+  - apps/*
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - cpu-features
+  - esbuild
+  - protobufjs
+  - sqlite3
+  - ssh2

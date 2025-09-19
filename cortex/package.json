@@ -1,0 +1,22 @@
+{
+  "name": "@codexsun/cortex",
+  "version": "0.1.0",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageManager": "pnpm@10.16.1",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "ts-node-dev src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "@types/pg": "^8.15.5"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "pg": "^8.16.3"
+  }
+}

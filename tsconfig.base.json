@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "paths": {
+      "@codexsun/cortex/*": ["cortex/*"],
+      "@codexsun/cxsun/*": ["apps/cxsun/*"],
+      "@codexsun/crm/*": ["apps/crm/*"],
+      "@codexsun/erp/*": ["apps/erp/*"],
+      "@codexsun/lms/*": ["apps/lms/*"]
+    },
+    "rootDir": "./",
+    "outDir": "./dist",
+
+    "typeRoots": ["./node_modules/@types", "./cortex/types"]
+  },
+  "exclude": ["node_modules", "dist"],
+
+
+  /* For frontend (React) */
+  "jsx": "react-jsx",
+  "lib": ["ES2022", "DOM", "DOM.Iterable"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.js"]
+}
