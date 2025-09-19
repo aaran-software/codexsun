@@ -1,12 +1,13 @@
 // tests/test.ts
 import "reflect-metadata";
-import {userHttpTest} from "./cxsun/user/user-route.test";
+// import {userHttpTest} from "./cxsun/user/user-route.test";
+import {authHttpTest} from "./cxsun/user/auth-route.test";
 
 async function runAllTests() {
   console.log("🚀 Starting All Tests...\n");
 
     // await runUserCrudTest();
-    await userHttpTest()
+    await authHttpTest()
 
   console.log("\n🎉 All Tests Completed Successfully");
 }
