@@ -3,6 +3,7 @@
 import type { Application } from "@codexsun/cortex/core/application";
 import { AuthService } from "./auth.service";
 import { registerAuthRoutes } from "./auth.routes";
+import {AuthRepository} from "@codexsun/cxsun/code/auth/auth.repos";
 
 export class AuthProvider {
     name = "AuthProvider";
@@ -10,9 +11,14 @@ export class AuthProvider {
     async register(app: Application) {
         app.logger.info(`[${this.name}] Registering services.`);
 
-        // ✅ Register AuthService in DI container
+        // ✅ Register AuthRepository with real Database
+        app.container.register("AuthRepository", {
+            useFactory: (c) => new AuthRepository(c.resolve("Database")),
+        });
+
+        // ✅ Register AuthService with repo
         app.container.register("AuthService", {
-            useFactory: () => new AuthService(),
+            useFactory: (c) => new AuthService(c.resolve("AuthRepository")),
         });
 
         // ✅ Register routes

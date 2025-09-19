@@ -16,7 +16,8 @@ export class AuthController {
     login = async (req: CRequest, res: CResponse): Promise<void> => {
         const { username, password } = req.body;
 
-        const valid = this.service.validateCredentials(username, password);
+        const valid = await this.service.validateCredentials(username, password);
+
         if (!valid) {
             res.status(401).json({ message: "Invalid username or password" });
             return;

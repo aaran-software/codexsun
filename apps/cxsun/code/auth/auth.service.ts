@@ -1,10 +1,22 @@
-// Business logic for validating credentials
+import { AuthRepository } from "./auth.repos";
+import { APP } from "@codexsun/cortex/core/application";
 
 export class AuthService {
-    private readonly USERNAME = "admin";
-    private readonly PASSWORD = "1234"; // plain text for demo
+    private repo: AuthRepository;
 
-    validateCredentials(username: string, password: string): boolean {
-        return username === this.USERNAME && password === this.PASSWORD;
+    constructor(repo: AuthRepository) {
+        this.repo = repo;
     }
+
+    async validateCredentials(username: string, password: string): Promise<boolean> {
+        const user = await this.repo.findByEmail(username);
+        if (!user) {
+            return false;
+        }
+
+        APP.logger.debug("[AuthService.validateCredentials] stored password=", user.password, " input=", password);
+
+        return user.password === password && user.status === "active";
+    }
+
 }
