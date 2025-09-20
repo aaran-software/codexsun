@@ -1,4 +1,5 @@
-// AuthContext.tsx
+// resources/global/auth/AuthContext.tsx
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {

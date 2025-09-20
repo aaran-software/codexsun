@@ -1,3 +1,5 @@
+// apps/cxsun/react/App.tsx
+
 import React, { JSX } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "../../../resources/global/auth/AuthContext";

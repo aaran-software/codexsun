@@ -1,3 +1,5 @@
+// apps/cxsun/react/web/home.tsx
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 

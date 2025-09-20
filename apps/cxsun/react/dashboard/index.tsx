@@ -1,4 +1,5 @@
-// index.tsx
+// apps/cxsun/react/dashboard/index.tsx
+
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../resources/global/auth/AuthContext";
