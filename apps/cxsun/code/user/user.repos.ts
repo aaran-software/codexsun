@@ -1,3 +1,5 @@
+// apps/cxsun/code/user/user.repos.ts
+
 import type { User } from "./user.model";
 import type { Database } from "@codexsun/cortex/core/application";
 import { APP } from "@codexsun/cortex/core/application"; // centralized logger

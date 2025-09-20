@@ -1,4 +1,4 @@
-// apps/cxsun/core/user/user.routes.ts
+// apps/cxsun/code/user/user.routes.ts
 
 import type { Application } from "@codexsun/cortex/core/application";
 import { UserController } from "./user.controller";

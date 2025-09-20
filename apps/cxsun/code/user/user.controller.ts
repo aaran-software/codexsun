@@ -1,4 +1,4 @@
-// apps/cxsun/core/user/user.controller.ts
+// apps/cxsun/code/user/user.controller.ts
 
 import type { Application } from "@codexsun/cortex/core/application";
 import type { CRequest, CResponse } from "@codexsun/cortex/http/chttpx";
