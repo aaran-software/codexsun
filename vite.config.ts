@@ -33,7 +33,9 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, APP_DIR, 'src'),
+            '@': path.resolve(__dirname, APP_DIR, 'react'),
+            '@codexsun/resources': path.resolve(__dirname, 'resources'),
+            '@codexsun/cortex': path.resolve(__dirname, 'cortex'),
         },
     },
     // ✅ Prevent esbuild from bundling native Oxide + LightningCSS
