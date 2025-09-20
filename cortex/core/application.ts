@@ -18,9 +18,9 @@ import { registerSystemEndpoints } from "@codexsun/cortex/templates/system";
 // ✅ DB + migration helpers
 import * as Db from "../db/db";
 import * as Migrate from "../db/migrate";
-import {JwtAuthMiddleware} from "@codexsun/cortex/auth/auth.middleware";
-import {ErrorMiddleware} from "@codexsun/cortex/auth/error.middleware";
-import {LoggerMiddleware} from "@codexsun/cortex/auth/logger.middleware";
+// import {JwtAuthMiddleware} from "@codexsun/cortex/auth/auth.middleware";
+// import {ErrorMiddleware} from "@codexsun/cortex/auth/error.middleware";
+// import {LoggerMiddleware} from "@codexsun/cortex/auth/logger.middleware";
 
 // -----------------------------------------------------------------------------
 // Database type

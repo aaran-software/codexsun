@@ -3,7 +3,7 @@
 import type { Application } from "@codexsun/cortex/core/application";
 import { AuthService } from "./auth.service";
 import { registerAuthRoutes } from "./auth.routes";
-import {AuthRepository} from "@codexsun/cxsun/code/auth/auth.repos";
+import {AuthRepository} from "./auth.repos";
 
 export class AuthProvider {
     name = "AuthProvider";

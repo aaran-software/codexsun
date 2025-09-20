@@ -9,14 +9,22 @@ export class AuthService {
     }
 
     async validateCredentials(username: string, password: string): Promise<boolean> {
-        const user = await this.repo.findByEmail(username);
-        if (!user) {
+        try {
+            const user = await this.repo.findByEmail(username);
+            if (!user) {
+                APP.logger.warn("[AuthService] No user found for:", username);
+                return false;
+            }
+            APP.logger.debug("[AuthService] User:", { email: user.email, password: user.password, status: user.status });
+            const isPasswordValid = user.password === password;
+            const isStatusValid = user.status === "active";
+            APP.logger.debug("[AuthService] Password valid:", isPasswordValid, "Status valid:", isStatusValid);
+            return isPasswordValid && isStatusValid;
+        } catch (error) {
+            APP.logger.error("[AuthService] DB error:", error);
             return false;
         }
-
-        APP.logger.debug("[AuthService.validateCredentials] stored password=", user.password, " input=", password);
-
-        return user.password === password && user.status === "active";
     }
 
 }
+
