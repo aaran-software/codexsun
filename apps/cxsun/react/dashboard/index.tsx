@@ -1,16 +1,21 @@
+// index.tsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function DashboardPage() {
-    const { user, logout } = useAuth();
+    const { user, loading, logout } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!user) {
+        if (!loading && !user) {
             navigate("/login", { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, loading, navigate]);
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
