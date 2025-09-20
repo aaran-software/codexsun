@@ -1,7 +1,7 @@
 // index.tsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../../../resources/global/auth/AuthContext";
 
 export default function DashboardPage() {
     const { user, loading, logout } = useAuth();
