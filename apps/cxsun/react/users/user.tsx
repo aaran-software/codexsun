@@ -1,4 +1,4 @@
-// apps/cxsun/react/user/user.tsx
+// apps/cxsun/react/users/user.tsx
 
 import React, { useEffect, useState } from "react";
 

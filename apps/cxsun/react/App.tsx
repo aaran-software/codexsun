@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "../../../resources/global/auth/AuthContext";
 import LoginPage from "../../../resources/global/auth/login";
 import DashboardPage from "./dashboard/index";
-import UserPage from "./user/user";
+import UserPage from "./users/user";
 import HomePage from "./web/home";
 import AboutPage from "./web/about"; // Import AboutPage
 import ContactPage from "./web/contact"; // Import ContactPage
