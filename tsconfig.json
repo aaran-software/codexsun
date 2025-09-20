@@ -17,21 +17,19 @@
     "baseUrl": ".",
     "paths": {
       "@codexsun/cortex/*": ["cortex/*"],
-      "@codexsun/cxsun/*": ["apps/cxsun/*"],
-      "@codexsun/crm/*": ["apps/crm/*"],
-      "@codexsun/erp/*": ["apps/erp/*"],
-      "@codexsun/lms/*": ["apps/lms/*"]
+      "@codexsun/apps/*": ["apps/*"],
+      "@codexsun/resources/*": ["resources/*"],
+      "@codexsun/tests/*": ["tests/*"],
+      "@codexsun/data/*": ["data/*"]
     },
     "rootDir": "./",
     "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./cortex/types"],
 
-    "typeRoots": ["./node_modules/@types", "./cortex/types"]
+    /* React/JSX options */
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "exclude": ["node_modules", "dist"],
-
-
-  /* For frontend (React) */
-  "jsx": "react-jsx",
-  "lib": ["ES2022", "DOM", "DOM.Iterable"],
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.js"]
+  "include": ["./**/*"]
 }

@@ -1,7 +1,7 @@
 import { CRequest, CResponse } from "./chttpx";
 import { parse } from "url";
 
-export type Middleware = (req: CRequest, res: CResponse, next: () => void) => void;
+export type Middleware = (req: CRequest, res: CResponse, next: () => void) => void | Promise<void>;
 
 export interface RouteDefinition {
     method: string;
@@ -17,17 +17,11 @@ export class CoreRouter {
     private logger: { info: Function; warn: Function; error: Function };
 
     constructor(logger?: { info: Function; warn: Function; error: Function }) {
-        // ✅ Inject logger from Application, fallback to console
         this.logger = logger || console;
     }
 
-    // -------------------------------------------------------------------------
-    // Route registration
-    // -------------------------------------------------------------------------
     register(method: string, path: string, handler: RouteDefinition["handler"]) {
         const m = method.toUpperCase();
-
-        // avoid duplicates
         if (this.routes.some((r) => r.method === m && r.path === path)) return;
 
         const paramNames: string[] = [];
@@ -63,13 +57,6 @@ export class CoreRouter {
         return this.routes.map((r) => ({ method: r.method, path: r.path }));
     }
 
-    list(): RouteDefinition[] {
-        return this.getRoutes();
-    }
-
-    // -------------------------------------------------------------------------
-    // Request handler
-    // -------------------------------------------------------------------------
     async handle(req: CRequest, res: CResponse): Promise<boolean> {
         const method = req.method?.toUpperCase() || "GET";
         const urlPath = parse(req.url || "/").pathname || "/";
@@ -77,7 +64,6 @@ export class CoreRouter {
         let matched: RouteDefinition | undefined;
         let params: Record<string, string> = {};
 
-        // match route
         for (const r of this.routes) {
             const match = r.regex.exec(urlPath);
             if (r.method === method && match) {
@@ -93,37 +79,13 @@ export class CoreRouter {
         if (req.parseQuery) req.parseQuery();
         if (req.parseBody) await req.parseBody();
 
-        // run middlewares + handler safely
         const runMiddlewares = async (i: number): Promise<void> => {
             if (i < this.middlewares.length) {
-                try {
-                    await Promise.resolve(
-                        this.middlewares[i](req, res, () => runMiddlewares(i + 1))
-                    );
-                } catch (err) {
-                    this.logger.error("❌ Middleware error", {
-                        method,
-                        url: urlPath,
-                        error: err,
-                    });
-                    if (!res.headersSent) {
-                        res.status(500).json({ error: "Internal Server Error" });
-                    }
-                }
+                await Promise.resolve(
+                    this.middlewares[i](req, res, () => runMiddlewares(i + 1))
+                );
             } else if (matched) {
-                try {
-                    await Promise.resolve(matched.handler(req, res));
-                } catch (err) {
-                    this.logger.error(`❌ Route handler error`, {
-                        method,
-                        url: urlPath,
-                        params,
-                        error: err,
-                    });
-                    if (!res.headersSent) {
-                        res.status(500).json({ error: "Internal Server Error" });
-                    }
-                }
+                await Promise.resolve(matched.handler(req, res));
             }
         };
 
