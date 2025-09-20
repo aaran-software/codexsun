@@ -18,6 +18,9 @@ import { registerSystemEndpoints } from "@codexsun/cortex/templates/system";
 // ✅ DB + migration helpers
 import * as Db from "../db/db";
 import * as Migrate from "../db/migrate";
+import {JwtAuthMiddleware} from "@codexsun/cortex/auth/auth.middleware";
+import {ErrorMiddleware} from "@codexsun/cortex/auth/error.middleware";
+import {LoggerMiddleware} from "@codexsun/cortex/auth/logger.middleware";
 
 // -----------------------------------------------------------------------------
 // Database type
@@ -138,6 +141,24 @@ export class Application {
             }
             next();
         });
+
+        // // 📝 Logger middleware
+        // const loggerMiddleware = new LoggerMiddleware();
+        // this.router.use((req, res, next) => loggerMiddleware.handle(req, res, next));
+        //
+        // // 🔒 JWT auth
+        // const jwtMiddleware = new JwtAuthMiddleware();
+        // this.router.use((req, res, next) => jwtMiddleware.handle(req, res, next));
+        //
+        // // 🚨 Error handler wrapper
+        // const errorMiddleware = new ErrorMiddleware();
+        // this.router.use(async (req, res, next) => {
+        //     try {
+        //         await next();
+        //     } catch (err) {
+        //         errorMiddleware.handle(err, req, res, next);
+        //     }
+        // });
 
         // ✅ built-in routes
         registerTemplateRoutes(this);

@@ -23,3 +23,8 @@ pnpm add -D @types/compression @types/cors @types/helmet @types/express-rate-lim
 
 pnpm add compression cors helmet express-rate-limit cookie-parser morgan -w
 pnpm add -D @types/compression @types/cors @types/helmet @types/express-rate-limit @types/cookie-parser @types/morgan -w
+
+
+pnpm setup
+C:\Users\SUNDAR\AppData\Local
+pnpm self-update
