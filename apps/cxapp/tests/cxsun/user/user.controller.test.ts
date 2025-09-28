@@ -139,4 +139,62 @@ describe("UserController API Setup", () => {
             });
         });
     });
+
+    describe("GET /users/:id", () => {
+        it("should return 400 for invalid id", async () => {
+            const response = await request.get("/users/invalid");
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({ error: "Invalid user id" });
+        });
+
+        it("should return 404 for non-existent user", async () => {
+            const response = await request.get("/users/999");
+            expect(response.status).toBe(404);
+            expect(response.body).toEqual({ error: "User not found" });
+        });
+
+        it("should return user by id", async () => {
+            const insertResult = await db.query(
+                "INSERT INTO users (name, email, password, status) VALUES (?, ?, ?, ?) RETURNING id",
+                ["Jane Doe", "jane@example.com", "password123", "active"]
+            );
+            const userId = insertResult[0].id;
+
+            const response = await request.get(`/users/${userId}`);
+            expect(response.status).toBe(200);
+            expect(response.body).toMatchObject({
+                id: userId,
+                name: "Jane Doe",
+                email: "jane@example.com",
+                status: "active",
+            });
+        });
+    });
+
+    describe("POST /users", () => {
+        it("should return 400 for missing fields", async () => {
+            const response = await request.post("/users").send({ name: "John" });
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({ error: "Missing required fields" });
+        });
+
+        it("should create a new user", async () => {
+            const newUser = {
+                name: "Alice Smith",
+                email: "alice@example.com",
+                password: "secure123",
+            };
+
+            const response = await request.post("/users").send(newUser);
+            expect(response.status).toBe(201);
+            expect(response.body).toMatchObject({
+                name: newUser.name,
+                email: newUser.email,
+                status: "active",
+            });
+            expect(response.body.id).toBeDefined();
+            expect(response.body.created_at).toBeDefined();
+            expect(response.body.updated_at).toBeDefined();
+        });
+    });
 });
