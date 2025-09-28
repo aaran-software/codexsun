@@ -100,34 +100,30 @@ export class UserRepository {
     });
   }
 
-  // Partial update user
-  async patchUser(id: number, updates: Partial<User>): Promise<User | null> {
-    APP.logger.debug(`[UserRepository.patchUser] id=${id}, updates=`, updates);
-
-    return this.db.withTransaction(async (q) => {
-      const fields = Object.keys(updates).filter(k => k !== 'id' && k !== 'created_at' && k !== 'updated_at');
-      if (fields.length === 0) {
-        return await this.getUser(id);
-      }
-
-      const setClause = fields.map((f) => `${f} = ?`).join(", ");
-      const values = fields.map((f) => (updates as any)[f]);
-      values.push(id);
-
-      const result = await q<User>(
-        `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *`,
-        values
-      );
-
-      if (result.rows.length === 0) {
-        APP.logger.warn(`[UserRepository.patchUser] No user found id=${id}`);
-        return null;
-      }
-
-      APP.logger.info(`[UserRepository.patchUser] User patched, id=${id}`);
-      return this.normalize(result.rows[0]);
-    });
-  }
+    // Partial update user
+    async patchUser(id: number, updates: Partial<User>): Promise<User | null> {
+        APP.logger.debug(`[UserRepository.patchUser] id=${id}, updates=`, updates);
+        const connection = await this.db.query(`SELECT 1 FROM users WHERE id = ?`, [id]);
+        console.log(`[UserRepository.patchUser] Check user id=${id}, rows=`, connection.rows);
+        if (connection.rows.length === 0) {
+            APP.logger.warn(`[UserRepository.patchUser] No user found id=${id}`);
+            return null;
+        }
+        const fields = Object.keys(updates).filter(k => k !== 'id' && k !== 'created_at' && k !== 'updated_at');
+        if (fields.length === 0) {
+            return await this.getUser(id);
+        }
+        const setClause = fields.map((f) => `${f} = ?`).join(", ");
+        const values = fields.map((f) => (updates as any)[f]);
+        values.push(id);
+        const result = await this.db.query<User>(
+            `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *`,
+            values
+        );
+        console.log("[UserRepository.patchUser] Update result:", result.rows[0]);
+        APP.logger.info(`[UserRepository.patchUser] User patched, id=${id}`);
+        return this.normalize(result.rows[0]);
+    }
 
   // Delete user
   async deleteUser(id: number): Promise<boolean> {
