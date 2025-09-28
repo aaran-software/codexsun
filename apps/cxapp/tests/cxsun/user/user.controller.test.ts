@@ -1,8 +1,8 @@
-import { Application } from "../../../cortex/core/application";
-import { UserProvider } from "../../../apps/cxsun/code/user/user.provider";
+import {Application} from "../../../cortex/core/application";
+import {UserProvider} from "../../../apps/cxsun/code/user/user.provider";
 import mariadb from "mariadb";
 import supertest from "supertest";
-import { close } from "../../../cortex/db/connection";
+import {close} from "../../../cortex/db/connection";
 
 interface TestDatabase {
     query: (text: string, params?: any[]) => Promise<{ rows: any[]; affectedRows?: number }>;
@@ -36,7 +36,7 @@ describe("UserController API Setup", () => {
             useValue: {
                 query: async (text: string, params: any[] = []) => {
                     const result = await db.query(text, params);
-                    return { rows: Array.isArray(result) ? result : [], affectedRows: result.affectedRows };
+                    return {rows: Array.isArray(result) ? result : [], affectedRows: result.affectedRows};
                 },
                 withTransaction: async <T>(fn: (q: any) => Promise<T>): Promise<T> => {
                     const connection = await db.getConnection();
@@ -71,12 +71,30 @@ describe("UserController API Setup", () => {
 
         // Test users table exists
         await db.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                                                 id INT AUTO_INCREMENT PRIMARY KEY,
-                                                 name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) NOT NULL UNIQUE,
-                password VARCHAR(255) NOT NULL,
-                status VARCHAR(50) DEFAULT 'active',
+            CREATE TABLE IF NOT EXISTS users
+            (
+                id
+                INT
+                AUTO_INCREMENT
+                PRIMARY
+                KEY,
+                name
+                VARCHAR
+            (
+                255
+            ) NOT NULL,
+                email VARCHAR
+            (
+                255
+            ) NOT NULL UNIQUE,
+                password VARCHAR
+            (
+                255
+            ) NOT NULL,
+                status VARCHAR
+            (
+                50
+            ) DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
@@ -95,10 +113,10 @@ describe("UserController API Setup", () => {
         }
         try {
             await db.end();
+            await close();
         } catch (e) {
             console.error("Error closing database pool:", e);
         }
-        await close();
     });
 
     it("should confirm server is running", async () => {
@@ -144,13 +162,13 @@ describe("UserController API Setup", () => {
         it("should return 400 for invalid id", async () => {
             const response = await request.get("/users/invalid");
             expect(response.status).toBe(400);
-            expect(response.body).toEqual({ error: "Invalid user id" });
+            expect(response.body).toEqual({error: "Invalid user id"});
         });
 
         it("should return 404 for non-existent user", async () => {
             const response = await request.get("/users/999");
             expect(response.status).toBe(404);
-            expect(response.body).toEqual({ error: "User not found" });
+            expect(response.body).toEqual({error: "User not found"});
         });
 
         it("should return user by id", async () => {
@@ -173,9 +191,9 @@ describe("UserController API Setup", () => {
 
     describe("POST /users", () => {
         it("should return 400 for missing fields", async () => {
-            const response = await request.post("/users").send({ name: "John" });
+            const response = await request.post("/users").send({name: "John"});
             expect(response.status).toBe(400);
-            expect(response.body).toEqual({ error: "Missing required fields" });
+            expect(response.body).toEqual({error: "Missing required fields"});
         });
 
         it("should create a new user", async () => {
