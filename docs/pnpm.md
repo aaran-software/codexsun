@@ -19,10 +19,6 @@ pnpm add ioredis -w
 pnpm add compression cors helmet express-rate-limit cookie-parser ws pino prom-client @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-http -w
 pnpm add -D @types/compression @types/cors @types/helmet @types/express-rate-limit @types/cookie-parser @types/ws -w
 
-
-
-
-
 pnpm add compression cors helmet express-rate-limit cookie-parser morgan -w
 pnpm add -D @types/compression @types/cors @types/helmet @types/express-rate-limit @types/cookie-parser @types/morgan -w
 
@@ -39,3 +35,5 @@ pnpm update -g
 pnpm add -d ts-jest @types/jest jest ts-node
 
 pnpm add -d rimraf
+
+pnpm  add -d supertest @types/supertest
