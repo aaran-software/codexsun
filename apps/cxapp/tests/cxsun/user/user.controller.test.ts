@@ -2,6 +2,7 @@ import { Application } from "../../../cortex/core/application";
 import { UserProvider } from "../../../apps/cxsun/code/user/user.provider";
 import mariadb from "mariadb";
 import supertest from "supertest";
+import { close } from "../../../cortex/db/connection";
 
 interface TestDatabase {
     query: (text: string, params?: any[]) => Promise<{ rows: any[]; affectedRows?: number }>;
@@ -82,6 +83,10 @@ describe("UserController API Setup", () => {
         `);
     });
 
+    beforeEach(async () => {
+        await db.query("TRUNCATE TABLE users");
+    });
+
     afterAll(async () => {
         try {
             await db.query("DROP TABLE IF EXISTS users");
@@ -89,10 +94,11 @@ describe("UserController API Setup", () => {
             console.error("Error dropping table:", e);
         }
         try {
-            await db.end(); // Ensure pool is closed
+            await db.end();
         } catch (e) {
             console.error("Error closing database pool:", e);
         }
+        await close();
     });
 
     it("should confirm server is running", async () => {
@@ -108,5 +114,29 @@ describe("UserController API Setup", () => {
     it("should confirm users table exists", async () => {
         const result = await db.query("SHOW TABLES LIKE 'users'");
         expect(result.length).toBeGreaterThan(0);
+    });
+
+    describe("GET /users", () => {
+        it("should return an empty array when no users exist", async () => {
+            const response = await request.get("/users");
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual([]);
+        });
+
+        it("should return all users", async () => {
+            await db.query(
+                "INSERT INTO users (name, email, password, status) VALUES (?, ?, ?, ?)",
+                ["John Doe", "john@example.com", "password123", "active"]
+            );
+
+            const response = await request.get("/users");
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveLength(1);
+            expect(response.body[0]).toMatchObject({
+                name: "John Doe",
+                email: "john@example.com",
+                status: "active",
+            });
+        });
     });
 });
