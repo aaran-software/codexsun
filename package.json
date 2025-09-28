@@ -10,9 +10,6 @@
     "clean:all": "pnpm -r run --if-present clean && npm prune && npm store prune"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
-    "@types/jest": "^30.0.0",
-    "jest": "^30.1.3",
     "prettier": "^3.6.2",
     "turbo": "^2.5.8",
     "typescript": "5.9.2"
@@ -22,11 +19,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
     "express": "^5.1.0",
     "rimraf": "^6.0.1",
-    "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2"
   }
 }
