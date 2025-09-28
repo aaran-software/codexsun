@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx index.ts",
     "check-types": "tsc --noEmit",
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
+    "jtest": "jest --detectOpenHandles",
     "verbose": "pnpm jest --verbose",
     "clear-cache": "pnpm jest --clearCache"
   },
