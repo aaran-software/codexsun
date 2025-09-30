@@ -9,6 +9,7 @@ export interface Todo {
   priority: 'low' | 'medium' | 'high';
   tenant_id: string; // Required for backend, but ignored in local
   created_at?: string; // Set by database, ignored in local
+  position?: number; // Position for ordering, updated on drag-drop
 }
 
 export interface InteractionState {

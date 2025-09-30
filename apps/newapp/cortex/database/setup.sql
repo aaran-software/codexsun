@@ -51,6 +51,18 @@ CREATE TABLE IF NOT EXISTS revoked_tokens (
     INDEX idx_expiry (expiry)
 );
 
+CREATE TABLE IF NOT EXISTS todos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    text VARCHAR(255) NOT NULL,
+    completed TINYINT(1) DEFAULT 0,
+    category VARCHAR(50) NOT NULL,
+    due_date DATE DEFAULT NULL,
+    priority ENUM('low', 'medium', 'high') NOT NULL,
+    tenant_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    position INT NOT NULL
+);
+
 -- Clear existing data
 TRUNCATE TABLE users;
 TRUNCATE TABLE revoked_tokens;
@@ -95,6 +107,18 @@ CREATE TABLE IF NOT EXISTS revoked_tokens (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_token (token(255)),
     INDEX idx_expiry (expiry)
+);
+
+CREATE TABLE IF NOT EXISTS todos (
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     text VARCHAR(255) NOT NULL,
+     completed TINYINT(1) DEFAULT 0,
+     category VARCHAR(50) NOT NULL,
+     due_date DATE DEFAULT NULL,
+     priority ENUM('low', 'medium', 'high') NOT NULL,
+     tenant_id VARCHAR(50) NOT NULL,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     position INT NOT NULL
 );
 
 -- Clear existing data

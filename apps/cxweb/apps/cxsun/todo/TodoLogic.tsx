@@ -13,6 +13,7 @@ export const useTodoLogic = () => {
       due_date: '2025-10-05',
       priority: 'high',
       tenant_id: 'tenant1',
+      position: 1,
     },
     {
       id: 2,
@@ -22,6 +23,7 @@ export const useTodoLogic = () => {
       due_date: null,
       priority: 'medium',
       tenant_id: 'tenant1',
+      position: 2,
     },
     {
       id: 3,
@@ -31,6 +33,7 @@ export const useTodoLogic = () => {
       due_date: '2025-10-10',
       priority: 'low',
       tenant_id: 'tenant1',
+      position: 3,
     },
     {
       id: 4,
@@ -40,13 +43,16 @@ export const useTodoLogic = () => {
       due_date: '2025-10-15',
       priority: 'high',
       tenant_id: 'tenant1',
+      position: 4,
     },
   ];
 
   const [todos, setTodos] = useState<Todo[]>(() => {
     const savedTodos = localStorage.getItem('todos');
     if (savedTodos) {
-      return JSON.parse(savedTodos);
+      const parsed = JSON.parse(savedTodos);
+      // Sort by position on load
+      return parsed.sort((a: Todo, b: Todo) => (a.position ?? Infinity) - (b.position ?? Infinity));
     } else {
       return dummyTodos; // Use dummy data if no saved todos
     }
@@ -78,8 +84,17 @@ export const useTodoLogic = () => {
     return matchesFilter && matchesCategory;
   });
 
+  const updatePositions = (updatedTodos: Todo[]) => {
+    // Recalculate positions sequentially
+    return updatedTodos.map((todo, index) => ({
+      ...todo,
+      position: index + 1,
+    }));
+  };
+
   const addTodo = (text: string, category: string, dueDate: string, priority: 'low' | 'medium' | 'high') => {
     if (!text.trim()) return;
+    const maxPosition = todos.length > 0 ? Math.max(...todos.map((t) => t.position ?? 0)) : 0;
     const newTodo: Todo = {
       id: todos.length ? Math.max(...todos.map((t) => t.id!)) + 1 : 1,
       text,
@@ -88,8 +103,10 @@ export const useTodoLogic = () => {
       due_date: dueDate || null,
       priority,
       tenant_id: 'tenant1', // Dummy tenant
+      position: maxPosition + 1,
     };
-    setTodos([...todos, newTodo]);
+    const updatedTodos = [...todos, newTodo];
+    setTodos(updatePositions(updatedTodos)); // Update positions after add
     setTodoListKey((prev) => prev + 1);
   };
 
@@ -103,7 +120,8 @@ export const useTodoLogic = () => {
   };
 
   const deleteTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+    const updatedTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(updatePositions(updatedTodos)); // Recalculate positions after delete
     setInteractionState({ ...interactionState, mode: 'none', id: null });
     setTodoListKey((prev) => prev + 1);
   };
@@ -129,19 +147,18 @@ export const useTodoLogic = () => {
     if (interactionState.mode !== 'edit' || interactionState.id !== id) return;
     if (!interactionState.editText.trim()) return;
 
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id
-          ? {
-              ...todo,
-              text: interactionState.editText,
-              category: interactionState.editCategory,
-              due_date: interactionState.editDueDate ? new Date(interactionState.editDueDate).toISOString() : null,
-              priority: interactionState.editPriority,
-            }
-          : todo
-      )
+    const updatedTodos = todos.map((todo) =>
+      todo.id === id
+        ? {
+            ...todo,
+            text: interactionState.editText,
+            category: interactionState.editCategory,
+            due_date: interactionState.editDueDate ? new Date(interactionState.editDueDate).toISOString() : null,
+            priority: interactionState.editPriority,
+          }
+        : todo
     );
+    setTodos(updatePositions(updatedTodos)); // Update positions (though unchanged, for consistency)
     setInteractionState({
       mode: 'none',
       id: null,
@@ -180,7 +197,8 @@ export const useTodoLogic = () => {
     if (over && active.id !== over.id) {
       const oldIndex = todos.findIndex((todo) => todo.id === active.id);
       const newIndex = todos.findIndex((todo) => todo.id === over.id);
-      setTodos(arrayMove(todos, oldIndex, newIndex));
+      const reorderedTodos = arrayMove(todos, oldIndex, newIndex);
+      setTodos(updatePositions(reorderedTodos)); // Recalculate positions after drag
       setTodoListKey((prev) => prev + 1);
     }
     setActiveTodo(null);

@@ -1,12 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './resources/global/auth/AuthContext';
+
 import WebLayout from './resources/components/layouts/WebLayout';
 import GuestLayout from './resources/components/layouts/GuestLayout';
 import AppLayout from './resources/components/layouts/AppLayout';
+
 import HomePage from './apps/cxsun/web/home';
 import AboutPage from './apps/cxsun/web/about';
 import ContactPage from './apps/cxsun/web/contact';
+
 import DashboardPage from './apps/cxsun/dashboard/index';
 import LoginPage from './resources/global/auth/login';
 import { ProtectedRoute } from './resources/global/auth/protected-route';
