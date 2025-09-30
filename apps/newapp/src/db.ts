@@ -23,7 +23,6 @@ export async function query<T = any>(text: string, params?: any[]): Promise<Quer
                 modifiedParams = [tenantId, ...modifiedParams];
             }
         }
-        console.log(`Executing query: ${modifiedText} with params: ${JSON.stringify(modifiedParams)}`); // Debug log
         const result = await client.query(modifiedText, modifiedParams);
         return {
             rows: Array.isArray(result) ? result : [],
