@@ -17,6 +17,7 @@ export interface AnyDbClient {
 export interface QueryResult<T> {
     rows: T[];
     rowCount: number;
+    insertId?: number;
 }
 
 export interface DBAdapter {
@@ -26,4 +27,12 @@ export interface DBAdapter {
     beginTransaction: (client: AnyDbClient) => Promise<void>;
     commitTransaction: (client: AnyDbClient) => Promise<void>;
     rollbackTransaction: (client: AnyDbClient) => Promise<void>;
+}
+
+export interface User {
+    id?: number;
+    username: string;
+    email: string;
+    tenantId: string;
+    created_at?: string;
 }

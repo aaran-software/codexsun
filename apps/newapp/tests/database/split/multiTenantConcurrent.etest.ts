@@ -1,9 +1,9 @@
 // tests/multiTenantConcurrent.test.ts
-import { DbConfig, AnyDbClient, QueryResult } from '../src/types';
+import { DbConfig, AnyDbClient, QueryResult } from '../../../src/types';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../src/adapters/mariadb';
-import { withTenantContext } from '../src/tenant';
-import { query, withTransaction, healthCheck } from '../src/db';
+import { MariaDBAdapter } from '../../../src/adapters/mariadb';
+import { withTenantContext } from '../../../src/tenant';
+import { query, withTransaction, healthCheck } from '../../../src/db';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

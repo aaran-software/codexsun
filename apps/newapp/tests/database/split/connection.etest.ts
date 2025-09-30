@@ -1,10 +1,10 @@
 // tests/connection.test.ts
-import { Connection } from '../src/connection';
-import { DbConfig, AnyDbClient } from '../src/types';
+import { Connection } from '../../../src/connection';
+import { DbConfig, AnyDbClient } from '../../../src/types';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../src/adapters/mariadb';
-import { withTenantContext } from '../src/tenant';
-import { query, withTransaction, healthCheck } from '../src/db';
+import { MariaDBAdapter } from '../../../src/adapters/mariadb';
+import { withTenantContext } from '../../../src/tenant';
+import { query, withTransaction, healthCheck } from '../../../src/db';
 
 // Test database configuration without database
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

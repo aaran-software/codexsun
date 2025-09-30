@@ -1,4 +1,5 @@
 // src/db.ts
+
 import { AsyncLocalStorage } from 'async_hooks';
 import { MariaDBAdapter } from './adapters/mariadb';
 import { AnyDbClient, QueryResult } from './types';
@@ -17,10 +18,13 @@ export async function query<T>(sql: string, params: any[] = []): Promise<QueryRe
     const db = tenantStorage.getStore() ?? '';
     const client = await MariaDBAdapter.getConnection(db);
     try {
-        const result = await client.query<T>(sql, params); // Use generic query method
-        // Ensure result is compatible with QueryResult<T>
-        const rows = Array.isArray(result) ? result : result.affectedRows ? [] : result;
-        return { rows: rows as T[], rowCount: result.affectedRows || rows.length };
+        const result = await client.query(sql, params);
+        const rows = Array.isArray(result) ? result : [];
+        return {
+            rows: rows as T[],
+            rowCount: result.affectedRows || rows.length,
+            insertId: result.insertId
+        };
     } finally {
         if (client.release) client.release();
         else if (client.end) await client.end();

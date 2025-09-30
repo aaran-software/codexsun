@@ -1,9 +1,9 @@
-// tests/multiTenantDeadlock.test.ts
-import { DbConfig, AnyDbClient, QueryResult } from '../src/types';
+// tests/multiTenantConciseCrossDeadlock.test.ts
+import { DbConfig, AnyDbClient, QueryResult } from '../../../src/types';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../src/adapters/mariadb';
-import { withTenantContext } from '../src/tenant';
-import { query } from '../src/db';
+import { MariaDBAdapter } from '../../../src/adapters/mariadb';
+import { withTenantContext } from '../../../src/tenant';
+import { query } from '../../../src/db';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {
@@ -44,6 +44,19 @@ async function setupTenantDatabases(pool: mariadb.Pool): Promise<void> {
                                                  shared_resource INT DEFAULT 0
                 )
             `);
+        }
+
+        // Check and create shared_resources table
+        const sharedTableExists = await connection.query(`SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'shared_resources'`, [masterDatabase]);
+        if (!sharedTableExists.length) {
+            await connection.query(`
+                CREATE TABLE shared_resources (
+                                                  resource_id VARCHAR(50) PRIMARY KEY,
+                                                  value INT DEFAULT 0,
+                                                  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            await connection.query('INSERT IGNORE INTO shared_resources (resource_id, value) VALUES (?, 0)', ['shared1']);
         }
 
         // Insert default tenant details
@@ -92,7 +105,7 @@ async function cleanupTenantDatabases(pool: mariadb.Pool): Promise<void> {
 async function withTransactionRetry<T>(
     callback: (client: AnyDbClient) => Promise<T>,
     database: string,
-    maxRetries: number = 5
+    maxRetries: number = 3
 ): Promise<T> {
     let lastError: Error | null = null;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -106,7 +119,7 @@ async function withTransactionRetry<T>(
             await client.query('ROLLBACK');
             lastError = error instanceof Error ? error : new Error('Unknown error');
             if (lastError.message.includes('Deadlock found') && attempt < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+                await new Promise(resolve => setTimeout(resolve, 50 * attempt));
                 continue;
             }
             throw lastError;
@@ -118,10 +131,10 @@ async function withTransactionRetry<T>(
     throw lastError || new Error('Transaction failed after retries');
 }
 
-describe('Multi-Tenant Deadlock Integration Tests (Real MariaDB)', () => {
+describe('Multi-Tenant Concise Cross-Deadlock Tests (Real MariaDB)', () => {
     let setupPool: mariadb.Pool;
 
-    jest.setTimeout(60000);
+    jest.setTimeout(30000);
 
     beforeAll(async () => {
         MariaDBAdapter.initPool(baseDbConfig);
@@ -149,36 +162,31 @@ describe('Multi-Tenant Deadlock Integration Tests (Real MariaDB)', () => {
                 if (!tableExists.length) throw new Error(`Table test_table does not exist in ${database}`);
                 await tempConnection.query('TRUNCATE TABLE test_table');
             }
+            await tempConnection.query(`USE \`${masterDatabase}\``);
+            await tempConnection.query('UPDATE shared_resources SET value = 0, last_updated = CURRENT_TIMESTAMP WHERE resource_id = ?', ['shared1']);
         } finally {
             tempConnection.release();
             await tempPool.end();
         }
     });
 
-    test('[test 1] should handle concurrent updates causing potential deadlocks', async () => {
-        const promises: Promise<void>[] = [];
-        const operationCount = 20;
-        const sharedTenantId = tenantDatabases[0].tenantId;
-        for (let i = 0; i < operationCount; i++) {
-            promises.push(
-                withTransactionRetry(async (client) => {
-                    await client.query(
-                        'INSERT INTO tenant_settings (tenant_id, database_name) VALUES (?, ?) ON DUPLICATE KEY UPDATE database_name = ?, last_updated = CURRENT_TIMESTAMP',
-                        [sharedTenantId, `updated_${sharedTenantId}_${i}`, `updated_${sharedTenantId}_${i}`]
-                    );
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    const result = await client.query('SELECT * FROM tenant_settings WHERE tenant_id = ?', [sharedTenantId]);
-                    expect(result.length).toBe(1);
-                }, masterDatabase)
-            );
-        }
+    test('[test 1] cross-tenant shared resource contention', async () => {
+        const resourceId = 'shared1';
+        const promises = tenantDatabases.map(({ tenantId, database }) =>
+            withTransactionRetry(async (client) => {
+                await client.query(`USE \`${masterDatabase}\``);
+                await client.query('UPDATE shared_resources SET value = value + 1 WHERE resource_id = ?', [resourceId]);
+                await new Promise(resolve => setTimeout(resolve, 30));
+                await client.query(`USE \`${database}\``);
+                await client.query('INSERT INTO test_table (name, tenant_id) VALUES (?, ?)', [resourceId, tenantId]);
+            }, database)
+        );
         await Promise.all(promises);
 
         const client = await MariaDBAdapter.getConnection(masterDatabase);
         try {
-            const result = await client.query('SELECT * FROM tenant_settings WHERE tenant_id = ?', [sharedTenantId]);
-            expect(result.length).toBe(1);
-            expect(result[0].database_name).toMatch(new RegExp(`^updated_${sharedTenantId}_\\d+$`));
+            const result = await client.query('SELECT value FROM shared_resources WHERE resource_id = ?', [resourceId]);
+            expect(result[0].value).toBe(tenantDatabases.length);
         } finally {
             if (client.release) {
                 client.release();
@@ -186,96 +194,92 @@ describe('Multi-Tenant Deadlock Integration Tests (Real MariaDB)', () => {
         }
     });
 
-    test('[test 2] should handle concurrent inserts and deletes causing deadlocks', async () => {
-        const { tenantId, database } = tenantDatabases[0];
-        const sharedName = 'shared_record';
-        await withTenantContext(tenantId, database, async () => {
-            await query('INSERT INTO test_table (name, tenant_id, data) VALUES (?, ?, ?)', [sharedName, tenantId, randomString(100)]);
+    test('[test 2] cross-tenant interlinked updates', async () => {
+        const promises = tenantDatabases.map(({ tenantId, database }, i) => {
+            const nextTenant = tenantDatabases[(i + 1) % tenantDatabases.length];
+            return withTransactionRetry(async (client) => {
+                await client.query(`USE \`${masterDatabase}\``);
+                await client.query('UPDATE tenant_settings SET shared_resource = shared_resource + 1 WHERE tenant_id = ?', [nextTenant.tenantId]);
+                await new Promise(resolve => setTimeout(resolve, 30));
+                await client.query(`USE \`${database}\``);
+                await client.query('INSERT INTO test_table (name, tenant_id) VALUES (?, ?)', [`record_${tenantId}`, tenantId]);
+            }, database);
         });
-
-        const promises: Promise<void>[] = [];
-        const operationCount = 15;
-        for (let i = 0; i < operationCount; i++) {
-            promises.push(
-                withTenantContext(tenantId, database, async () => {
-                    await withTransactionRetry(async (client) => {
-                        await client.query('DELETE FROM test_table WHERE name = ?', [sharedName]);
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                        await client.query('INSERT INTO test_table (name, tenant_id, data) VALUES (?, ?, ?)', [sharedName, tenantId, randomString(100)]);
-                    }, database);
-                })
-            );
-        }
         await Promise.all(promises);
 
-        await withTenantContext(tenantId, database, async () => {
-            const result = await query('SELECT * FROM test_table WHERE name = ?', [sharedName]);
-            expect(result.rows).toHaveLength(1);
-            expect(result.rows[0].name).toBe(sharedName);
-        });
+        const client = await MariaDBAdapter.getConnection(masterDatabase);
+        try {
+            const result = await client.query('SELECT shared_resource FROM tenant_settings');
+            for (const row of result) expect(row.shared_resource).toBeGreaterThanOrEqual(1);
+        } finally {
+            if (client.release) {
+                client.release();
+            }
+        }
     });
 
-    test('[test 3] should handle mixed operations causing potential deadlocks', async () => {
-        const { tenantId, database } = tenantDatabases[0];
-        const sharedName = 'mixed_record';
-        await withTenantContext(tenantId, database, async () => {
-            await query('INSERT INTO test_table (name, tenant_id, data) VALUES (?, ?, ?)', [sharedName, tenantId, randomString(100)]);
-        });
-
-        const promises: Promise<void>[] = [];
-        const operationCount = 20;
-        for (let i = 0; i < operationCount; i++) {
-            promises.push(
-                withTenantContext(tenantId, database, async () => {
-                    await withTransactionRetry(async (client) => {
-                        const action = i % 3;
-                        if (action === 0) {
-                            await client.query('UPDATE test_table SET data = ? WHERE name = ?', [randomString(100), sharedName]);
-                        } else if (action === 1) {
-                            await client.query('SELECT * FROM test_table WHERE name = ? FOR UPDATE', [sharedName]);
-                            await new Promise(resolve => setTimeout(resolve, 50));
-                        } else {
-                            await client.query('INSERT INTO test_table (name, tenant_id, data) VALUES (?, ?, ?)', [`${sharedName}_${i}`, tenantId, randomString(100)]);
-                        }
-                    }, database);
-                })
-            );
+    test('[test 3] cross-tenant mixed operation deadlock', async () => {
+        const sharedName = 'mixed';
+        for (const { tenantId, database } of tenantDatabases) {
+            await withTenantContext(tenantId, database, async () => {
+                await query('INSERT INTO test_table (name, tenant_id) VALUES (?, ?)', [sharedName, tenantId]);
+            });
         }
+
+        const promises = tenantDatabases.map(({ tenantId, database }, i) =>
+            withTransactionRetry(async (client) => {
+                const action = i % 2;
+                if (action === 0) {
+                    await client.query(`USE \`${masterDatabase}\``);
+                    await client.query('UPDATE shared_resources SET value = value + 1 WHERE resource_id = ?', ['shared1']);
+                    await new Promise(resolve => setTimeout(resolve, 30));
+                } else {
+                    await client.query(`USE \`${database}\``);
+                    await client.query('SELECT * FROM test_table WHERE name = ? FOR UPDATE', [sharedName]);
+                }
+            }, database)
+        );
         await Promise.all(promises);
 
-        await withTenantContext(tenantId, database, async () => {
-            const result = await query('SELECT * FROM test_table WHERE name = ?', [sharedName]);
-            expect(result.rows).toHaveLength(1);
-        });
+        const client = await MariaDBAdapter.getConnection(masterDatabase);
+        try {
+            const result = await client.query('SELECT value FROM shared_resources WHERE resource_id = ?', ['shared1']);
+            expect(result[0].value).toBeGreaterThanOrEqual(Math.floor(tenantDatabases.length / 2));
+        } finally {
+            if (client.release) {
+                client.release();
+            }
+        }
     });
 
-    test('[test 4] should recover from deadlocks with retries', async () => {
-        const { tenantId, database } = tenantDatabases[0];
-        const sharedName = 'retry_record';
-        await withTenantContext(tenantId, database, async () => {
-            await query('INSERT INTO test_table (name, tenant_id, data) VALUES (?, ?, ?)', [sharedName, tenantId, randomString(100)]);
-        });
-
-        const promises: Promise<void>[] = [];
-        const operationCount = 10;
-        for (let i = 0; i < operationCount; i++) {
-            promises.push(
-                withTenantContext(tenantId, database, async () => {
-                    await withTransactionRetry(async (client) => {
-                        await client.query('UPDATE test_table SET data = ? WHERE name = ?', [randomString(100), sharedName]);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        const result = await client.query('SELECT * FROM test_table WHERE name = ?', [sharedName]);
-                        expect(result.length).toBe(1);
-                    }, database);
-                })
-            );
+    test('[test 4] cross-tenant deadlock recovery', async () => {
+        const sharedName = 'recovery';
+        for (const { tenantId, database } of tenantDatabases) {
+            await withTenantContext(tenantId, database, async () => {
+                await query('INSERT INTO test_table (name, tenant_id) VALUES (?, ?)', [sharedName, tenantId]);
+            });
         }
+
+        const promises = tenantDatabases.map(({ tenantId, database }) =>
+            withTransactionRetry(async (client) => {
+                await client.query(`USE \`${masterDatabase}\``);
+                await client.query('UPDATE shared_resources SET value = value + 1 WHERE resource_id = ?', ['shared1']);
+                await new Promise(resolve => setTimeout(resolve, 30));
+                await client.query(`USE \`${database}\``);
+                await client.query('UPDATE test_table SET name = ? WHERE name = ?', [`updated_${sharedName}`, sharedName]);
+            }, database)
+        );
         await Promise.all(promises);
 
-        await withTenantContext(tenantId, database, async () => {
-            const result = await query('SELECT * FROM test_table WHERE name = ?', [sharedName]);
-            expect(result.rows).toHaveLength(1);
-        });
+        const client = await MariaDBAdapter.getConnection(masterDatabase);
+        try {
+            const result = await client.query('SELECT value FROM shared_resources WHERE resource_id = ?', ['shared1']);
+            expect(result[0].value).toBe(tenantDatabases.length);
+        } finally {
+            if (client.release) {
+                client.release();
+            }
+        }
     });
 
     test('[test 5] optimized concurrent updates to tenant_settings', async () => {
