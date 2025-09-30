@@ -12,35 +12,21 @@ export interface DbConfig {
     user?: string;
     password?: string;
     database: string; // file path for sqlite, DB name for others
-    connectionTimeout?: number; // Timeout in milliseconds
 }
 
 export interface DBAdapter {
     init(): Promise<void>;
     close(): Promise<void>;
-
     getClient(): Promise<AnyDbClient>;
+    pooledQuery<T = any>(query: string, params?: any[]): Promise<T[]>;
 
     beginTransaction(client: AnyDbClient): Promise<void>;
     commitTransaction(client: AnyDbClient): Promise<void>;
     rollbackTransaction(client: AnyDbClient): Promise<void>;
     releaseClient(client: AnyDbClient): Promise<void>;
-
-
-    pooledQuery<T = any>(query: string, params?: any[]): Promise<T[]>;
-
     queryWithClient<T = any>(
         client: AnyDbClient,
         query: string,
         params?: any[]
     ): Promise<T[]>;
-
-
-
-
-
-
-
-
-
 }

@@ -21,6 +21,12 @@ export class UserService {
   }
 
   async updateUser(id: number, data: Partial<User>): Promise<User | null> {
+
+      const existing = await this.repo.getUser(id);
+      if (!existing) return null;
+
+      const updated = { ...existing, ...data };
+
     return this.repo.updateUser(id, data);
   }
 

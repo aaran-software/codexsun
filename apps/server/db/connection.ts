@@ -33,6 +33,14 @@ export async function close() {
     await adapter.close();
 }
 
+export async function getClient() {
+    return adapter.getClient();
+}
+
+export async function pooledQuery<T = any>(q: string, p: any[] = []) {
+    return adapter.pooledQuery<T>(q, p);
+}
+
 export function getAdapter(): DBAdapter {
     return adapter;
 }

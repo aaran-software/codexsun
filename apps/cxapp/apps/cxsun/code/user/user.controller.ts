@@ -85,7 +85,7 @@ export class UserController {
             return;
         }
 
-        res.status(200).json(user);
+        res.json(user);
     };
 
     // DELETE /users/:id
