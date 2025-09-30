@@ -1,11 +1,11 @@
 // tests/api/userRoleApi.test.ts
 import supertest from 'supertest';
 import express from 'express';
-import { createUserRouter } from '../../src/api/user';
-import { createAuthRouter } from '../../src/api/auth';
+import { createUserRouter } from '../../cortex/api/user';
+import { createAuthRouter } from '../../cortex/api/auth';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../src/adapters/mariadb';
-import { DbConfig } from '../../src/types';
+import { MariaDBAdapter } from '../../cortex/adapters/mariadb';
+import { DbConfig } from '../../cortex/types';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

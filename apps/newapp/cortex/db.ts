@@ -1,4 +1,4 @@
-// src/db.ts
+// cortex/db.ts
 import { AsyncLocalStorage } from 'async_hooks';
 import { MariaDBAdapter } from './adapters/mariadb';
 import { AnyDbClient, QueryResult } from './types';

@@ -1,4 +1,4 @@
-// src/adapters/mariadb.ts
+// cortex/adapters/mariadb.ts
 import mariadb from 'mariadb';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../types';
 

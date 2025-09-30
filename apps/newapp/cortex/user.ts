@@ -1,4 +1,4 @@
-// src/user.ts
+// cortex/user.ts
 import * as bcrypt from 'bcrypt';
 import { query, withTransaction } from './db';
 import { QueryResult, User } from './types';

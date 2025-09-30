@@ -1,9 +1,9 @@
 // tests/database/userIntegration.test.ts
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../src/adapters/mariadb';
-import { withTenantContext, query } from '../../src/db';
-import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../../src/user';
-import { DbConfig, QueryResult } from '../../src/types';
+import { MariaDBAdapter } from '../../cortex/adapters/mariadb';
+import { withTenantContext, query } from '../../cortex/db';
+import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../../cortex/user';
+import { DbConfig, QueryResult } from '../../cortex/types';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

@@ -1,9 +1,9 @@
 // tests/multiTenantConcurrent.test.ts
-import { DbConfig, AnyDbClient, QueryResult } from '../../../src/types';
+import { DbConfig, AnyDbClient, QueryResult } from '../../../cortex/types';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../../src/adapters/mariadb';
-import { withTenantContext } from '../../../src/tenant';
-import { query, withTransaction, healthCheck } from '../../../src/db';
+import { MariaDBAdapter } from '../../../cortex/adapters/mariadb';
+import { withTenantContext } from '../../../cortex/tenant';
+import { query, withTransaction, healthCheck } from '../../../cortex/db';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

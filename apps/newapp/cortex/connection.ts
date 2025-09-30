@@ -1,4 +1,4 @@
-// src/connection.ts
+// cortex/connection.ts
 import { DbConfig, AnyDbClient, DBAdapter } from './types';
 import { MariaDBAdapter } from './adapters/mariadb';
 

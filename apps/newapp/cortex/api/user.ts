@@ -1,4 +1,4 @@
-// src/api/user.ts
+// cortex/api/user.ts
 import express, { Router, Request, Response } from 'express';
 import { withTenantContext } from '../db';
 import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../user';
