@@ -1,11 +1,12 @@
-// tests/api/userApiConsolidated.test.ts
+// tests/user/userApiConsolidated.test.ts
 import supertest from 'supertest';
 import express from 'express';
 import { createUserRouter } from '../../cortex/api/api-user';
 import { createAuthRouter } from '../../cortex/api/api-auth';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../cortex/adapters/mariadb';
+import { MariaDBAdapter } from '../../cortex/db/adapters/mariadb';
 import { baseDbConfig, masterDatabase, tenantDatabases, setupDatabases, cleanupDatabases, resetTenantDatabases, randomString } from '../utils/testUtils';
+import { withTenantContext } from '../../cortex/db/db';
 
 describe('Consolidated User API Tests', () => {
     let app: express.Express;
@@ -15,6 +16,10 @@ describe('Consolidated User API Tests', () => {
     jest.setTimeout(30000);
 
     beforeAll(async () => {
+        // Validate baseDbConfig
+        if (!baseDbConfig.host || !baseDbConfig.port || !baseDbConfig.user || !baseDbConfig.password) {
+            throw new Error('Invalid baseDbConfig: host, port, user, and password are required');
+        }
         MariaDBAdapter.initPool(baseDbConfig);
         setupPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 10, acquireTimeout: 20000 });
         await setupDatabases(setupPool);
@@ -39,11 +44,21 @@ describe('Consolidated User API Tests', () => {
     });
 
     async function getToken(tenantId: string, email: string = 'admin@example.com', password: string = 'admin123'): Promise<string> {
-        const loginResponse = await request
-            .post('/api/auth/login')
-            .set('X-Tenant-Id', tenantId)
-            .send({ email, password });
-        return loginResponse.body.token;
+        try {
+            return await withTenantContext(tenantId, async () => {
+                const loginResponse = await request
+                    .post('/api/auth/login')
+                    .set('X-Tenant-Id', tenantId)
+                    .send({ email, password });
+                if (loginResponse.status !== 200) {
+                    throw new Error(`Login failed with status ${loginResponse.status}: ${loginResponse.body.error || 'Unknown error'}`);
+                }
+                return loginResponse.body.token;
+            });
+        } catch (err) {
+            console.error(`Failed to get token for tenantId: ${tenantId}, email: ${email}`, err);
+            throw err;
+        }
     }
 
     describe('Database and Table Existence', () => {
@@ -94,17 +109,21 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
-            const response = await request
-                .post('/api/auth/login')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .send({ email, password });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/auth/login')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .send({ email, password });
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty('token');
@@ -118,17 +137,21 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
-            const response = await request
-                .post('/api/auth/login')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .send({ email, password: `wrong_${randomString(8)}` });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/auth/login')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .send({ email, password: `wrong_${randomString(8)}` });
+            });
 
             expect(response.status).toBe(401);
             expect(response.body.error).toBe('Invalid credentials');
@@ -141,20 +164,24 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
             const userToken = await getToken(tenant.tenantId, email, password);
 
-            const response = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`);
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
@@ -168,10 +195,12 @@ describe('Consolidated User API Tests', () => {
 
         test('[test 5] should fail protected route with invalid JWT', async () => {
             const tenant = tenantDatabases[0];
-            const response = await request
-                .get('/api/users/1')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', 'Bearer invalid_token');
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get('/api/users/1')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', 'Bearer invalid_token');
+            });
 
             expect(response.status).toBe(401);
             expect(response.body.error).toBe('Invalid or expired token');
@@ -179,9 +208,11 @@ describe('Consolidated User API Tests', () => {
 
         test('[test 6] should fail protected route with missing JWT', async () => {
             const tenant = tenantDatabases[0];
-            const response = await request
-                .get('/api/users/1')
-                .set('X-Tenant-Id', tenant.tenantId);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get('/api/users/1')
+                    .set('X-Tenant-Id', tenant.tenantId);
+            });
 
             expect(response.status).toBe(401);
             expect(response.body.error).toBe('Authorization token required');
@@ -195,20 +226,24 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant1.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant1.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant1.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant1.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
             const userToken = await getToken(tenant1.tenantId, email, password);
 
-            const response = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant2.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
+            const response = await withTenantContext(tenant2.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant2.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`);
+            });
 
             expect(response.status).toBe(403);
             expect(response.body.error).toBe('Tenant ID mismatch');
@@ -223,11 +258,13 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            const response = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' });
+            });
 
             expect(response.status).toBe(201);
             expect(response.body).toMatchObject({
@@ -247,20 +284,24 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userToken = await getToken(tenant.tenantId, email, password);
 
-            const response = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ username: `new_${randomString(6)}`, email: `new_${randomString(6)}@example.com`, password: `pass_${randomString(8)}`, role: 'user' });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`)
+                    .send({ username: `new_${randomString(6)}`, email: `new_${randomString(6)}@example.com`, password: `pass_${randomString(8)}`, role: 'user' });
+            });
 
             expect(response.status).toBe(403);
             expect(response.body.error).toBe('Admin access required');
@@ -273,18 +314,22 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
-            const response = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}`, role: 'user' });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}`, role: 'user' });
+            });
 
             expect(response.status).toBe(400);
             expect(response.body.error).toMatch(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
@@ -297,19 +342,23 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
 
-            const response = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`);
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
@@ -329,20 +378,24 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
             const userToken = await getToken(tenant.tenantId, email, password);
 
-            const response = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`);
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
@@ -364,26 +417,33 @@ describe('Consolidated User API Tests', () => {
             const password2 = `pass_${randomString(6)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            const createResponse1 = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username1, email: email1, password: password1, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username: username1, email: email1, password: password1, role: 'user' })
+                    .expect(201);
+            });
 
-            const userId2 = (await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username2, email: email2, password: password2, role: 'user' })
-                .expect(201)).body.id;
+            const createResponse2 = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username: username2, email: email2, password: password2, role: 'user' })
+                    .expect(201);
+            });
 
+            const userId2 = createResponse2.body.id;
             const userToken = await getToken(tenant.tenantId, email1, password1);
 
-            const response = await request
-                .get(`/api/users/${userId2}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId2}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`);
+            });
 
             expect(response.status).toBe(403);
             expect(response.body.error).toBe('Cannot access another user');
@@ -393,10 +453,12 @@ describe('Consolidated User API Tests', () => {
             const tenant = tenantDatabases[0];
             const token = await getToken(tenant.tenantId);
 
-            const response = await request
-                .get('/api/users/9999')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get('/api/users/9999')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`);
+            });
 
             expect(response.status).toBe(404);
             expect(response.body.error).toBe('User not found');
@@ -409,17 +471,21 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
-            const response = await request
-                .get(`/api/users/email/${email}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get(`/api/users/email/${email}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`);
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
@@ -441,20 +507,24 @@ describe('Consolidated User API Tests', () => {
             const newPassword = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
 
-            const response = await request
-                .put(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username: newUsername, email: newEmail, password: newPassword });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .put(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username: newUsername, email: newEmail, password: newPassword });
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
@@ -476,21 +546,25 @@ describe('Consolidated User API Tests', () => {
             const newPassword = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
             const userToken = await getToken(tenant.tenantId, email, password);
 
-            const response = await request
-                .put(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ username: newUsername, email: newEmail, password: newPassword });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .put(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`)
+                    .send({ username: newUsername, email: newEmail, password: newPassword });
+            });
 
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
@@ -512,27 +586,34 @@ describe('Consolidated User API Tests', () => {
             const password2 = `pass_${randomString(6)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            const createResponse1 = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username1, email: email1, password: password1, role: 'user' })
-                .expect(201);
+            await withTenantContext(tenant.tenantId, async () => {
+                await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username: username1, email: email1, password: password1, role: 'user' })
+                    .expect(201);
+            });
 
-            const userId2 = (await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username2, email: email2, password: password2, role: 'user' })
-                .expect(201)).body.id;
+            const createResponse2 = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username: username2, email: email2, password: password2, role: 'user' })
+                    .expect(201);
+            });
 
+            const userId2 = createResponse2.body.id;
             const userToken = await getToken(tenant.tenantId, email1, password1);
 
-            const response = await request
-                .put(`/api/users/${userId2}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ username: `updated_${randomString(6)}`, email: `updated_${randomString(6)}@example.com`, password: `pass_${randomString(8)}` });
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .put(`/api/users/${userId2}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`)
+                    .send({ username: `updated_${randomString(6)}`, email: `updated_${randomString(6)}@example.com`, password: `pass_${randomString(8)}` });
+            });
 
             expect(response.status).toBe(403);
             expect(response.body.error).toBe('Admin access required or cannot modify another user');
@@ -545,26 +626,32 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
 
-            const response = await request
-                .delete(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .delete(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`);
+            });
 
             expect(response.status).toBe(204);
 
-            const verifyResponse = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`);
+            const verifyResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`);
+            });
 
             expect(verifyResponse.status).toBe(404);
             expect(verifyResponse.body.error).toBe('User not found');
@@ -577,20 +664,24 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const adminToken = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
             const userToken = await getToken(tenant.tenantId, email, password);
 
-            const response = await request
-                .delete(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
+            const response = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .delete(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${userToken}`);
+            });
 
             expect(response.status).toBe(403);
             expect(response.body.error).toBe('Admin access required');
@@ -603,29 +694,35 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
 
-            const validResponse = await request
-                .post('/api/users/verify')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ id: userId, password });
+            const validResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users/verify')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ id: userId, password });
+            });
 
             expect(validResponse.status).toBe(200);
             expect(validResponse.body.isValid).toBe(true);
 
-            const invalidResponse = await request
-                .post('/api/users/verify')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ id: userId, password: `wrong_${randomString(8)}` });
+            const invalidResponse = await withTenantContext(tenant.tenantId, async () => {
+                return await request
+                    .post('/api/users/verify')
+                    .set('X-Tenant-Id', tenant.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ id: userId, password: `wrong_${randomString(8)}` });
+            });
 
             expect(invalidResponse.status).toBe(200);
             expect(invalidResponse.body.isValid).toBe(false);
@@ -639,20 +736,24 @@ describe('Consolidated User API Tests', () => {
             const password = `pass_${randomString(8)}`;
             const token = await getToken(tenant1.tenantId);
 
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant1.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
+            const createResponse = await withTenantContext(tenant1.tenantId, async () => {
+                return await request
+                    .post('/api/users')
+                    .set('X-Tenant-Id', tenant1.tenantId)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ username, email, password, role: 'user' })
+                    .expect(201);
+            });
 
             const userId = createResponse.body.id;
             const tenant2Token = await getToken(tenant2.tenantId);
 
-            const response = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant2.tenantId)
-                .set('Authorization', `Bearer ${tenant2Token}`);
+            const response = await withTenantContext(tenant2.tenantId, async () => {
+                return await request
+                    .get(`/api/users/${userId}`)
+                    .set('X-Tenant-Id', tenant2.tenantId)
+                    .set('Authorization', `Bearer ${tenant2Token}`);
+            });
 
             expect(response.status).toBe(404);
             expect(response.body.error).toBe('User not found');

@@ -1,6 +1,6 @@
 // tests/database/userIntegration.test.ts
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../../cortex/adapters/mariadb';
+import { MariaDBAdapter } from '../../../cortex/db/adapters/mariadb';
 import { withTenantContext, query } from '../../../cortex/db/db';
 import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../../../cortex/user';
 import { DbConfig, QueryResult } from '../../../cortex/db/types';

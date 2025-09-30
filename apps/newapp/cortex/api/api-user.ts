@@ -1,236 +1,133 @@
 // cortex/api/api-user.ts
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import { query } from '../db/db'; // Assuming this is the path to the query function in db.ts
+import express, { Router, Request, Response } from 'express';
+import { withTenantContext } from '../db/db';
+import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../user';
+import { authenticateJWT, AuthRequest } from './api-auth';
 
-export function createUserRouter() {
+// Tenant database mapping (in production, use config or database)
+const tenantDatabases = [
+    { tenantId: 'tenant1', database: 'tenant_1' },
+    { tenantId: 'tenant2', database: 'tenant_2' },
+];
+
+export function createUserRouter(): Router {
     const router = express.Router();
 
-    // Authentication middleware
-    const authenticate = async (req, res, next) => {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Authorization token required' });
-        }
+    // Apply JWT middleware to all routes
+    router.use(authenticateJWT);
 
-        const token = authHeader.split(' ')[1];
-        try {
-            const decoded = jwt.verify(token, 'secret'); // Use process.env.JWT_SECRET in production
-            req.user = decoded;
-
-            const tenantId = req.headers['x-tenant-id'];
-            if (!tenantId || tenantId !== decoded.tenant_id) {
-                return res.status(403).json({ error: 'Tenant ID mismatch' });
-            }
-
-            next();
-        } catch (err) {
-            res.status(401).json({ error: 'Invalid or expired token' });
-        }
-    };
-
-    router.use(authenticate);
-
-    // POST /users - Create user (admin only)
-    router.post('/', async (req, res) => {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-
-        const { username, email, password, role = 'user' } = req.body;
-        const tenantId = req.headers['x-tenant-id'];
-
-        try {
-            const password_hash = await bcrypt.hash(password, 10);
-            const result = await query(
-                'INSERT INTO users (username, email, password_hash, role, tenant_id) VALUES (?, ?, ?, ?, ?)',
-                [username, email, password_hash, role, tenantId],
-                tenantId
-            );
-
-            const id = result.insertId;
-            const users = await query(
-                'SELECT id, username, email, role, tenant_id, created_at FROM users WHERE id = ?',
-                [id],
-                tenantId
-            );
-
-            res.status(201).json(users[0]);
-        } catch (err) {
-            console.error('MariaDB query error:', err);
-            if (err.code === 'ER_DUP_ENTRY') {
-                res.status(400).json({ error: err.sqlMessage });
-            } else {
-                res.status(500).json({ error: 'Server error' });
-            }
-        }
-    });
-
-    // GET /users/:id - Get user by ID (admin or self)
-    router.get('/:id', async (req, res) => {
-        const id = parseInt(req.params.id);
-        if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid user ID' });
-        }
-
-        if (req.user.role !== 'admin' && req.user.id !== id) {
-            return res.status(403).json({ error: 'Cannot access another user' });
-        }
-
-        const tenantId = req.headers['x-tenant-id'];
-
-        try {
-            const users = await query(
-                'SELECT id, username, email, role, tenant_id, created_at FROM users WHERE id = ?',
-                [id],
-                tenantId
-            );
-
-            if (!users.length) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-
-            res.json(users[0]);
-        } catch (err) {
-            console.error('MariaDB query error:', err);
-            res.status(500).json({ error: 'Server error' });
-        }
-    });
-
-    // GET /users/email/:email - Get user by email (admin only)
-    router.get('/email/:email', async (req, res) => {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-
-        const email = req.params.email;
-        const tenantId = req.headers['x-tenant-id'];
-
-        try {
-            const users = await query(
-                'SELECT id, username, email, role, tenant_id, created_at FROM users WHERE email = ?',
-                [email],
-                tenantId
-            );
-
-            if (!users.length) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-
-            res.json(users[0]);
-        } catch (err) {
-            console.error('MariaDB query error:', err);
-            res.status(500).json({ error: 'Server error' });
-        }
-    });
-
-    // PUT /users/:id - Update user (admin or self)
-    router.put('/:id', async (req, res) => {
-        const id = parseInt(req.params.id);
-        if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid user ID' });
-        }
-
-        if (req.user.role !== 'admin' && req.user.id !== id) {
-            return res.status(403).json({ error: 'Admin access required or cannot modify another user' });
-        }
+    // Create a user
+    router.post('/', async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id');
+        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
         const { username, email, password } = req.body;
-        const tenantId = req.headers['x-tenant-id'];
-
-        const fields = [];
-        const params = [];
-
-        if (username) {
-            fields.push('username = ?');
-            params.push(username);
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Username, email, and password are required' });
         }
-        if (email) {
-            fields.push('email = ?');
-            params.push(email);
-        }
-        if (password) {
-            const password_hash = await bcrypt.hash(password, 10);
-            fields.push('password_hash = ?');
-            params.push(password_hash);
-        }
-
-        if (!fields.length) {
-            return res.status(400).json({ error: 'No fields to update' });
-        }
-
-        params.push(id);
 
         try {
-            await query(
-                `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
-                params,
-                tenantId
-            );
-
-            const users = await query(
-                'SELECT id, username, email, role, tenant_id, created_at FROM users WHERE id = ?',
-                [id],
-                tenantId
-            );
-
-            res.json(users[0]);
-        } catch (err) {
-            console.error('MariaDB query error:', err);
-            if (err.code === 'ER_DUP_ENTRY') {
-                res.status(400).json({ error: err.sqlMessage });
-            } else {
-                res.status(500).json({ error: 'Server error' });
-            }
+            const result = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+                const createResult = await createUser({ username, email, password, tenantId });
+                const user = await getUserById(Number(createResult.insertId), tenantId);
+                return user;
+            });
+            if (!result) throw new Error('User creation failed');
+            res.status(201).json(result);
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
         }
     });
 
-    // DELETE /users/:id - Delete user (admin only)
-    router.delete('/:id', async (req, res) => {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
-
-        const id = parseInt(req.params.id);
-        if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid user ID' });
-        }
-
-        const tenantId = req.headers['x-tenant-id'];
+    // Get a user by ID
+    router.get('/:id', async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id');
+        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
         try {
-            const result = await query('DELETE FROM users WHERE id = ?', [id], tenantId);
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ error: 'User not found' });
-            }
+            const user = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+                return getUserById(Number(req.params.id), tenantId);
+            });
+            if (!user) return res.status(404).json({ error: 'User not found' });
+            res.status(200).json(user);
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
+        }
+    });
+
+    // Get a user by email
+    router.get('/email/:email', async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id');
+        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
+
+        try {
+            const user = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+                return getUserByEmail(req.params.email, tenantId);
+            });
+            if (!user) return res.status(404).json({ error: 'User not found' });
+            res.status(200).json(user);
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
+        }
+    });
+
+    // Update a user
+    router.put('/:id', async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id');
+        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
+
+        const { username, email, password } = req.body;
+        if (!username && !email && !password) {
+            return res.status(400).json({ error: 'At least one field (username, email, password) is required' });
+        }
+
+        try {
+            const result = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+                const updateResult = await updateUser(Number(req.params.id), { username, email, password, tenantId });
+                if (updateResult.rowCount === 0) throw new Error('User not found');
+                const user = await getUserById(Number(req.params.id), tenantId);
+                return user;
+            });
+            if (!result) throw new Error('User update failed');
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(error.message === 'User not found' ? 404 : 400).json({ error: (error as Error).message });
+        }
+    });
+
+    // Delete a user
+    router.delete('/:id', async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id');
+        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
+
+        try {
+            const result = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+                return deleteUser(Number(req.params.id), tenantId);
+            });
+            if (result.rowCount === 0) return res.status(404).json({ error: 'User not found' });
             res.status(204).send();
-        } catch (err) {
-            console.error('MariaDB query error:', err);
-            res.status(500).json({ error: 'Server error' });
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
         }
     });
 
-    // POST /users/verify - Verify password (admin only)
-    router.post('/verify', async (req, res) => {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Admin access required' });
-        }
+    // Verify a user’s password
+    router.post('/verify', async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id');
+        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
         const { id, password } = req.body;
-        const tenantId = req.headers['x-tenant-id'];
+        if (!id || !password) {
+            return res.status(400).json({ error: 'User ID and password are required' });
+        }
 
         try {
-            const users = await query('SELECT password_hash FROM users WHERE id = ?', [id], tenantId);
-            if (!users.length) {
-                return res.json({ isValid: false });
-            }
-
-            const isValid = await bcrypt.compare(password, users[0].password_hash);
-            res.json({ isValid });
-        } catch (err) {
-            console.error('MariaDB query error:', err);
-            res.status(500).json({ error: 'Server error' });
+            const isValid = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+                return verifyUserPassword(Number(id), password, tenantId);
+            });
+            res.status(200).json({ isValid });
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
         }
     });
 

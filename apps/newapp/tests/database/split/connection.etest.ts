@@ -2,7 +2,7 @@
 import { Connection } from '../../../cortex/db/connection';
 import { DbConfig, AnyDbClient } from '../../../cortex/db/types';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../../cortex/adapters/mariadb';
+import { MariaDBAdapter } from '../../../cortex/db/adapters/mariadb';
 import { withTenantContext } from '../../../cortex/tenant';
 import { query, withTransaction, healthCheck } from '../../../cortex/db/db';
 
