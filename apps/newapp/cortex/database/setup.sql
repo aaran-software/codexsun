@@ -66,20 +66,30 @@ CREATE TABLE IF NOT EXISTS todos (
 -- Clear existing data
 TRUNCATE TABLE users;
 TRUNCATE TABLE revoked_tokens;
+TRUNCATE TABLE todos;
 
 -- Seed data for tenant_1
--- Password hash for 'password123' (bcrypt, 10 salt rounds)
-SET @password_hash = '$2b$10$z5X9Y7k3L9pQz5x4v6q5e2Q2z5X8Y7k3L9pQz5x4v6q5e2Q2z5X';
--- Password hash for 'admin123' (bcrypt, 10 salt rounds)
-SET @admin_password_hash = '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS';
+-- Password hash for 'password123' (bcrypt, 10 rounds)
+SET @password_hash = '$2b$10$Qo5JqcVzjGZ0Af8T5hgds.7HnfbWjmAPJcwXwbvmgfcgJpFNwHxiK';
+-- Password hash for 'admin123' (bcrypt, 10 rounds)
+SET @admin_password_hash = '$2b$10$x0aKXyaw5FpQXDsz.s8pce/tFTkKmTesgZfREI0twTzl4J91j.cEW';
+
 INSERT INTO users (username, email, password_hash, tenant_id, role) VALUES
     ('user1_tenant1', 'user1@tenant1.com', @password_hash, 'tenant1', 'user'),
     ('user2_tenant1', 'user2@tenant1.com', @password_hash, 'tenant1', 'user'),
-    ('admin', 'admin@example.com', @admin_password_hash, 'tenant1', 'admin');
+    ('admin', 'admin@example.com', @admin_password_hash, 'tenant1', 'admin'),
+    ('sundar', 'sundar@sundar.com', @admin_password_hash, 'tenant1', 'admin');
 
--- Sample revoked token (expired for testing)
+-- Sample revoked token (non-expired for testing)
 INSERT INTO revoked_tokens (token, expiry, tenant_id) VALUES
-    ('sample.revoked.token.tenant1', '2025-09-30 12:00:00', 'tenant1');
+    ('sample.revoked.token.tenant1', '2025-10-01 12:00:00', 'tenant1');
+
+-- Dummy todos for tenant_1
+INSERT INTO todos (text, completed, category, due_date, priority, tenant_id, position) VALUES
+    ('Complete ERP module implementation', 0, 'Work', '2025-10-05', 'high', 'tenant1', 1),
+    ('Review financial reports', 1, 'Work', NULL, 'medium', 'tenant1', 2),
+    ('Schedule team meeting', 0, 'Personal', '2025-10-10', 'low', 'tenant1', 3),
+    ('Update inventory database', 0, 'Other', '2025-10-15', 'high', 'tenant1', 4);
 
 -- Tenant 2 Database Setup
 CREATE DATABASE tenant_2;
@@ -124,6 +134,7 @@ CREATE TABLE IF NOT EXISTS todos (
 -- Clear existing data
 TRUNCATE TABLE users;
 TRUNCATE TABLE revoked_tokens;
+TRUNCATE TABLE todos;
 
 -- Seed data for tenant_2
 -- Same password hashes
@@ -135,3 +146,10 @@ INSERT INTO users (username, email, password_hash, tenant_id, role) VALUES
 -- Sample revoked token (non-expired for testing)
 INSERT INTO revoked_tokens (token, expiry, tenant_id) VALUES
     ('sample.revoked.token.tenant2', '2025-10-01 12:00:00', 'tenant2');
+
+-- Dummy todos for tenant_2
+INSERT INTO todos (text, completed, category, due_date, priority, tenant_id, position) VALUES
+    ('Complete ERP module implementation2', 0, 'Work', '2025-10-05', 'high', 'tenant2', 1),
+    ('Review financial reports2', 1, 'Work', NULL, 'medium', 'tenant2', 2),
+    ('Schedule team meeting2', 0, 'Personal', '2025-10-10', 'low', 'tenant2', 3),
+    ('Update inventory database2', 0, 'Other', '2025-10-15', 'high', 'tenant2', 4);
