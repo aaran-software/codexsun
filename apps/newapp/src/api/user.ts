@@ -2,13 +2,23 @@
 import express, { Router, Request, Response } from 'express';
 import { withTenantContext } from '../db';
 import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../user';
-import { User } from '../types';
+import { User, QueryResult } from '../types';
+import { authenticateJWT, AuthRequest } from './auth';
+
+// Tenant database mapping (in production, use config or database)
+const tenantDatabases = [
+    { tenantId: 'tenant1', database: 'tenant_1' },
+    { tenantId: 'tenant2', database: 'tenant_2' },
+];
 
 export function createUserRouter(): Router {
     const router = express.Router();
 
+    // Apply JWT middleware to all routes
+    router.use(authenticateJWT);
+
     // Create a user
-    router.post('/', async (req: Request, res: Response) => {
+    router.post('/', async (req: AuthRequest, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
@@ -31,7 +41,7 @@ export function createUserRouter(): Router {
     });
 
     // Get a user by ID
-    router.get('/:id', async (req: Request, res: Response) => {
+    router.get('/:id', async (req: AuthRequest, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
@@ -47,7 +57,7 @@ export function createUserRouter(): Router {
     });
 
     // Get a user by email
-    router.get('/email/:email', async (req: Request, res: Response) => {
+    router.get('/email/:email', async (req: AuthRequest, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
@@ -63,7 +73,7 @@ export function createUserRouter(): Router {
     });
 
     // Update a user
-    router.put('/:id', async (req: Request, res: Response) => {
+    router.put('/:id', async (req: AuthRequest, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
@@ -87,7 +97,7 @@ export function createUserRouter(): Router {
     });
 
     // Delete a user
-    router.delete('/:id', async (req: Request, res: Response) => {
+    router.delete('/:id', async (req: AuthRequest, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
@@ -103,7 +113,7 @@ export function createUserRouter(): Router {
     });
 
     // Verify a user’s password
-    router.post('/verify', async (req: Request, res: Response) => {
+    router.post('/verify', async (req: AuthRequest, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
 
@@ -124,9 +134,3 @@ export function createUserRouter(): Router {
 
     return router;
 }
-
-// Tenant database mapping (in production, this would be in a config or database)
-const tenantDatabases = [
-    { tenantId: 'tenant1', database: 'tenant_1' },
-    { tenantId: 'tenant2', database: 'tenant_2' },
-];

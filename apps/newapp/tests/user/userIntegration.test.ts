@@ -40,11 +40,11 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
         const settingsTableExists = await connection.query(`SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tenant_settings'`, [masterDatabase]);
         if (!settingsTableExists.length) {
             await connection.query(`
-                CREATE TABLE tenant_settings (
-                                                 tenant_id VARCHAR(50) PRIMARY KEY,
-                                                 database_name VARCHAR(255) NOT NULL,
-                                                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
+                CREATE TABLE IF NOT EXISTS tenant_settings (
+                                                               tenant_id VARCHAR(50) PRIMARY KEY,
+                    database_name VARCHAR(255) NOT NULL,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
             `);
         }
 
@@ -57,7 +57,7 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
         }
 
         // Tenant databases with users table
-        for (const { database } of tenantDatabases) {
+        for (const { database, tenantId } of tenantDatabases) {
             await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\``);
             await connection.query(`USE \`${database}\``);
             const usersTableExists = await connection.query(`SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users'`, [database]);
@@ -74,6 +74,11 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
                     )
                 `);
             }
+            // Create admin user for API tests
+            await connection.query(
+                'INSERT IGNORE INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
+                ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', tenantId]
+            );
         }
     } finally {
         connection.release();

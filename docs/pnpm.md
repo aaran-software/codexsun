@@ -40,3 +40,5 @@ pnpm  add -d supertest @types/supertest
 
 pnpm install bcrypt
 pnpm install -D @types/bcrypt
+
+pnpm install jsonwebtoken @types/jsonwebtoken --filter
