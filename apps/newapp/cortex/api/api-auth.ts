@@ -11,6 +11,30 @@ export interface AuthRequest extends Request {
     user?: { id: number; tenantId: string };
 }
 
+// Tenant database mapping (in production, use config or database)
+const tenantDatabases = [
+    { tenantId: 'tenant1', database: 'tenant_1' },
+    { tenantId: 'tenant2', database: 'tenant_2' },
+];
+
+const getTenantDatabase = (tenantId: string): string => {
+    const tenant = tenantDatabases.find(t => t.tenantId === tenantId);
+    if (!tenant) {
+        throw new Error('Tenant not found');
+    }
+    return tenant.database;
+};
+
+async function isTokenRevoked(token: string, tenantId: string): Promise<boolean> {
+    return withTenantContext(tenantId, getTenantDatabase(tenantId), async () => {
+        const result = await query<{ count: number }>(
+            'SELECT COUNT(*) as count FROM revoked_tokens WHERE token = ? AND tenant_id = ?',
+            [token, tenantId]
+        );
+        return result.rows[0].count > 0;
+    });
+}
+
 export function createAuthRouter(): Router {
     const router = express.Router();
 
@@ -25,7 +49,7 @@ export function createAuthRouter(): Router {
         }
 
         try {
-            const user = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
+            const user = await withTenantContext(tenantId, getTenantDatabase(tenantId), async () => {
                 const user = await getUserByEmail(email, tenantId);
                 if (!user) throw new Error('Invalid credentials');
                 const isValid = await verifyUserPassword(user.id!, password, tenantId);
@@ -37,6 +61,34 @@ export function createAuthRouter(): Router {
             res.status(200).json({ token });
         } catch (error) {
             res.status(401).json({ error: 'Invalid credentials' });
+        }
+    });
+
+    // Logout endpoint
+    router.post('/logout', authenticateJWT, async (req: AuthRequest, res: Response) => {
+        const tenantId = req.get('X-Tenant-Id')!;
+        const authHeader = req.get('Authorization')!;
+        const token = authHeader.replace('Bearer ', '');
+
+        try {
+            // Decode token to get expiry
+            const decoded = jwt.decode(token) as { exp: number } | null;
+            if (!decoded || !decoded.exp) {
+                throw new Error('Invalid token');
+            }
+            const expiryDate = new Date(decoded.exp * 1000);
+            const expiry = expiryDate.toISOString().slice(0, 19).replace('T', ' ');
+
+            await withTenantContext(tenantId, getTenantDatabase(tenantId), async () => {
+                await query(
+                    'INSERT INTO revoked_tokens (token, expiry, tenant_id) VALUES (?, ?, ?)',
+                    [token, expiry, tenantId]
+                );
+            });
+
+            res.status(200).json({ message: 'Logged out successfully' });
+        } catch (error) {
+            res.status(400).json({ error: (error as Error).message });
         }
     });
 
@@ -57,15 +109,18 @@ export function authenticateJWT(req: AuthRequest, res: Response, next: NextFunct
         if (decoded.tenantId !== tenantId) {
             return res.status(403).json({ error: 'Tenant ID mismatch' });
         }
-        req.user = decoded;
-        next();
+
+        // Check if token is revoked
+        isTokenRevoked(token, tenantId).then(isRevoked => {
+            if (isRevoked) {
+                return res.status(401).json({ error: 'Token has been revoked' });
+            }
+            req.user = decoded;
+            next();
+        }).catch(error => {
+            res.status(500).json({ error: 'Error checking token revocation' });
+        });
     } catch (error) {
         res.status(401).json({ error: 'Invalid or expired token' });
     }
 }
-
-// Tenant database mapping (in production, use config or database)
-const tenantDatabases = [
-    { tenantId: 'tenant1', database: 'tenant_1' },
-    { tenantId: 'tenant2', database: 'tenant_2' },
-];
