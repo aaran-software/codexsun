@@ -1,6 +1,6 @@
 // cortex/db.ts
 import { AsyncLocalStorage } from 'async_hooks';
-import { MariaDBAdapter } from './adapters/mariadb';
+import { MariaDBAdapter } from '../adapters/mariadb';
 import { AnyDbClient, QueryResult } from './types';
 
 const tenantStorage = new AsyncLocalStorage<string>();
@@ -13,7 +13,7 @@ export async function withTenantContext<T>(
     return tenantStorage.run(database, callback);
 }
 
-export async function query<T>(sql: string, params: any[] = []): Promise<QueryResult<T>> {
+export async function query<T>(sql: string, params: any[] = [], tenantId: string | string[]): Promise<QueryResult<T>> {
     const db = tenantStorage.getStore() ?? '';
     const client = await MariaDBAdapter.getConnection(db);
     try {

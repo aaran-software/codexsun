@@ -1,7 +1,7 @@
-// cortex/user.ts
+// cortex/api-user.ts
 import * as bcrypt from 'bcrypt';
-import { query, withTransaction } from './db';
-import { QueryResult, User } from './types';
+import { query, withTransaction } from './db/db';
+import { QueryResult, User } from './db/types';
 
 const SALT_ROUNDS = 10;
 

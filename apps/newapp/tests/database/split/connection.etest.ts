@@ -1,10 +1,10 @@
 // tests/connection.test.ts
-import { Connection } from '../../../cortex/connection';
-import { DbConfig, AnyDbClient } from '../../../cortex/types';
+import { Connection } from '../../../cortex/db/connection';
+import { DbConfig, AnyDbClient } from '../../../cortex/db/types';
 import mariadb from 'mariadb';
 import { MariaDBAdapter } from '../../../cortex/adapters/mariadb';
 import { withTenantContext } from '../../../cortex/tenant';
-import { query, withTransaction, healthCheck } from '../../../cortex/db';
+import { query, withTransaction, healthCheck } from '../../../cortex/db/db';
 
 // Test database configuration without database
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

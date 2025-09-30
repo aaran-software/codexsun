@@ -1,4 +1,4 @@
-// src/api/auth.ts
+// src/api/api-auth.ts
 import express, { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { withTenantContext, query } from '../db';

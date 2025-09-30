@@ -1,11 +1,11 @@
-// tests/api/userRoleApi.test.ts
+// tests/api/userApi.test.ts
 import supertest from 'supertest';
 import express from 'express';
-import { createUserRouter } from '../../cortex/api/user';
-import { createAuthRouter } from '../../cortex/api/auth';
+import { createUserRouter } from '../../../cortex/api/api-user';
+import { createAuthRouter } from '../../../cortex/api/api-auth';
 import mariadb from 'mariadb';
-import { MariaDBAdapter } from '../../cortex/adapters/mariadb';
-import { DbConfig } from '../../cortex/types';
+import { MariaDBAdapter } from '../../../cortex/adapters/mariadb';
+import { DbConfig } from '../../../cortex/db/types';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {
@@ -100,7 +100,7 @@ async function cleanupDatabases(pool: mariadb.Pool): Promise<void> {
     }
 }
 
-describe('User Role-Based Access API Tests', () => {
+describe('User API Tests', () => {
     let app: express.Express;
     let request: supertest.SuperTest<supertest.Test>;
     let setupPool: mariadb.Pool;
@@ -147,21 +147,21 @@ describe('User Role-Based Access API Tests', () => {
         }
     });
 
-    async function getToken(tenantId: string, email: string, password: string): Promise<string> {
+    async function getToken(tenantId: string): Promise<string> {
         const loginResponse = await request
             .post('/api/auth/login')
             .set('X-Tenant-Id', tenantId)
-            .send({ email, password });
+            .send({ email: 'admin@example.com', password: 'admin123' });
         return loginResponse.body.token;
     }
 
-    describe('Role-Based Access Control', () => {
-        test('[test 1] should allow admin to create a user', async () => {
+    describe('User CRUD API', () => {
+        test('[test 1] should create a user via POST /users', async () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const token = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
+            const token = await getToken(tenant.tenantId);
 
             const response = await request
                 .post('/api/users')
@@ -180,160 +180,158 @@ describe('User Role-Based Access API Tests', () => {
             expect(response.body.created_at).toBeDefined();
         });
 
-        test('[test 2] should deny regular user from creating a user', async () => {
+        test('[test 2] should fail to create user with duplicate email', async () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
-
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
-
-            const userToken = await getToken(tenant.tenantId, email, password);
-
-            const response = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ username: `new_${randomString(6)}`, email: `new_${randomString(6)}@example.com`, password: `pass_${randomString(8)}`, role: 'user' });
-
-            // TODO: Update to expect(403).toBe('Admin access required') once RBAC is implemented
-            expect(response.status).toBe(201);
-            expect(response.body).toMatchObject({
-                username: expect.stringMatching(/^new_/),
-                email: expect.stringMatching(/@example\.com$/),
-                role: 'user',
-                tenant_id: tenant.tenantId,
-            });
-        });
-
-        test('[test 3] should allow admin to update any user', async () => {
-            const tenant = tenantDatabases[0];
-            const username = `user_${randomString(6)}`;
-            const email = `${username}@example.com`;
-            const password = `pass_${randomString(8)}`;
-            const newUsername = `updated_${randomString(6)}`;
-            const newEmail = `${newUsername}@example.com`;
-            const newPassword = `pass_${randomString(8)}`;
-            const token = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
-
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
-
-            const userId = createResponse.body.id;
-
-            const response = await request
-                .put(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username: newUsername, email: newEmail, password: newPassword });
-
-            expect(response.status).toBe(200);
-            expect(response.body).toMatchObject({
-                id: userId,
-                username: newUsername,
-                email: newEmail,
-                role: 'user',
-                tenant_id: tenant.tenantId,
-            });
-        });
-
-        test('[test 4] should allow regular user to update their own profile', async () => {
-            const tenant = tenantDatabases[0];
-            const username = `user_${randomString(6)}`;
-            const email = `${username}@example.com`;
-            const password = `pass_${randomString(8)}`;
-            const newUsername = `updated_${randomString(6)}`;
-            const newEmail = `${newUsername}@example.com`;
-            const newPassword = `pass_${randomString(8)}`;
-            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
-
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
-
-            const userId = createResponse.body.id;
-            const userToken = await getToken(tenant.tenantId, email, password);
-
-            const response = await request
-                .put(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ username: newUsername, email: newEmail, password: newPassword });
-
-            expect(response.status).toBe(200);
-            expect(response.body).toMatchObject({
-                id: userId,
-                username: newUsername,
-                email: newEmail,
-                role: 'user',
-                tenant_id: tenant.tenantId,
-            });
-        });
-
-        test('[test 5] should deny regular user from updating another user', async () => {
-            const tenant = tenantDatabases[0];
-            const username1 = `user1_${randomString(6)}`;
-            const email1 = `${username1}@example.com`;
-            const password1 = `pass_${randomString(6)}`;
-            const username2 = `user2_${randomString(6)}`;
-            const email2 = `${username2}@example.com`;
-            const password2 = `pass_${randomString(6)}`;
-            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
-
-            const createResponse1 = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username1, email: email1, password: password1, role: 'user' })
-                .expect(201);
-
-            const userId1 = createResponse1.body.id;
+            const token = await getToken(tenant.tenantId);
 
             await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username2, email: email2, password: password2, role: 'user' })
+                .set('Authorization', `Bearer ${token}`)
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
-            const userToken = await getToken(tenant.tenantId, email1, password1);
+            const response = await request
+                .post('/api/users')
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}`, role: 'user' });
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toMatch(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
+        });
+
+        test('[test 3] should retrieve a user by ID via GET /users/:id', async () => {
+            const tenant = tenantDatabases[0];
+            const username = `user_${randomString(6)}`;
+            const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
+            const token = await getToken(tenant.tenantId);
+
+            const createResponse = await request
+                .post('/api/users')
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ username, email, password, role: 'user' })
+                .expect(201);
+
+            const userId = createResponse.body.id;
 
             const response = await request
-                .put(`/api/users/${userId1 + 1}`)
+                .get(`/api/users/${userId}`)
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`)
-                .send({ username: `updated_${randomString(6)}`, email: `updated_${randomString(6)}@example.com`, password: `pass_${randomString(8)}` });
+                .set('Authorization', `Bearer ${token}`);
 
-            // TODO: Update to expect(403).toBe('Admin access required or cannot modify another user') once RBAC is implemented
             expect(response.status).toBe(200);
             expect(response.body).toMatchObject({
-                id: userId1 + 1,
-                username: expect.stringMatching(/^updated_/),
-                email: expect.stringMatching(/@example\.com$/),
+                id: userId,
+                username,
+                email,
+                role: 'user',
+                tenant_id: tenant.tenantId,
+            });
+            expect(response.body.created_at).toBeDefined();
+        });
+
+        test('[test 4] should return 404 for non-existent user ID', async () => {
+            const tenant = tenantDatabases[0];
+            const token = await getToken(tenant.tenantId);
+
+            const response = await request
+                .get('/api/users/9999')
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`);
+
+            expect(response.status).toBe(404);
+            expect(response.body.error).toBe('User not found');
+        });
+
+        test('[test 5] should retrieve a user by email via GET /users/email/:email', async () => {
+            const tenant = tenantDatabases[0];
+            const username = `user_${randomString(6)}`;
+            const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
+            const token = await getToken(tenant.tenantId);
+
+            await request
+                .post('/api/users')
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ username, email, password, role: 'user' })
+                .expect(201);
+
+            const response = await request
+                .get(`/api/users/email/${email}`)
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`);
+
+            expect(response.status).toBe(200);
+            expect(response.body).toMatchObject({
+                username,
+                email,
+                role: 'user',
+                tenant_id: tenant.tenantId,
+            });
+            expect(response.body.created_at).toBeDefined();
+        });
+
+        test('[test 6] should update a user via PUT /users/:id', async () => {
+            const tenant = tenantDatabases[0];
+            const username = `user_${randomString(6)}`;
+            const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
+            const newUsername = `updated_${randomString(6)}`;
+            const newEmail = `${newUsername}@example.com`;
+            const newPassword = `pass_${randomString(8)}`;
+            const token = await getToken(tenant.tenantId);
+
+            const createResponse = await request
+                .post('/api/users')
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ username, email, password, role: 'user' })
+                .expect(201);
+
+            const userId = createResponse.body.id;
+
+            const response = await request
+                .put(`/api/users/${userId}`)
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ username: newUsername, email: newEmail, password: newPassword });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toMatchObject({
+                id: userId,
+                username: newUsername,
+                email: newEmail,
+                role: 'user',
+                tenant_id: tenant.tenantId,
+            });
+
+            const verifyResponse = await request
+                .get(`/api/users/${userId}`)
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`);
+
+            expect(verifyResponse.status).toBe(200);
+            expect(verifyResponse.body).toMatchObject({
+                username: newUsername,
+                email: newEmail,
                 role: 'user',
                 tenant_id: tenant.tenantId,
             });
         });
 
-        test('[test 6] should allow admin to delete any user', async () => {
+        test('[test 7] should delete a user via DELETE /users/:id', async () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const token = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
+            const token = await getToken(tenant.tenantId);
 
             const createResponse = await request
                 .post('/api/users')
@@ -360,113 +358,48 @@ describe('User Role-Based Access API Tests', () => {
             expect(verifyResponse.body.error).toBe('User not found');
         });
 
-        test('[test 7] should deny regular user from deleting any user', async () => {
+        test('[test 8] should verify a user’s password via POST /users/verify', async () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
+            const token = await getToken(tenant.tenantId);
 
             const createResponse = await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
+                .set('Authorization', `Bearer ${token}`)
                 .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
-            const userToken = await getToken(tenant.tenantId, email, password);
 
-            const response = await request
-                .delete(`/api/users/${userId}`)
+            const validResponse = await request
+                .post('/api/users/verify')
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
+                .set('Authorization', `Bearer ${token}`)
+                .send({ id: userId, password });
 
-            // TODO: Update to expect(403).toBe('Admin access required') once RBAC is implemented
-            expect(response.status).toBe(204);
+            expect(validResponse.status).toBe(200);
+            expect(validResponse.body.isValid).toBe(true);
+
+            const invalidResponse = await request
+                .post('/api/users/verify')
+                .set('X-Tenant-Id', tenant.tenantId)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ id: userId, password: `wrong_${randomString(8)}` });
+
+            expect(invalidResponse.status).toBe(200);
+            expect(invalidResponse.body.isValid).toBe(false);
         });
 
-        test('[test 8] should allow regular user to view their own profile', async () => {
-            const tenant = tenantDatabases[0];
-            const username = `user_${randomString(6)}`;
-            const email = `${username}@example.com`;
-            const password = `pass_${randomString(8)}`;
-            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
-
-            const createResponse = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username, email, password, role: 'user' })
-                .expect(201);
-
-            const userId = createResponse.body.id;
-            const userToken = await getToken(tenant.tenantId, email, password);
-
-            const response = await request
-                .get(`/api/users/${userId}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
-
-            expect(response.status).toBe(200);
-            expect(response.body).toMatchObject({
-                id: userId,
-                username,
-                email,
-                role: 'user',
-                tenant_id: tenant.tenantId,
-            });
-        });
-
-        test('[test 9] should deny regular user from viewing another user', async () => {
-            const tenant = tenantDatabases[0];
-            const username1 = `user1_${randomString(6)}`;
-            const email1 = `${username1}@example.com`;
-            const password1 = `pass_${randomString(6)}`;
-            const username2 = `user2_${randomString(6)}`;
-            const email2 = `${username2}@example.com`;
-            const password2 = `pass_${randomString(6)}`;
-            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
-
-            const createResponse1 = await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username1, email: email1, password: password1, role: 'user' })
-                .expect(201);
-
-            const userId2 = (await request
-                .post('/api/users')
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ username: username2, email: email2, password: password2, role: 'user' })
-                .expect(201)).body.id;
-
-            const userToken = await getToken(tenant.tenantId, email1, password1);
-
-            const response = await request
-                .get(`/api/users/${userId2}`)
-                .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${userToken}`);
-
-            // TODO: Update to expect(403).toBe('Cannot access another user') once RBAC is implemented
-            expect(response.status).toBe(200);
-            expect(response.body).toMatchObject({
-                id: userId2,
-                username: username2,
-                email: email2,
-                role: 'user',
-                tenant_id: tenant.tenantId,
-            });
-        });
-
-        test('[test 10] should enforce tenant isolation with roles', async () => {
+        test('[test 9] should enforce tenant isolation', async () => {
             const tenant1 = tenantDatabases[0];
             const tenant2 = tenantDatabases[1];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const token = await getToken(tenant1.tenantId, 'admin@example.com', 'admin123');
+            const token = await getToken(tenant1.tenantId);
 
             const createResponse = await request
                 .post('/api/users')
@@ -477,7 +410,7 @@ describe('User Role-Based Access API Tests', () => {
 
             const userId = createResponse.body.id;
 
-            const tenant2Token = await getToken(tenant2.tenantId, 'admin@example.com', 'admin123');
+            const tenant2Token = await getToken(tenant2.tenantId);
 
             const response = await request
                 .get(`/api/users/${userId}`)

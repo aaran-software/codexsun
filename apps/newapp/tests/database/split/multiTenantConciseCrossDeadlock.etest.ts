@@ -1,9 +1,9 @@
 // tests/multiTenantConciseCrossDeadlock.test.ts
-import { DbConfig, AnyDbClient, QueryResult } from '../../../cortex/types';
+import { DbConfig, AnyDbClient, QueryResult } from '../../../cortex/db/types';
 import mariadb from 'mariadb';
 import { MariaDBAdapter } from '../../../cortex/adapters/mariadb';
 import { withTenantContext } from '../../../cortex/tenant';
-import { query } from '../../../cortex/db';
+import { query } from '../../../cortex/db/db';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

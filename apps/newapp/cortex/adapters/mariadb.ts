@@ -1,6 +1,6 @@
 // cortex/adapters/mariadb.ts
 import mariadb from 'mariadb';
-import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../types';
+import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db/types';
 
 export class MariaDBAdapter implements DBAdapter {
     private static pool: mariadb.Pool | null = null;
