@@ -5,7 +5,7 @@ import { createUserRouter } from '../../../cortex/api/api-user';
 import { createAuthRouter } from '../../../cortex/api/api-auth';
 import mariadb from 'mariadb';
 import { MariaDBAdapter } from '../../../cortex/db/adapters/mariadb';
-import { DbConfig } from '../../../cortex/db/types';
+import { DbConfig } from '../../../cortex/db/db-types';
 
 // Test database configuration
 const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {

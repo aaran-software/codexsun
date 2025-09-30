@@ -71,7 +71,7 @@ export class MariaDBAdapter implements DBAdapter {
         }
     }
 
-    async query(client: AnyDbClient, text: string, params?: any[]): Promise<QueryResult> {
+    async query<T>(client: AnyDbClient, text: string, params?: any[]): Promise<QueryResult<T>> {
         const result = await client.query(text, params);
         return {
             rows: Array.isArray(result) ? result : [],
