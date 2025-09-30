@@ -1,3 +1,4 @@
+// src/db.ts
 import { AnyDbClient, QueryResult } from './types';
 import { getTenantId, getTenantDatabase } from './tenant';
 import { MariaDBAdapter } from './adapters/mariadb';
@@ -10,12 +11,20 @@ export async function query<T = any>(text: string, params?: any[]): Promise<Quer
     const client = await MariaDBAdapter.getConnection(tenantDatabase);
     try {
         let modifiedText = text;
+        let modifiedParams = params ? [...params] : [];
         const tenantId = getTenantId();
-        if (tenantId) {
-            modifiedText = text.replace(/FROM\s+(\w+)/i, `FROM $1 WHERE tenant_id = ?`);
-            params = params ? [tenantId, ...params] : [tenantId];
+        if (tenantId && !text.toUpperCase().includes('INSERT')) { // Skip tenant_id filter for INSERT
+            const hasWhereClause = /WHERE\s/i.test(text);
+            if (hasWhereClause) {
+                modifiedText = text.replace(/WHERE\s/i, `WHERE tenant_id = ? AND `);
+                modifiedParams = [tenantId, ...modifiedParams];
+            } else {
+                modifiedText = text.replace(/FROM\s+(\w+)/i, `FROM $1 WHERE tenant_id = ?`);
+                modifiedParams = [tenantId, ...modifiedParams];
+            }
         }
-        const result = await client.query(modifiedText, params);
+        console.log(`Executing query: ${modifiedText} with params: ${JSON.stringify(modifiedParams)}`); // Debug log
+        const result = await client.query(modifiedText, modifiedParams);
         return {
             rows: Array.isArray(result) ? result : [],
             rowCount: (result as any).affectedRows || result.length || 0,
