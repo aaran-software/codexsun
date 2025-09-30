@@ -50,15 +50,8 @@ if (!settingsTableExists.length) {
     await connection.query(`
                 CREATE TABLE IF NOT EXISTS tenant_settings
                 (
-                    tenant_id
-                    VARCHAR
-                (
-                    50
-                ) PRIMARY KEY,
-                    database_name VARCHAR
-                (
-                    255
-                ) NOT NULL,
+                    tenant_id VARCHAR(50) PRIMARY KEY,
+                    database_name VARCHAR(255) NOT NULL,
                     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
@@ -73,44 +66,13 @@ for (const tenant of tenantDatabases) {
     await connection.query(`
                 CREATE TABLE IF NOT EXISTS users
                 (
-                    id
-                    INT
-                    AUTO_INCREMENT
-                    PRIMARY
-                    KEY,
-                    username
-                    VARCHAR
-                (
-                    255
-                )
-                    NOT
-                    NULL,
-                    email
-                    VARCHAR
-                (
-                    255
-                )
-                    NOT
-                    NULL
-                    UNIQUE,
-                    password_hash
-                    VARCHAR
-                (
-                    255
-                )
-                    NOT
-                    NULL,
-                    tenant_id
-                    VARCHAR
-                (
-                    50
-                )
-                    NOT
-                    NULL,
-                    created_at
-                    TIMESTAMP
-                    DEFAULT
-                    CURRENT_TIMESTAMP
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    tenant_id VARCHAR(50) NOT NULL,
+                    role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
 
@@ -118,63 +80,43 @@ for (const tenant of tenantDatabases) {
     await connection.query(`
                 CREATE TABLE IF NOT EXISTS todos
                 (
-                    id
-                    INT
-                    AUTO_INCREMENT
-                    PRIMARY
-                    KEY,
-                    text
-                    VARCHAR
-                (
-                    255
-                )
-                    NOT
-                    NULL,
-                    completed
-                    BOOLEAN
-                    DEFAULT
-                    FALSE,
-                    category
-                    VARCHAR
-                (
-                    50
-                )
-                    NOT
-                    NULL,
-                    due_date
-                    DATE
-                    DEFAULT
-                    NULL,
-                    priority
-                    ENUM
-                (
-                    'low',
-                    'medium',
-                    'high'
-                )
-                    NOT
-                    NULL,
-                    tenant_id
-                    VARCHAR
-                (
-                    50
-                )
-                    NOT
-                    NULL,
-                    position
-                    INT
-                    NOT
-                    NULL,
-                    created_at
-                    TIMESTAMP
-                    DEFAULT
-                    CURRENT_TIMESTAMP
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    text VARCHAR(255) NOT NULL,
+                    completed BOOLEAN DEFAULT FALSE,
+                    category VARCHAR(50) NOT NULL,
+                    due_date DATE DEFAULT NULL,
+                    priority ENUM('low', 'medium', 'high') NOT NULL,
+                    tenant_id VARCHAR(50) NOT NULL,
+                    position INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
 }
 } finally {
     connection.release();
 }
+}
+
+async function seedAdmin(pool: mariadb.Pool) {
+    const connection = await pool.getConnection();
+    try {
+        for (const tenant of tenantDatabases) {
+            await connection.query(`USE \`${tenant.database}\``);
+            await connection.query(`TRUNCATE TABLE users`);
+            await connection.query(`TRUNCATE TABLE todos`);
+
+            const adminEmail = tenant.tenantId === 'tenant1' ? 'sundar@sundar.com' : 'admin@example.com';
+            const adminUsername = 'admin';
+            const adminRole = 'admin';
+            const passwordHash = '$2b$10$x0aKXyaw5FpQXDsz.s8pce/tFTkKmTesgZfREI0twTzl4J91j.cEW'; // Hash for 'admin123'
+
+            await connection.query(`
+                INSERT INTO users (username, email, password_hash, tenant_id, role) VALUES (?, ?, ?, ?, ?)
+            `, [adminUsername, adminEmail, passwordHash, tenant.tenantId, adminRole]);
+        }
+    } finally {
+        connection.release();
+    }
 }
 
 describe('Todo API Tests', () => {
@@ -187,6 +129,7 @@ describe('Todo API Tests', () => {
         MariaDBAdapter.initPool(baseDbConfig);
 
         await setupDatabases(pool);
+        await seedAdmin(pool);
 
         app = express();
         app.use(express.json());
@@ -199,6 +142,19 @@ describe('Todo API Tests', () => {
 
     afterAll(async () => {
         await MariaDBAdapter.closePool();
+        await pool.end();
+    });
+
+    beforeEach(async () => {
+        const connection = await pool.getConnection();
+        try {
+            for (const tenant of tenantDatabases) {
+                await connection.query(`USE \`${tenant.database}\``);
+                await connection.query(`TRUNCATE TABLE todos`);
+            }
+        } finally {
+            connection.release();
+        }
     });
 
     async function getToken(tenantId: string): Promise<string> {
@@ -247,11 +203,12 @@ describe('Todo API Tests', () => {
             text,
             category,
             priority,
-            due_date,
             tenant_id: tenant.tenantId,
             completed: false,
             position: expect.any(Number),
         });
+        const expectedDateStr = new Date(due_date + 'T00:00:00').toISOString().split('T')[0];
+        expect(new Date(createResponse.body.due_date).toISOString().split('T')[0]).toBe(expectedDateStr);
     });
 
     test('[todo-test-2] should fail to create todo without required fields', async () => {
@@ -305,7 +262,7 @@ describe('Todo API Tests', () => {
             .set('Authorization', `Bearer ${token}`)
             .expect(200);
 
-        expect(getResponse.body.length).toBeGreaterThanOrEqual(2);
+        expect(getResponse.body.length).toBe(2);
         expect(getResponse.body[0]).toHaveProperty('position');
     });
 
@@ -356,7 +313,8 @@ describe('Todo API Tests', () => {
         expect(updateResponse.body.text).toBe(updatedText);
         expect(updateResponse.body.category).toBe(updatedCategory);
         expect(updateResponse.body.priority).toBe(updatedPriority);
-        expect(updateResponse.body.due_date).toBe(updatedDueDate);
+        const expectedDateStr = new Date(updatedDueDate + 'T00:00:00').toISOString().split('T')[0];
+        expect(new Date(updateResponse.body.due_date).toISOString().split('T')[0]).toBe(expectedDateStr);
     });
 
     test('[todo-test-8] should toggle completed status', async () => {
@@ -408,7 +366,7 @@ describe('Todo API Tests', () => {
         const todoId1 = await createTodo(tenant.tenantId, token);
         const todoId2 = await createTodo(tenant.tenantId, token);
 
-        const orderResponse = await request
+        await request
             .post('/api/todos/order')
             .set('X-Tenant-Id', tenant.tenantId)
             .set('Authorization', `Bearer ${token}`)
@@ -484,7 +442,7 @@ describe('Todo API Tests', () => {
         const tenant = tenantDatabases[0];
         const token = await getToken(tenant.tenantId);
 
-        // Assume some todos exist, create new
+        // Create new todo
         const todoId = await createTodo(tenant.tenantId, token);
 
         const getResponse = await request
@@ -493,6 +451,6 @@ describe('Todo API Tests', () => {
             .set('Authorization', `Bearer ${token}`)
             .expect(200);
 
-        expect(getResponse.body.position).toBeGreaterThan(0);
+        expect(getResponse.body.position).toBe(1); // Since beforeEach truncates, position starts from 1
     });
 });

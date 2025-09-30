@@ -3,6 +3,7 @@ import cors from 'cors';
 import { createUserRouter } from './cortex/api/api-user';
 import { createAuthRouter } from './cortex/api/api-auth';
 import { MariaDBAdapter } from './cortex/db/adapters/mariadb';
+import {createTodoRouter} from "./cortex/todos/todo.routes";
 
 // Configuration
 const baseDbConfig = {
@@ -30,6 +31,7 @@ app.use(express.json());
 // Routes
 app.use('/api/users', createUserRouter());
 app.use('/api/auth', createAuthRouter());
+app.use('/api/todos', createTodoRouter());
 
 // Welcome route
 app.get('/', (_req: Request, res: Response) => {
