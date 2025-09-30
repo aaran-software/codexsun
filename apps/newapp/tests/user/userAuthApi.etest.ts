@@ -69,6 +69,7 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
                                            username VARCHAR(50) NOT NULL,
                                            email VARCHAR(255) NOT NULL,
                                            password_hash VARCHAR(255) NOT NULL,
+                                           role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
                                            tenant_id VARCHAR(50) NOT NULL,
                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                            UNIQUE (email)
@@ -77,8 +78,8 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
             }
             // Create admin user
             await connection.query(
-                'INSERT IGNORE INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
-                ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', tenantId]
+                'INSERT IGNORE INTO users (username, email, password_hash, role, tenant_id) VALUES (?, ?, ?, ?, ?)',
+                ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', 'admin', tenantId]
             );
         }
     } finally {
@@ -136,8 +137,8 @@ describe('User Authentication API Tests', () => {
                 await tempConnection.query(`USE \`${database}\``);
                 await tempConnection.query('TRUNCATE TABLE users');
                 await tempConnection.query(
-                    'INSERT INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
-                    ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', tenantId]
+                    'INSERT INTO users (username, email, password_hash, role, tenant_id) VALUES (?, ?, ?, ?, ?)',
+                    ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', 'admin', tenantId]
                 );
             }
         } finally {
@@ -146,20 +147,27 @@ describe('User Authentication API Tests', () => {
         }
     });
 
+    async function getToken(tenantId: string, email: string, password: string): Promise<string> {
+        const loginResponse = await request
+            .post('/api/auth/login')
+            .set('X-Tenant-Id', tenantId)
+            .send({ email, password });
+        return loginResponse.body.token;
+    }
+
     describe('JWT Authentication', () => {
         test('[test 1] should login with valid credentials and return JWT', async () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-
-            const token = await getToken(tenant.tenantId);
+            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
 
             await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const response = await request
@@ -177,13 +185,13 @@ describe('User Authentication API Tests', () => {
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const token = await getToken(tenant.tenantId);
+            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
 
             await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const response = await request
@@ -200,13 +208,13 @@ describe('User Authentication API Tests', () => {
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const token = await getToken(tenant.tenantId);
+            const adminToken = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
 
             const createResponse = await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
@@ -229,6 +237,7 @@ describe('User Authentication API Tests', () => {
                 id: userId,
                 username,
                 email,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
         });
@@ -260,13 +269,13 @@ describe('User Authentication API Tests', () => {
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
-            const token = await getToken(tenant1.tenantId);
+            const adminToken = await getToken(tenant1.tenantId, 'admin@example.com', 'admin123');
 
             const createResponse = await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant1.tenantId)
-                .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
@@ -290,7 +299,7 @@ describe('User Authentication API Tests', () => {
 
         test('[test 7] should create user with valid JWT', async () => {
             const tenant = tenantDatabases[0];
-            const token = await getToken(tenant.tenantId);
+            const token = await getToken(tenant.tenantId, 'admin@example.com', 'admin123');
 
             const newUsername = `user_${randomString(6)}`;
             const newEmail = `${newUsername}@example.com`;
@@ -300,22 +309,15 @@ describe('User Authentication API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username: newUsername, email: newEmail, password: newPassword });
+                .send({ username: newUsername, email: newEmail, password: newPassword, role: 'user' });
 
             expect(response.status).toBe(201);
             expect(response.body).toMatchObject({
                 username: newUsername,
                 email: newEmail,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
         });
-
-        async function getToken(tenantId: string): Promise<string> {
-            const loginResponse = await request
-                .post('/api/auth/login')
-                .set('X-Tenant-Id', tenantId)
-                .send({ email: 'admin@example.com', password: 'admin123' });
-            return loginResponse.body.token;
-        }
     });
 });

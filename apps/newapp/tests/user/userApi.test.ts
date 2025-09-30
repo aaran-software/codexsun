@@ -69,6 +69,7 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
                                            username VARCHAR(50) NOT NULL,
                                            email VARCHAR(255) NOT NULL,
                                            password_hash VARCHAR(255) NOT NULL,
+                                           role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
                                            tenant_id VARCHAR(50) NOT NULL,
                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                            UNIQUE (email)
@@ -77,8 +78,8 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
             }
             // Create admin user
             await connection.query(
-                'INSERT IGNORE INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
-                ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', tenantId]
+                'INSERT IGNORE INTO users (username, email, password_hash, role, tenant_id) VALUES (?, ?, ?, ?, ?)',
+                ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', 'admin', tenantId]
             );
         }
     } finally {
@@ -136,8 +137,8 @@ describe('User API Tests', () => {
                 await tempConnection.query(`USE \`${database}\``);
                 await tempConnection.query('TRUNCATE TABLE users');
                 await tempConnection.query(
-                    'INSERT INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
-                    ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', tenantId]
+                    'INSERT INTO users (username, email, password_hash, role, tenant_id) VALUES (?, ?, ?, ?, ?)',
+                    ['admin', 'admin@example.com', '$2b$10$tCreVQTbemTktnTUugIULefUd4kmLsrqOmF3QDvo8.S8.qkY4D5ZS', 'admin', tenantId]
                 );
             }
         } finally {
@@ -146,15 +147,15 @@ describe('User API Tests', () => {
         }
     });
 
-    describe('User CRUD API', () => {
-        async function getToken(tenantId: string): Promise<string> {
-            const loginResponse = await request
-                .post('/api/auth/login')
-                .set('X-Tenant-Id', tenantId)
-                .send({ email: 'admin@example.com', password: 'admin123' });
-            return loginResponse.body.token;
-        }
+    async function getToken(tenantId: string): Promise<string> {
+        const loginResponse = await request
+            .post('/api/auth/login')
+            .set('X-Tenant-Id', tenantId)
+            .send({ email: 'admin@example.com', password: 'admin123' });
+        return loginResponse.body.token;
+    }
 
+    describe('User CRUD API', () => {
         test('[test 1] should create a user via POST /users', async () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
@@ -166,13 +167,14 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password });
+                .send({ username, email, password, role: 'user' });
 
             expect(response.status).toBe(201);
             expect(response.body).toMatchObject({
                 id: expect.any(Number),
                 username,
                 email,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
             expect(response.body.created_at).toBeDefined();
@@ -189,14 +191,14 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const response = await request
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}` });
+                .send({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}`, role: 'user' });
 
             expect(response.status).toBe(400);
             expect(response.body.error).toMatch(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
@@ -213,7 +215,7 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
@@ -228,6 +230,7 @@ describe('User API Tests', () => {
                 id: userId,
                 username,
                 email,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
             expect(response.body.created_at).toBeDefined();
@@ -257,7 +260,7 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const response = await request
@@ -269,6 +272,7 @@ describe('User API Tests', () => {
             expect(response.body).toMatchObject({
                 username,
                 email,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
             expect(response.body.created_at).toBeDefined();
@@ -288,7 +292,7 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
@@ -304,6 +308,7 @@ describe('User API Tests', () => {
                 id: userId,
                 username: newUsername,
                 email: newEmail,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
 
@@ -316,6 +321,7 @@ describe('User API Tests', () => {
             expect(verifyResponse.body).toMatchObject({
                 username: newUsername,
                 email: newEmail,
+                role: 'user',
                 tenant_id: tenant.tenantId,
             });
         });
@@ -331,7 +337,7 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
@@ -363,7 +369,7 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
@@ -399,18 +405,20 @@ describe('User API Tests', () => {
                 .post('/api/users')
                 .set('X-Tenant-Id', tenant1.tenantId)
                 .set('Authorization', `Bearer ${token}`)
-                .send({ username, email, password })
+                .send({ username, email, password, role: 'user' })
                 .expect(201);
 
             const userId = createResponse.body.id;
 
+            const tenant2Token = await getToken(tenant2.tenantId);
+
             const response = await request
                 .get(`/api/users/${userId}`)
                 .set('X-Tenant-Id', tenant2.tenantId)
-                .set('Authorization', `Bearer ${token}`);
+                .set('Authorization', `Bearer ${tenant2Token}`);
 
-            expect(response.status).toBe(403);
-            expect(response.body.error).toBe('Tenant ID mismatch');
+            expect(response.status).toBe(404);
+            expect(response.body.error).toBe('User not found');
         });
     });
 });
