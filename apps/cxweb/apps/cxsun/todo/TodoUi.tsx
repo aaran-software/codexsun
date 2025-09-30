@@ -180,7 +180,7 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
             size="icon"
             onClick={() => startEditing(todo.id!, todo.text, todo.category, todo.due_date, todo.priority)}
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4  cursor-pointer" />
           </Button>
           <Button
             variant="ghost"
@@ -188,7 +188,7 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
             onClick={() => deleteTodo(todo.id!)}
             className="text-gray-500"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4  cursor-pointer" />
           </Button>
         </div>
       )}
@@ -262,8 +262,10 @@ export const TodoUi: React.FC<TodoUiProps> = ({
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">CODEXSUN ERP Todo Dashboard</h1>
+    <div className="p-6 max-w-9xl mx-auto">
+
+      <h1 className="text-2xl font-bold mb-6">Todos</h1>
+
       <motion.form
         onSubmit={handleAddTodo}
         className="mb-6 flex flex-col sm:flex-row gap-4 items-end"
@@ -311,6 +313,7 @@ export const TodoUi: React.FC<TodoUiProps> = ({
           Add Todo
         </Button>
       </motion.form>
+
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <Select value={filter} onValueChange={(value) => setFilter(value as 'all' | 'completed' | 'active')}>
           <SelectTrigger className="w-40">
@@ -336,6 +339,7 @@ export const TodoUi: React.FC<TodoUiProps> = ({
           </SelectContent>
         </Select>
       </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -377,13 +381,17 @@ export const TodoUi: React.FC<TodoUiProps> = ({
               )}
             >
               <GripVertical className="w-5 h-5 text-gray-400 mr-2" />
+
               <span className="w-8 text-gray-500 font-medium">{activeTodo.id}.</span>
+
               <Checkbox
                 checked={activeTodo.completed}
                 disabled
                 className="mr-3"
               />
+
               <div className="flex-1 flex items-center gap-2">
+
                 <span
                   className={cn(
                     'flex-1 flex items-center gap-2',
@@ -399,6 +407,8 @@ export const TodoUi: React.FC<TodoUiProps> = ({
                     {activeTodo.category}
                   </span>
                 </span>
+
+
                 <div className="flex items-center gap-2 border-l border-gray-300 pl-2">
                   <span
                     className={cn('text-sm', activeTodo.completed ? 'text-gray-500' : 'text-gray-600')}
@@ -425,6 +435,7 @@ export const TodoUi: React.FC<TodoUiProps> = ({
           ) : null}
         </DragOverlay>
       </DndContext>
+
     </div>
   );
 };
