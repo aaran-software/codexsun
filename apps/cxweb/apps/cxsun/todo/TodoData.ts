@@ -1,84 +1,37 @@
-const API_BASE = process.env.APP_URL || 'http://localhost:3006';
+import { Briefcase, User, Layers } from 'lucide-react';
 
-interface Todo {
-  id: number;
+export interface Todo {
+  id?: number; // Optional for creation, set by database
   text: string;
   completed: boolean;
   category: string;
-  dueDate: Date | null;
+  due_date: string | null; // ISO string or null for database
   priority: 'low' | 'medium' | 'high';
-  order_position?: number;
-  created_at?: Date;
-  updated_at?: Date;
+  tenant_id: string; // Required for backend, but ignored in local
+  created_at?: string; // Set by database, ignored in local
 }
 
-interface TodoData {
-  user_id: number;
-  text: string;
-  completed: boolean;
-  category: string;
-  due_date: string | null;
-  priority: 'low' | 'medium' | 'high';
+export interface InteractionState {
+  mode: 'none' | 'edit' | 'delete';
+  id: number | null;
+  editText: string;
+  editCategory: string;
+  editDueDate: string; // Date as string for input type="date"
+  editPriority: 'low' | 'medium' | 'high';
 }
 
-export const formatDateForMySQL = (date: string | null): string | null => {
-  if (!date) return null;
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) return null;
-  return parsedDate.toISOString().split('T')[0]; // Date only (YYYY-MM-DD)
+export const categories = ['Work', 'Personal', 'Other'];
+export const priorities = ['low', 'medium', 'high'];
+
+// Map categories to icons
+export const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  Work: Briefcase,
+  Personal: User,
+  Other: Layers,
 };
 
-export const fetchTodos = async (userId: number): Promise<Todo[]> => {
-  const res = await fetch(`${API_BASE}/todos?user_id=${userId}`);
-  if (!res.ok) throw new Error('Failed to fetch todos');
-  const data = await res.json();
-  return data.map((t: any) => ({
-    ...t,
-    dueDate: t.due_date ? new Date(t.due_date) : null,
-    created_at: t.created_at ? new Date(t.created_at) : undefined,
-    updated_at: t.updated_at ? new Date(t.updated_at) : undefined,
-  }));
-};
-
-export const addTodo = async (todoData: TodoData): Promise<void> => {
-  const res = await fetch(`${API_BASE}/todos`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(todoData),
-  });
-  if (!res.ok) throw new Error('Failed to add todo');
-};
-
-export const toggleTodo = async (id: number, completed: boolean, userId: number): Promise<void> => {
-  const res = await fetch(`${API_BASE}/todos/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completed, user_id: userId }),
-  });
-  if (!res.ok) throw new Error('Failed to toggle todo');
-};
-
-export const deleteTodo = async (id: number, userId: number): Promise<void> => {
-  const res = await fetch(`${API_BASE}/todos/${id}?user_id=${userId}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) throw new Error('Failed to delete todo');
-};
-
-export const saveEdit = async (id: number, updates: Omit<TodoData, 'completed'>): Promise<void> => {
-  const res = await fetch(`${API_BASE}/todos/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
-  });
-  if (!res.ok) throw new Error('Failed to update todo');
-};
-
-export const saveOrder = async (userId: number, order: number[]): Promise<void> => {
-  const res = await fetch(`${API_BASE}/todos/order?user_id=${userId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ order }),
-  });
-  if (!res.ok) throw new Error('Failed to save order');
+// Format date for display
+export const formatDate = (date: string | null): string => {
+  if (!date) return 'No due date';
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };

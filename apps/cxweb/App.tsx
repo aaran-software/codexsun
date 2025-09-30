@@ -12,14 +12,16 @@ import LoginPage from './resources/global/auth/login';
 import { ProtectedRoute } from './resources/global/auth/protected-route';
 
 import UserPage from './apps/cxsun/user/user';
-import TodoPage from './apps/cxsun/todo/todo';
-import TodoLogic from './apps/cxsun/todo/TodoLogic';
 import ComponentsPage from './resources/templates';
 import Credit from "./apps/cxsun/dashboard/credit";
+
+import { TodoUi } from './apps/cxsun/todo/TodoUi';
+import { useTodoLogic } from './apps/cxsun/todo/TodoLogic';
 
 const App: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+    const todoLogic = useTodoLogic();
 
   const handleLoginClick = () => {
     console.log('[App] Login Clicked');
@@ -59,8 +61,7 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/user" element={<UserPage />} />
 
-            <Route path="/todo" element={<TodoPage />} />
-            <Route path="/todonew" element={<TodoLogic />} />
+              <Route path="/todos" element={<TodoUi {...todoLogic} />} />
 
             <Route path="/credit" element={<Credit />} />
 

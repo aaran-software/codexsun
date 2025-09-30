@@ -66,8 +66,8 @@ const data = {
           url: "/credit",
         },
         {
-          title: "todonew",
-          url: "/todonew",
+          title: "Todos",
+          url: "/todos",
         },
       ],
     },
