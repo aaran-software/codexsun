@@ -1,3 +1,4 @@
+// src/types.ts
 export interface DbConfig {
     host: string;
     port: number;
@@ -8,20 +9,20 @@ export interface DbConfig {
 }
 
 export interface AnyDbClient {
-    query: (text: string, params?: any[]) => Promise<QueryResult | any>;
+    query<T = any>(text: string, params?: any[]): Promise<QueryResult<T> | any>;
     end?: () => Promise<void>;
     release?: () => void;
 }
 
-export interface QueryResult {
-    rows: any[];
+export interface QueryResult<T> {
+    rows: T[];
     rowCount: number;
 }
 
 export interface DBAdapter {
     connect: (config: DbConfig) => Promise<AnyDbClient>;
     disconnect: (client: AnyDbClient) => Promise<void>;
-    query: (client: AnyDbClient, text: string, params?: any[]) => Promise<QueryResult>;
+    query: (client: AnyDbClient, text: string, params?: any[]) => Promise<QueryResult<any>>;
     beginTransaction: (client: AnyDbClient) => Promise<void>;
     commitTransaction: (client: AnyDbClient) => Promise<void>;
     rollbackTransaction: (client: AnyDbClient) => Promise<void>;

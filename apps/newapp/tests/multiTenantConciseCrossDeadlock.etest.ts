@@ -30,8 +30,7 @@ async function setupTenantDatabases(pool: mariadb.Pool): Promise<void> {
     const connection = await pool.getConnection();
     try {
         // Check and create master_db
-        const dbExists = await connection.query(`SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [masterDatabase]);
-        if (!dbExists.length) await connection.query(`CREATE DATABASE \`${masterDatabase}\``);
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${masterDatabase}\``);
         await connection.query(`USE \`${masterDatabase}\``);
 
         // Check and create tenant_settings table
@@ -39,10 +38,10 @@ async function setupTenantDatabases(pool: mariadb.Pool): Promise<void> {
         if (!settingsTableExists.length) {
             await connection.query(`
                 CREATE TABLE tenant_settings (
-                    tenant_id VARCHAR(50) PRIMARY KEY,
-                    database_name VARCHAR(255) NOT NULL,
-                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    shared_resource INT DEFAULT 0
+                                                 tenant_id VARCHAR(50) PRIMARY KEY,
+                                                 database_name VARCHAR(255) NOT NULL,
+                                                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                 shared_resource INT DEFAULT 0
                 )
             `);
         }
@@ -52,12 +51,12 @@ async function setupTenantDatabases(pool: mariadb.Pool): Promise<void> {
         if (!sharedTableExists.length) {
             await connection.query(`
                 CREATE TABLE shared_resources (
-                    resource_id VARCHAR(50) PRIMARY KEY,
-                    value INT DEFAULT 0,
-                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                                  resource_id VARCHAR(50) PRIMARY KEY,
+                                                  value INT DEFAULT 0,
+                                                  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
-            await connection.query('INSERT INTO shared_resources (resource_id, value) VALUES (?, 0)', ['shared1']);
+            await connection.query('INSERT IGNORE INTO shared_resources (resource_id, value) VALUES (?, 0)', ['shared1']);
         }
 
         // Insert default tenant details
@@ -70,18 +69,16 @@ async function setupTenantDatabases(pool: mariadb.Pool): Promise<void> {
 
         // Create tenant databases and tables
         for (const { database } of tenantDatabases) {
-            const tenantDbExists = await connection.query(`SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?`, [database]);
-            if (!tenantDbExists.length) await connection.query(`CREATE DATABASE \`${database}\``);
+            await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\``);
             await connection.query(`USE \`${database}\``);
-
             const tenantTableExists = await connection.query(`SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'test_table'`, [database]);
             if (!tenantTableExists.length) {
                 await connection.query(`
                     CREATE TABLE test_table (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        name VARCHAR(255),
-                        tenant_id VARCHAR(50),
-                        data TEXT
+                                                id INT AUTO_INCREMENT PRIMARY KEY,
+                                                name VARCHAR(255),
+                                                tenant_id VARCHAR(50),
+                                                data TEXT
                     )
                 `);
             }
@@ -137,24 +134,24 @@ async function withTransactionRetry<T>(
 describe('Multi-Tenant Concise Cross-Deadlock Tests (Real MariaDB)', () => {
     let setupPool: mariadb.Pool;
 
-    jest.setTimeout(30000); // Reduced timeout for concise tests
+    jest.setTimeout(30000);
 
     beforeAll(async () => {
         MariaDBAdapter.initPool(baseDbConfig);
-        setupPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 10, acquireTimeout: 15000 });
+        setupPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 15, acquireTimeout: 20000 });
         await setupTenantDatabases(setupPool);
         await setupPool.end();
     });
 
     afterAll(async () => {
-        const cleanupPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 10, acquireTimeout: 15000 });
+        const cleanupPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 15, acquireTimeout: 20000 });
         await cleanupTenantDatabases(cleanupPool);
         await cleanupPool.end();
         await MariaDBAdapter.closePool();
     });
 
     beforeEach(async () => {
-        const tempPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 10, acquireTimeout: 15000 });
+        const tempPool = mariadb.createPool({ ...baseDbConfig, connectionLimit: 15, acquireTimeout: 20000 });
         const tempConnection = await tempPool.getConnection();
         try {
             for (const { database } of tenantDatabases) {
