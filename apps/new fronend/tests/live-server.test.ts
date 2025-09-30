@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:3000';
 const TENANT_ID = 'tenant1';
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'admin123';
-const JWT_SECRET = 'your_jwt_secret_key'; // Must match server
+const JWT_SECRET = 'your_jwt_secret_key';
 
 // Function to create random string for test data
 function randomString(length: number): string {
@@ -18,6 +18,9 @@ function randomString(length: number): string {
     return result;
 }
 
+// Utility to add a delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Utility to check server connectivity with retries using /hz
 async function checkServerConnectivity(request: SuperTest<Test>, retries = 3, delayMs = 2000): Promise<void> {
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -27,7 +30,7 @@ async function checkServerConnectivity(request: SuperTest<Test>, retries = 3, de
                 console.log(`Server is reachable at ${API_BASE_URL}`);
                 return;
             }
-            throw new Error(`Unexpected status: ${response.status}`);
+            throw new Error(`Unexpected status: ${response.status}, body: ${JSON.stringify(response.body)}`);
         } catch (error: any) {
             console.log(`Connectivity check attempt ${attempt} failed: ${error.message}`);
             if (attempt === retries) {
@@ -58,14 +61,13 @@ describe('Live Server API Tests', () => {
 
         adminToken = response.body.token;
         expect(adminToken).toBeDefined();
-    }, 15000); // Extend timeout for retries
+    }, 15000);
 
     test('[live-test-1] should create a user and login', async () => {
         const username = `user_${randomString(6)}`;
         const email = `${username}@example.com`;
         const password = `pass_${randomString(8)}`;
 
-        // Create user
         const createResponse = await request
             .post('/api/users')
             .set('X-Tenant-Id', TENANT_ID)
@@ -83,7 +85,6 @@ describe('Live Server API Tests', () => {
 
         const userId = createResponse.body.id;
 
-        // Login as new user
         const loginResponse = await request
             .post('/api/auth/login')
             .set('X-Tenant-Id', TENANT_ID)
@@ -98,7 +99,6 @@ describe('Live Server API Tests', () => {
         const email = `${username}@example.com`;
         const password = `pass_${randomString(8)}`;
 
-        // Create user
         const createResponse = await request
             .post('/api/users')
             .set('X-Tenant-Id', TENANT_ID)
@@ -108,7 +108,6 @@ describe('Live Server API Tests', () => {
 
         const userId = createResponse.body.id;
 
-        // Login
         const loginResponse = await request
             .post('/api/auth/login')
             .set('X-Tenant-Id', TENANT_ID)
@@ -117,7 +116,6 @@ describe('Live Server API Tests', () => {
 
         const userToken = loginResponse.body.token;
 
-        // Access protected route
         const userResponse = await request
             .get(`/api/users/${userId}`)
             .set('X-Tenant-Id', TENANT_ID)
@@ -138,7 +136,6 @@ describe('Live Server API Tests', () => {
         const email = `${username}@example.com`;
         const password = `pass_${randomString(8)}`;
 
-        // Create user
         const createResponse = await request
             .post('/api/users')
             .set('X-Tenant-Id', TENANT_ID)
@@ -148,7 +145,6 @@ describe('Live Server API Tests', () => {
 
         const userId = createResponse.body.id;
 
-        // Login
         const loginResponse = await request
             .post('/api/auth/login')
             .set('X-Tenant-Id', TENANT_ID)
@@ -157,14 +153,12 @@ describe('Live Server API Tests', () => {
 
         const userToken = loginResponse.body.token;
 
-        // Logout
         await request
             .post('/api/auth/logout')
             .set('X-Tenant-Id', TENANT_ID)
             .set('Authorization', `Bearer ${userToken}`)
             .expect(200);
 
-        // Verify token is revoked
         const accessResponse = await request
             .get(`/api/users/${userId}`)
             .set('X-Tenant-Id', TENANT_ID)
@@ -178,9 +172,10 @@ describe('Live Server API Tests', () => {
         const response = await request
             .post('/api/auth/login')
             .set('X-Tenant-Id', 'invalid_tenant')
-            .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD })
-            .expect(400);
+            .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
 
+        console.log(`[live-test-4] Response: ${JSON.stringify(response.body)}`);
+        expect(response.status).toBe(400);
         expect(response.body.error).toBe('Tenant not found');
     });
 
@@ -189,7 +184,6 @@ describe('Live Server API Tests', () => {
         const email = `${username}@example.com`;
         const password = `pass_${randomString(8)}`;
 
-        // Create user in tenant1
         const createResponse = await request
             .post('/api/users')
             .set('X-Tenant-Id', TENANT_ID)
@@ -199,7 +193,6 @@ describe('Live Server API Tests', () => {
 
         const userId = createResponse.body.id;
 
-        // Login in tenant1
         const loginResponse = await request
             .post('/api/auth/login')
             .set('X-Tenant-Id', TENANT_ID)
@@ -208,7 +201,6 @@ describe('Live Server API Tests', () => {
 
         const userToken = loginResponse.body.token;
 
-        // Try accessing with tenant2
         const accessResponse = await request
             .get(`/api/users/${userId}`)
             .set('X-Tenant-Id', 'tenant2')
@@ -216,5 +208,56 @@ describe('Live Server API Tests', () => {
             .expect(403);
 
         expect(accessResponse.body.error).toBe('Tenant ID mismatch');
+    });
+
+    test('[live-test-6] should compare JWT tokens after multiple logins', async () => {
+        const loginResponse1 = await request
+            .post('/api/auth/login')
+            .set('X-Tenant-Id', TENANT_ID)
+            .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD })
+            .expect(200);
+
+        const token1 = loginResponse1.body.token;
+        const decoded1 = jwt.decode(token1) as { iat: number; exp: number };
+
+        await delay(2000); // Increased delay to ensure distinct timestamps
+
+        const loginResponse2 = await request
+            .post('/api/auth/login')
+            .set('X-Tenant-Id', TENANT_ID)
+            .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD })
+            .expect(200);
+
+        const token2 = loginResponse2.body.token;
+        const decoded2 = jwt.decode(token2) as { iat: number; exp: number };
+
+        console.log('Token 1:', { token: token1, decoded: decoded1 });
+        console.log('Token 2:', { token: token2, decoded: decoded2 });
+
+        expect(token1).not.toBe(token2);
+        expect(decoded2.iat).toBeGreaterThan(decoded1.iat);
+    });
+
+    test('[live-test-7] should add 10 users to the database', async () => {
+        for (let i = 1; i <= 10; i++) {
+            const username = `test_user_${i}_${randomString(4)}`;
+            const email = `${username}@example.com`;
+            const password = `test_pass_${randomString(8)}`;
+
+            const createResponse = await request
+                .post('/api/users')
+                .set('X-Tenant-Id', TENANT_ID)
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ username, email, password, role: 'user' })
+                .expect(201);
+
+            expect(createResponse.body).toMatchObject({
+                id: expect.any(Number),
+                username,
+                email,
+                role: 'user',
+                tenant_id: TENANT_ID,
+            });
+        }
     });
 }, 15000);

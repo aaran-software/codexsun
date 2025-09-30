@@ -15,6 +15,7 @@ import UserPage from './apps/cxsun/user/user';
 import TodoPage from './apps/cxsun/todo/todo';
 import TodoLogic from './apps/cxsun/todo/TodoLogic';
 import ComponentsPage from './resources/templates';
+import Credit from "./apps/cxsun/dashboard/credit";
 
 const App: React.FC = () => {
   const { user, logout } = useAuth();
@@ -60,6 +61,8 @@ const App: React.FC = () => {
 
             <Route path="/todo" element={<TodoPage />} />
             <Route path="/todonew" element={<TodoLogic />} />
+
+            <Route path="/credit" element={<Credit />} />
 
             <Route path="/templates" element={<ComponentsPage />} />
 

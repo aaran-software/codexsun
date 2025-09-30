@@ -62,8 +62,8 @@ const data = {
           url: "/user",
         },
         {
-          title: "Todo",
-          url: "/todo",
+          title: "Credits",
+          url: "/credit",
         },
         {
           title: "todonew",

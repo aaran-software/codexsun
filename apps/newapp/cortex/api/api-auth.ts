@@ -1,4 +1,3 @@
-// cortex/api/api-auth.ts
 import express, { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { withTenantContext, query } from '../db/db';
@@ -41,7 +40,9 @@ export function createAuthRouter(): Router {
     // Login endpoint
     router.post('/login', async (req: Request, res: Response) => {
         const tenantId = req.get('X-Tenant-Id');
-        if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
+        if (!tenantId) {
+            return res.status(400).json({ error: 'Tenant ID is required' });
+        }
 
         const { email, password } = req.body;
         if (!email || !password) {
@@ -49,7 +50,9 @@ export function createAuthRouter(): Router {
         }
 
         try {
-            const user = await withTenantContext(tenantId, getTenantDatabase(tenantId), async () => {
+            // Check tenant validity before proceeding
+            const tenantDb = getTenantDatabase(tenantId);
+            const user = await withTenantContext(tenantId, tenantDb, async () => {
                 const user = await getUserByEmail(email, tenantId);
                 if (!user) throw new Error('Invalid credentials');
                 const isValid = await verifyUserPassword(user.id!, password, tenantId);
@@ -59,7 +62,10 @@ export function createAuthRouter(): Router {
 
             const token = jwt.sign({ id: user.id, tenantId }, JWT_SECRET, { expiresIn: '1h' });
             res.status(200).json({ token });
-        } catch (error) {
+        } catch (error: any) {
+            if (error.message === 'Tenant not found') {
+                return res.status(400).json({ error: 'Tenant not found' });
+            }
             res.status(401).json({ error: 'Invalid credentials' });
         }
     });
@@ -87,8 +93,8 @@ export function createAuthRouter(): Router {
             });
 
             res.status(200).json({ message: 'Logged out successfully' });
-        } catch (error) {
-            res.status(400).json({ error: (error as Error).message });
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
         }
     });
 

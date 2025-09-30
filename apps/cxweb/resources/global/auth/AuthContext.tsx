@@ -1,3 +1,15 @@
+// Updated AuthContext.tsx to connect with the backend API as per the test specifications
+// Changes:
+// - Use correct API base URL[](http://localhost:3000) and endpoints (/api/auth/login, /api/auth/logout, /api/users/email/:email)
+// - Include X-Tenant-Id header with 'tenant1' (as per test)
+// - Store and manage JWT token
+// - Fetch user profile after login using the token
+// - Map backend user fields to frontend User interface (username -> name, assume status 'active')
+// - Handle logout with backend call
+// - Persist token and user in localStorage
+// - Remove unnecessary credentials: 'include' since using JWT Bearer
+// - Error handling aligned with test expectations
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
@@ -9,6 +21,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
+    token: string | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => Promise<void>;
@@ -18,15 +31,22 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const API_URL = "http://localhost:3000";
+    const TENANT_ID = "tenant1";
 
     useEffect(() => {
         const savedUser = localStorage.getItem("auth_user");
-        if (savedUser) {
+        const savedToken = localStorage.getItem("auth_token");
+        if (savedUser && savedToken) {
             try {
                 setUser(JSON.parse(savedUser));
+                setToken(savedToken);
             } catch {
                 localStorage.removeItem("auth_user");
+                localStorage.removeItem("auth_token");
             }
         }
         setLoading(false);
@@ -35,29 +55,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = async (email: string, password: string) => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:3006/login", {
+            const res = await fetch(`${API_URL}/api/auth/login`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: email, password }),
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Tenant-Id": TENANT_ID,
+                },
+                body: JSON.stringify({ email, password }),
             });
 
             if (res.ok) {
-                const profileRes = await fetch(`http://localhost:3006/users?email=${email}`);
-                let userData: User = { id: 0, name: email, email, status: "active" };
+                const data = await res.json();
+                const newToken = data.token;
+
+                // Fetch user profile with token
+                const profileRes = await fetch(`${API_URL}/api/users/email/${email}`, {
+                    headers: {
+                        "Authorization": `Bearer ${newToken}`,
+                        "X-Tenant-Id": TENANT_ID,
+                    },
+                });
 
                 if (profileRes.ok) {
-                    const users = await profileRes.json();
-                    if (Array.isArray(users) && users.length > 0) {
-                        userData = users[0];
-                    }
-                }
+                    const userData = await profileRes.json();
+                    const mappedUser: User = {
+                        id: userData.id,
+                        name: userData.username,
+                        email: userData.email,
+                        status: "active", // Assume active as per test; adjust if needed
+                    };
 
-                setUser(userData);
-                localStorage.setItem("auth_user", JSON.stringify(userData));
-                setLoading(false);
-                return true;
+                    setUser(mappedUser);
+                    setToken(newToken);
+                    localStorage.setItem("auth_user", JSON.stringify(mappedUser));
+                    localStorage.setItem("auth_token", newToken);
+                    setLoading(false);
+                    return true;
+                } else {
+                    throw new Error('Failed to fetch user profile');
+                }
             } else {
-                setLoading(false);
                 throw new Error('Invalid credentials');
             }
         } catch (error) {
@@ -71,24 +108,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             setLoading(true);
             console.log('[AuthContext] Starting logout...');
-            await fetch("http://localhost:3006/logout", {
-                method: "POST",
-                credentials: 'include' // Include cookies if backend uses session-based logout
-            });
+            if (token) {
+                await fetch(`${API_URL}/api/auth/logout`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "X-Tenant-Id": TENANT_ID,
+                    },
+                });
+            }
             console.log('[AuthContext] Backend logout request completed.');
         } catch (error) {
             console.error('[AuthContext] Logout backend error (non-fatal):', error);
             // Continue with frontend cleanup even if backend fails
         } finally {
             setUser(null);
+            setToken(null);
             localStorage.removeItem("auth_user");
+            localStorage.removeItem("auth_token");
             setLoading(false);
             console.log('[AuthContext] Frontend state cleared.');
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
