@@ -2,7 +2,7 @@
 import mariadb from 'mariadb';
 import { MariaDBAdapter } from '../../src/adapters/mariadb';
 import { withTenantContext, query } from '../../src/db';
-import { createUser, getUserById, getUserByEmail, updateUser, deleteUser } from '../../src/user';
+import { createUser, getUserById, getUserByEmail, updateUser, deleteUser, verifyUserPassword } from '../../src/user';
 import { DbConfig, QueryResult } from '../../src/types';
 
 // Test database configuration
@@ -67,6 +67,7 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
                                            id INT AUTO_INCREMENT PRIMARY KEY,
                                            username VARCHAR(50) NOT NULL,
                                            email VARCHAR(255) NOT NULL,
+                                           password_hash VARCHAR(16) NOT NULL,
                                            tenant_id VARCHAR(50) NOT NULL,
                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                            UNIQUE (email)
@@ -132,12 +133,13 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                const result = await createUser({ username, email, tenantId: tenant.tenantId });
+                const result = await createUser({ username, email, password, tenantId: tenant.tenantId });
                 expect(result.rowCount).toBe(1);
 
-                const users = await query<{ id: number; username: string; email: string; tenant_id: string }>(
+                const users = await query<{ id: number; username: string; email: string; password_hash: string; tenant_id: string }>(
                     'SELECT * FROM users WHERE username = ?',
                     [username]
                 );
@@ -147,6 +149,7 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email,
                     tenant_id: tenant.tenantId,
                 });
+                expect(users.rows[0].password_hash).toHaveLength(16); // Verify 16-digit hash
             });
         });
 
@@ -155,10 +158,11 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant2 = tenantDatabases[1];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
 
             // Create user in tenant1
             await withTenantContext(tenant1.tenantId, tenant1.database, async () => {
-                await createUser({ username, email, tenantId: tenant1.tenantId });
+                await createUser({ username, email, password, tenantId: tenant1.tenantId });
                 const users = await query('SELECT * FROM users WHERE username = ?', [username]);
                 expect(users.rows).toHaveLength(1);
                 expect(users.rows[0].tenant_id).toBe(tenant1.tenantId);
@@ -179,13 +183,15 @@ describe('User Integration Tests (Real MariaDB)', () => {
             for (let i = 0; i < operationCount; i++) {
                 const username = `user_${randomString(6)}`;
                 const email = `${username}@example.com`;
+                const password = `pass_${randomString(8)}`;
                 promises.push(
                     withTenantContext(tenant.tenantId, tenant.database, async () => {
-                        const result = await createUser({ username, email, tenantId: tenant.tenantId });
+                        const result = await createUser({ username, email, password, tenantId: tenant.tenantId });
                         expect(result.rowCount).toBe(1);
                         const users = await query('SELECT * FROM users WHERE username = ?', [username]);
                         expect(users.rows).toHaveLength(1);
                         expect(users.rows[0]).toMatchObject({ username, email, tenant_id: tenant.tenantId });
+                        expect(users.rows[0].password_hash).toHaveLength(16);
                     })
                 );
             }
@@ -202,14 +208,15 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
                 // Create first user
-                await createUser({ username, email, tenantId: tenant.tenantId });
+                await createUser({ username, email, password, tenantId: tenant.tenantId });
 
                 // Attempt to create another user with same email
                 await expect(
-                    createUser({ username: `user_${randomString(6)}`, email, tenantId: tenant.tenantId })
+                    createUser({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}`, tenantId: tenant.tenantId })
                 ).rejects.toThrow(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
 
                 // Verify only one user with the email exists
@@ -222,9 +229,10 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                const createResult = await createUser({ username, email, tenantId: tenant.tenantId });
+                const createResult = await createUser({ username, email, password, tenantId: tenant.tenantId });
                 expect(createResult.rowCount).toBe(1);
 
                 const user = await getUserById(Number(createResult.insertId), tenant.tenantId);
@@ -234,6 +242,7 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email,
                     tenant_id: tenant.tenantId,
                 });
+                expect(user?.password_hash).toHaveLength(16);
             });
         });
 
@@ -241,9 +250,10 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                await createUser({ username, email, tenantId: tenant.tenantId });
+                await createUser({ username, email, password, tenantId: tenant.tenantId });
 
                 const user = await getUserByEmail(email, tenant.tenantId);
                 expect(user).toMatchObject({
@@ -251,6 +261,7 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email,
                     tenant_id: tenant.tenantId,
                 });
+                expect(user?.password_hash).toHaveLength(16);
             });
         });
 
@@ -258,17 +269,19 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
             const newUsername = `updated_${randomString(6)}`;
             const newEmail = `${newUsername}@example.com`;
+            const newPassword = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                const createResult = await createUser({ username, email, tenantId: tenant.tenantId });
+                const createResult = await createUser({ username, email, password, tenantId: tenant.tenantId });
                 expect(createResult.rowCount).toBe(1);
 
-                const updateResult = await updateUser(Number(createResult.insertId), { username: newUsername, email: newEmail, tenantId: tenant.tenantId });
+                const updateResult = await updateUser(Number(createResult.insertId), { username: newUsername, email: newEmail, password: newPassword, tenantId: tenant.tenantId });
                 expect(updateResult.rowCount).toBe(1);
 
-                const users = await query<{ id: number; username: string; email: string; tenant_id: string }>(
+                const users = await query<{ id: number; username: string; email: string; password_hash: string; tenant_id: string }>(
                     'SELECT * FROM users WHERE id = ?',
                     [Number(createResult.insertId)]
                 );
@@ -278,10 +291,11 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email: newEmail,
                     tenant_id: tenant.tenantId,
                 });
+                expect(users.rows[0].password_hash).toHaveLength(16);
 
                 // Verify email uniqueness
                 await expect(
-                    createUser({ username: `user_${randomString(6)}`, email: newEmail, tenantId: tenant.tenantId })
+                    createUser({ username: `user_${randomString(6)}`, email: newEmail, password: `pass_${randomString(8)}`, tenantId: tenant.tenantId })
                 ).rejects.toThrow(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
             });
         });
@@ -290,9 +304,10 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                const createResult = await createUser({ username, email, tenantId: tenant.tenantId });
+                const createResult = await createUser({ username, email, password, tenantId: tenant.tenantId });
                 expect(createResult.rowCount).toBe(1);
 
                 const deleteResult = await deleteUser(Number(createResult.insertId), tenant.tenantId);
@@ -307,20 +322,22 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const tenant = tenantDatabases[0];
             const username = `user_${randomString(6)}`;
             const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
             const promises: Promise<void>[] = [];
             const operationCount = 10;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                const createResult = await createUser({ username, email, tenantId: tenant.tenantId });
+                const createResult = await createUser({ username, email, password, tenantId: tenant.tenantId });
                 expect(createResult.rowCount).toBe(1);
                 const userId = Number(createResult.insertId);
 
                 for (let i = 0; i < operationCount; i++) {
                     const newUsername = `updated_${randomString(6)}`;
                     const newEmail = `${newUsername}@example.com`;
+                    const newPassword = `pass_${randomString(8)}`;
                     promises.push(
                         withTenantContext(tenant.tenantId, tenant.database, async () => {
-                            const result = await updateUser(userId, { username: newUsername, email: newEmail, tenantId: tenant.tenantId });
+                            const result = await updateUser(userId, { username: newUsername, email: newEmail, password: newPassword, tenantId: tenant.tenantId });
                             expect(result.rowCount).toBe(1);
                         })
                     );
@@ -329,6 +346,79 @@ describe('User Integration Tests (Real MariaDB)', () => {
 
                 const users = await query('SELECT * FROM users WHERE id = ?', [userId]);
                 expect(users.rows).toHaveLength(1);
+                expect(users.rows[0].password_hash).toHaveLength(16);
+            });
+        });
+
+        test('[test 10] should verify a user’s password', async () => {
+            const tenant = tenantDatabases[0];
+            const username = `user_${randomString(6)}`;
+            const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
+
+            await withTenantContext(tenant.tenantId, tenant.database, async () => {
+                await createUser({ username, email, password, tenantId: tenant.tenantId });
+
+                const user = await getUserByEmail(email, tenant.tenantId);
+                expect(user).not.toBeNull();
+
+                const isValid = await verifyUserPassword(user!.id!, password, tenant.tenantId);
+                expect(isValid).toBe(true);
+
+                const isInvalid = await verifyUserPassword(user!.id!, `wrong_${randomString(8)}`, tenant.tenantId);
+                expect(isInvalid).toBe(false);
+            });
+        });
+
+        test('[test 11] should update a user’s password', async () => {
+            const tenant = tenantDatabases[0];
+            const username = `user_${randomString(6)}`;
+            const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
+            const newPassword = `pass_${randomString(8)}`;
+
+            await withTenantContext(tenant.tenantId, tenant.database, async () => {
+                const createResult = await createUser({ username, email, password, tenantId: tenant.tenantId });
+                expect(createResult.rowCount).toBe(1);
+
+                const updateResult = await updateUser(Number(createResult.insertId), { password: newPassword, tenantId: tenant.tenantId });
+                expect(updateResult.rowCount).toBe(1);
+
+                const isValid = await verifyUserPassword(Number(createResult.insertId), newPassword, tenant.tenantId);
+                expect(isValid).toBe(true);
+
+                const isInvalid = await verifyUserPassword(Number(createResult.insertId), password, tenant.tenantId);
+                expect(isInvalid).toBe(false);
+            });
+        });
+
+        test('[test 12] should handle concurrent password updates', async () => {
+            const tenant = tenantDatabases[0];
+            const username = `user_${randomString(6)}`;
+            const email = `${username}@example.com`;
+            const password = `pass_${randomString(8)}`;
+            const promises: Promise<void>[] = [];
+            const operationCount = 10;
+
+            await withTenantContext(tenant.tenantId, tenant.database, async () => {
+                const createResult = await createUser({ username, email, password, tenantId: tenant.tenantId });
+                expect(createResult.rowCount).toBe(1);
+                const userId = Number(createResult.insertId);
+
+                for (let i = 0; i < operationCount; i++) {
+                    const newPassword = `pass_${randomString(8)}`;
+                    promises.push(
+                        withTenantContext(tenant.tenantId, tenant.database, async () => {
+                            const result = await updateUser(userId, { password: newPassword, tenantId: tenant.tenantId });
+                            expect(result.rowCount).toBe(1);
+                        })
+                    );
+                }
+                await Promise.all(promises);
+
+                const users = await query('SELECT * FROM users WHERE id = ?', [userId]);
+                expect(users.rows).toHaveLength(1);
+                expect(users.rows[0].password_hash).toHaveLength(16);
             });
         });
     });

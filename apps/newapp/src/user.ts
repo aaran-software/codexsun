@@ -1,12 +1,20 @@
 // src/user.ts
-import { query } from './db';
+import { createHash } from 'crypto';
+import { query, withTransaction } from './db';
 import { QueryResult, User } from './types';
 
+// Generate a 16-digit hash from a password
+function hashPassword(password: string): string {
+    const hash = createHash('sha256').update(password).digest('hex');
+    return hash.substring(0, 16); // Truncate to 16 digits
+}
+
 export async function createUser(user: User): Promise<QueryResult<User>> {
-    const { username, email, tenantId } = user;
+    const { username, email, password, tenantId } = user;
+    const passwordHash = password ? hashPassword(password) : '';
     return query<User>(
-        'INSERT INTO users (username, email, tenant_id) VALUES (?, ?, ?)',
-        [username, email, tenantId]
+        'INSERT INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
+        [username, email, passwordHash, tenantId]
     );
 }
 
@@ -21,7 +29,7 @@ export async function getUserByEmail(email: string, tenantId: string): Promise<U
 }
 
 export async function updateUser(id: number, user: Partial<User> & { tenantId: string }): Promise<QueryResult<User>> {
-    const { username, email, tenantId } = user;
+    const { username, email, password, tenantId } = user;
     const updates: string[] = [];
     const params: any[] = [];
 
@@ -32,6 +40,10 @@ export async function updateUser(id: number, user: Partial<User> & { tenantId: s
     if (email) {
         updates.push('email = ?');
         params.push(email);
+    }
+    if (password) {
+        updates.push('password_hash = ?');
+        params.push(hashPassword(password));
     }
 
     if (updates.length === 0) {
@@ -45,4 +57,10 @@ export async function updateUser(id: number, user: Partial<User> & { tenantId: s
 
 export async function deleteUser(id: number, tenantId: string): Promise<QueryResult<User>> {
     return query<User>('DELETE FROM users WHERE id = ? AND tenant_id = ?', [id, tenantId]);
+}
+
+export async function verifyUserPassword(id: number, password: string, tenantId: string): Promise<boolean> {
+    const user = await getUserById(id, tenantId);
+    if (!user || !user.password_hash) return false;
+    return hashPassword(password) === user.password_hash;
 }

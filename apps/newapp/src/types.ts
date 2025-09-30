@@ -33,6 +33,8 @@ export interface User {
     id?: number;
     username: string;
     email: string;
+    password?: string; // Input for create/update
+    password_hash?: string; // Stored in database
     tenantId: string;
     created_at?: string;
 }
