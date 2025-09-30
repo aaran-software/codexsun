@@ -1,18 +1,26 @@
-let currentTenantId: string | null = null;
+// src/tenant.ts
+import { AsyncLocalStorage } from 'async_hooks';
 
-export async function withTenantContext<T>(tenantId: string, callback: () => Promise<T>): Promise<T> {
-    const previousTenantId = currentTenantId;
-    currentTenantId = tenantId;
-    try {
-        return await callback().finally(() => {
-            currentTenantId = previousTenantId;
-        });
-    } catch (error) {
-        currentTenantId = previousTenantId;
-        throw error;
-    }
+interface TenantContext {
+    tenantId: string | null;
+    tenantDatabase: string | null;
+}
+
+const tenantStorage = new AsyncLocalStorage<TenantContext>();
+
+export async function withTenantContext<T>(
+    tenantId: string | null,
+    tenantDatabase: string | null,
+    callback: () => Promise<T>
+): Promise<T> {
+    const store: TenantContext = { tenantId, tenantDatabase };
+    return tenantStorage.run(store, callback);
 }
 
 export function getTenantId(): string | null {
-    return currentTenantId;
+    return tenantStorage.getStore()?.tenantId || null;
+}
+
+export function getTenantDatabase(): string | null {
+    return tenantStorage.getStore()?.tenantDatabase || null;
 }

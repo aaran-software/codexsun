@@ -1,4 +1,5 @@
-import { DbConfig, AnyDbClient, DBAdapter, QueryResult } from './types';
+// src/connection.ts
+import { DbConfig, AnyDbClient, DBAdapter } from './types';
 import { MariaDBAdapter } from './adapters/mariadb';
 
 export class Connection {
@@ -6,15 +7,8 @@ export class Connection {
     private adapter: DBAdapter;
     private client: AnyDbClient | null = null;
 
-    constructor(config?: DbConfig) {
-        this.config = config || {
-            host: process.env.DB_HOST || 'localhost',
-            port: parseInt(process.env.DB_PORT || '3306', 10),
-            database: process.env.DB_NAME || 'codexsun_db',
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASSWORD || 'Computer.1',
-            type: 'mariadb',
-        };
+    constructor(config: DbConfig) {
+        this.config = config;
         if (this.config.type !== 'mariadb') {
             throw new Error(`Unsupported database type: ${this.config.type}. Only mariadb is supported.`);
         }

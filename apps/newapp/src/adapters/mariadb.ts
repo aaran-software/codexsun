@@ -2,25 +2,60 @@ import mariadb from 'mariadb';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../types';
 
 export class MariaDBAdapter implements DBAdapter {
-    private pool: mariadb.Pool | null = null;
+    private static pool: mariadb.Pool | null = null;
+    private static poolsInitialized = false;
 
-    async connect(config: DbConfig): Promise<AnyDbClient> {
+    static initPool(config: Omit<DbConfig, 'database' | 'type'>): void {
+        if (this.poolsInitialized) return;
         this.pool = mariadb.createPool({
             host: config.host,
             port: config.port,
-            database: config.database,
             user: config.user,
             password: config.password,
-            connectionLimit: 10, // Adjust for production
+            connectionLimit: 10,
             acquireTimeout: 10000,
+            idleTimeout: 30000,
         });
+        this.poolsInitialized = true;
+    }
 
-        const connection = await this.pool.getConnection();
-        return {
-            query: (text: string, params?: any[]) => connection.query(text, params),
-            end: () => connection.end(),
-            release: () => connection.release(),
-        };
+    static async closePool(): Promise<void> {
+        if (this.pool) {
+            await this.pool.end();
+            this.pool = null;
+            this.poolsInitialized = false;
+        }
+    }
+
+    static async getConnection(database: string): Promise<AnyDbClient> {
+        if (!this.pool) {
+            throw new Error('Pool not initialized. Call initPool first.');
+        }
+        try {
+            const connection = await this.pool.getConnection();
+            await connection.query(`USE \`${database}\``);
+            // Validate connection
+            await connection.query('SELECT 1');
+            return {
+                query: async (text: string, params?: any[]) => {
+                    try {
+                        return await connection.query(text, params);
+                    } catch (err) {
+                        console.error('MariaDB query error:', err);
+                        throw err;
+                    }
+                },
+                end: () => connection.end(),
+                release: () => connection.release(),
+            };
+        } catch (err) {
+            console.error('MariaDB connection error:', err);
+            throw err;
+        }
+    }
+
+    async connect(config: DbConfig): Promise<AnyDbClient> {
+        return MariaDBAdapter.getConnection(config.database);
     }
 
     async disconnect(client: AnyDbClient): Promise<void> {
@@ -28,10 +63,6 @@ export class MariaDBAdapter implements DBAdapter {
             client.release();
         } else if (client.end) {
             await client.end();
-        }
-        if (this.pool) {
-            await this.pool.end();
-            this.pool = null;
         }
     }
 

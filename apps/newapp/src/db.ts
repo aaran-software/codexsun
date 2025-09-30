@@ -1,68 +1,76 @@
-import { Connection } from './connection';
 import { AnyDbClient, QueryResult } from './types';
-import { getTenantId } from './tenant';
-
-let defaultConnection: Connection | null = null;
-
-export function setDefaultConnection(connection: Connection): void {
-    defaultConnection = connection;
-}
+import { getTenantId, getTenantDatabase } from './tenant';
+import { MariaDBAdapter } from './adapters/mariadb';
 
 export async function query<T = any>(text: string, params?: any[]): Promise<QueryResult> {
-    if (!defaultConnection) {
-        throw new Error('Default connection not set');
+    const tenantDatabase = getTenantDatabase();
+    if (!tenantDatabase) {
+        throw new Error('Tenant database not set in context');
     }
-    const client = defaultConnection.getClient();
-    const adapter = defaultConnection['adapter'] as any;
-    const tenantId = getTenantId();
-    let modifiedText = text;
-
-    if (tenantId) {
-        modifiedText = text.replace(/FROM\s+(\w+)/i, `FROM $1 WHERE tenant_id = $2`);
-        params = params ? [tenantId, ...params] : [tenantId];
-    }
-
+    const client = await MariaDBAdapter.getConnection(tenantDatabase);
     try {
-        return await adapter.query(client, modifiedText, params);
-    } catch (error) {
-        if (error instanceof Error) {
-            throw new Error(`Query failed: ${error.message}`);
-        } else {
-            throw new Error(`Query failed: Unknown error`);
+        let modifiedText = text;
+        const tenantId = getTenantId();
+        if (tenantId) {
+            modifiedText = text.replace(/FROM\s+(\w+)/i, `FROM $1 WHERE tenant_id = ?`);
+            params = params ? [tenantId, ...params] : [tenantId];
+        }
+        const result = await client.query(modifiedText, params);
+        return {
+            rows: Array.isArray(result) ? result : [],
+            rowCount: (result as any).affectedRows || result.length || 0,
+        };
+    } finally {
+        if (client.release) {
+            client.release();
+        } else if (client.end) {
+            await client.end();
         }
     }
 }
 
 export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>): Promise<T> {
-    if (!defaultConnection) {
-        throw new Error('Default connection not set');
+    const tenantDatabase = getTenantDatabase();
+    if (!tenantDatabase) {
+        throw new Error('Tenant database not set in context');
     }
-    const client = defaultConnection.getClient();
-    const adapter = defaultConnection['adapter'] as any;
-
+    const adapter = new MariaDBAdapter();
+    const client = await MariaDBAdapter.getConnection(tenantDatabase);
     try {
         await adapter.beginTransaction(client);
         const result = await callback(client);
         await adapter.commitTransaction(client);
         return result;
     } catch (error) {
+        await adapter.rollbackTransaction(client);
         if (error instanceof Error) {
-            await adapter.rollbackTransaction(client);
             throw new Error(`Transaction failed: ${error.message}`);
         } else {
             throw new Error(`Transaction failed: Unknown error`);
         }
+    } finally {
+        if (client.release) {
+            client.release();
+        } else if (client.end) {
+            await client.end();
+        }
     }
 }
 
-export async function healthCheck(): Promise<boolean> {
-    if (!defaultConnection) {
-        return false;
-    }
+export async function healthCheck(database: string = 'codexsun_db'): Promise<boolean> {
     try {
-        const result = await query('SELECT 1 AS value');
-        return result.rows.length === 1 && result.rows[0].value === 1;
-    } catch (error) {
+        const client = await MariaDBAdapter.getConnection(database);
+        try {
+            const result = await client.query('SELECT 1 AS value');
+            return Array.isArray(result) && result.length === 1 && result[0].value === 1;
+        } finally {
+            if (client.release) {
+                client.release();
+            } else if (client.end) {
+                await client.end();
+            }
+        }
+    } catch {
         return false;
     }
 }

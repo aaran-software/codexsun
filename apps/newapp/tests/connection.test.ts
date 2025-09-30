@@ -1,20 +1,24 @@
+// tests/connection.test.ts
 import { Connection } from '../src/connection';
 import { DbConfig, AnyDbClient } from '../src/types';
 import mariadb from 'mariadb';
+import { MariaDBAdapter } from '../src/adapters/mariadb';
+import { withTenantContext } from '../src/tenant';
+import { query, withTransaction, healthCheck } from '../src/db';
 
-// Test database configuration
-const testDbConfig: DbConfig = {
+// Test database configuration without database
+const baseDbConfig: Omit<DbConfig, 'database' | 'type'> = {
     host: 'localhost',
     port: 3306,
-    database: 'codexsun_test',
     user: 'root',
     password: 'Computer.1',
-    type: 'mariadb',
 };
 
+const testDatabase = 'codexsun_test';
+
 // Invalid configuration for testing connection failure
-const invalidDbConfig: DbConfig = {
-    ...testDbConfig,
+const invalidDbConfig: Omit<DbConfig, 'database' | 'type'> = {
+    ...baseDbConfig,
     user: 'invalid_user',
     password: 'wrong_password',
 };
@@ -26,17 +30,18 @@ describe('Connection Integration Tests (Real MariaDB)', () => {
     jest.setTimeout(20000); // Increased timeout for invalid credentials test
 
     beforeAll(async () => {
+        MariaDBAdapter.initPool(baseDbConfig);
         setupPool = mariadb.createPool({
-            host: testDbConfig.host,
-            port: testDbConfig.port,
-            user: testDbConfig.user,
-            password: testDbConfig.password,
+            host: baseDbConfig.host,
+            port: baseDbConfig.port,
+            user: baseDbConfig.user,
+            password: baseDbConfig.password,
             connectionLimit: 1,
             acquireTimeout: 15000,
         });
         const setupConnection = await setupPool.getConnection();
-        await setupConnection.query('CREATE DATABASE IF NOT EXISTS codexsun_test');
-        await setupConnection.query('USE codexsun_test');
+        await setupConnection.query(`CREATE DATABASE IF NOT EXISTS ${testDatabase}`);
+        await setupConnection.query(`USE ${testDatabase}`);
         await setupConnection.query(`
             CREATE TABLE IF NOT EXISTS test_table (
                                                       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,33 +54,34 @@ describe('Connection Integration Tests (Real MariaDB)', () => {
 
     afterAll(async () => {
         const cleanupPool = mariadb.createPool({
-            host: testDbConfig.host,
-            port: testDbConfig.port,
-            user: testDbConfig.user,
-            password: testDbConfig.password,
+            host: baseDbConfig.host,
+            port: baseDbConfig.port,
+            user: baseDbConfig.user,
+            password: baseDbConfig.password,
             connectionLimit: 1,
             acquireTimeout: 15000,
         });
         const cleanupConnection = await cleanupPool.getConnection();
-        await cleanupConnection.query('USE codexsun_test');
+        await cleanupConnection.query(`USE ${testDatabase}`);
         await cleanupConnection.query('DROP TABLE IF EXISTS test_table');
-        await cleanupConnection.query('DROP DATABASE IF EXISTS codexsun_test');
+        await cleanupConnection.query(`DROP DATABASE IF EXISTS ${testDatabase}`);
         cleanupConnection.release();
         await cleanupPool.end();
+        await MariaDBAdapter.closePool();
     });
 
     beforeEach(async () => {
-        connection = new Connection(testDbConfig);
+        connection = new Connection({ ...baseDbConfig, database: testDatabase, type: 'mariadb' });
         const tempPool = mariadb.createPool({
-            host: testDbConfig.host,
-            port: testDbConfig.port,
-            user: testDbConfig.user,
-            password: testDbConfig.password,
+            host: baseDbConfig.host,
+            port: baseDbConfig.port,
+            user: baseDbConfig.user,
+            password: baseDbConfig.password,
             connectionLimit: 1,
             acquireTimeout: 15000,
         });
         const tempConnection = await tempPool.getConnection();
-        await tempConnection.query('USE codexsun_test');
+        await tempConnection.query(`USE ${testDatabase}`);
         await tempConnection.query('TRUNCATE TABLE test_table');
         tempConnection.release();
         await tempPool.end();
@@ -94,15 +100,19 @@ describe('Connection Integration Tests (Real MariaDB)', () => {
     test('[test 1] should initialize real MariaDB connection successfully', async () => {
         await expect(connection.init()).resolves.toBeUndefined();
         expect(connection.getClient()).toBeDefined();
-        expect(connection.getConfig()).toEqual(testDbConfig);
+        expect(connection.getConfig()).toEqual({ ...baseDbConfig, database: testDatabase, type: 'mariadb' });
     });
 
     test('[test 2] should fail to initialize with invalid credentials', async () => {
-        const invalidConnection = new Connection(invalidDbConfig);
+        await MariaDBAdapter.closePool();
+        MariaDBAdapter.initPool(invalidDbConfig);
+        const invalidConnection = new Connection({ ...invalidDbConfig, database: testDatabase, type: 'mariadb' });
         await expect(invalidConnection.init()).rejects.toThrow(
             /Access denied for user|ER_ACCESS_DENIED_ERROR|pool timeout|Connection refused/
         );
         expect(() => invalidConnection.getClient()).toThrow('Connection not initialized');
+        await MariaDBAdapter.closePool();
+        MariaDBAdapter.initPool(baseDbConfig);
     }, 20000);
 
     test('[test 3] should close real MariaDB connection successfully', async () => {
@@ -140,7 +150,7 @@ describe('Connection Integration Tests (Real MariaDB)', () => {
 
     test('[test 7] should handle multiple connections and closures', async () => {
         await connection.init();
-        const secondConnection = new Connection(testDbConfig);
+        const secondConnection = new Connection({ ...baseDbConfig, database: testDatabase, type: 'mariadb' });
         await expect(secondConnection.init()).resolves.toBeUndefined();
         await expect(secondConnection.close()).resolves.toBeUndefined();
         await expect(connection.close()).resolves.toBeUndefined();
