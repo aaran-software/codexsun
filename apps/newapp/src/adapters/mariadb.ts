@@ -1,3 +1,4 @@
+// src/adapters/mariadb.ts
 import mariadb from 'mariadb';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../types';
 
@@ -41,7 +42,9 @@ export class MariaDBAdapter implements DBAdapter {
                     try {
                         return await connection.query(text, params);
                     } catch (err) {
-                        console.error('MariaDB query error:', err);
+                        if (process.env.SUPPRESS_DB_LOGS !== 'true') {
+                            console.error('MariaDB query error:', err);
+                        }
                         throw err;
                     }
                 },
@@ -49,7 +52,9 @@ export class MariaDBAdapter implements DBAdapter {
                 release: () => connection.release(),
             };
         } catch (err) {
-            console.error('MariaDB connection error:', err);
+            if (process.env.SUPPRESS_DB_LOGS !== 'true') {
+                console.error('MariaDB connection error:', err);
+            }
             throw err;
         }
     }
