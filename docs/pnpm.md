@@ -37,3 +37,6 @@ pnpm add -d ts-jest @types/jest jest ts-node
 pnpm add -d rimraf
 
 pnpm  add -d supertest @types/supertest
+
+pnpm install bcrypt
+pnpm install -D @types/bcrypt

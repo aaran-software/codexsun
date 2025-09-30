@@ -1,17 +1,13 @@
 // src/user.ts
-import { createHash } from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { query, withTransaction } from './db';
 import { QueryResult, User } from './types';
 
-// Generate a 16-digit hash from a password
-function hashPassword(password: string): string {
-    const hash = createHash('sha256').update(password).digest('hex');
-    return hash.substring(0, 16); // Truncate to 16 digits
-}
+const SALT_ROUNDS = 10;
 
 export async function createUser(user: User): Promise<QueryResult<User>> {
     const { username, email, password, tenantId } = user;
-    const passwordHash = password ? hashPassword(password) : '';
+    const passwordHash = password ? await bcrypt.hash(password, SALT_ROUNDS) : '';
     return query<User>(
         'INSERT INTO users (username, email, password_hash, tenant_id) VALUES (?, ?, ?, ?)',
         [username, email, passwordHash, tenantId]
@@ -43,7 +39,7 @@ export async function updateUser(id: number, user: Partial<User> & { tenantId: s
     }
     if (password) {
         updates.push('password_hash = ?');
-        params.push(hashPassword(password));
+        params.push(await bcrypt.hash(password, SALT_ROUNDS));
     }
 
     if (updates.length === 0) {
@@ -62,5 +58,5 @@ export async function deleteUser(id: number, tenantId: string): Promise<QueryRes
 export async function verifyUserPassword(id: number, password: string, tenantId: string): Promise<boolean> {
     const user = await getUserById(id, tenantId);
     if (!user || !user.password_hash) return false;
-    return hashPassword(password) === user.password_hash;
+    return bcrypt.compare(password, user.password_hash);
 }

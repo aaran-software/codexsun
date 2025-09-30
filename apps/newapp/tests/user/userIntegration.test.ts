@@ -67,7 +67,7 @@ async function setupDatabases(pool: mariadb.Pool): Promise<void> {
                                            id INT AUTO_INCREMENT PRIMARY KEY,
                                            username VARCHAR(50) NOT NULL,
                                            email VARCHAR(255) NOT NULL,
-                                           password_hash VARCHAR(16) NOT NULL,
+                                           password_hash VARCHAR(255) NOT NULL,
                                            tenant_id VARCHAR(50) NOT NULL,
                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                            UNIQUE (email)
@@ -149,7 +149,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email,
                     tenant_id: tenant.tenantId,
                 });
-                expect(users.rows[0].password_hash).toHaveLength(16); // Verify 16-digit hash
             });
         });
 
@@ -160,7 +159,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const email = `${username}@example.com`;
             const password = `pass_${randomString(8)}`;
 
-            // Create user in tenant1
             await withTenantContext(tenant1.tenantId, tenant1.database, async () => {
                 await createUser({ username, email, password, tenantId: tenant1.tenantId });
                 const users = await query('SELECT * FROM users WHERE username = ?', [username]);
@@ -168,7 +166,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
                 expect(users.rows[0].tenant_id).toBe(tenant1.tenantId);
             });
 
-            // Verify user does not exist in tenant2
             await withTenantContext(tenant2.tenantId, tenant2.database, async () => {
                 const users = await query('SELECT * FROM users WHERE username = ?', [username]);
                 expect(users.rows).toHaveLength(0);
@@ -191,13 +188,11 @@ describe('User Integration Tests (Real MariaDB)', () => {
                         const users = await query('SELECT * FROM users WHERE username = ?', [username]);
                         expect(users.rows).toHaveLength(1);
                         expect(users.rows[0]).toMatchObject({ username, email, tenant_id: tenant.tenantId });
-                        expect(users.rows[0].password_hash).toHaveLength(16);
                     })
                 );
             }
             await Promise.all(promises);
 
-            // Verify total users
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
                 const result = await query('SELECT COUNT(*) as count FROM users');
                 expect(Number(result.rows[0].count)).toBe(operationCount);
@@ -211,15 +206,12 @@ describe('User Integration Tests (Real MariaDB)', () => {
             const password = `pass_${randomString(8)}`;
 
             await withTenantContext(tenant.tenantId, tenant.database, async () => {
-                // Create first user
                 await createUser({ username, email, password, tenantId: tenant.tenantId });
 
-                // Attempt to create another user with same email
                 await expect(
                     createUser({ username: `user_${randomString(6)}`, email, password: `pass_${randomString(8)}`, tenantId: tenant.tenantId })
                 ).rejects.toThrow(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
 
-                // Verify only one user with the email exists
                 const users = await query('SELECT * FROM users WHERE email = ?', [email]);
                 expect(users.rows).toHaveLength(1);
             });
@@ -242,7 +234,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email,
                     tenant_id: tenant.tenantId,
                 });
-                expect(user?.password_hash).toHaveLength(16);
             });
         });
 
@@ -261,7 +252,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email,
                     tenant_id: tenant.tenantId,
                 });
-                expect(user?.password_hash).toHaveLength(16);
             });
         });
 
@@ -291,9 +281,7 @@ describe('User Integration Tests (Real MariaDB)', () => {
                     email: newEmail,
                     tenant_id: tenant.tenantId,
                 });
-                expect(users.rows[0].password_hash).toHaveLength(16);
 
-                // Verify email uniqueness
                 await expect(
                     createUser({ username: `user_${randomString(6)}`, email: newEmail, password: `pass_${randomString(8)}`, tenantId: tenant.tenantId })
                 ).rejects.toThrow(/Duplicate entry.*for key 'email'|ER_DUP_ENTRY/);
@@ -346,7 +334,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
 
                 const users = await query('SELECT * FROM users WHERE id = ?', [userId]);
                 expect(users.rows).toHaveLength(1);
-                expect(users.rows[0].password_hash).toHaveLength(16);
             });
         });
 
@@ -418,7 +405,6 @@ describe('User Integration Tests (Real MariaDB)', () => {
 
                 const users = await query('SELECT * FROM users WHERE id = ?', [userId]);
                 expect(users.rows).toHaveLength(1);
-                expect(users.rows[0].password_hash).toHaveLength(16);
             });
         });
     });
