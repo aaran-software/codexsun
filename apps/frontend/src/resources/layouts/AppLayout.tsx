@@ -1,10 +1,9 @@
 import React from 'react';
 import {Outlet} from 'react-router-dom';
-import {TopMenu} from "../menu/app/top-menu";
-import {SidebarInset, SidebarProvider, SidebarTrigger} from "../ui/sidebar";
-import {AppSidebar} from "../menu/sidebar/app-sidebar";
-import {Separator} from "radix-ui";
-import {useAuth} from '../../global/auth/AuthContext';
+import {TopMenu} from "../components/menu/app/top-menu";
+import {SidebarInset, SidebarProvider, SidebarTrigger} from "../components/ui/sidebar";
+import {AppSidebar} from "../components/menu/sidebar/app-sidebar";
+import {useAuth} from '../global/auth/AuthContext';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -12,9 +11,8 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator
-} from "../ui/breadcrumb";
-import Loader from "../../components/loader/loader";
-import BreadcrumbsWithIcon from '../blocks/BreadcrumbItem';
+} from "../components/ui/breadcrumb";
+import Loader from "../components/loader/loader";
 
 const AppLayout: React.FC = () => {
     const {loading} = useAuth();

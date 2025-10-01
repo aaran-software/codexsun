@@ -1,6 +1,6 @@
 // src/components/templates/CardDemo.tsx
 
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function CardDemo() {
   return (

@@ -2,9 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './resources/global/auth/AuthContext';
 
-import WebLayout from './resources/components/layouts/WebLayout';
-import GuestLayout from './resources/components/layouts/GuestLayout';
-import AppLayout from './resources/components/layouts/AppLayout';
+import WebLayout from '@/resources/layouts/WebLayout';
+import GuestLayout from '@/resources/layouts/GuestLayout';
+import AppLayout from '@/resources/layouts/AppLayout';
 
 import HomePage from './apps/cxsun/web/home';
 import AboutPage from './apps/cxsun/web/about';
@@ -14,7 +14,7 @@ import DashboardPage from './apps/cxsun/dashboard/index';
 import LoginPage from './resources/global/auth/login';
 import { ProtectedRoute } from './resources/global/auth/protected-route';
 
-import ComponentsPage from './resources/templates';
+import ComponentsPage from './resources/components/templates';
 import Credit from "./apps/cxsun/dashboard/credit";
 
 import { TodoList } from './apps/cxsun/todo/TodoUi';

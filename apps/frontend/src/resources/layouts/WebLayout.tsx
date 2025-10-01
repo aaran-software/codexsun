@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../global/auth/AuthContext';
+import { useAuth } from '../global/auth/AuthContext';
 import { Menu, X, ArrowUp, Sun, Moon } from 'lucide-react';
-import Loader from "../../components/loader/loader";
+import Loader from "../components/loader/loader";
 
 interface WebLayoutProps {
   onLoginClick: () => void;

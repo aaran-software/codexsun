@@ -1,15 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Calendar } from "../components/ui/calendar"
-import { Label } from "../components/ui/label"
+import { Calendar } from "../ui/calendar"
+import { Label } from "../ui/label"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "../components/ui/select"
+} from "../ui/select"
 
 export function Calendar13() {
     const [dropdown, setDropdown] = React.useState<

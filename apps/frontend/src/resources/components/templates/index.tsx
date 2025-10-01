@@ -3,7 +3,7 @@ import {JSX, useState} from 'react';
 import AccordionDemo from "./accordion";
 import ButtonDemo from "./ButtonDemo";
 import CardDemo from "./CardDemo";
-import {Calendar} from "../components/ui/calendar";
+import {Calendar} from "../ui/calendar";
 
 type DemoKey = "accordion" | "button" | "card" | "calender" | "testimonials";
 
