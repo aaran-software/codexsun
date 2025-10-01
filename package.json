@@ -2,18 +2,8 @@
   "name": "codexsun",
   "private": true,
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types",
-    "clean:all": "pnpm -r run --if-present clean && npm prune && npm store prune",
-    "clean": "pnpm store prune && pnpm -r exec -- cmd /C \"del /S /Q node_modules dist build out 2>nul\" && del /Q pnpm-lock.yaml && pnpm install --force"
-  },
-  "devDependencies": {
-    "prettier": "^3.6.2",
-    "turbo": "^2.5.8",
-    "typescript": "5.9.2"
+    "clean": "pnpm store prune && pnpm -r exec -- cmd /C \"del /S /Q node_modules dist build out 2>nul\" && del /Q pnpm-lock.yaml && pnpm install --force",
+    "dev:all": "concurrently \"pnpm --filter frontend web\" \"pnpm --filter backend api\""
   },
   "packageManager": "pnpm@10.17.1",
   "engines": {
@@ -21,6 +11,11 @@
   },
   "dependencies": {
     "rimraf": "^6.0.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "concurrently": "^9.2.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "5.9.2"
   }
 }

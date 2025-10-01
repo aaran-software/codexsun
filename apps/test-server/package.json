@@ -1,10 +1,11 @@
 {
-  "name": "frontend_test",
+  "name": "test-server",
   "version": "0.1.0",
   "type": "commonjs",
   "private": true,
   "scripts": {
     "dev": "tsx index.ts",
+    "test-server": "tsx index.ts",
     "check-types": "tsc --noEmit",
     "todo-test": "jest",
     "jtest": "jest --detectOpenHandles",
