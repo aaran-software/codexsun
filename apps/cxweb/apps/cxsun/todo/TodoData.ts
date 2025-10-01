@@ -13,7 +13,7 @@ export interface Todo {
 }
 
 export interface InteractionState {
-  mode: 'none' | 'edit' | 'delete';
+  mode: 'none' | 'edit' | 'delete'| 'add';
   id: number | null;
   editText: string;
   editCategory: string;

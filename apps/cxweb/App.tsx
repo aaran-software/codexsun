@@ -18,7 +18,7 @@ import UserPage from './apps/cxsun/user/user';
 import ComponentsPage from './resources/templates';
 import Credit from "./apps/cxsun/dashboard/credit";
 
-import { TodoUi } from './apps/cxsun/todo/TodoUi';
+import { TodoList } from './apps/cxsun/todo/TodoUi';
 import { useTodoLogic } from './apps/cxsun/todo/TodoLogic';
 
 const App: React.FC = () => {
@@ -64,7 +64,7 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/user" element={<UserPage />} />
 
-              <Route path="/todos" element={<TodoUi {...todoLogic} />} />
+              <Route path="/todos" element={<TodoList {...todoLogic} />} />
 
             <Route path="/credit" element={<Credit />} />
 
