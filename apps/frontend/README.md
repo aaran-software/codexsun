@@ -71,3 +71,8 @@ export default defineConfig([
   },
 ])
 ```
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
