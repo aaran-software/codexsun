@@ -145,7 +145,7 @@ function Calendar({
                 ...classNames,
             }}
             components={{
-                Root,
+                // Root,
                 Chevron: ({ className, orientation, ...props }) => {
                     if (orientation === "left") {
                         return (
