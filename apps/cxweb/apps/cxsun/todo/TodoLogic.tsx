@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { Todo, InteractionState } from './TodoData';
+import { Todo, InteractionState, AddState } from './TodoData';
 import { useAuth } from '../../../resources/global/auth/AuthContext';
 
 const API_BASE_URL = 'http://localhost:3000';
 const TENANT_ID = 'tenant1';
 
+// Utility to update todo positions for drag-and-drop ordering.
 const updatePositions = (todos: Todo[]): Todo[] => {
     return todos.map((todo, index) => ({
         ...todo,
@@ -27,25 +28,28 @@ export const useTodoLogic = () => {
         editDueDate: '',
         editPriority: 'low',
     });
+    const [addState, setAddState] = useState<AddState>({
+        addText: '',
+        addCategory: 'Work',
+        addDueDate: '',
+        addPriority: 'low',
+    });
     const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
     const [overId, setOverId] = useState<number | null>(null);
     const [todoListKey, setTodoListKey] = useState(0);
     const [error, setError] = useState<string | null>(null);
-
-    // Pagination states
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(10);
 
-    // Headers for API requests
+    // Headers for API requests, conditionally including Authorization if token exists.
     const headers = () => ({
         'Content-Type': 'application/json',
         'X-Tenant-Id': TENANT_ID,
         ...(token && { Authorization: `Bearer ${token}` }),
     });
 
-    // Function to refresh token (assumes AuthContext handles refresh)
+    // Function to refresh token, assuming AuthContext handles refresh or login.
     const refreshToken = async () => {
-        // Note: This assumes useAuth has a refresh mechanism. If not, implement a login call.
         try {
             const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
                 method: 'POST',
@@ -69,7 +73,7 @@ export const useTodoLogic = () => {
         }
     };
 
-    // Fetch todos when token is available and not loading
+    // Fetch todos when token is available and not loading.
     useEffect(() => {
         const fetchTodos = async () => {
             if (loading || !token) return;
@@ -105,7 +109,7 @@ export const useTodoLogic = () => {
         fetchTodos();
     }, [token, loading]);
 
-    // Filter todos based on status and category
+    // Filter todos based on status and category.
     const filteredTodos = todos
         .filter((todo) => {
             if (filter === 'completed') return todo.completed;
@@ -118,9 +122,9 @@ export const useTodoLogic = () => {
     const pageCount = Math.ceil(filteredTodos.length / pageSize);
     const paginatedTodos = filteredTodos.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
 
-    // Add a new todo
+    // Add a new todo using addState
     const addTodo = async () => {
-        if (!interactionState.editText.trim()) {
+        if (!addState.addText.trim()) {
             setError('Todo text cannot be empty');
             return;
         }
@@ -130,10 +134,10 @@ export const useTodoLogic = () => {
         }
 
         const newTodo = {
-            text: interactionState.editText,
-            category: interactionState.editCategory,
-            due_date: interactionState.editDueDate || null,
-            priority: interactionState.editPriority,
+            text: addState.addText,
+            category: addState.addCategory,
+            due_date: addState.addDueDate || null,
+            priority: addState.addPriority,
             tenant_id: TENANT_ID,
             completed: false,
         };
@@ -161,6 +165,12 @@ export const useTodoLogic = () => {
                 setTodos((prev) => updatePositions([...prev, data]));
                 setTodoListKey((prev) => prev + 1);
                 setError(null);
+                setAddState({ // Reset add form
+                    addText: '',
+                    addCategory: 'Work',
+                    addDueDate: '',
+                    addPriority: 'low',
+                });
             } else {
                 setError('Failed to add todo');
                 console.error('Add todo failed:', res.statusText);
@@ -169,15 +179,6 @@ export const useTodoLogic = () => {
             setError('Network error while adding todo');
             console.error('Error adding todo:', error);
         }
-
-        setInteractionState({
-            mode: 'none',
-            id: null,
-            editText: '',
-            editCategory: 'Work',
-            editDueDate: '',
-            editPriority: 'low',
-        });
     };
 
     // Toggle todo completion status
@@ -336,7 +337,7 @@ export const useTodoLogic = () => {
         });
     };
 
-    // Cancel edit or add action
+    // Cancel edit or delete action
     const cancelAction = () => {
         setInteractionState({
             mode: 'none',
@@ -406,18 +407,20 @@ export const useTodoLogic = () => {
     return {
         todos,
         filteredTodos,
-        paginatedTodos, // Added for pagination
-        pageIndex, // Added
-        setPageIndex, // Added
-        pageSize, // Added
-        setPageSize, // Added
-        pageCount, // Added
+        paginatedTodos,
+        pageIndex,
+        setPageIndex,
+        pageSize,
+        setPageSize,
+        pageCount,
         filter,
         setFilter,
         categoryFilter,
         setCategoryFilter,
         interactionState,
         setInteractionState,
+        addState, // Added
+        setAddState, // Added
         activeTodo,
         overId,
         todoListKey,

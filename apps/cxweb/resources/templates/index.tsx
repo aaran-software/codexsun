@@ -4,13 +4,18 @@ import AccordionDemo from "./accordion";
 import ButtonDemo from "./ButtonDemo";
 import CardDemo from "./CardDemo";
 import Testimonial06 from "./testimonial-06";
+import {Calendar} from "../components/ui/calendar";
 
-type DemoKey = "accordion" | "button" | "card" | "testimonials";
+type DemoKey = "accordion" | "button" | "card" | "calender" | "testimonials";
 
 const demos: Record<DemoKey, { title: string; component: JSX.Element }> = {
     accordion: {title: "Accordion", component: <AccordionDemo/>},
     button: {title: "Button", component: <ButtonDemo/>},
     card: {title: "Card", component: <CardDemo/>},
+    calender: {title: "Calender", component: <Calendar/>},
+
+
+
     testimonials: {title: "testimonial_6", component: <Testimonial06/>},
 };
 

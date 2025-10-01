@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
+import React from 'react';
 import { Button } from '../../../resources/components/ui/button';
 import { Input } from '../../../resources/components/ui/input';
 import { Checkbox } from '../../../resources/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../resources/components/ui/select';
 import { cn } from '../../../resources/lib/utils';
 import { motion } from 'framer-motion';
-import {GripVertical, Pencil, Trash2, Check, X, ChevronRightIcon} from 'lucide-react';
+import { GripVertical, Pencil, Trash2, Check, X } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -21,13 +21,12 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { Todo, InteractionState, categories, categoryIcons, formatDate } from './TodoData';
-
-// Import getPageNumbers from pagination.tsx (assume it's exported)
+import { Todo, InteractionState, AddState, categories, categoryIcons, formatDate } from './TodoData';
 import { getPageNumbers } from '../../../resources/lib/utils';
-import {ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon} from "@radix-ui/react-icons"; // Adjust path as needed
+import { ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 
 // Section 1: Interfaces
+// Defines the props for the SortableTodoItem component, which handles individual todo rendering and interactions.
 interface SortableTodoItemProps {
     todo: Todo;
     toggleTodo: (id: number) => void;
@@ -40,6 +39,11 @@ interface SortableTodoItemProps {
     overId: number | null;
 }
 
+// Section 2: SortableTodoItem Component
+// Renders a single sortable todo item, handling drag-and-drop, editing mode, and actions like toggle, edit, and delete.
+// - Uses useSortable hook for drag-and-drop functionality.
+// - Conditionally renders edit form or view mode based on interactionState.
+// - Displays todo details (text, category, due date, priority) with appropriate styling.
 const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                                                                todo,
                                                                toggleTodo,
@@ -227,21 +231,24 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
 };
 
 // Section 3: TodoList Component
+// Renders the entire todo list UI, including error/loading display, add form, filters, sortable items with drag-and-drop, and pagination with record count.
 interface TodoListProps {
     todos: Todo[];
     filteredTodos: Todo[];
-    paginatedTodos: Todo[]; // Added
-    pageIndex: number; // Added
-    setPageIndex: React.Dispatch<React.SetStateAction<number>>; // Added
-    pageSize: number; // Added
-    setPageSize: React.Dispatch<React.SetStateAction<number>>; // Added
-    pageCount: number; // Added
+    paginatedTodos: Todo[];
+    pageIndex: number;
+    setPageIndex: React.Dispatch<React.SetStateAction<number>>;
+    pageSize: number;
+    setPageSize: React.Dispatch<React.SetStateAction<number>>;
+    pageCount: number;
     filter: 'all' | 'completed' | 'active';
     setFilter: React.Dispatch<React.SetStateAction<'all' | 'completed' | 'active'>>;
     categoryFilter: string;
     setCategoryFilter: React.Dispatch<React.SetStateAction<string>>;
     interactionState: InteractionState;
     setInteractionState: React.Dispatch<React.SetStateAction<InteractionState>>;
+    addState: AddState;
+    setAddState: React.Dispatch<React.SetStateAction<AddState>>;
     activeTodo: Todo | null;
     overId: number | null;
     todoListKey: number;
@@ -273,6 +280,8 @@ export const TodoList: React.FC<TodoListProps> = ({
                                                       setCategoryFilter,
                                                       interactionState,
                                                       setInteractionState,
+                                                      addState,
+                                                      setAddState,
                                                       activeTodo,
                                                       overId,
                                                       todoListKey,
@@ -294,26 +303,46 @@ export const TodoList: React.FC<TodoListProps> = ({
         useSensor(KeyboardSensor)
     );
 
-    // Section 3.1: Add Section
+    // Section 3.1: Error and Loading Display
+    // Displays loading indicator or error messages if authentication or API calls fail (e.g., 401 Unauthorized).
+    const renderError = () => (
+        <>
+            {loading && (
+                <div className="mb-6 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
+                    Loading...
+                </div>
+            )}
+            {error && (
+                <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    {error}
+                </div>
+            )}
+        </>
+    );
+
+    // Section 3.2: Add Section
+    // Always renders the add form for creating new todos. Uses addState to manage inputs, independent of edit state.
+    // - Standard shadcn Button for adding todos, no cancel button.
+    // - Maintains spacing with mb-6 for visual separation.
     const renderAddSection = () => (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm mb-4"
+            className="flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm mb-6"
         >
             <Input
-                value={interactionState.editText}
+                value={addState.addText}
                 onChange={(e) =>
-                    setInteractionState((prev) => ({ ...prev, editText: e.target.value }))
+                    setAddState((prev) => ({ ...prev, addText: e.target.value }))
                 }
                 className="flex-1 mr-2"
                 placeholder="Add new todo..."
             />
             <Select
-                value={interactionState.editCategory}
+                value={addState.addCategory}
                 onValueChange={(value) =>
-                    setInteractionState((prev) => ({ ...prev, editCategory: value }))
+                    setAddState((prev) => ({ ...prev, addCategory: value }))
                 }
             >
                 <SelectTrigger className="w-[120px] mr-2">
@@ -329,16 +358,16 @@ export const TodoList: React.FC<TodoListProps> = ({
             </Select>
             <Input
                 type="date"
-                value={interactionState.editDueDate}
+                value={addState.addDueDate}
                 onChange={(e) =>
-                    setInteractionState((prev) => ({ ...prev, editDueDate: e.target.value }))
+                    setAddState((prev) => ({ ...prev, addDueDate: e.target.value }))
                 }
                 className="w-[150px] mr-2"
             />
             <Select
-                value={interactionState.editPriority}
+                value={addState.addPriority}
                 onValueChange={(value) =>
-                    setInteractionState((prev) => ({ ...prev, editPriority: value as 'low' | 'medium' | 'high' }))
+                    setAddState((prev) => ({ ...prev, addPriority: value as 'low' | 'medium' | 'high' }))
                 }
             >
                 <SelectTrigger className="w-[120px] mr-2">
@@ -352,18 +381,16 @@ export const TodoList: React.FC<TodoListProps> = ({
                     ))}
                 </SelectContent>
             </Select>
-            <Button variant="ghost" size="icon" onClick={addTodo} className="text-green-600 mr-1">
-                <Check className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={cancelAction} className="text-red-600">
-                <X className="h-4 w-4" />
+            <Button onClick={addTodo} className="bg-blue-600 text-white hover:bg-blue-700">
+                Add Todo
             </Button>
         </motion.div>
     );
 
-    // Section 3.2: Filters Section
+    // Section 3.3: Filters Section
+    // Renders dropdown filters for todo status (all, active, completed) and category (Work, Personal, Other, all).
     const renderFilters = () => (
-        <div className="flex justify-between mb-4">
+        <div className="flex justify-between mb-6">
             <Select value={filter} onValueChange={(value) => setFilter(value as 'all' | 'completed' | 'active')}>
                 <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Filter by status" />
@@ -390,29 +417,17 @@ export const TodoList: React.FC<TodoListProps> = ({
         </div>
     );
 
-    // Section 3.3: Error and Loading Display
-    const renderError = () => (
-        <>
-            {loading && (
-                <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
-                    Loading...
-                </div>
-            )}
-            {error && (
-                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                    {error}
-                </div>
-            )}
-        </>
-    );
-
-    // Section 3.4: Pagination Section (Custom adapted from pagination.tsx)
+    // Section 3.4: Pagination Section
+    // Renders pagination controls including page size selection, page numbers, navigation buttons, and number of records.
     const renderPagination = () => {
         const currentPage = pageIndex + 1;
         const pageNumbers = getPageNumbers(currentPage, pageCount);
+        const totalRecords = filteredTodos.length;
+        const startRecord = pageIndex * pageSize + 1;
+        const endRecord = Math.min((pageIndex + 1) * pageSize, totalRecords);
 
         return (
-            <div className="flex items-center justify-between px-2 mt-4">
+            <div className="flex items-center justify-between px-2 mt-6">
                 <div className="flex items-center gap-2">
                     <Select
                         value={`${pageSize}`}
@@ -436,6 +451,9 @@ export const TodoList: React.FC<TodoListProps> = ({
                         Rows per page
                     </p>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                    Showing {startRecord} to {endRecord} of {totalRecords} records
+                </p>
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
@@ -510,10 +528,10 @@ export const TodoList: React.FC<TodoListProps> = ({
             >
                 <SortableContext
                     key={todoListKey}
-                    items={paginatedTodos.map((todo) => todo.id!)} // Use paginatedTodos
+                    items={paginatedTodos.map((todo) => todo.id!)}
                     strategy={verticalListSortingStrategy}
                 >
-                    {paginatedTodos.map((todo) => ( // Use paginatedTodos
+                    {paginatedTodos.map((todo) => (
                         <SortableTodoItem
                             key={todo.id}
                             todo={todo}
