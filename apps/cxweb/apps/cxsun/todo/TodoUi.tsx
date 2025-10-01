@@ -5,7 +5,7 @@ import { Checkbox } from '../../../resources/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../resources/components/ui/select';
 import { cn } from '../../../resources/lib/utils';
 import { motion } from 'framer-motion';
-import { GripVertical, Pencil, Trash2, Check, X } from 'lucide-react';
+import {GripVertical, Pencil, Trash2, Check, X, ChevronRightIcon} from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -23,8 +23,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { Todo, InteractionState, categories, categoryIcons, formatDate } from './TodoData';
 
+// Import getPageNumbers from pagination.tsx (assume it's exported)
+import { getPageNumbers } from '../../../resources/lib/utils';
+import {ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon} from "@radix-ui/react-icons"; // Adjust path as needed
+
 // Section 1: Interfaces
-// Defines the props for the SortableTodoItem component, which handles individual todo rendering and interactions.
 interface SortableTodoItemProps {
     todo: Todo;
     toggleTodo: (id: number) => void;
@@ -35,12 +38,8 @@ interface SortableTodoItemProps {
     saveEdit: (id: number) => void;
     cancelAction: () => void;
     overId: number | null;
-    error: string | null;
-    loading: boolean;
 }
 
-// Section 2: SortableTodoItem Component
-// This component renders a single sortable todo item, handling drag-and-drop, editing mode, and actions like toggle, edit, and delete.
 const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                                                                todo,
                                                                toggleTodo,
@@ -51,25 +50,20 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                                                                saveEdit,
                                                                cancelAction,
                                                                overId,
-
                                                            }) => {
-    // Use sortable hook to enable drag-and-drop functionality for this item.
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: todo.id!,
     });
 
     const isOver = overId === todo.id && !isDragging;
 
-    // Compute styles for drag transformation and transition.
     const style = {
         transform: CSS.Transform.toString(transform),
         transition: isDragging ? transition : 'none',
     };
 
-    // Get the icon component based on the todo's category.
     const CategoryIcon = categoryIcons[todo.category] || (() => null);
 
-    // Handle key down event for edit input to save on Enter key press.
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -77,7 +71,6 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
         }
     };
 
-    // Conditional rendering: If in edit mode for this todo, show edit form; otherwise, show view mode.
     if (interactionState.mode === 'edit' && interactionState.id === todo.id) {
         return (
             <motion.div
@@ -150,7 +143,6 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
         );
     }
 
-    // View mode rendering for the todo item.
     return (
         <motion.div
             ref={setNodeRef}
@@ -183,11 +175,11 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                         todo.completed && 'line-through text-gray-500'
                     )}
                 >
-                  {todo.text}{' '}
+                    {todo.text}{' '}
                     <span className="text-sm text-gray-400 flex items-center gap-1">
-                    <CategoryIcon className="w-4 h-4" />
+                        <CategoryIcon className="w-4 h-4" />
                         {todo.category}
-                  </span>
+                    </span>
                 </span>
                 <div className="flex items-center gap-2 border-l border-gray-300 pl-2">
                     <span className={cn('text-sm', todo.completed ? 'text-gray-500' : 'text-gray-600')}>
@@ -235,10 +227,15 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
 };
 
 // Section 3: TodoList Component
-// This component renders the entire todo list, including filters, add button, and sortable items with drag-and-drop support.
 interface TodoListProps {
     todos: Todo[];
     filteredTodos: Todo[];
+    paginatedTodos: Todo[]; // Added
+    pageIndex: number; // Added
+    setPageIndex: React.Dispatch<React.SetStateAction<number>>; // Added
+    pageSize: number; // Added
+    setPageSize: React.Dispatch<React.SetStateAction<number>>; // Added
+    pageCount: number; // Added
     filter: 'all' | 'completed' | 'active';
     setFilter: React.Dispatch<React.SetStateAction<'all' | 'completed' | 'active'>>;
     categoryFilter: string;
@@ -257,13 +254,19 @@ interface TodoListProps {
     handleDragStart: (event: DragEndEvent) => void;
     handleDragOver: (event: DragOverEvent) => void;
     handleDragEnd: (event: DragEndEvent) => void;
-    error: string;
-    loading: string;
+    error: string | null;
+    loading: boolean;
 }
 
 export const TodoList: React.FC<TodoListProps> = ({
                                                       todos,
                                                       filteredTodos,
+                                                      paginatedTodos,
+                                                      pageIndex,
+                                                      setPageIndex,
+                                                      pageSize,
+                                                      setPageSize,
+                                                      pageCount,
                                                       filter,
                                                       setFilter,
                                                       categoryFilter,
@@ -285,31 +288,13 @@ export const TodoList: React.FC<TodoListProps> = ({
                                                       error,
                                                       loading,
                                                   }) => {
-    // Set up sensors for drag-and-drop (mouse, touch, keyboard).
     const sensors = useSensors(
         useSensor(MouseSensor),
         useSensor(TouchSensor),
         useSensor(KeyboardSensor)
     );
 
-    // Update renderError to include loading state
-
-    const renderError = () => (
-        <>
-            {loading && (
-                <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
-                    Loading...
-                </div>
-            )}
-            {error && (
-                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                    {error}
-                </div>
-            )}
-        </>
-    );
     // Section 3.1: Add Section
-    // Always render the add form as a separate section, keeping it open by default without a toggle button.
     const renderAddSection = () => (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -377,7 +362,6 @@ export const TodoList: React.FC<TodoListProps> = ({
     );
 
     // Section 3.2: Filters Section
-    // Render filter controls for status and category.
     const renderFilters = () => (
         <div className="flex justify-between mb-4">
             <Select value={filter} onValueChange={(value) => setFilter(value as 'all' | 'completed' | 'active')}>
@@ -406,9 +390,113 @@ export const TodoList: React.FC<TodoListProps> = ({
         </div>
     );
 
+    // Section 3.3: Error and Loading Display
+    const renderError = () => (
+        <>
+            {loading && (
+                <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg">
+                    Loading...
+                </div>
+            )}
+            {error && (
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    {error}
+                </div>
+            )}
+        </>
+    );
+
+    // Section 3.4: Pagination Section (Custom adapted from pagination.tsx)
+    const renderPagination = () => {
+        const currentPage = pageIndex + 1;
+        const pageNumbers = getPageNumbers(currentPage, pageCount);
+
+        return (
+            <div className="flex items-center justify-between px-2 mt-4">
+                <div className="flex items-center gap-2">
+                    <Select
+                        value={`${pageSize}`}
+                        onValueChange={(value) => {
+                            setPageSize(Number(value));
+                            setPageIndex(0); // Reset to first page on size change
+                        }}
+                    >
+                        <SelectTrigger className="h-8 w-[70px]">
+                            <SelectValue placeholder={pageSize} />
+                        </SelectTrigger>
+                        <SelectContent side="top">
+                            {[10, 20, 30, 40, 50, 100, 500, 1000].map((size) => (
+                                <SelectItem key={size} value={`${size}`}>
+                                    {size}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                        Rows per page
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        className="size-8 p-0"
+                        onClick={() => setPageIndex(0)}
+                        disabled={pageIndex === 0}
+                    >
+                        <span className="sr-only">Go to first page</span>
+                        <DoubleArrowLeftIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="size-8 p-0"
+                        onClick={() => setPageIndex(pageIndex - 1)}
+                        disabled={pageIndex === 0}
+                    >
+                        <span className="sr-only">Go to previous page</span>
+                        <ChevronLeftIcon className="h-4 w-4" />
+                    </Button>
+                    {pageNumbers.map((pageNumber, index) => (
+                        <div key={`${pageNumber}-${index}`} className="flex items-center">
+                            {pageNumber === '...' ? (
+                                <span className="text-muted-foreground px-1 text-sm">...</span>
+                            ) : (
+                                <Button
+                                    variant={currentPage === pageNumber ? 'default' : 'outline'}
+                                    className="h-8 min-w-8 px-2"
+                                    onClick={() => setPageIndex((pageNumber as number) - 1)}
+                                >
+                                    <span className="sr-only">Go to page {pageNumber}</span>
+                                    {pageNumber}
+                                </Button>
+                            )}
+                        </div>
+                    ))}
+                    <Button
+                        variant="outline"
+                        className="size-8 p-0"
+                        onClick={() => setPageIndex(pageIndex + 1)}
+                        disabled={pageIndex + 1 === pageCount}
+                    >
+                        <span className="sr-only">Go to next page</span>
+                        <ChevronRightIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="size-8 p-0"
+                        onClick={() => setPageIndex(pageCount - 1)}
+                        disabled={pageIndex + 1 === pageCount}
+                    >
+                        <span className="sr-only">Go to last page</span>
+                        <DoubleArrowRightIcon className="h-4 w-4" />
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div>
-            {/* Always render the add section, keeping it open and separate as requested. */}
+            {renderError()}
             {renderAddSection()}
             {renderFilters()}
 
@@ -422,10 +510,10 @@ export const TodoList: React.FC<TodoListProps> = ({
             >
                 <SortableContext
                     key={todoListKey}
-                    items={filteredTodos.map((todo) => todo.id!)}
+                    items={paginatedTodos.map((todo) => todo.id!)} // Use paginatedTodos
                     strategy={verticalListSortingStrategy}
                 >
-                    {filteredTodos.map((todo) => (
+                    {paginatedTodos.map((todo) => ( // Use paginatedTodos
                         <SortableTodoItem
                             key={todo.id}
                             todo={todo}
@@ -436,7 +524,8 @@ export const TodoList: React.FC<TodoListProps> = ({
                             setInteractionState={setInteractionState}
                             saveEdit={saveEdit}
                             cancelAction={cancelAction}
-                            overId={overId} error={null} loading={false}                        />
+                            overId={overId}
+                        />
                     ))}
                 </SortableContext>
 
@@ -456,27 +545,27 @@ export const TodoList: React.FC<TodoListProps> = ({
                                 className="mr-3"
                             />
                             <div className="flex-1 flex items-center gap-2">
-                <span
-                    className={cn(
-                        'flex-1 flex items-center gap-2',
-                        activeTodo.completed && 'line-through text-gray-500'
-                    )}
-                >
-                  {activeTodo.text}{' '}
-                    <span className="text-sm text-gray-400 flex items-center gap-1">
-                    {(() => {
-                        const Icon = categoryIcons[activeTodo.category] || (() => null);
-                        return <Icon className="w-4 h-4" />;
-                    })()}
-                        {activeTodo.category}
-                  </span>
-                </span>
+                                <span
+                                    className={cn(
+                                        'flex-1 flex items-center gap-2',
+                                        activeTodo.completed && 'line-through text-gray-500'
+                                    )}
+                                >
+                                    {activeTodo.text}{' '}
+                                    <span className="text-sm text-gray-400 flex items-center gap-1">
+                                        {(() => {
+                                            const Icon = categoryIcons[activeTodo.category] || (() => null);
+                                            return <Icon className="w-4 h-4" />;
+                                        })()}
+                                        {activeTodo.category}
+                                    </span>
+                                </span>
                                 <div className="flex items-center gap-2 border-l border-gray-300 pl-2">
-                  <span
-                      className={cn('text-sm', activeTodo.completed ? 'text-gray-500' : 'text-gray-600')}
-                  >
-                    {formatDate(activeTodo.due_date)}
-                  </span>
+                                    <span
+                                        className={cn('text-sm', activeTodo.completed ? 'text-gray-500' : 'text-gray-600')}
+                                    >
+                                        {formatDate(activeTodo.due_date)}
+                                    </span>
                                     <span
                                         className={cn(
                                             'text-sm capitalize',
@@ -486,8 +575,8 @@ export const TodoList: React.FC<TodoListProps> = ({
                                             activeTodo.completed && 'text-gray-500'
                                         )}
                                     >
-                    {activeTodo.priority}
-                  </span>
+                                        {activeTodo.priority}
+                                    </span>
                                 </div>
                                 <Button variant="ghost" size="icon" disabled className="text-gray-500">
                                     <Trash2 className="h-4 w-4" />
@@ -498,6 +587,7 @@ export const TodoList: React.FC<TodoListProps> = ({
                 </DragOverlay>
             </DndContext>
 
+            {renderPagination()}
         </div>
     );
 };

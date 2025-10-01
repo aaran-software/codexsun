@@ -32,6 +32,10 @@ export const useTodoLogic = () => {
     const [todoListKey, setTodoListKey] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
+    // Pagination states
+    const [pageIndex, setPageIndex] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+
     // Headers for API requests
     const headers = () => ({
         'Content-Type': 'application/json',
@@ -80,7 +84,6 @@ export const useTodoLogic = () => {
                         setError('Authentication failed');
                         return;
                     }
-                    // Update token in AuthContext (assumes useAuth updates token)
                     res = await fetch(`${API_BASE_URL}/api/todos`, {
                         headers: headers(),
                     });
@@ -110,6 +113,10 @@ export const useTodoLogic = () => {
             return true;
         })
         .filter((todo) => categoryFilter === 'all' || todo.category === categoryFilter);
+
+    // Pagination calculations
+    const pageCount = Math.ceil(filteredTodos.length / pageSize);
+    const paginatedTodos = filteredTodos.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
 
     // Add a new todo
     const addTodo = async () => {
@@ -399,6 +406,12 @@ export const useTodoLogic = () => {
     return {
         todos,
         filteredTodos,
+        paginatedTodos, // Added for pagination
+        pageIndex, // Added
+        setPageIndex, // Added
+        pageSize, // Added
+        setPageSize, // Added
+        pageCount, // Added
         filter,
         setFilter,
         categoryFilter,
