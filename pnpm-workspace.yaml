@@ -6,6 +6,7 @@ onlyBuiltDependencies:
   - '@clerk/shared'
   - '@swc/core'
   - '@tailwindcss/oxide'
+  - bcrypt
   - core-js
   - core-js-pure
   - cpu-features

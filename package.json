@@ -7,7 +7,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "clean:all": "pnpm -r run --if-present clean && npm prune && npm store prune"
+    "clean:all": "pnpm -r run --if-present clean && npm prune && npm store prune",
+    "clean": "pnpm store prune && pnpm -r exec -- cmd /C \"del /S /Q node_modules dist build out 2>nul\" && del /Q pnpm-lock.yaml && pnpm install --force"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

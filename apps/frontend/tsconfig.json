@@ -18,7 +18,6 @@
       "node"
     ],
     "paths": {
-      //      "@codexsun/cortex/*": ["cortex/*"],
       "@/*": [
         "./src/*"
       ]
