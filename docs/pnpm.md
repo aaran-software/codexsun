@@ -42,3 +42,8 @@ pnpm install bcrypt
 pnpm install -D @types/bcrypt
 
 pnpm install jsonwebtoken @types/jsonwebtoken --filter
+
+
+pnpm add -D tsx --filter frontend
+
+pnpm add react-router-dom --filter frontend
