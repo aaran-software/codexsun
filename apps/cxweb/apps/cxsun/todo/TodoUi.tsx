@@ -381,7 +381,7 @@ export const TodoList: React.FC<TodoListProps> = ({
                     ))}
                 </SelectContent>
             </Select>
-            <Button onClick={addTodo} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button onClick={addTodo} variant="default" className="w-10%">
                 Add Todo
             </Button>
         </motion.div>
