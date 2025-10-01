@@ -3,12 +3,14 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
+  - '@clerk/shared'
   - '@swc/core'
   - '@tailwindcss/oxide'
   - core-js
   - core-js-pure
   - cpu-features
   - esbuild
+  - oxc-resolver
   - sharp
   - sqlite3
   - ssh2
