@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { Todo, InteractionState, AddState } from './TodoData';
-import { useAuth } from '../../../resources/global/auth/AuthContext';
+import { useAuth } from '../../../global/auth/AuthContext';
 
 const API_BASE_URL = 'http://localhost:3000';
 const TENANT_ID = 'tenant1';

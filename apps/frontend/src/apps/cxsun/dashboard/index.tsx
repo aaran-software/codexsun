@@ -3,7 +3,7 @@ import { Button } from '../../../resources/components/ui/button';
 import { Input } from '../../../resources/components/ui/input';
 import { Checkbox } from '../../../resources/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../resources/components/ui/select';
-import { cn } from '../../../resources/lib/utils';
+import { cn } from '@/components/lib/utils';
 import { motion } from 'framer-motion';
 import { GripVertical, Briefcase, User, Layers, Pencil, Trash2, Check, X } from 'lucide-react';
 import {

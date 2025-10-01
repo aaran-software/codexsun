@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Component } from "react";
-import { cn } from "../../lib/utils";
+import { cn } from "@/components/lib/utils";
 
 interface LoaderProps {
   className?: string;

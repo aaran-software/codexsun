@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../../../resources/global/auth/AuthContext';
+import { useAuth } from '../../../global/auth/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 const Credit: React.FC = () => {

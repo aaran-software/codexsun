@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { cn } from '../../lib/utils'
+import { cn } from '@/components/lib/utils'
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
 import { DataTableToolbar } from './toolbar'
 import { DataTablePagination } from './pagination'
 import { DataTableBulkActions } from './bulk-actions'
-import  Loader  from '../loader/loader'
+import  Loader  from '@/components/loader/loader'
 
 type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[]

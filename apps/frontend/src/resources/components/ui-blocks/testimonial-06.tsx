@@ -9,7 +9,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "../ui/carousel";
-import { cn } from "../../lib/utils";
+import { cn } from "@/components/lib/utils";
 import { StarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 

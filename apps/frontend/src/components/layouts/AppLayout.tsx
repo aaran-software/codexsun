@@ -1,9 +1,9 @@
 import React from 'react';
 import {Outlet} from 'react-router-dom';
-import {TopMenu} from "../components/menu/app/top-menu";
-import {SidebarInset, SidebarProvider, SidebarTrigger} from "../components/ui/sidebar";
-import {AppSidebar} from "../components/menu/sidebar/app-sidebar";
-import {useAuth} from '../global/auth/AuthContext';
+import {TopMenu} from "@/components/menu/app/top-menu";
+import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
+import {AppSidebar} from "@/components/menu/sidebar/app-sidebar";
+import {useAuth} from '@/global/auth/AuthContext';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -11,8 +11,8 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator
-} from "../components/ui/breadcrumb";
-import Loader from "../components/loader/loader";
+} from "@/resources/components/ui/breadcrumb";
+import Loader from "@/components/loader/loader";
 
 const AppLayout: React.FC = () => {
     const {loading} = useAuth();

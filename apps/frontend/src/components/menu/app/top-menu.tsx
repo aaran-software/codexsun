@@ -20,7 +20,7 @@ import {
     DropdownMenuTrigger,
 } from "../../ui/dropdown-menu"
 import { Input } from "../../ui/input"
-import { cn } from "../../../lib/utils"
+import { cn } from "@/components/lib/utils"
 
 export function TopMenu() {
     const { user, logout } = useAuth()

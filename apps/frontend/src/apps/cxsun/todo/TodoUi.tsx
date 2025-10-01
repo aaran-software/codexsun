@@ -3,7 +3,7 @@ import { Button } from '../../../resources/components/ui/button';
 import { Input } from '../../../resources/components/ui/input';
 import { Checkbox } from '../../../resources/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../resources/components/ui/select';
-import { cn } from '../../../resources/lib/utils';
+import { cn } from '@/components/lib/utils';
 import { motion } from 'framer-motion';
 import { GripVertical, Pencil, Trash2, Check, X } from 'lucide-react';
 import {
@@ -22,7 +22,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { Todo, InteractionState, AddState, categories, categoryIcons, formatDate } from './TodoData';
-import { getPageNumbers } from '../../../resources/lib/utils';
+import { getPageNumbers } from '@/components/lib/utils';
 import { ChevronLeftIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 
 // Section 1: Interfaces
