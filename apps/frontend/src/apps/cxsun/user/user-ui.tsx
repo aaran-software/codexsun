@@ -9,9 +9,9 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { schema } from "./user-data";
 import { useDataTableLogic } from "./user-logic";
-import { DataTableToolbar } from "./toolbar";
-import { DataTablePagination } from "./pagination";
-import { DataTableBulkActions } from "./bulk-actions";
+import { DataTableToolbar } from "./to/toolbar";
+import { DataTablePagination } from "./to/pagination";
+import { DataTableBulkActions } from "./to/bulk-actions";
 import { UsersPrimaryButtons } from "./user-primary-buttons";
 import { UsersDialog } from "./user-dialog";
 import { UsersProvider } from "./users-provider";

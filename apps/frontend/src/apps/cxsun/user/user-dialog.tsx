@@ -25,8 +25,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SelectDropdown } from "./select-dropdown";
-import { ConfirmDialog } from "./confirm-dialog";
+import { SelectDropdown } from "./to/select-dropdown";
+import { ConfirmDialog } from "./to/confirm-dialog";
 import { useUsers } from "./users-provider";
 import { schema, roles } from "./user-data";
 

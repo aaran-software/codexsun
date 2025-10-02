@@ -33,7 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical, IconGripVertical } from "@tabler/icons-react";
 import { schema } from "./user-data";
-import { DataTableColumnHeader } from "./column-header";
+import { DataTableColumnHeader } from "./to/column-header";
 import { useUsers } from "./users-provider";
 
 export const columns: ColumnDef<z.infer<typeof schema>>[] = [
