@@ -2,58 +2,52 @@
 
 import * as React from "react"
 import {
-    AudioWaveform,
     BookOpen,
     Bot,
-    Command,
     Frame,
-    GalleryVerticalEnd,
     Map,
     PieChart,
     Settings2,
-    SquareTerminal,
+    LayoutDashboard,
+    SquareTerminal
 } from "lucide-react"
 
 import {NavMain} from "./nav-main"
 import {NavProjects} from "./nav-projects"
 import {NavUser} from "./nav-user"
-import {TeamSwitcher} from "./team-switcher"
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
-    SidebarHeader,
     SidebarRail,
 } from "../../ui/sidebar"
 
-// This is sample data.
 const data = {
     user: {
         name: "shadcn",
         email: "m@example.com",
         avatar: "/avatars/shadcn.jpg",
     },
-    teams: [
-        {
-            name: "Acme Inc",
-            logo: GalleryVerticalEnd,
-            plan: "Enterprise",
-        },
-        {
-            name: "Acme Corp.",
-            logo: AudioWaveform,
-            plan: "Startup",
-        },
-        {
-            name: "Evil Corp.",
-            logo: Command,
-            plan: "Free",
-        },
-    ],
     navMain: [
         {
             title: "Dashboard",
             url: "/dashboard",
+            icon: LayoutDashboard,
+            isActive: true,
+            items: [
+                {
+                    title: "view-1",
+                    url: "/dashboard",
+                },
+                {
+                    title: "view-2",
+                    url: "/dashboard",
+                },
+            ],
+        },
+        {
+            title: "Master",
+            url: "/master",
             icon: SquareTerminal,
             isActive: true,
             items: [
@@ -182,9 +176,9 @@ const data = {
 export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar collapsible="icon" {...props}>
-            <SidebarHeader>
-                <TeamSwitcher teams={data.teams}/>
-            </SidebarHeader>
+            {/*<SidebarHeader>*/}
+            {/*    <TeamSwitcher teams={data.teams}/>*/}
+            {/*</SidebarHeader>*/}
             <SidebarContent>
                 <NavMain items={data.navMain}/>
                 <NavProjects projects={data.projects}/>
