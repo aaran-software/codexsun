@@ -9,21 +9,8 @@ import {
     IconLayoutColumns,
     IconPlus,
 } from "@tabler/icons-react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { z } from "zod";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from "@/components/ui/drawer";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -33,150 +20,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
-import { AddSectionDialog } from "./add-section";
-
-import { schema, chartData, chartConfig } from "./user-data";
+import { MoveUp, MoveDown } from "lucide-react";
+import { UserDialog } from "./user-dialog";
+import { schema } from "./user-data";
 import { useDataTableLogic } from "./user-logic";
-
-export function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-    const isMobile = useIsMobile();
-
-    return (
-        <Drawer direction={isMobile ? "bottom" : "right"}>
-            <DrawerTrigger asChild>
-                <Button variant="link" className="text-foreground w-fit px-0 text-left">
-                    {item.header}
-                </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-                <DrawerHeader className="gap-1">
-                    <DrawerTitle>{item.header}</DrawerTitle>
-                    <DrawerDescription>Showing total visitors for the last 6 months</DrawerDescription>
-                </DrawerHeader>
-                <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-                    {!isMobile && (
-                        <>
-                            <ChartContainer config={chartConfig}>
-                                <AreaChart accessibilityLayer data={chartData} margin={{ left: 0, right: 10 }}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis
-                                        dataKey="month"
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickMargin={8}
-                                        tickFormatter={(value) => value.slice(0, 3)}
-                                        hide
-                                    />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                                    <Area
-                                        dataKey="mobile"
-                                        type="natural"
-                                        fill="var(--color-mobile)"
-                                        fillOpacity={0.6}
-                                        stroke="var(--color-mobile)"
-                                        stackId="a"
-                                    />
-                                    <Area
-                                        dataKey="desktop"
-                                        type="natural"
-                                        fill="var(--color-desktop)"
-                                        fillOpacity={0.4}
-                                        stroke="var(--color-desktop)"
-                                        stackId="a"
-                                    />
-                                </AreaChart>
-                            </ChartContainer>
-                            <Separator />
-                            <div className="grid gap-2">
-                                <div className="flex gap-2 leading-none font-medium">
-                                    Trending up by 5.2% this month
-                                </div>
-                                <div className="text-muted-foreground">
-                                    Showing total visitors for the last 6 months. This is sample text to test the layout.
-                                </div>
-                            </div>
-                            <Separator />
-                        </>
-                    )}
-                    <form className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-3">
-                            <Label htmlFor="header">Header</Label>
-                            <Input id="header" defaultValue={item.header} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="type">Type</Label>
-                                <Select defaultValue={item.type}>
-                                    <SelectTrigger id="type" className="w-full">
-                                        <SelectValue placeholder="Select a type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Table of Contents">Table of Contents</SelectItem>
-                                        <SelectItem value="Executive Summary">Executive Summary</SelectItem>
-                                        <SelectItem value="Technical Approach">Technical Approach</SelectItem>
-                                        <SelectItem value="Design">Design</SelectItem>
-                                        <SelectItem value="Capabilities">Capabilities</SelectItem>
-                                        <SelectItem value="Focus Documents">Focus Documents</SelectItem>
-                                        <SelectItem value="Narrative">Narrative</SelectItem>
-                                        <SelectItem value="Cover Page">Cover Page</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="status">Status</Label>
-                                <Select defaultValue={item.status}>
-                                    <SelectTrigger id="status" className="w-full">
-                                        <SelectValue placeholder="Select a status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Done">Done</SelectItem>
-                                        <SelectItem value="In Progress">In Progress</SelectItem>
-                                        <SelectItem value="Not Started">Not Started</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="target">Target</Label>
-                                <Input id="target" defaultValue={item.target} />
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="limit">Limit</Label>
-                                <Input id="limit" defaultValue={item.limit} />
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <Label htmlFor="reviewer">Reviewer</Label>
-                            <Select defaultValue={item.reviewer}>
-                                <SelectTrigger id="reviewer" className="w-full">
-                                    <SelectValue placeholder="Select a reviewer" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                                    <SelectItem value="Jamik Tashpulatov">Jamik Tashpulatov</SelectItem>
-                                    <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </form>
-                </div>
-                <DrawerFooter>
-                    <Button>Submit</Button>
-                    <DrawerClose asChild>
-                        <Button variant="outline">Done</Button>
-                    </DrawerClose>
-                </DrawerFooter>
-            </DrawerContent>
-        </Drawer>
-    );
-}
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
     const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -205,9 +57,9 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
         <div className="w-full flex flex-col gap-6 px-4 lg:px-6">
             <div className="flex items-center justify-between">
                 <Input
-                    placeholder="Filter headers..."
-                    value={(table.getColumn("header")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) => table.getColumn("header")?.setFilterValue(event.target.value)}
+                    placeholder="Filter usernames..."
+                    value={(table.getColumn("username")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) => table.getColumn("username")?.setFilterValue(event.target.value)}
                     className="max-w-sm"
                 />
                 <div className="flex items-center gap-2">
@@ -236,17 +88,17 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
                                 ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <AddSectionDialog
+                    <UserDialog
                         onAdd={(newItem) => {
                             const newId = Math.max(...data.map((d) => d.id), 0) + 1;
-                            setData([...data, { id: newId, ...newItem }]);
+                            setData([...data, { id: newId, created_at: new Date().toISOString(), ...newItem }]);
                         }}
                     >
                         <Button variant="outline" size="sm">
                             <IconPlus />
-                            <span className="hidden lg:inline">Add Section</span>
+                            <span className="hidden lg:inline">Add User</span>
                         </Button>
-                    </AddSectionDialog>
+                    </UserDialog>
                 </div>
             </div>
             <div className="overflow-hidden rounded-lg border">

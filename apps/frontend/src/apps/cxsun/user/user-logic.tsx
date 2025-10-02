@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+    closestCenter,
     KeyboardSensor,
     MouseSensor,
     TouchSensor,
@@ -8,7 +9,9 @@ import {
     type DragEndEvent,
     type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { arrayMove, useSortable } from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -18,6 +21,7 @@ import {
     getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
+    Row,
     SortingState,
     useReactTable,
     VisibilityState,
@@ -27,15 +31,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { IconCircleCheckFilled, IconDotsVertical, IconGripVertical, IconLoader } from "@tabler/icons-react";
+import { IconDotsVertical, IconGripVertical } from "@tabler/icons-react";
+import { MoveUp, MoveDown } from "lucide-react";
 import { schema } from "./user-data";
-import { TableCellViewer } from "./user-ui";
-import {z} from "zod";
+import { UserDialog } from "./user-dialog";
 
-// Column definitions for the table
 export const columns: ColumnDef<z.infer<typeof schema>>[] = [
     {
         id: "drag",
@@ -77,187 +77,108 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: "header",
+        accessorKey: "username",
         header: ({ column }) => (
             <Button
                 variant="ghost"
                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-                Header
-                {column.getIsSorted() === "asc" ? " 🔼" : column.getIsSorted() === "desc" ? " 🔽" : ""}
+                Username
+                {column.getIsSorted() === "asc" ? <MoveUp className="ml-2 h-4 w-4" /> : column.getIsSorted() === "desc" ? <MoveDown className="ml-2 h-4 w-4" /> : null}
             </Button>
         ),
-        cell: ({ row }) => <TableCellViewer item={row.original} />,
+        cell: ({ row }) => <div>{row.original.username}</div>,
         enableHiding: false,
     },
     {
-        accessorKey: "type",
+        accessorKey: "email",
         header: ({ column }) => (
             <Button
                 variant="ghost"
                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-                Section Type
-                {column.getIsSorted() === "asc" ? " 🔼" : column.getIsSorted() === "desc" ? " 🔽" : ""}
+                Email
+                {column.getIsSorted() === "asc" ? <MoveUp className="ml-2 h-4 w-4" /> : column.getIsSorted() === "desc" ? <MoveDown className="ml-2 h-4 w-4" /> : null}
+            </Button>
+        ),
+        cell: ({ row }) => <div>{row.original.email}</div>,
+    },
+    {
+        accessorKey: "role",
+        header: ({ column }) => (
+            <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+                Role
+                {column.getIsSorted() === "asc" ? <MoveUp className="ml-2 h-4 w-4" /> : column.getIsSorted() === "desc" ? <MoveDown className="ml-2 h-4 w-4" /> : null}
             </Button>
         ),
         cell: ({ row }) => (
             <div className="w-32">
                 <Badge variant="outline" className="text-muted-foreground px-1.5">
-                    {row.original.type}
+                    {row.original.role}
                 </Badge>
             </div>
         ),
     },
     {
-        accessorKey: "status",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-                Status
-                {column.getIsSorted() === "asc" ? " 🔼" : column.getIsSorted() === "desc" ? " 🔽" : ""}
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <Badge variant="outline" className="text-muted-foreground px-1.5">
-                {row.original.status === "Done" ? (
-                    <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-                ) : (
-                    <IconLoader />
-                )}
-                {row.original.status}
-            </Badge>
-        ),
+        accessorKey: "tenant_id",
+        header: () => <div className="w-full text-right">Tenant ID</div>,
+        cell: ({ row }) => <div className="text-right">{row.original.tenant_id}</div>,
     },
     {
-        accessorKey: "target",
-        header: ({ column }) => (
-            <div className="w-full text-right">
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Target
-                    {column.getIsSorted() === "asc" ? " 🔼" : column.getIsSorted() === "desc" ? " 🔽" : ""}
-                </Button>
-            </div>
-        ),
-        cell: ({ row }) => (
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-                        loading: `Saving ${row.original.header}`,
-                        success: "Done",
-                        error: "Error",
-                    });
-                }}
-            >
-                <Label htmlFor={`${row.original.id}-target`} className="sr-only">
-                    Target
-                </Label>
-                <Input
-                    className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-                    defaultValue={row.original.target}
-                    id={`${row.original.id}-target`}
-                />
-            </form>
-        ),
-    },
-    {
-        accessorKey: "limit",
-        header: ({ column }) => (
-            <div className="w-full text-right">
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Limit
-                    {column.getIsSorted() === "asc" ? " 🔼" : column.getIsSorted() === "desc" ? " 🔽" : ""}
-                </Button>
-            </div>
-        ),
-        cell: ({ row }) => (
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-                        loading: `Saving ${row.original.header}`,
-                        success: "Done",
-                        error: "Error",
-                    });
-                }}
-            >
-                <Label htmlFor={`${row.original.id}-limit`} className="sr-only">
-                    Limit
-                </Label>
-                <Input
-                    className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-                    defaultValue={row.original.limit}
-                    id={`${row.original.id}-limit`}
-                />
-            </form>
-        ),
-    },
-    {
-        accessorKey: "reviewer",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-                Reviewer
-                {column.getIsSorted() === "asc" ? " 🔼" : column.getIsSorted() === "desc" ? " 🔽" : ""}
-            </Button>
-        ),
-        cell: ({ row }) => {
-            const isAssigned = row.original.reviewer !== "Assign reviewer";
-            return isAssigned ? (
-                row.original.reviewer
-            ) : (
-                <>
-                    <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
-                        Reviewer
-                    </Label>
-                    <Select defaultValue={row.original.reviewer}>
-                        <SelectTrigger className="w-38 truncate" size="sm" id={`${row.original.id}-reviewer`}>
-                            <SelectValue placeholder="Assign reviewer" />
-                        </SelectTrigger>
-                        <SelectContent align="end">
-                            <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                            <SelectItem value="Jamik Tashpulatov">Jamik Tashpulatov</SelectItem>
-                            <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </>
-            );
-        },
+        accessorKey: "created_at",
+        header: () => <div className="w-full text-right">Created At</div>,
+        cell: ({ row }) => <div className="text-right">{new Date(row.original.created_at).toLocaleDateString()}</div>,
     },
     {
         id: "actions",
-        cell: () => (
+        cell: ({ row, table }) => (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="data-[state=open]:bg-muted text-muted-foreground flex size-8" size="icon">
+                    <Button
+                        variant="ghost"
+                        className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                        size="icon"
+                    >
                         <IconDotsVertical />
                         <span className="sr-only">Open menu</span>
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32">
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                    <UserDialog
+                        user={row.original}
+                        onEdit={(id, updatedItem) => {
+                            table.options.meta?.updateData(id, updatedItem);
+                        }}
+                    >
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            Edit
+                        </DropdownMenuItem>
+                    </UserDialog>
                     <DropdownMenuItem>Make a copy</DropdownMenuItem>
                     <DropdownMenuItem>Favorite</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+                    <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                            table.options.meta?.deleteData(row.original.id);
+                            toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
+                                loading: `Deleting ${row.original.username}`,
+                                success: "Deleted successfully",
+                                error: "Error deleting user",
+                            });
+                        }}
+                    >
+                        Delete
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         ),
     },
 ];
 
-// Custom hook for table logic
 export function useDataTableLogic(initialData: z.infer<typeof schema>[]) {
     const [data, setData] = React.useState(() => initialData);
     const [rowSelection, setRowSelection] = React.useState({});
@@ -287,6 +208,23 @@ export function useDataTableLogic(initialData: z.infer<typeof schema>[]) {
         getSortedRowModel: getSortedRowModel(),
         getFacetedRowModel: getFacetedRowModel(),
         getFacetedUniqueValues: getFacetedUniqueValues(),
+        meta: {
+            updateData: (id: number, updatedItem: Omit<z.infer<typeof schema>, "id" | "created_at">) => {
+                setData((prev) =>
+                    prev.map((item) =>
+                        item.id === id ? { ...item, ...updatedItem } : item
+                    )
+                );
+                toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
+                    loading: `Updating user`,
+                    success: "Updated successfully",
+                    error: "Error updating user",
+                });
+            },
+            deleteData: (id: number) => {
+                setData((prev) => prev.filter((item) => item.id !== id));
+            },
+        },
     });
 
     function handleDragEnd(event: DragEndEvent) {
