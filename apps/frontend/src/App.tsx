@@ -19,6 +19,7 @@ import Credit from "./apps/cxsun/dashboard/credit";
 
 import { TodoList } from './apps/cxsun/todo/TodoUi';
 import { useTodoLogic } from './apps/cxsun/todo/TodoLogic';
+import UserList from "@/apps/cxsun/user";
 
 const App: React.FC = () => {
   const { user, logout } = useAuth();
@@ -66,6 +67,8 @@ const App: React.FC = () => {
               <Route path="/todos" element={<TodoList {...todoLogic} />} />
 
             <Route path="/credit" element={<Credit />} />
+
+            <Route path="/users" element={<UserList />} />
 
             <Route path="/templates" element={<ComponentsPage />} />
 

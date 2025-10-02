@@ -53,7 +53,7 @@ const data = {
             items: [
                 {
                     title: "User",
-                    url: "/user",
+                    url: "/users",
                 },
                 {
                     title: "Credits",

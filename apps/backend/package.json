@@ -13,7 +13,6 @@
     "clear-cache": "pnpm jest --clearCache"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -37,8 +36,6 @@
 
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
