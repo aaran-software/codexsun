@@ -2,8 +2,8 @@ import { Cross2Icon } from '@radix-ui/react-icons'
 import { type Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DataTableFacetedFilter } from '@/components/data-table/faceted-filter'
-import { DataTableViewOptions } from '@/components/data-table/view-options'
+import { DataTableFacetedFilter } from './faceted-filter'
+import { DataTableViewOptions } from './view-options'
 
 type DataTableToolbarProps<TData> = {
     table: Table<TData>
@@ -18,7 +18,7 @@ type DataTableToolbarProps<TData> = {
             icon?: React.ComponentType<{ className?: string }>
         }[]
     }[]
-    children?: React.ReactNode // Added to support rendering buttons
+    children?: React.ReactNode
 }
 
 export function DataTableToolbar<TData>({

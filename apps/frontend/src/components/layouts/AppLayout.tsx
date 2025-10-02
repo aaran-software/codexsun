@@ -11,7 +11,7 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator
-} from "@/resources/components/ui/breadcrumb";
+} from "@/components/ui/breadcrumb";
 import Loader from "@/components/loader/loader";
 
 const AppLayout: React.FC = () => {

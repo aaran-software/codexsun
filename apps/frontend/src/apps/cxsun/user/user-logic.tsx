@@ -113,7 +113,7 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         id: "actions",
-        cell: ({ row, table }) => {
+        cell: ({ row }) => {
             const { setOpen, setCurrentRow } = useUsers();
             return (
                 <DropdownMenu>
@@ -185,6 +185,11 @@ export function useDataTableLogic(initialData: z.infer<typeof schema>[]) {
         getFacetedRowModel: getFacetedRowModel(),
         getFacetedUniqueValues: getFacetedUniqueValues(),
         meta: {
+            addData: (newItem: Omit<z.infer<typeof schema>, "id" | "created_at">) => {
+                const newId = Math.max(...data.map((d) => d.id), 0) + 1;
+                setData([...data, { id: newId, created_at: new Date().toISOString(), ...newItem }]);
+                toast.success("User added successfully");
+            },
             updateData: (id: number, updatedItem: Omit<z.infer<typeof schema>, "id" | "created_at">) => {
                 setData((prev) =>
                     prev.map((item) =>
@@ -196,11 +201,6 @@ export function useDataTableLogic(initialData: z.infer<typeof schema>[]) {
             deleteData: (ids: number[]) => {
                 setData((prev) => prev.filter((item) => !ids.includes(item.id)));
                 toast.success(`Deleted ${ids.length} user${ids.length > 1 ? "s" : ""} successfully`);
-            },
-            addData: (newItem: Omit<z.infer<typeof schema>, "id" | "created_at">) => {
-                const newId = Math.max(...data.map((d) => d.id), 0) + 1;
-                setData([...data, { id: newId, created_at: new Date().toISOString(), ...newItem }]);
-                toast.success("User added successfully");
             },
         },
     });

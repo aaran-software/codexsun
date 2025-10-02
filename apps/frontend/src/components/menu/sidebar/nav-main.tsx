@@ -6,7 +6,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/resources/components/ui/collapsible"
+} from "@/components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,

@@ -14,7 +14,6 @@ import DashboardPage from './apps/cxsun/dashboard/index';
 import LoginPage from './global/auth/login';
 import { ProtectedRoute } from './global/auth/protected-route';
 
-import ComponentsPage from './resources/components/templates';
 import Credit from "./apps/cxsun/dashboard/credit";
 
 import { TodoList } from './apps/cxsun/todo/TodoUi';
@@ -70,7 +69,6 @@ const App: React.FC = () => {
 
             <Route path="/users" element={<UserList />} />
 
-            <Route path="/templates" element={<ComponentsPage />} />
 
 
 

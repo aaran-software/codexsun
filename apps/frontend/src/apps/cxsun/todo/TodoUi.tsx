@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button } from '../../../resources/components/ui/button';
-import { Input } from '../../../resources/components/ui/input';
-import { Checkbox } from '../../../resources/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../resources/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/components/lib/utils';
 import { motion } from 'framer-motion';
 import { GripVertical, Pencil, Trash2, Check, X } from 'lucide-react';
