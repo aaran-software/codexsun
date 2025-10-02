@@ -1,6 +1,6 @@
 import { ChartAreaInteractive } from "@/components/menu/sidebar/chart-area-interactive"
 import { DataTable } from "@/components/menu/sidebar/data-table"
-import { SectionCards } from "@/components/section-cards"
+import { SectionCards } from "@/components/menu/sidebar/section-cards"
 
 import data from "./data.json"
 
