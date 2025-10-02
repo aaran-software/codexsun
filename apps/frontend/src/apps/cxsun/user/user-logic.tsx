@@ -32,9 +32,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical, IconGripVertical } from "@tabler/icons-react";
-import { MoveUp, MoveDown } from "lucide-react";
 import { schema } from "./user-data";
 import { UserDialog } from "./user-dialog";
+import { DataTableColumnHeader } from "@/components/data-table/column-header";
 
 export const columns: ColumnDef<z.infer<typeof schema>>[] = [
     {
@@ -78,42 +78,18 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         accessorKey: "username",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-                Username
-                {column.getIsSorted() === "asc" ? <MoveUp className="ml-2 h-4 w-4" /> : column.getIsSorted() === "desc" ? <MoveDown className="ml-2 h-4 w-4" /> : null}
-            </Button>
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Username" />,
         cell: ({ row }) => <div>{row.original.username}</div>,
         enableHiding: false,
     },
     {
         accessorKey: "email",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-                Email
-                {column.getIsSorted() === "asc" ? <MoveUp className="ml-2 h-4 w-4" /> : column.getIsSorted() === "desc" ? <MoveDown className="ml-2 h-4 w-4" /> : null}
-            </Button>
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
         cell: ({ row }) => <div>{row.original.email}</div>,
     },
     {
         accessorKey: "role",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-                Role
-                {column.getIsSorted() === "asc" ? <MoveUp className="ml-2 h-4 w-4" /> : column.getIsSorted() === "desc" ? <MoveDown className="ml-2 h-4 w-4" /> : null}
-            </Button>
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
         cell: ({ row }) => (
             <div className="w-32">
                 <Badge variant="outline" className="text-muted-foreground px-1.5">
@@ -121,6 +97,9 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
                 </Badge>
             </div>
         ),
+        filterFn: (row, id, value) => {
+            return value.includes(row.getValue(id));
+        },
     },
     {
         accessorKey: "tenant_id",
@@ -163,7 +142,7 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
                     <DropdownMenuItem
                         variant="destructive"
                         onClick={() => {
-                            table.options.meta?.deleteData(row.original.id);
+                            table.options.meta?.deleteData([row.original.id]);
                             toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
                                 loading: `Deleting ${row.original.username}`,
                                 success: "Deleted successfully",
@@ -221,8 +200,8 @@ export function useDataTableLogic(initialData: z.infer<typeof schema>[]) {
                     error: "Error updating user",
                 });
             },
-            deleteData: (id: number) => {
-                setData((prev) => prev.filter((item) => item.id !== id));
+            deleteData: (ids: number[]) => {
+                setData((prev) => prev.filter((item) => !ids.includes(item.id)));
             },
         },
     });
