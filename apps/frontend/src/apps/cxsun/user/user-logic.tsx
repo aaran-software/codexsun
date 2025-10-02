@@ -59,8 +59,8 @@ import {
   IconLoader,
 } from "@tabler/icons-react";
 
-import { schema } from "./data";
-import { TableCellViewer } from "./ui";
+import { schema } from "./user-data";
+import { TableCellViewer } from "./user-ui";
 
 // Column definitions for the table
 export const columns: ColumnDef<z.infer<typeof schema>>[] = [

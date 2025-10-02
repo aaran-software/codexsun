@@ -43,8 +43,8 @@ import { DndContext, closestCenter } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 
-import { schema, chartData, chartConfig } from "./data";
-import { useDataTableLogic } from "./logic";
+import { schema, chartData, chartConfig } from "./user-data";
+import { useDataTableLogic } from "./user-logic";
 
 export function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile();

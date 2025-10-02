@@ -1,6 +1,6 @@
 import { Toaster } from "sonner";
-import { DataTable } from "./ui";
-import { schema } from "./data";
+import { DataTable } from "./user-ui";
+import { schema } from "./user-data";
 import { z } from "zod";
 
 // Sample data for the table
@@ -47,7 +47,6 @@ function UserList() {
   return (
     <div className="p-4">
       <Toaster />
-      <h1 className="text-2xl font-bold mb-4">Data Table Example</h1>
       <DataTable data={sampleData} />
     </div>
   );
