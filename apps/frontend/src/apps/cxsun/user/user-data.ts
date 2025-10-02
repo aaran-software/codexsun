@@ -9,3 +9,9 @@ export const schema = z.object({
     role: z.string(),
     created_at: z.string(),
 });
+
+export const roles = [
+    { label: 'Admin', value: 'Admin' },
+    { label: 'Editor', value: 'Editor' },
+    { label: 'Viewer', value: 'Viewer' },
+];

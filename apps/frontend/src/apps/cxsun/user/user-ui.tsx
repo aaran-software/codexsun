@@ -1,19 +1,18 @@
 import * as React from "react";
 import { Row, flexRender } from "@tanstack/react-table";
-import { IconPlus } from "@tabler/icons-react";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
-import { UserDialog } from "./user-dialog";
 import { schema } from "./user-data";
 import { useDataTableLogic } from "./user-logic";
-import { DataTableToolbar } from "@/components/data-table/toolbar";
-import { DataTablePagination } from "@/components/data-table/pagination";
-import {DataTableBulkActions} from "@/resources/components/data-table";
+import { DataTableToolbar } from "./toolbar";
+import { DataTablePagination } from "./pagination";
+import { DataTableBulkActions } from "./bulk-actions";
+import { UsersPrimaryButtons } from "./users-primary-buttons";
+import { UsersDialogs } from "./users-dialogs";
 
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
     const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -40,6 +39,12 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
 
     return (
         <div className="w-full flex flex-col gap-6 px-4 lg:px-6">
+            <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                    Today's date and time is 06:53 PM IST on Thursday, October 02, 2025
+                </div>
+                <UsersPrimaryButtons />
+            </div>
             <DataTableToolbar
                 table={table}
                 searchPlaceholder="Filter usernames..."
@@ -99,9 +104,8 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
                 table={table}
                 entityName="user"
             >
-                <Button
-                    variant="destructive"
-                    size="sm"
+                <button
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 h-9 px-4 py-2"
                     onClick={() => {
                         table.options.meta?.deleteData(
                             table.getFilteredSelectedRowModel().rows.map((row) => row.original.id)
@@ -110,8 +114,9 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
                     }}
                 >
                     Delete Selected
-                </Button>
+                </button>
             </DataTableBulkActions>
+            <UsersDialogs />
         </div>
     );
 }

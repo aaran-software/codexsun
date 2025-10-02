@@ -33,8 +33,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical, IconGripVertical } from "@tabler/icons-react";
 import { schema } from "./user-data";
-import { UserDialog } from "./user-dialog";
-import { DataTableColumnHeader } from "@/components/data-table/column-header";
+import { DataTableColumnHeader } from "./column-header";
+import { useUsers } from "./users-provider";
 
 export const columns: ColumnDef<z.infer<typeof schema>>[] = [
     {
@@ -113,48 +113,45 @@ export const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         id: "actions",
-        cell: ({ row, table }) => (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                        size="icon"
-                    >
-                        <IconDotsVertical />
-                        <span className="sr-only">Open menu</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32">
-                    <UserDialog
-                        user={row.original}
-                        onEdit={(id, updatedItem) => {
-                            table.options.meta?.updateData(id, updatedItem);
-                        }}
-                    >
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+        cell: ({ row, table }) => {
+            const { setOpen, setCurrentRow } = useUsers();
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                            size="icon"
+                        >
+                            <IconDotsVertical />
+                            <span className="sr-only">Open menu</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                        <DropdownMenuItem
+                            onSelect={() => {
+                                setCurrentRow(row.original);
+                                setOpen("edit");
+                            }}
+                        >
                             Edit
                         </DropdownMenuItem>
-                    </UserDialog>
-                    <DropdownMenuItem>Make a copy</DropdownMenuItem>
-                    <DropdownMenuItem>Favorite</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => {
-                            table.options.meta?.deleteData([row.original.id]);
-                            toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-                                loading: `Deleting ${row.original.username}`,
-                                success: "Deleted successfully",
-                                error: "Error deleting user",
-                            });
-                        }}
-                    >
-                        Delete
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        ),
+                        <DropdownMenuItem>Make a copy</DropdownMenuItem>
+                        <DropdownMenuItem>Favorite</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => {
+                                setCurrentRow(row.original);
+                                setOpen("delete");
+                            }}
+                        >
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
+        },
     },
 ];
 
@@ -194,14 +191,16 @@ export function useDataTableLogic(initialData: z.infer<typeof schema>[]) {
                         item.id === id ? { ...item, ...updatedItem } : item
                     )
                 );
-                toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-                    loading: `Updating user`,
-                    success: "Updated successfully",
-                    error: "Error updating user",
-                });
+                toast.success("User updated successfully");
             },
             deleteData: (ids: number[]) => {
                 setData((prev) => prev.filter((item) => !ids.includes(item.id)));
+                toast.success(`Deleted ${ids.length} user${ids.length > 1 ? "s" : ""} successfully`);
+            },
+            addData: (newItem: Omit<z.infer<typeof schema>, "id" | "created_at">) => {
+                const newId = Math.max(...data.map((d) => d.id), 0) + 1;
+                setData([...data, { id: newId, created_at: new Date().toISOString(), ...newItem }]);
+                toast.success("User added successfully");
             },
         },
     });

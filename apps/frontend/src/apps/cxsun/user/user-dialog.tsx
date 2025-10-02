@@ -14,18 +14,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { z } from "zod";
 import { schema } from "./user-data";
+import { toast } from "sonner";
 
 type Item = z.infer<typeof schema>;
 
 interface UserDialogProps {
     user?: Item; // Optional for add mode, required for edit mode
+    mode?: "add" | "edit"; // Mode to determine dialog behavior
     onAdd?: (newItem: Omit<Item, "id" | "created_at">) => void;
     onEdit?: (id: number, updatedItem: Omit<Item, "id" | "created_at">) => void;
     children: React.ReactNode;
 }
 
-export function UserDialog({ user, onAdd, onEdit, children }: UserDialogProps) {
-    const isEditMode = !!user;
+export function UserDialog({ user, mode = "add", onAdd, onEdit, children }: UserDialogProps) {
+    const isEditMode = mode === "edit" && !!user;
     const [open, setOpen] = React.useState(false);
     const [username, setUsername] = React.useState(user?.username || "");
     const [email, setEmail] = React.useState(user?.email || "");
@@ -37,8 +39,10 @@ export function UserDialog({ user, onAdd, onEdit, children }: UserDialogProps) {
         const data = { username, email, password_hash, tenant_id, role };
         if (isEditMode && onEdit && user) {
             onEdit(user.id, data);
+            toast.success("User updated successfully");
         } else if (onAdd) {
             onAdd(data);
+            toast.success("User created successfully");
         }
         setOpen(false);
         setUsername("");
@@ -110,7 +114,9 @@ export function UserDialog({ user, onAdd, onEdit, children }: UserDialogProps) {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleSubmit}>{isEditMode ? "Save Changes" : "Add User"}</Button>
+                    <Button onClick={handleSubmit}>
+                        {isEditMode ? "Save Changes" : "Add User"}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
