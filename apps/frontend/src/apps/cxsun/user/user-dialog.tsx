@@ -1,38 +1,35 @@
+// File: user-dialog.tsx
+// Description: User-specific dialogs using generic form components.
+// Notes for study:
+// - Uses reusable FormDialog and ConfirmDialog.
+// - Specific schemas for add/edit/invite filled from original.
+// - roles defined based on filters.
+// - Handlers defined using window.tableMeta as in original.
+
 import * as React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertTriangle, MailPlus, Send } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { SelectDropdown } from "./to/select-dropdown";
-import { ConfirmDialog } from "./to/confirm-dialog";
-import { useUsers } from "./users-provider";
-import { schema, roles } from "./user-data";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FormDialog } from "@/apps/cxsun/common/form-dialog";
+import { ConfirmDialog } from "@/apps/cxsun/common/confirm-dialog";
+import { useDataContext } from "@/apps/cxsun/common/data-provider";
+import { type User } from "./user-schema"; // Existing reusable.
 
-type Item = z.infer<typeof schema>;
+type FieldConfig = {
+    name: string;
+    label: string;
+    type: 'text' | 'email' | 'password' | 'select' | 'textarea';
+    options?: { label: string; value: string }[]; // For select.
+};
 
-const addEditFormSchema = z
+const roles = [
+    { label: "Admin", value: "Admin" },
+    { label: "Editor", value: "Editor" },
+    { label: "Viewer", value: "Viewer" },
+];
+
+const addEditSchema = z
     .object({
         username: z.string().min(1, "Username is required."),
         email: z.string().email({
@@ -48,7 +45,7 @@ const addEditFormSchema = z
         { message: "Password is required.", path: ["password_hash"] }
     );
 
-const inviteFormSchema = z.object({
+const inviteSchema = z.object({
     email: z.string().email({
         message: (iss) => (iss.input === "" ? "Please enter an email to invite." : "Invalid email format."),
     }),
@@ -56,55 +53,13 @@ const inviteFormSchema = z.object({
     desc: z.string().optional(),
 });
 
-type AddEditForm = z.infer<typeof addEditFormSchema>;
-type InviteForm = z.infer<typeof inviteFormSchema>;
-
 export function UsersDialog() {
-    const { open, setOpen, currentRow, setCurrentRow } = useUsers();
+    const { open, setOpen, currentRow, setCurrentRow } = useDataContext<User>();
     const [deleteConfirmValue, setDeleteConfirmValue] = React.useState("");
 
-    const addEditForm = useForm<AddEditForm>({
-        resolver: zodResolver(addEditFormSchema),
-        defaultValues: {
-            username: currentRow?.username || "",
-            email: currentRow?.email || "",
-            password_hash: currentRow?.password_hash || "",
-            tenant_id: currentRow?.tenant_id || "",
-            role: currentRow?.role || "",
-            isEdit: open === "edit",
-        },
-    });
-
-    const inviteForm = useForm<InviteForm>({
-        resolver: zodResolver(inviteFormSchema),
-        defaultValues: { email: "", role: "Viewer", desc: "" },
-    });
-
-    React.useEffect(() => {
-        if (open === "edit" && currentRow) {
-            addEditForm.reset({
-                username: currentRow.username,
-                email: currentRow.email,
-                password_hash: currentRow.password_hash,
-                tenant_id: currentRow.tenant_id,
-                role: currentRow.role,
-                isEdit: true,
-            });
-        } else if (open === "add") {
-            addEditForm.reset({
-                username: "",
-                email: "",
-                password_hash: "",
-                tenant_id: "",
-                role: "",
-                isEdit: false,
-            });
-        }
-    }, [open, currentRow, addEditForm]);
-
-    const handleAddEditSubmit = (values: AddEditForm) => {
+    const handleAddEditSubmit = (values: z.infer<typeof addEditSchema>) => {
         const { isEdit, ...data } = values;
-        const meta = (window as any).tableMeta; // Access table meta globally (set in user-logic.tsx)
+        const meta = (window as any).tableMeta;
         if (isEdit && currentRow) {
             meta?.updateData(currentRow.id, data);
         } else {
@@ -112,20 +67,18 @@ export function UsersDialog() {
         }
         setOpen(null);
         setCurrentRow(null);
-        addEditForm.reset();
     };
 
-    const handleInviteSubmit = (values: InviteForm) => {
+    const handleInviteSubmit = (values: z.infer<typeof inviteSchema>) => {
         const meta = (window as any).tableMeta;
         meta?.addData({
-            username: values.email.split("@")[0], // Derive username from email
+            username: values.email.split("@")[0],
             email: values.email,
             password_hash: "invited",
-            tenant_id: "default_tenant", // Default value
+            tenant_id: "default_tenant",
             role: values.role,
         });
         setOpen(null);
-        inviteForm.reset();
     };
 
     const handleDeleteSubmit = () => {
@@ -137,196 +90,62 @@ export function UsersDialog() {
         setDeleteConfirmValue("");
     };
 
+    const addEditDefaultValues = open === "edit" && currentRow
+        ? {
+            username: currentRow.username,
+            email: currentRow.email,
+            password_hash: currentRow.password_hash,
+            tenant_id: currentRow.tenant_id,
+            role: currentRow.role,
+            isEdit: true,
+        }
+        : {
+            username: "",
+            email: "",
+            password_hash: "",
+            tenant_id: "",
+            role: "",
+            isEdit: false,
+        };
+
     return (
         <>
-            {/* Add/Edit Dialog */}
-            <Dialog open={open === "add" || open === "edit"} onOpenChange={() => setOpen(null)}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>{open === "edit" ? "Edit User" : "Add New User"}</DialogTitle>
-                        <DialogDescription>
-                            {open === "edit" ? "Update the details for the user." : "Fill in the details for the new user."}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Form {...addEditForm}>
-                        <form
-                            id="user-form"
-                            onSubmit={addEditForm.handleSubmit(handleAddEditSubmit)}
-                            className="space-y-4"
-                        >
-                            <FormField
-                                control={addEditForm.control}
-                                name="username"
-                                render={({ field }) => (
-                                    <FormItem className="grid grid-cols-4 items-center gap-4">
-                                        <FormLabel className="text-right">Username</FormLabel>
-                                        <FormControl>
-                                            <Input className="col-span-3" {...field} />
-                                        </FormControl>
-                                        <FormMessage className="col-span-3 col-start-2" />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={addEditForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem className="grid grid-cols-4 items-center gap-4">
-                                        <FormLabel className="text-right">Email</FormLabel>
-                                        <FormControl>
-                                            <Input className="col-span-3" type="email" {...field} />
-                                        </FormControl>
-                                        <FormMessage className="col-span-3 col-start-2" />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={addEditForm.control}
-                                name="password_hash"
-                                render={({ field }) => (
-                                    <FormItem className="grid grid-cols-4 items-center gap-4">
-                                        <FormLabel className="text-right">Password Hash</FormLabel>
-                                        <FormControl>
-                                            <Input className="col-span-3" {...field} />
-                                        </FormControl>
-                                        <FormMessage className="col-span-3 col-start-2" />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={addEditForm.control}
-                                name="tenant_id"
-                                render={({ field }) => (
-                                    <FormItem className="grid grid-cols-4 items-center gap-4">
-                                        <FormLabel className="text-right">Tenant ID</FormLabel>
-                                        <FormControl>
-                                            <Input className="col-span-3" {...field} />
-                                        </FormControl>
-                                        <FormMessage className="col-span-3 col-start-2" />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={addEditForm.control}
-                                name="role"
-                                render={({ field }) => (
-                                    <FormItem className="grid grid-cols-4 items-center gap-4">
-                                        <FormLabel className="text-right">Role</FormLabel>
-                                        <FormControl>
-                                            <SelectDropdown
-                                                defaultValue={field.value}
-                                                onValueChange={field.onChange}
-                                                placeholder="Select a role"
-                                                items={roles}
-                                                className="col-span-3"
-                                            />
-                                        </FormControl>
-                                        <FormMessage className="col-span-3 col-start-2" />
-                                    </FormItem>
-                                )}
-                            />
-                        </form>
-                    </Form>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit" form="user-form">
-                            {open === "edit" ? "Save Changes" : "Add User"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Invite Dialog */}
-            <Dialog open={open === "invite"} onOpenChange={() => setOpen(null)}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader className="text-start">
-                        <DialogTitle className="flex items-center gap-2">
-                            <MailPlus /> Invite User
-                        </DialogTitle>
-                        <DialogDescription>
-                            Invite new user to join your team by sending them an email invitation. Assign a role to define their access level.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Form {...inviteForm}>
-                        <form
-                            id="user-invite-form"
-                            onSubmit={inviteForm.handleSubmit(handleInviteSubmit)}
-                            className="space-y-4"
-                        >
-                            <FormField
-                                control={inviteForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Email</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="email"
-                                                placeholder="eg: john.doe@gmail.com"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={inviteForm.control}
-                                name="role"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Role</FormLabel>
-                                        <FormControl>
-                                            <SelectDropdown
-                                                defaultValue={field.value}
-                                                onValueChange={field.onChange}
-                                                placeholder="Select a role"
-                                                items={roles}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={inviteForm.control}
-                                name="desc"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Description (optional)</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                className="resize-none"
-                                                placeholder="Add a personal note to your invitation (optional)"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </form>
-                    </Form>
-                    <DialogFooter className="gap-y-2">
-                        <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit" form="user-invite-form">
-                            Invite <Send />
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Dialog */}
+            <FormDialog
+                open={open === "add" || open === "edit"}
+                onClose={() => setOpen(null)}
+                schema={addEditSchema}
+                defaultValues={addEditDefaultValues}
+                onSubmit={handleAddEditSubmit}
+                title={open === "edit" ? "Edit User" : "Add New User"}
+                description={open === "edit" ? "Update the details for the user." : "Fill in the details for the new user."}
+                fields={[
+                    { name: "username", label: "Username", type: "text" },
+                    { name: "email", label: "Email", type: "email" },
+                    { name: "password_hash", label: "Password Hash", type: "text" },
+                    { name: "tenant_id", label: "Tenant ID", type: "text" },
+                    { name: "role", label: "Role", type: "select", options: roles },
+                ]}
+            />
+            <FormDialog
+                open={open === "invite"}
+                onClose={() => setOpen(null)}
+                schema={inviteSchema}
+                defaultValues={{ email: "", role: "Viewer", desc: "" }}
+                onSubmit={handleInviteSubmit}
+                title="Invite User"
+                description="Invite new user to join your team by sending them an email invitation. Assign a role to define their access level."
+                fields={[
+                    { name: "email", label: "Email", type: "email" },
+                    { name: "role", label: "Role", type: "select", options: roles },
+                    { name: "desc", label: "Description (optional)", type: "textarea" },
+                ]}
+            />
             {currentRow && (
                 <ConfirmDialog
                     open={open === "delete"}
                     onOpenChange={() => setOpen(null)}
                     handleConfirm={handleDeleteSubmit}
-                    disabled={deleteConfirmValue.trim() !== currentRow?.username}
+                    disabled={deleteConfirmValue.trim() !== currentRow.username}
                     title={
                         <span className="text-destructive">
                             <AlertTriangle className="stroke-destructive me-1 inline-block" size={18} /> Delete User
