@@ -6,19 +6,33 @@ import { withTenantContext, query, createTenant } from '../../cortex/db/db';
 import { Connection } from '../../cortex/db/connection';
 import { getDbConfig } from '../../cortex/config/db-config';
 import { QueryResult } from '../../cortex/db/db-types';
+import { Server } from 'http';
 
 let connection: Connection;
+let server: Server;
 
 describe('[test 5] Tenancy Logic', () => {
     beforeAll(async () => {
         // Initialize connection for tests
         const dbConfig = getDbConfig();
         connection = await Connection.initialize(dbConfig);
+        // Start server on random port
+        server = app.listen(0);
+        await new Promise<void>((resolve) => {
+            server.on('listening', resolve);
+        });
     });
 
     afterAll(async () => {
         // Close connection to release open handles
         await connection.close();
+        // Close server
+        await new Promise<void>((resolve, reject) => {
+            server.close((err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
     });
 
     it('should handle tenancy when TENANCY=true', async () => {
@@ -46,8 +60,7 @@ describe('[test 5] Tenancy Logic', () => {
         // Verify tenant exists
         const verifyClient = await connection.getClient(settings.MASTER_DB);
         try {
-            const result: QueryResult<{
-                database_name: string }> = await verifyClient.query('SELECT database_name FROM tenants WHERE tenant_id = ?', ['test_tenant']);
+            const result: QueryResult<{ database_name: string }> = await verifyClient.query('SELECT database_name FROM tenants WHERE tenant_id = ?', ['test_tenant']);
             expect(result.rows.length).toBe(1);
             expect(result.rows[0].database_name).toBe('test_tenant_db');
         } finally {
@@ -68,7 +81,7 @@ describe('[test 5] Tenancy Logic', () => {
         });
 
         // Check middleware with request
-        const response = await request(app).get('/hz').set('x-tenant-id', 'test_tenant');
+        const response = await request(server).get('/hz').set('x-tenant-id', 'test_tenant');
         expect(response.status).toBe(200);
 
         // Cleanup

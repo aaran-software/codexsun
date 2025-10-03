@@ -82,7 +82,7 @@ async function setupMasterDb(): Promise<void> {
     let client = await conn.getClient('');
     try {
         if (settings.DB_DRIVER === 'postgres') {
-            await client.query(`CREATE SCHEMA IF NOT EXISTS "${settings.MASTER_DB}"`);
+            await client.query(`CREATE SCHEMA IF NOT EXISTS ${settings.MASTER_DB}`);
         } else {
             await client.query(`CREATE DATABASE IF NOT EXISTS \`${settings.MASTER_DB}\``);
         }
