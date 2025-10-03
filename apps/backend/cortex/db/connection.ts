@@ -1,56 +1,87 @@
 // cortex/connection.ts
 import { DbConfig, AnyDbClient, DBAdapter } from './db-types';
 import { MariaDBAdapter } from './adapters/mariadb';
+import { PostgresAdapter } from './adapters/postgres';
+import { MysqlAdapter } from './adapters/mysql';
+import { SqliteAdapter } from './adapters/sqlite';
 
 export class Connection {
-    private config: DbConfig;
+    private readonly config: DbConfig;
     private adapter: DBAdapter;
-    private client: AnyDbClient | null = null;
+    private static instance: Connection | null = null;
 
-    constructor(config: DbConfig) {
+    private constructor(config: DbConfig) {
         this.config = config;
-        if (this.config.type !== 'mariadb') {
-            throw new Error(`Unsupported database type: ${this.config.type}. Only mariadb is supported.`);
+        switch (this.config.type) {
+            case 'mariadb':
+                this.adapter = new MariaDBAdapter();
+                break;
+            case 'postgres':
+                this.adapter = new PostgresAdapter();
+                break;
+            case 'mysql':
+                this.adapter = new MysqlAdapter();
+                break;
+            case 'sqlite':
+                this.adapter = new SqliteAdapter();
+                break;
+            default:
+                throw new Error(`Unsupported database type: ${this.config.type}`);
         }
-        this.adapter = new MariaDBAdapter();
+    }
+
+    /**
+     * Initialize the singleton connection instance.
+     */
+    static async initialize(config: DbConfig): Promise<Connection> {
+        if (!Connection.instance) {
+            Connection.instance = new Connection(config);
+            await Connection.instance.init();
+        }
+        return Connection.instance;
+    }
+
+    /**
+     * Get the singleton connection instance.
+     */
+    static getInstance(): Connection {
+        if (!Connection.instance) {
+            throw new Error('Connection not initialized. Call initialize first.');
+        }
+        return Connection.instance;
     }
 
     async init(): Promise<void> {
-        if (this.client) {
-            throw new Error('Connection already initialized');
-        }
         try {
-            this.client = await this.adapter.connect(this.config);
+            if (this.adapter.initPool) {
+                await this.adapter.initPool(this.config);
+            }
         } catch (error) {
             if (error instanceof Error) {
-                throw new Error(`Failed to initialize connection: ${error.message}`);
+                throw new Error(`Failed to initialize pool: ${error.message}`);
             } else {
-                throw new Error(`Failed to initialize connection: Unknown error`);
+                throw new Error(`Failed to initialize pool: Unknown error`);
             }
         }
     }
 
     async close(): Promise<void> {
-        if (!this.client) {
-            return;
-        }
         try {
-            await this.adapter.disconnect(this.client);
-            this.client = null;
+            if (this.adapter.closePool) {
+                await this.adapter.closePool();
+            }
+            Connection.instance = null;
         } catch (error) {
             if (error instanceof Error) {
-                throw new Error(`Failed to close connection: ${error.message}`);
+                throw new Error(`Failed to close pool: ${error.message}`);
             } else {
-                throw new Error(`Failed to close connection: Unknown error`);
+                throw new Error(`Failed to close pool: Unknown error`);
             }
         }
     }
 
-    getClient(): AnyDbClient {
-        if (!this.client) {
-            throw new Error('Connection not initialized');
-        }
-        return this.client;
+    async getClient(database: string = ''): Promise<AnyDbClient> {
+        return await this.adapter.getConnection(database);
     }
 
     getConfig(): DbConfig {

@@ -1,41 +1,42 @@
-// cortex/adapters/mariadb.ts
-import mariadb from 'mariadb';
+// cortex/adapters/postgres.ts
+import { Pool, PoolClient } from 'pg';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 
-export class MariaDBAdapter implements DBAdapter {
-    private static pool: mariadb.Pool | null = null;
+export class PostgresAdapter implements DBAdapter {
+    private static pool: Pool | null = null;
     private static poolsInitialized = false;
 
     async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
-        if (MariaDBAdapter.poolsInitialized) return;
-        MariaDBAdapter.pool = mariadb.createPool({
+        if (PostgresAdapter.poolsInitialized) return;
+        PostgresAdapter.pool = new Pool({
             host: config.host,
             port: config.port,
             user: config.user,
             password: config.password,
-            connectionLimit: 10,
-            acquireTimeout: 10000,
-            idleTimeout: 30000,
+            ssl: config.ssl ? { rejectUnauthorized: false } : false,
+            max: 10,
+            connectionTimeoutMillis: 10000,
+            idleTimeoutMillis: 30000,
         });
-        MariaDBAdapter.poolsInitialized = true;
+        PostgresAdapter.poolsInitialized = true;
     }
 
     async closePool(): Promise<void> {
-        if (MariaDBAdapter.pool) {
-            await MariaDBAdapter.pool.end();
-            MariaDBAdapter.pool = null;
-            MariaDBAdapter.poolsInitialized = false;
+        if (PostgresAdapter.pool) {
+            await PostgresAdapter.pool.end();
+            PostgresAdapter.pool = null;
+            PostgresAdapter.poolsInitialized = false;
         }
     }
 
     async getConnection(database: string): Promise<AnyDbClient> {
-        if (!MariaDBAdapter.pool) {
+        if (!PostgresAdapter.pool) {
             throw new Error('Pool not initialized. Call initPool first.');
         }
         try {
-            const connection = await MariaDBAdapter.pool.getConnection();
+            const connection: PoolClient = await PostgresAdapter.pool.connect();
             if (database) {
-                await connection.query(`USE \`${database}\``);
+                await connection.query(`SET search_path TO ${database}`);
             }
             await connection.query('SELECT 1');
             return {
@@ -43,23 +44,22 @@ export class MariaDBAdapter implements DBAdapter {
                     try {
                         const result = await connection.query(text, params);
                         return {
-                            rows: Array.isArray(result) ? result : [],
-                            rowCount: (result as any).affectedRows || (Array.isArray(result) ? result.length : 0),
-                            insertId: (result as any).insertId || undefined,
+                            rows: result.rows,
+                            rowCount: result.rowCount || 0,
+                            insertId: result.rows[0]?.id || undefined,
                         };
                     } catch (err) {
                         if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                            console.error('MariaDB query error:', err);
+                            console.error('PostgreSQL query error:', err);
                         }
                         throw err;
                     }
                 },
-                end: () => connection.end(),
                 release: () => connection.release(),
             };
         } catch (err) {
             if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                console.error('MariaDB connection error:', err);
+                console.error('PostgreSQL connection error:', err);
             }
             throw err;
         }
@@ -71,7 +71,7 @@ export class MariaDBAdapter implements DBAdapter {
             port: config.port,
             user: config.user,
             password: config.password,
-            ssl: config.ssl
+            ssl: config.ssl,
         });
         return this.getConnection(config.database);
     }
@@ -79,8 +79,6 @@ export class MariaDBAdapter implements DBAdapter {
     async disconnect(client: AnyDbClient): Promise<void> {
         if (client.release) {
             client.release();
-        } else if (client.end) {
-            await client.end();
         }
     }
 
@@ -89,12 +87,12 @@ export class MariaDBAdapter implements DBAdapter {
         return {
             rows: result.rows || [],
             rowCount: result.rowCount || 0,
-            insertId: result.insertId || undefined,
+            insertId: result.insertId,
         };
     }
 
     async beginTransaction(client: AnyDbClient): Promise<void> {
-        await client.query('START TRANSACTION');
+        await client.query('BEGIN');
     }
 
     async commitTransaction(client: AnyDbClient): Promise<void> {

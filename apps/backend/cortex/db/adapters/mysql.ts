@@ -1,39 +1,40 @@
-// cortex/adapters/mariadb.ts
-import mariadb from 'mariadb';
+// cortex/adapters/mysql.ts
+import mysql, { Pool as MySqlPool, PoolConnection } from 'mysql2/promise';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 
-export class MariaDBAdapter implements DBAdapter {
-    private static pool: mariadb.Pool | null = null;
+export class MysqlAdapter implements DBAdapter {
+    private static pool: MySqlPool | null = null;
     private static poolsInitialized = false;
 
     async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
-        if (MariaDBAdapter.poolsInitialized) return;
-        MariaDBAdapter.pool = mariadb.createPool({
+        if (MysqlAdapter.poolsInitialized) return;
+        MysqlAdapter.pool = mysql.createPool({
             host: config.host,
             port: config.port,
             user: config.user,
             password: config.password,
+            ssl: config.ssl ? { rejectUnauthorized: false } : undefined,
             connectionLimit: 10,
-            acquireTimeout: 10000,
-            idleTimeout: 30000,
+            connectTimeout: 10000,
+            waitForConnections: true,
         });
-        MariaDBAdapter.poolsInitialized = true;
+        MysqlAdapter.poolsInitialized = true;
     }
 
     async closePool(): Promise<void> {
-        if (MariaDBAdapter.pool) {
-            await MariaDBAdapter.pool.end();
-            MariaDBAdapter.pool = null;
-            MariaDBAdapter.poolsInitialized = false;
+        if (MysqlAdapter.pool) {
+            await MysqlAdapter.pool.end();
+            MysqlAdapter.pool = null;
+            MysqlAdapter.poolsInitialized = false;
         }
     }
 
     async getConnection(database: string): Promise<AnyDbClient> {
-        if (!MariaDBAdapter.pool) {
+        if (!MysqlAdapter.pool) {
             throw new Error('Pool not initialized. Call initPool first.');
         }
         try {
-            const connection = await MariaDBAdapter.pool.getConnection();
+            const connection: PoolConnection = await MysqlAdapter.pool.getConnection();
             if (database) {
                 await connection.query(`USE \`${database}\``);
             }
@@ -41,25 +42,24 @@ export class MariaDBAdapter implements DBAdapter {
             return {
                 query: async (text: string, params?: any[]) => {
                     try {
-                        const result = await connection.query(text, params);
+                        const [rows, fields] = await connection.query(text, params);
                         return {
-                            rows: Array.isArray(result) ? result : [],
-                            rowCount: (result as any).affectedRows || (Array.isArray(result) ? result.length : 0),
-                            insertId: (result as any).insertId || undefined,
+                            rows: Array.isArray(rows) ? rows : [],
+                            rowCount: (rows as any).affectedRows || (Array.isArray(rows) ? rows.length : 0),
+                            insertId: (rows as any).insertId || undefined,
                         };
                     } catch (err) {
                         if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                            console.error('MariaDB query error:', err);
+                            console.error('MySQL query error:', err);
                         }
                         throw err;
                     }
                 },
-                end: () => connection.end(),
                 release: () => connection.release(),
             };
         } catch (err) {
             if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                console.error('MariaDB connection error:', err);
+                console.error('MySQL connection error:', err);
             }
             throw err;
         }
@@ -71,7 +71,7 @@ export class MariaDBAdapter implements DBAdapter {
             port: config.port,
             user: config.user,
             password: config.password,
-            ssl: config.ssl
+            ssl: config.ssl,
         });
         return this.getConnection(config.database);
     }
@@ -79,8 +79,6 @@ export class MariaDBAdapter implements DBAdapter {
     async disconnect(client: AnyDbClient): Promise<void> {
         if (client.release) {
             client.release();
-        } else if (client.end) {
-            await client.end();
         }
     }
 
@@ -89,7 +87,7 @@ export class MariaDBAdapter implements DBAdapter {
         return {
             rows: result.rows || [],
             rowCount: result.rowCount || 0,
-            insertId: result.insertId || undefined,
+            insertId: result.insertId,
         };
     }
 

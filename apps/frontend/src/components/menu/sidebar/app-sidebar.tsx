@@ -75,8 +75,8 @@ const data = {
                     url: "/user",
                 },
                 {
-                    title: "Explorer",
-                    url: "#",
+                    title: "iuser",
+                    url: "/iuser",
                 },
                 {
                     title: "Quantum",

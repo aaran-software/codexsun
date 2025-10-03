@@ -1,5 +1,4 @@
-// components/users-table.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import {
     type SortingState,
     type VisibilityState,
@@ -13,8 +12,8 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
-} from '@tanstack/react-table';
-import { cn } from '@/lib/utils';
+} from '@tanstack/react-table'
+import { cn } from '@/lib/utils'
 import {
     Table,
     TableBody,
@@ -22,32 +21,32 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table';
-import { roles } from '../data/data';
-import { type User } from '../data/schema';
-import { DataTableBulkActions } from './data-table-bulk-actions';
-import { usersColumns as columns } from './users-columns';
+} from '@/components/ui/table'
+import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { roles } from '../data/data'
+import { type User } from '../data/schema'
+import { DataTableBulkActions } from './data-table-bulk-actions'
+import { usersColumns as columns } from './users-columns'
 
 declare module '@tanstack/react-table' {
     interface ColumnMeta<TData, TValue> {
-        className: string;
+        className: string
     }
 }
 
 type DataTableProps = {
-    data: User[];
-};
+    data: User[]
+}
 
 export function UsersTable({ data }: DataTableProps) {
-    const [rowSelection, setRowSelection] = useState({});
-    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [rowSelection, setRowSelection] = useState({})
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
         pageSize: 10,
-    });
+    })
 
     const table = useReactTable({
         data,
@@ -71,14 +70,14 @@ export function UsersTable({ data }: DataTableProps) {
         getSortedRowModel: getSortedRowModel(),
         getFacetedRowModel: getFacetedRowModel(),
         getFacetedUniqueValues: getFacetedUniqueValues(),
-    });
+    })
 
     useEffect(() => {
-        const pageCount = table.getPageCount();
+        const pageCount = table.getPageCount()
         if (pagination.pageIndex >= pageCount && pageCount > 0) {
-            setPagination((prev) => ({ ...prev, pageIndex: pageCount - 1 }));
+            setPagination((prev) => ({ ...prev, pageIndex: pageCount - 1 }))
         }
-    }, [table, pagination.pageIndex]);
+    }, [table, pagination.pageIndex])
 
     return (
         <div className='space-y-4 max-sm:has-[div[role="toolbar"]]:mb-16'>
@@ -88,19 +87,9 @@ export function UsersTable({ data }: DataTableProps) {
                 searchKey='username'
                 filters={[
                     {
-                        columnId: 'status',
-                        title: 'Status',
-                        options: [
-                            { label: 'Active', value: 'active' },
-                            { label: 'Inactive', value: 'inactive' },
-                            { label: 'Invited', value: 'invited' },
-                            { label: 'Suspended', value: 'suspended' },
-                        ],
-                    },
-                    {
                         columnId: 'role',
                         title: 'Role',
-                        options: roles.map((role) => ({ ...role })),
+                        options: roles.map((role) => ({ label: role.label, value: role.value })),
                     },
                 ]}
             />
@@ -160,5 +149,5 @@ export function UsersTable({ data }: DataTableProps) {
             <DataTablePagination table={table} />
             <DataTableBulkActions table={table} />
         </div>
-    );
+    )
 }

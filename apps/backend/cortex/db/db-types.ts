@@ -5,7 +5,8 @@ export interface DbConfig {
     database: string;
     user: string;
     password: string;
-    type: 'mariadb';
+    type: 'mariadb' | 'postgres' | 'mysql' | 'sqlite';
+    ssl?: boolean;
 }
 
 export interface AnyDbClient {
@@ -21,6 +22,9 @@ export interface QueryResult<T> {
 }
 
 export interface DBAdapter {
+    initPool?: (config: Omit<DbConfig, 'database' | 'type'>) => Promise<void>;
+    closePool?: () => Promise<void>;
+    getConnection: (database: string) => Promise<AnyDbClient>;
     connect: (config: DbConfig) => Promise<AnyDbClient>;
     disconnect: (client: AnyDbClient) => Promise<void>;
     query: (client: AnyDbClient, text: string, params?: any[]) => Promise<QueryResult<any>>;
