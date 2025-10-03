@@ -1,9 +1,16 @@
+// File: components/toolbar.tsx
+// Description: Toolbar for data table with search and filters.
+// Notes for study:
+// - Renders search input and faceted filters.
+// - Handles global or column-specific filtering.
+// - Fixed by checking if column exists before rendering filter to avoid errors.
+
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { type Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DataTableFacetedFilter } from '../user/to/faceted-filter'
-import { DataTableViewOptions } from '../user/to/view-options'
+import { DataTableFacetedFilter } from '@/apps/cxsun/user/to/faceted-filter'
+import { DataTableViewOptions } from '@/apps/cxsun/user/to/view-options'
 
 type DataTableToolbarProps<TData> = {
     table: Table<TData>

@@ -1,9 +1,11 @@
-// File: user-table.tsx
+// File: apps/cxsun/user/user-table.tsx
 // Description: Main data table component for users.
 // Notes for study:
-// - Updated date to current.
-// - Uses useDataTableLogic with initialData.
+// - Restored original structure to avoid dependency on undefined generic DataTable.
+// - Uses useDataTableLogic with initialData and user-specific columns.
 // - Sets window.tableMeta in useEffect.
+// - Updated date to current (October 03, 2025).
+// - Fixed TypeScript issues with proper typing and imports.
 
 import * as React from "react";
 import { Row, flexRender } from "@tanstack/react-table";
@@ -14,17 +16,19 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 
 import { userSchema } from "./user-schema";
-import { useDataTableLogic } from "./user-provider";
+import { useDataTableLogic } from "./user-provider"; // Note: Import from user-provider, but we'll update it.
 import { DataTableToolbar } from "@/apps/cxsun/common/toolbar";
 import { DataTablePagination } from "@/apps/cxsun/common/pagination";
 import { DataTableBulkActions } from "@/apps/cxsun/common/bulk-actions";
 import { UserProvider } from "./user-provider";
 import { UsersPrimaryButtons } from "./user-primary-buttons";
 import { UsersDialog } from "./user-dialog";
+import { columns } from "./user-columns"; // Import user-specific columns.
 
+// Component for draggable table rows
 function DraggableRow({ row }: { row: Row<z.infer<typeof userSchema>> }) {
     const { transform, transition, setNodeRef, isDragging } = useSortable({
-        id: row.original.id,
+        id: row.original.id, // Use row ID for sortable
     });
 
     return (
@@ -32,7 +36,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof userSchema>> }) {
             data-state={row.getIsSelected() && "selected"}
             data-dragging={isDragging}
             ref={setNodeRef}
-            className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+            className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80" // Styles for dragging
             style={{ transform: CSS.Transform.toString(transform), transition }}
         >
             {row.getVisibleCells().map((cell) => (
@@ -43,7 +47,8 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof userSchema>> }) {
 }
 
 export function DataTable({ data: initialData }: { data: z.infer<typeof userSchema>[] }) {
-    const { table, data, setData, sensors, sortableId, dataIds, handleDragEnd } = useDataTableLogic(initialData);
+    // Use the fixed useDataTableLogic with columns passed
+    const { table, data, setData, sensors, sortableId, dataIds, handleDragEnd } = useDataTableLogic(initialData, columns);
 
     // Store table meta globally for dialog access
     React.useEffect(() => {
@@ -59,7 +64,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof userSche
             <div className="w-full flex flex-col gap-6 px-4 lg:px-6">
                 <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                        Today's date and time is 06:53 PM IST on Friday, October 03, 2025
+                        Today's date and time is 09:17 AM IST on Friday, October 03, 2025
                     </div>
                     <UsersPrimaryButtons />
                 </div>

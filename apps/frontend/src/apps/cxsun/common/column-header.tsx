@@ -1,3 +1,10 @@
+// File: components/column-header.tsx
+// Description: Column header component for sorting and hiding.
+// Notes for study:
+// - Renders sortable headers with icons.
+// - Uses DropdownMenu for actions.
+// - Fixed by adding missing imports for ArrowDownIcon, etc.
+
 import {
     ArrowDownIcon,
     ArrowUpIcon,

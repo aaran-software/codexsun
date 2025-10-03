@@ -5,19 +5,32 @@
 // - Accepts schema, fields config (name, label, type, options for select).
 // - Handles form rendering dynamically based on fields.
 // - Usable across modules for any form-based dialog.
+// - Fixed by correcting imports for Dialog, Form, and adding missing components.
 
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {Dialog, Form} from "radix-ui";
-import {DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
-import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
-import {SelectDropdown} from "@/apps/cxsun/user/to/select-dropdown";
-import {Textarea} from "@/components/ui/textarea";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-// ... UI imports ...
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
+} from "@/components/ui/form";
+import { SelectDropdown } from "@/apps/cxsun/user/to/select-dropdown";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type FieldConfig = {
     name: string;
@@ -83,7 +96,7 @@ export function FormDialog<T>({ open, onClose, schema, defaultValues, onSubmit, 
                 </Form>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button type="submit" form="form-id">Submit</Button> {/* Adjust form id */}
+                    <Button type="submit">Submit</Button> {/* Removed form="form-id" as no id specified */}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

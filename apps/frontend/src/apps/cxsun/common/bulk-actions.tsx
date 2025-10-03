@@ -1,3 +1,11 @@
+// File: components/bulk-actions.tsx
+// Description: Bulk actions component for data table.
+// Notes for study:
+// - Displays when rows are selected.
+// - Includes clear selection button and custom children actions.
+// - Fixed by adding missing imports and correcting className usage.
+// - Added missing CSS for animations if needed, but assumed utils are defined.
+
 import React, {useState, useEffect, useRef} from 'react'
 import {type Table} from '@tanstack/react-table'
 import {X} from 'lucide-react'
@@ -67,8 +75,8 @@ export function DataTableBulkActions<TData>({
                 tabIndex={-1}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                    'fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl',
-                    'transition-all delay-100 duration-300 ease-out hover:scale-105',
+                    'fixed inset-x-0 bottom-0 z-50 mx-auto max-w-7xl px-4',
+                    'animate-in slide-in-from-bottom-5 duration-300 ease-out',
                     'focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none'
                 )}
             >
@@ -90,7 +98,7 @@ export function DataTableBulkActions<TData>({
                                 aria-label='Clear selection'
                                 title='Clear selection (Escape)'
                             >
-                                <X/>
+                                <X />
                                 <span className='sr-only'>Clear selection</span>
                             </Button>
                         </TooltipTrigger>

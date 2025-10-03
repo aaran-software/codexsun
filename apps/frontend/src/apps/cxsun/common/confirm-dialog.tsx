@@ -1,3 +1,9 @@
+// File: components/confirm-dialog.tsx
+// Description: Reusable ConfirmDialog component.
+// Notes for study:
+// - Used for confirmation actions like delete.
+// - Fixed by correcting import for AlertDialog components and adding missing props handling.
+
 import { cn } from '@/lib/utils'
 import {
     AlertDialog,
@@ -41,7 +47,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
     } = props
     return (
         <AlertDialog {...actions}>
-            <AlertDialogContent className={cn(className && className)}>
+            <AlertDialogContent className={cn(className)}>
                 <AlertDialogHeader className='text-start'>
                     <AlertDialogTitle>{title}</AlertDialogTitle>
                     <AlertDialogDescription asChild>

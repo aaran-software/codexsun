@@ -5,19 +5,23 @@
 // - Integrates DnD, toolbar, pagination, bulk actions.
 // - Can be used in any module by passing entity-specific props.
 // - Exposes meta globally if needed.
+// - Fixed by completing DndContext and SortableContext props.
+// - Corrected import for Table from ui/table, not lucide-react.
+// - Added DraggableRow definition.
+// - Added missing imports for Row, flexRender.
 
 import * as React from "react";
-import {z} from "zod";
-import {ColumnDef} from "@tanstack/react-table";
-import {useDataTableLogic} from "@/apps/cxsun/common/use-data-table-logic";
-import {DataTableToolbar} from "@/apps/cxsun/common/toolbar";
-import {DndContext} from "@dnd-kit/core";
-import {TableBody, TableCell, TableHeader, TableRow} from "@/components/ui/table";
-import {Table} from "lucide-react";
-import { SortableContext } from "@dnd-kit/sortable";
-import {DataTablePagination} from "@/apps/cxsun/common/pagination";
-import {DataTableBulkActions} from "@/apps/cxsun/common/bulk-actions";
-// ... imports ...
+import { z } from "zod";
+import { ColumnDef, Row, flexRender } from "@tanstack/react-table";
+import { useDataTableLogic } from "./use-data-table-logic";
+import { DataTableToolbar } from "./toolbar";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTablePagination } from "./pagination";
+import { DataTableBulkActions } from "./bulk-actions";
 
 type DataTableProps<T> = {
     initialData: T[];
@@ -31,7 +35,7 @@ type DataTableProps<T> = {
 };
 
 export function DataTable<T extends { id: number }>({ initialData, columns, primaryButtons, dialogs, searchPlaceholder, searchKey, filters }: DataTableProps<T>) {
-    const { table} = useDataTableLogic<T>(initialData);
+    const { table, data, setData, sensors, sortableId, dataIds, handleDragEnd } = useDataTableLogic<T>(initialData, columns);
 
     React.useEffect(() => {
         (window as any).tableMeta = table.options.meta; // Global exposure.
@@ -45,14 +49,28 @@ export function DataTable<T extends { id: number }>({ initialData, columns, prim
             </div>
             <DataTableToolbar table={table} searchPlaceholder={searchPlaceholder} searchKey={searchKey} filters={filters} />
             <div className="overflow-hidden rounded-lg border">
-                <DndContext /* ... */ >
+                <DndContext
+                    collisionDetection={closestCenter}
+                    modifiers={[restrictToVerticalAxis]}
+                    onDragEnd={handleDragEnd}
+                    sensors={sensors}
+                    id={sortableId}
+                >
                     <Table>
-                        <TableHeader /* ... */ >
-                            {/* Render headers */}
+                        <TableHeader className="bg-muted sticky top-0 z-10">
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id} colSpan={header.colSpan}>
+                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                        </TableHead>
+                                    ))}
+                                </TableRow>
+                            ))}
                         </TableHeader>
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
-                                <SortableContext /* ... */ >
+                                <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
                                     {table.getRowModel().rows.map((row) => (
                                         <DraggableRow key={row.id} row={row} />
                                     ))}
@@ -66,7 +84,7 @@ export function DataTable<T extends { id: number }>({ initialData, columns, prim
             </div>
             <DataTablePagination table={table} />
             <DataTableBulkActions table={table} entityName="item">
-                <button /* delete selected */ onClick={() => {
+                <button onClick={() => {
                     table.options.meta?.deleteData(table.getFilteredSelectedRowModel().rows.map((row) => row.original.id));
                     table.resetRowSelection();
                 }}>
@@ -80,5 +98,21 @@ export function DataTable<T extends { id: number }>({ initialData, columns, prim
 
 // DraggableRow component (reusable).
 function DraggableRow<T>({ row }: { row: Row<T> }) {
-    // ... same as before ...
+    const { transform, transition, setNodeRef, isDragging } = useSortable({
+        id: row.original.id,
+    });
+
+    return (
+        <TableRow
+            data-state={row.getIsSelected() && "selected"}
+            data-dragging={isDragging}
+            ref={setNodeRef}
+            className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+            style={{ transform: CSS.Transform.toString(transform), transition }}
+        >
+            {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+            ))}
+        </TableRow>
+    );
 }

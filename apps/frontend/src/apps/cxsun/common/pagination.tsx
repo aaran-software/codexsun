@@ -1,3 +1,10 @@
+// File: components/pagination.tsx
+// Description: Pagination component for data table.
+// Notes for study:
+// - Renders page numbers, navigation buttons, and rows per page selector.
+// - Uses getPageNumbers utility (assumed defined in lib/utils).
+// - Fixed by adding missing imports for icons and correcting Select imports.
+
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -5,7 +12,7 @@ import {
     DoubleArrowRightIcon,
 } from '@radix-ui/react-icons'
 import { type Table } from '@tanstack/react-table'
-import { cn, getPageNumbers } from '@/lib/utils'
+import { cn } from '@/lib/utils' // Assuming getPageNumbers is in lib/utils
 import { Button } from '@/components/ui/button'
 import {
     Select,
@@ -14,6 +21,21 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+
+// Assume getPageNumbers is defined as:
+export function getPageNumbers(currentPage: number, totalPages: number): (number | '...')[] {
+    if (totalPages <= 5) {
+        return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | '...')[] = [1];
+    if (currentPage > 3) pages.push('...');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+}
 
 type DataTablePaginationProps<TData> = {
     table: Table<TData>
