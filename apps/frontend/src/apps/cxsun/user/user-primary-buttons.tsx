@@ -1,15 +1,15 @@
 // File: user-primary-buttons.tsx
 // Description: User-specific primary buttons.
 // Notes for study:
-// - Uses generic context with type User.
+// - Uses useUsers from provider.
 // - Pattern can be replicated for other entities.
 
 import { MailPlus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useDataContext } from '@/apps/cxsun/common/data-provider';
+import { useUsers } from './user-provider'; // Fixed to useUsers.
 
 export function UsersPrimaryButtons() {
-    const { setOpen } = useDataContext<unknown>(); // Use unknown if type is not specific, but better User if possible.
+    const { setOpen } = useUsers();
     return (
         <div className='flex gap-2'>
             <Button variant='outline' className='space-x-1' onClick={() => setOpen('invite')}>

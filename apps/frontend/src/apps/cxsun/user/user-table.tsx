@@ -2,12 +2,11 @@
 // Description: Main data table component for users.
 // Notes for study:
 // - Updated date to current.
-// - Fixed import for useDataTableLogic from "./user-provider".
-// - Assumes common components are defined elsewhere.
+// - Uses useDataTableLogic with initialData.
+// - Sets window.tableMeta in useEffect.
 
 import * as React from "react";
 import { Row, flexRender } from "@tanstack/react-table";
-import { z } from "zod";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { DndContext, closestCenter } from "@dnd-kit/core";
@@ -15,7 +14,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 
 import { userSchema } from "./user-schema";
-import { useDataTableLogic } from "./user-provider"; // Fixed import.
+import { useDataTableLogic } from "./user-provider";
 import { DataTableToolbar } from "@/apps/cxsun/common/toolbar";
 import { DataTablePagination } from "@/apps/cxsun/common/pagination";
 import { DataTableBulkActions } from "@/apps/cxsun/common/bulk-actions";
@@ -44,7 +43,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof userSchema>> }) {
 }
 
 export function DataTable({ data: initialData }: { data: z.infer<typeof userSchema>[] }) {
-    const { table, data, setData, sensors, sortableId, dataIds, handleDragEnd } = useDataTableLogic();
+    const { table, data, setData, sensors, sortableId, dataIds, handleDragEnd } = useDataTableLogic(initialData);
 
     // Store table meta globally for dialog access
     React.useEffect(() => {

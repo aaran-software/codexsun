@@ -1,10 +1,9 @@
 // File: user-provider.tsx
 // Description: User-specific provider with context and table logic.
 // Notes for study:
-// - Merged with original logic for completeness.
-// - Generic for User type.
-// - Includes columns, but moved to separate file; import if needed.
-// - Fixed to include useDataTableLogic.
+// - Fixed by removing call to useDataTableLogic in provider component to avoid error.
+// - useDataTableLogic is exported for use in user-table.tsx.
+// - Context only for dialog state; tableMeta via window as original.
 
 import * as React from "react";
 import {
@@ -18,7 +17,7 @@ import {
     type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { arrayMove } from "@dnd-kit/sortable"; // Note: verticalListSortingStrategy is used elsewhere.
+import { arrayMove } from "@dnd-kit/sortable";
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -42,14 +41,13 @@ type TableMeta = {
     addData: (newItem: Omit<User, "id" | "created_at">) => void;
     updateData: (id: number, updatedItem: Omit<User, "id" | "created_at">) => void;
     deleteData: (ids: number[]) => void;
-} | null;
+};
 
 type UsersContextType = {
     open: DialogType;
     setOpen: (str: DialogType) => void;
     currentRow: User | null;
     setCurrentRow: React.Dispatch<React.SetStateAction<User | null>>;
-    tableMeta: TableMeta;
 };
 
 const UsersContext = React.createContext<UsersContextType | null>(null);
@@ -57,10 +55,9 @@ const UsersContext = React.createContext<UsersContextType | null>(null);
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const [open, setOpen] = React.useState<DialogType>(null);
     const [currentRow, setCurrentRow] = React.useState<User | null>(null);
-    const table = useDataTableLogic(); // Use the logic hook.
 
     return (
-        <UsersContext.Provider value={{ open, setOpen, currentRow, setCurrentRow, tableMeta: table.options.meta as TableMeta }}>
+        <UsersContext.Provider value={{ open, setOpen, currentRow, setCurrentRow }}>
             {children}
         </UsersContext.Provider>
     );
@@ -74,8 +71,8 @@ export const useUsers = () => {
     return context;
 };
 
-export function useDataTableLogic() {
-    const [data, setData] = React.useState<User[]>([]); // Initial data would be passed or fetched.
+export function useDataTableLogic(initialData: User[]) {
+    const [data, setData] = React.useState(() => initialData);
     const [rowSelection, setRowSelection] = React.useState({});
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -84,7 +81,7 @@ export function useDataTableLogic() {
     const sortableId = React.useId();
     const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
-    const dataIds = React.useMemo<UniqueIdentifier[]>(() => data.map(({ id }) => id), [data]);
+    const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ id }) => id) || [], [data]);
 
     const table = useReactTable({
         data,
@@ -104,12 +101,12 @@ export function useDataTableLogic() {
         getFacetedRowModel: getFacetedRowModel(),
         getFacetedUniqueValues: getFacetedUniqueValues(),
         meta: {
-            addData: (newItem) => {
+            addData: (newItem: Omit<User, "id" | "created_at">) => {
                 const newId = Math.max(...data.map((d) => d.id), 0) + 1;
                 setData([...data, { id: newId, created_at: new Date().toISOString(), ...newItem }]);
                 toast.success("User added successfully");
             },
-            updateData: (id, updatedItem) => {
+            updateData: (id: number, updatedItem: Omit<User, "id" | "created_at">) => {
                 setData((prev) =>
                     prev.map((item) =>
                         item.id === id ? { ...item, ...updatedItem } : item
@@ -117,11 +114,11 @@ export function useDataTableLogic() {
                 );
                 toast.success("User updated successfully");
             },
-            deleteData: (ids) => {
+            deleteData: (ids: number[]) => {
                 setData((prev) => prev.filter((item) => !ids.includes(item.id)));
                 toast.success(`Deleted ${ids.length} user${ids.length > 1 ? "s" : ""} successfully`);
             },
-        },
+        } as TableMeta,
     });
 
     function handleDragEnd(event: DragEndEvent) {

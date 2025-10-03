@@ -5,6 +5,7 @@
 // - Specific schemas for add/edit/invite filled from original.
 // - roles defined based on filters.
 // - Handlers defined using window.tableMeta as in original.
+// - Changed useDataContext to useUsers for consistency with provider.
 
 import * as React from "react";
 import { z } from "zod";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FormDialog } from "@/apps/cxsun/common/form-dialog";
 import { ConfirmDialog } from "@/apps/cxsun/common/confirm-dialog";
-import { useDataContext } from "@/apps/cxsun/common/data-provider";
+import { useUsers } from "./user-provider"; // Fixed to useUsers.
 import { type User } from "./user-schema"; // Existing reusable.
 
 type FieldConfig = {
@@ -54,7 +55,7 @@ const inviteSchema = z.object({
 });
 
 export function UsersDialog() {
-    const { open, setOpen, currentRow, setCurrentRow } = useDataContext<User>();
+    const { open, setOpen, currentRow, setCurrentRow } = useUsers();
     const [deleteConfirmValue, setDeleteConfirmValue] = React.useState("");
 
     const handleAddEditSubmit = (values: z.infer<typeof addEditSchema>) => {

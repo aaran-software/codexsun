@@ -3,6 +3,7 @@
 // Notes for study:
 // - These are specific to users but follow a pattern that can be replicated for other entities.
 // - Completed with all columns from original, including Badge for role.
+// - Changed useDataContext to useUsers for consistency.
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { IconDotsVertical, IconGripVertical } from "@tabler/icons-react";
 import { DataTableColumnHeader } from "@/apps/cxsun/common/column-header"; // Reusable header.
 import { type User } from "./user-schema";
-import { useDataContext } from "@/apps/cxsun/common/data-provider";
+import { useUsers } from "./user-provider"; // Fixed to useUsers.
 
 export const columns: ColumnDef<User>[] = [
     {
@@ -84,7 +85,7 @@ export const columns: ColumnDef<User>[] = [
     {
         id: "actions",
         cell: ({ row }) => {
-            const { setOpen, setCurrentRow } = useDataContext<User>();
+            const { setOpen, setCurrentRow } = useUsers();
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
