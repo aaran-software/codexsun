@@ -80,3 +80,8 @@ export type Role = 'admin' | 'user' | 'viewer';
 export interface PermissionCheck {
     requiredRole: Role;
 }
+
+export interface RateLimitConfig {
+    windowMs: number;
+    max: number;
+}

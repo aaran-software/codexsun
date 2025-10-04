@@ -17,7 +17,6 @@ const mockUserQuery = async (connection: DbConnection, email: string): Promise<a
     const mockUsers = [
         { id: 'user1', email: 'john@tenant1.com', tenantId: 'tenant1', password: 'hashed_pass123', role: 'admin' },
     ];
-    const result = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
     return mockUsers.find(user => user.email === email) || null;
 };
 

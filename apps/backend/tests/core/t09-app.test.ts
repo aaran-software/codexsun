@@ -40,7 +40,7 @@ describe('[9.] Express App', () => {
 // Mock request helper for testing Express app
 async function mockRequest(app: any, method: string, url: string, body: any): Promise<any> {
     return new Promise((resolve) => {
-        const req = { method, url, body, headers: {}, context: {} };
+        const req = { method, url, body, headers: {}, context: {}, ip: '127.0.0.1' };
         const res = {
             statusCode: 200,
             status: (code: number) => {

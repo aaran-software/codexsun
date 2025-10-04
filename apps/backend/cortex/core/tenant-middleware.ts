@@ -4,10 +4,15 @@ import { handleError } from './error-handler';
 
 // Mock JWT verification (replace with actual JWT library like jsonwebtoken in production)
 const mockJwtVerify = async (token: string): Promise<User | null> => {
-    if (token === 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature') {
-        return { id: 'user1', tenantId: 'tenant1', role: 'admin', token };
+    const validTokens = [
+        'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature',
+        'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6InVzZXIifQ.signature',
+    ];
+    if (!validTokens.includes(token)) {
+        return null;
     }
-    return null;
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    return { id: payload.id, tenantId: payload.tenantId, role: payload.role, token };
 };
 
 export async function tenantMiddleware(
