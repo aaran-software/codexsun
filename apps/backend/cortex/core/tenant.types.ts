@@ -43,3 +43,16 @@ export interface StoredUser {
     email: string;
     tenantId: string;
 }
+
+export interface InventoryItemData {
+    name: string;
+    quantity: number;
+    tenantId: string;
+}
+
+export interface StoredInventoryItem {
+    id: string;
+    name: string;
+    quantity: number;
+    tenantId: string;
+}

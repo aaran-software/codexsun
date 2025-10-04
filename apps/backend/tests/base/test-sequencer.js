@@ -8,6 +8,7 @@ class CustomSequencer extends Sequencer {
             't03-auth-service.test.ts',
             't04-error-handler.test.ts',
             't05-user-service.test.ts',
+            't06-inventory-service.test.ts',
         ];
         return tests.sort((a, b) => {
             const aIndex = order.indexOf(a.path.split('/').pop());

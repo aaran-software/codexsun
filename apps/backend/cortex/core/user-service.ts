@@ -4,7 +4,7 @@ import { getTenantDbConnection } from './db-context-switcher';
 // Mock DB query for user (replace with actual DB query in production)
 const mockUserQuery = async (connection: DbConnection, id?: string, email?: string): Promise<any> => {
     const mockUsers: StoredUser[] = [
-        { id: 'user1', name: 'John Doe', email: 'john@tenant1.com', tenantId: 'tenant1' },
+        { id: 'user1', name: 'Existing User', email: 'existing@tenant1.com', tenantId: 'tenant1' },
     ];
     if (id) {
         return mockUsers.find(user => user.id === id) || null;
