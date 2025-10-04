@@ -29,7 +29,7 @@ describe('System Migration', () => {
             }
 
             // Run system migration using the existing connection
-            await runSystemMigration();
+            await runSystemMigration(connection);
 
             // Verify master DB exists
             noDbClient = await connection.getClient('');
@@ -63,12 +63,12 @@ describe('System Migration', () => {
                     { column_name: 'id', data_type: 'bigint', is_nullable: 'NO', column_default: null },
                     { column_name: 'tenant_id', data_type: 'varchar', is_nullable: 'NO', column_default: null },
                     { column_name: 'database_name', data_type: 'varchar', is_nullable: 'NO', column_default: null },
-                    { column_name: 'host', data_type: 'varchar', is_nullable: 'NO', column_default: null },
-                    { column_name: 'port', data_type: 'int', is_nullable: 'NO', column_default: null },
-                    { column_name: 'user', data_type: 'varchar', is_nullable: 'NO', column_default: null },
-                    { column_name: 'password', data_type: 'varchar', is_nullable: 'NO', column_default: null },
-                    { column_name: 'type', data_type: 'varchar', is_nullable: 'NO', column_default: null },
-                    { column_name: 'ssl', data_type: 'tinyint', is_nullable: 'NO', column_default: null },
+                    { column_name: 'db_host', data_type: 'varchar', is_nullable: 'NO', column_default: null },
+                    { column_name: 'db_port', data_type: 'int', is_nullable: 'NO', column_default: null },
+                    { column_name: 'db_user', data_type: 'varchar', is_nullable: 'NO', column_default: null },
+                    { column_name: 'db_pass', data_type: 'varchar', is_nullable: 'NO', column_default: null },
+                    { column_name: 'db_type', data_type: 'varchar', is_nullable: 'NO', column_default: null },
+                    { column_name: 'db_ssl', data_type: 'tinyint', is_nullable: 'NO', column_default: null },
                     { column_name: 'created_at', data_type: 'timestamp', is_nullable: 'YES', column_default: 'current_timestamp()' },
                     { column_name: 'updated_at', data_type: 'timestamp', is_nullable: 'YES', column_default: 'current_timestamp()' }
                 ];
@@ -77,18 +77,18 @@ describe('System Migration', () => {
 
                 // Verify default tenant entry
                 const tenantEntryCheck = await masterClient.query(
-                    'SELECT tenant_id, database_name, host, port, user, type, ssl FROM tenants WHERE tenant_id = ?',
+                    'SELECT tenant_id, database_name, db_host, db_port, db_user, db_type, db_ssl FROM tenants WHERE tenant_id = ?',
                     ['default']
                 );
                 expect(tenantEntryCheck.rows).toHaveLength(1);
                 expect(tenantEntryCheck.rows[0]).toMatchObject({
                     tenant_id: 'default',
                     database_name: 'codexsun_db',
-                    host: settings.DB_HOST,
-                    port: settings.DB_PORT,
-                    user: settings.DB_USER,
-                    type: settings.DB_DRIVER,
-                    ssl: settings.DB_SSL ? 1 : 0
+                    db_host: settings.DB_HOST,
+                    db_port: settings.DB_PORT,
+                    db_user: settings.DB_USER,
+                    db_type: settings.DB_DRIVER,
+                    db_ssl: settings.DB_SSL ? 1 : 0
                 });
             } finally {
                 if (masterClient.release) masterClient.release();
