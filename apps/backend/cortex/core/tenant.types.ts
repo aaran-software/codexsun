@@ -56,3 +56,27 @@ export interface StoredInventoryItem {
     quantity: number;
     tenantId: string;
 }
+
+export interface LoginResponse {
+    user: User;
+    tenant: Tenant;
+}
+
+export interface RequestContext {
+    tenant?: Tenant;
+    user?: User;
+}
+
+export interface UserResponse {
+    user: StoredUser;
+}
+
+export interface InventoryResponse {
+    item: StoredInventoryItem;
+}
+
+export type Role = 'admin' | 'user' | 'viewer';
+
+export interface PermissionCheck {
+    requiredRole: Role;
+}
