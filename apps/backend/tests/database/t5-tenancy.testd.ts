@@ -16,6 +16,9 @@ describe('[test 5] Tenancy Logic', () => {
         // Initialize connection for tests
         const dbConfig = getDbConfig();
         connection = await Connection.initialize(dbConfig);
+
+        //un commended to run server for middleware test individually
+
         // Start server on random port
         // server = app.listen(0);
         // await new Promise<void>((resolve) => {
@@ -26,6 +29,8 @@ describe('[test 5] Tenancy Logic', () => {
     afterAll(async () => {
         // Close connection to release open handles
         await connection.close();
+
+        //un commended to run server for middleware test individually
         // Close server
         // await new Promise<void>((resolve, reject) => {
         //     server.close((err) => {
@@ -80,6 +85,7 @@ describe('[test 5] Tenancy Logic', () => {
             expect(createResult.rowCount).toBe(0); // Table creation
         });
 
+        //un commended to run server for middleware test individually
         // // Check middleware with request
         // const response = await request(server).get('/hz').set('x-tenant-id', 'test_tenant');
         // expect(response.status).toBe(200);
