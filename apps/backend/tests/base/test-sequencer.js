@@ -17,7 +17,6 @@ class CustomSequencer extends Sequencer {
             'tests/core/t12-auth-middleware.test.ts',
             'tests/core/t13-app.test.ts',
             'tests/core/t14-rate-limiter.test.ts',
-            'tests/core/t15-connection-cache.test.ts',
         ];
         return tests.sort((a, b) => {
             const aIndex = order.indexOf(a.path);

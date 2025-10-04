@@ -23,6 +23,10 @@ export function createApp() {
                 return res.status(200).json(result);
             }
 
+            if (req.method !== 'POST') {
+                return res.status(404).json({ error: 'Not found' });
+            }
+
             const tenantErr = await new Promise<Error | undefined>((resolve) => {
                 tenantMiddleware(req, res, (err) => resolve(err));
             });
@@ -30,23 +34,23 @@ export function createApp() {
                 return res.status(401).json({ error: tenantErr.message });
             }
 
-            if (req.method === 'POST' && req.url === '/users') {
+            if (req.url === '/users') {
                 const authErr = await new Promise<Error | undefined>((resolve) => {
                     authMiddleware({ requiredRole: 'admin' })(req, res, (err) => resolve(err));
                 });
                 if (authErr) {
-                    return res.status(403).json({ error: authErr.message });
+                    return res.status(401).json({ error: authErr.message });
                 }
                 const result = await createUser(req);
                 return res.status(201).json(result);
             }
 
-            if (req.method === 'POST' && req.url === '/inventory') {
+            if (req.url === '/inventory') {
                 const authErr = await new Promise<Error | undefined>((resolve) => {
                     authMiddleware({ requiredRole: 'admin' })(req, res, (err) => resolve(err));
                 });
                 if (authErr) {
-                    return res.status(403).json({ error: authErr.message });
+                    return res.status(401).json({ error: authErr.message });
                 }
                 const result = await createInventoryItem(req);
                 return res.status(201).json(result);

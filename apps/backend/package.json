@@ -8,6 +8,8 @@
     "api": "tsx index.ts",
     "check-types": "tsc --noEmit",
     "test": "jest --runInBand",
+    "ctest": "jest --coverage",
+    "cxtest": "jest --coverage --collectCoverageFrom=\"tests/core/*.{ts,tsx}\"",
     "jtest": "jest --detectOpenHandles",
     "verbose": "pnpm jest --verbose",
     "clear-cache": "pnpm jest --clearCache"
