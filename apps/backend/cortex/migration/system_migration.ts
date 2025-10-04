@@ -1,19 +1,21 @@
 // cortex/database/system_migration.ts
-import { settings } from '../config/get-settings';
 import { Connection } from '../db/connection';
 import { getDbConfig } from '../config/db-config';
+
+const MASTER_DB = 'master_db';
+const DEFAULT_TENANT_DB = 'codexsun_db';
 
 export async function runSystemMigration(): Promise<void> {
     // Initialize connection with database settings
     const config = getDbConfig();
     const conn = await Connection.initialize({
-        host: settings.DB_HOST,
-        port: settings.DB_PORT,
-        database: settings.DB_NAME,
-        user: settings.DB_USER,
-        password: settings.DB_PASS,
-        type: settings.DB_DRIVER,
-        ssl: settings.DB_SSL,
+        host: config.host,
+        port: config.port,
+        database: config.database,
+        user: config.user,
+        password: config.password,
+        type: config.type,
+        ssl: config.ssl,
     });
 
     let noDbClient = await conn.getClient('');
@@ -22,11 +24,11 @@ export async function runSystemMigration(): Promise<void> {
     try {
         const dbCheck = await noDbClient.query(
             `SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?`,
-            [settings.MASTER_DB]
+            [MASTER_DB]
         );
         if (dbCheck.rows.length === 0) {
-            await noDbClient.query(`CREATE DATABASE IF NOT EXISTS \`${settings.MASTER_DB}\``);
-            console.log(`Created master database: ${settings.MASTER_DB}`);
+            await noDbClient.query(`CREATE DATABASE IF NOT EXISTS \`${MASTER_DB}\``);
+            console.log(`Created master database: ${MASTER_DB}`);
         }
     } finally {
         if (noDbClient.release) noDbClient.release();
@@ -34,11 +36,11 @@ export async function runSystemMigration(): Promise<void> {
     }
 
     // Check if tenants table exists in master DB, create if not
-    const masterClient = await conn.getClient(settings.MASTER_DB);
+    const masterClient = await conn.getClient(MASTER_DB);
     try {
         const tableCheck = await masterClient.query(
             `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?`,
-            [settings.MASTER_DB, 'tenants']
+            [MASTER_DB, 'tenants']
         );
         if (tableCheck.rows.length === 0) {
             await masterClient.query(`
@@ -51,7 +53,7 @@ export async function runSystemMigration(): Promise<void> {
                     user VARCHAR(255) NOT NULL,
                     password VARCHAR(255) NOT NULL,
                     type VARCHAR(50) NOT NULL,
-                    ssl TINYINT NOT NULL,
+                    \`ssl\` TINYINT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
@@ -64,7 +66,7 @@ export async function runSystemMigration(): Promise<void> {
     }
 
     // Create default tenant entry with full DB settings if not exists
-    const masterClientForTenant = await conn.getClient(settings.MASTER_DB);
+    const masterClientForTenant = await conn.getClient(MASTER_DB);
     try {
         const tenantCheck = await masterClientForTenant.query(
             'SELECT tenant_id FROM tenants WHERE tenant_id = ?',
@@ -72,16 +74,16 @@ export async function runSystemMigration(): Promise<void> {
         );
         if (tenantCheck.rows.length === 0) {
             await masterClientForTenant.query(
-                `INSERT INTO tenants (tenant_id, database_name, host, port, user, password, type, ssl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO tenants (tenant_id, database_name, host, port, user, password, type, \`ssl\`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     'default',
-                    'codexsun_db',
-                    settings.DB_HOST,
-                    settings.DB_PORT,
-                    settings.DB_USER,
-                    settings.DB_PASS,
-                    settings.DB_DRIVER,
-                    settings.DB_SSL ? 1 : 0
+                    DEFAULT_TENANT_DB,
+                    config.host,
+                    config.port,
+                    config.user,
+                    config.password,
+                    config.type,
+                    config.ssl ? 1 : 0
                 ]
             );
             console.log('Created default tenant entry in master database');
@@ -96,11 +98,11 @@ export async function runSystemMigration(): Promise<void> {
     try {
         const tenantDbCheck = await noDbClient.query(
             `SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?`,
-            ['codexsun_db']
+            [DEFAULT_TENANT_DB]
         );
         if (tenantDbCheck.rows.length === 0) {
-            await noDbClient.query(`CREATE DATABASE IF NOT EXISTS \`codexsun_db\``);
-            console.log('Created default tenant database: codexsun_db');
+            await noDbClient.query(`CREATE DATABASE IF NOT EXISTS \`${DEFAULT_TENANT_DB}\``);
+            console.log(`Created default tenant database: ${DEFAULT_TENANT_DB}`);
         }
     } finally {
         if (noDbClient.release) noDbClient.release();
@@ -108,11 +110,11 @@ export async function runSystemMigration(): Promise<void> {
     }
 
     // Check if migrations table exists in tenant DB, create if not
-    const tenantClient = await conn.getClient('codexsun_db');
+    const tenantClient = await conn.getClient(DEFAULT_TENANT_DB);
     try {
         const migrationsTableCheck = await tenantClient.query(
             `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?`,
-            ['codexsun_db', 'migrations']
+            [DEFAULT_TENANT_DB, 'migrations']
         );
         if (migrationsTableCheck.rows.length === 0) {
             await tenantClient.query(`

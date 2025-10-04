@@ -28,7 +28,7 @@ describe('System Migration', () => {
                 else if (noDbClient.end) await noDbClient.end();
             }
 
-            // Run system migration
+            // Run system migration using the existing connection
             await runSystemMigration();
 
             // Verify master DB exists
