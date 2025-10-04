@@ -55,4 +55,12 @@ export class SchemaBuilder {
     getDropSql(): string {
         return `DROP TABLE IF EXISTS ${this.tableName};`;
     }
+
+    nullable():this {
+        const lastColumn = this.columns[this.columns.length - 1];
+        if (lastColumn.includes('NULL')) {
+            this.columns[this.columns.length - 1] = lastColumn.replace('NULL', 'NULL');
+        }
+        return this;
+    }
 }

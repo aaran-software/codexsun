@@ -17,4 +17,5 @@ module.exports = {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+    testSequencer: './tests/base/test-sequencer.js',
 };
