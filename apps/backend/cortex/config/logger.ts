@@ -20,6 +20,13 @@ interface HealthCheckLog {
     error?: string;
 }
 
+interface ConnectionLog {
+    db: string;
+    connectionString: string;
+    duration?: number;
+    error?: string;
+}
+
 /**
  * Logs query execution details when APP_DEBUG is true or metrics in production.
  * @param phase - 'start', 'end', or 'error' phase of query execution.
@@ -65,6 +72,22 @@ export function logHealthCheck(phase: 'success' | 'error', data: HealthCheckLog)
         logMetrics('health_check_duration_ms', data.duration || 0, { database: data.database });
     } else if (phase === 'error') {
         logMetrics('health_check_error', 1, { database: data.database });
+    }
+}
+
+/**
+ * Logs tenant DB connection attempts when APP_DEBUG is true or metrics in production.
+ * @param phase - 'start', 'success', or 'error' phase of connection attempt.
+ * @param data - Connection details including DB, connection string, duration, and error (if any).
+ */
+export function logConnection(phase: 'start' | 'success' | 'error', data: ConnectionLog): void {
+    if (settings.APP_DEBUG) {
+        console.debug(`Connection ${phase}:`, data);
+    }
+    if (phase === 'success') {
+        logMetrics('connection_duration_ms', data.duration || 0, { db: data.db });
+    } else if (phase === 'error') {
+        logMetrics('connection_error', 1, { db: data.db });
     }
 }
 

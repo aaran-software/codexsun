@@ -1,19 +1,54 @@
 import { resolveTenant } from '../../cortex/core/tenant/tenant-resolver';
 import { Tenant } from '../../cortex/core/tenant/tenant.types';
+import { query } from '../../cortex/db/db';
+import { Connection } from '../../cortex/db/connection';
+import { getDbConfig } from '../../cortex/config/db-config';
 
-describe('[1.] Tenant Resolver with Email', () => {
-    test('[test 1] resolves tenantId from email in master DB', async () => {
+describe('Tenant Resolver with Email', () => {
+    beforeAll(async () => {
+        // Initialize connection to master DB
+        await Connection.initialize(getDbConfig());
+
+        // Seed master DB with test data
+        await query(
+            'CREATE TABLE IF NOT EXISTS tenant_users (email VARCHAR(255), tenant_id VARCHAR(50))'
+        );
+        await query(
+            'CREATE TABLE IF NOT EXISTS tenants (id VARCHAR(50), db_connection TEXT)'
+        );
+        await query(
+            'INSERT INTO tenant_users (email, tenant_id) VALUES (?, ?), (?, ?)',
+            ['john@tenant1.com', 'tenant1', 'shared@domain.com', 'tenant1']
+        );
+        await query(
+            'INSERT INTO tenant_users (email, tenant_id) VALUES (?, ?)',
+            ['shared@domain.com', 'tenant2']
+        );
+        await query(
+            'INSERT INTO tenants (id, db_connection) VALUES (?, ?)',
+            ['tenant1', 'postgresql://localhost/tenant1_db']
+        );
+    });
+
+    afterAll(async () => {
+        // Clean up test data
+        await query('DROP TABLE IF EXISTS tenant_users');
+        await query('DROP TABLE IF EXISTS tenants');
+        await Connection.getInstance().close();
+    });
+
+    test('resolves tenant from email in master DB', async () => {
         const req = { body: { email: 'john@tenant1.com', password: 'pass123' } };
         const tenant = await resolveTenant(req);
         expect(tenant).toEqual({ id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' });
     });
 
-    test('[test 2] throws error for email not found in master DB', async () => {
+    test('throws error for email not found in master DB', async () => {
         const req = { body: { email: 'unknown@domain.com', password: 'pass123' } };
         await expect(resolveTenant(req)).rejects.toThrow('Email not associated with any tenant');
     });
 
-    test('[test 3] throws error for email associated with multiple tenants', async () => {
+    test('throws error for email associated with multiple tenants', async () => {
         const req = { body: { email: 'shared@domain.com', password: 'pass123' } };
         await expect(resolveTenant(req)).rejects.toThrow('Multiple tenants found for email');
     });
