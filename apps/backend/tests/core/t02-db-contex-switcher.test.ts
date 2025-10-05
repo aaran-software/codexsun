@@ -40,8 +40,12 @@ describe('DB Context Switching', () => {
 
     afterAll(async () => {
         // Clean up test data
-        await tenantStorage.run(masterDb, () => query(`DROP DATABASE IF EXISTS \`${tenantDb}\``));
-        await tenantStorage.run(masterDb, () => query('DROP TABLE IF EXISTS tenants'));
+        try {
+            await query(`DROP DATABASE IF EXISTS \`${tenantDb}\``);
+            await tenantStorage.run(masterDb, () => query('DROP TABLE IF EXISTS tenants'));
+        } catch (error) {
+            console.error(`Error during cleanup: ${(error as Error).message}`);
+        }
         const conn = Connection.getInstance();
         if (conn) {
             await conn.close();

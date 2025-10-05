@@ -44,11 +44,6 @@ export async function getTenantDbConnection(tenant: Tenant): Promise<DbConnectio
             duration: Date.now() - start,
             error: (error as Error).message,
         });
-        if (client && client.release) {
-            client.release();
-        } else if (client && client.end) {
-            await client.end();
-        }
         throw new Error(`Failed to connect to tenant DB ${dbName}: ${(error as Error).message}`);
     }
 }
