@@ -7,17 +7,19 @@
     "dev": "tsx index.ts",
     "api": "tsx index.ts",
     "check-types": "tsc --noEmit",
+
     "test": "jest --runInBand",
+    "jtest": "jest --detectOpenHandles",
+
     "ctest": "jest --coverage",
     "cxtest": "jest --coverage --collectCoverageFrom=\"tests/core/*.{ts,tsx}\"",
-    "jtest": "jest --detectOpenHandles",
     "verbose": "pnpm jest --verbose",
     "clear-cache": "pnpm jest --clearCache",
 
     "migrate:master": "tsx cortex/db/migration/master/master-migrate.ts migrate",
     "seed:master": "tsx cortex/db/migration/master/master-seeder.ts seed",
 
-    "migrate": "tsx cortex/db/migration/tenant/tenant-migrate.ts migrate",
+    "migrate:tenant": "tsx cortex/db/migration/tenant/tenant-migrate.ts migrate",
     "reset": "tsx cortex/db/migration/tenant/tenant-migrate.ts reset",
     "seed": "tsx cortex/db/migration/tenant/tenant-seeder.ts seed"
   },
