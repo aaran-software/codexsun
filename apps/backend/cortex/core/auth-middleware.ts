@@ -1,4 +1,4 @@
-import { RequestContext, PermissionCheck } from './tenant.types';
+import { RequestContext, PermissionCheck } from './tenant/tenant.types';
 import { handleError } from './error-handler';
 
 export function authMiddleware(permission: PermissionCheck) {

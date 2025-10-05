@@ -1,4 +1,4 @@
-import { Tenant, UserData, StoredUser, DbConnection } from './tenant.types';
+import { Tenant, UserData, StoredUser, DbConnection } from './tenant/tenant.types';
 import { getTenantDbConnection } from './db-context-switcher';
 
 // Mock DB query for user (replace with actual DB query in production)

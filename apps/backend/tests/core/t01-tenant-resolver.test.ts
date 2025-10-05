@@ -1,5 +1,5 @@
-import { resolveTenant } from '../../cortex/core/tenant-resolver';
-import { Tenant } from '../../cortex/core/tenant.types';
+import { resolveTenant } from '../../cortex/core/tenant/tenant-resolver';
+import { Tenant } from '../../cortex/core/tenant/tenant.types';
 
 describe('[1.] Tenant Resolver with Email', () => {
     test('[test 1] resolves tenantId from email in master DB', async () => {

@@ -1,7 +1,7 @@
 import { login } from './login-controller';
 import { createUser } from './user-controller';
 import { createInventoryItem } from './inventory-controller';
-import { tenantMiddleware } from './tenant-middleware';
+import { tenantMiddleware } from './tenant/tenant-middleware';
 import { authMiddleware } from './auth-middleware';
 import { rateLimiter } from './rate-limiter';
 import { handleError } from './error-handler';

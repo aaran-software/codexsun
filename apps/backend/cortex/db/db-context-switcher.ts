@@ -1,4 +1,4 @@
-import { Tenant, DbConnection } from './tenant.types';
+import { Tenant, DbConnection } from '../core/tenant/tenant.types';
 
 // Mock DB client (replace with actual DB client like pg in production)
 const mockDbClient = {

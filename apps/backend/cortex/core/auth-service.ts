@@ -1,4 +1,4 @@
-import { Tenant, Credentials, User, DbConnection, JwtPayload } from './tenant.types';
+import { Tenant, Credentials, User, DbConnection, JwtPayload } from './tenant/tenant.types';
 import { getTenantDbConnection } from './db-context-switcher';
 
 // Mock JWT (replace with actual JWT library like jsonwebtoken in production)

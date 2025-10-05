@@ -1,4 +1,4 @@
-import { RequestContext, InventoryItemData, InventoryResponse } from './tenant.types';
+import { RequestContext, InventoryItemData, InventoryResponse } from './tenant/tenant.types';
 import { createInventoryItem as createInventoryItemService } from './inventory-service';
 import { handleError } from './error-handler';
 

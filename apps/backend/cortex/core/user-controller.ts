@@ -1,4 +1,4 @@
-import { RequestContext, UserResponse, UserData } from './tenant.types';
+import { RequestContext, UserResponse, UserData } from './tenant/tenant.types';
 import { createUser as createUserService } from './user-service';
 import { handleError } from './error-handler';
 

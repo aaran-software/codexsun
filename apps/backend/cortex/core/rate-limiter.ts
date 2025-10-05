@@ -1,4 +1,4 @@
-import { RateLimitConfig } from './tenant.types';
+import { RateLimitConfig } from './tenant/tenant.types';
 
 interface RateLimitStore {
     [ip: string]: { count: number; timestamp: number };

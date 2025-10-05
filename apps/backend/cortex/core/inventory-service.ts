@@ -1,4 +1,4 @@
-import { Tenant, InventoryItemData, StoredInventoryItem, DbConnection } from './tenant.types';
+import { Tenant, InventoryItemData, StoredInventoryItem, DbConnection } from './tenant/tenant.types';
 import { getTenantDbConnection } from './db-context-switcher';
 
 // Mock DB query for inventory item (replace with actual DB query in production)

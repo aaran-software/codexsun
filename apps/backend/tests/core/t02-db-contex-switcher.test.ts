@@ -1,5 +1,5 @@
 import {getTenantDbConnection} from "../../cortex/core/db-context-switcher";
-import {Tenant} from "../../cortex/core/tenant.types";
+import {Tenant} from "../../cortex/core/tenant/tenant.types";
 
 describe('[2.] DB Context Switching', () => {
     test('[test 1] switches to tenant-specific DB connection', async () => {

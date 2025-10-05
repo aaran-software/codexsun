@@ -1,3 +1,5 @@
+// cortex/core/tenant/tenant.types.ts
+
 export interface Tenant {
     id: string;
     dbConnection: string;
