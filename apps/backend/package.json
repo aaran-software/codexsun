@@ -13,9 +13,9 @@
     "jtest": "jest --detectOpenHandles",
     "verbose": "pnpm jest --verbose",
     "clear-cache": "pnpm jest --clearCache",
-    "migrate": "tsx cortex/db/migration/migrate.ts",
-    "reset:migrate": "tsx cortex/db/migration/reset.ts",
-    "master:reset": "tsx cortex/db/migration/master-reset.ts",
+    "migrate:master": "tsx cortex/db/migration/master/master-migrate.ts migrate",
+    "seed:master": "tsx cortex/db/migration/master/master-seeder.ts seed",
+    "reset:master": "tsx cortex/db/migration/master/master-migrate.ts reset",
     "seed": "tsx cortex/db/migration/seed-runner.ts",
     "rollback": "tsx cortex/db/migration/seed-runner.ts rollback"
   },

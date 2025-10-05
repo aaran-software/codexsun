@@ -1,10 +1,10 @@
-// E:\Workspace\codexsun\apps\backend\cortex\database\master-reset.ts
-import { query } from '../mdb';
-import { Connection } from '../connection';
-import { getDbConfig } from '../../config/db-config';
+// E:\Workspace\codexsun\apps\backend\cortex\database\reset.ts
+import { query } from '../../mdb';
+import { Connection } from '../../connection';
+import { getDbConfig } from '../../../config/db-config';
 
-export async function resetMasterDatabase(): Promise<void> {
-    console.log('Starting master database reset');
+export async function resetDatabase(): Promise<void> {
+    console.log('Starting database reset');
 
     const config = getDbConfig();
 
@@ -25,12 +25,29 @@ export async function resetMasterDatabase(): Promise<void> {
 
     // Validate environment variables
     const masterDb = process.env.MASTER_DB_NAME || 'master_db';
+    const defaultDbName = process.env.DEFAULT_TENANT_DB || 'tenant_db';
 
-    if (!masterDb) {
-        throw new Error('Missing required environment variable: MASTER_DB_NAME');
+    if (!masterDb || !defaultDbName) {
+        throw new Error('Missing required environment variables: MASTER_DB_NAME or DEFAULT_TENANT_DB');
     }
 
-    // Drop master database tables
+    // Drop tenant databases
+    try {
+        const tenantsResult = await query(`SELECT db_name FROM tenants`, [], masterDb);
+        const tenantDbs: string[] = tenantsResult.rows.map((row: any) => row.db_name);
+        console.log(`Found tenant databases: ${tenantDbs.join(', ')}`);
+
+        for (const tenantDb of tenantDbs) {
+            console.log(`Dropping database: ${tenantDb}`);
+            await query(`DROP DATABASE IF EXISTS \`${tenantDb}\``, [], masterDb);
+        }
+    } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        console.error(`Error dropping tenant databases: ${error.message}`);
+        throw error;
+    }
+
+    // Drop tenants and migrations tables in master_db
     try {
         await query('BEGIN', [], masterDb);
         await query(`DROP TABLE IF EXISTS tenants`, [], masterDb);
@@ -44,24 +61,14 @@ export async function resetMasterDatabase(): Promise<void> {
         throw error;
     }
 
-    // Drop master database
-    try {
-        console.log(`Dropping master database: ${masterDb}`);
-        await query(`DROP DATABASE IF EXISTS \`${masterDb}\``, [], config.database);
-    } catch (err: unknown) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
-        console.error(`Error dropping master database ${masterDb}: ${error.message}`);
-        throw error;
-    }
-
     // Close connection
     await conn.close();
     console.log('Database connection closed');
-    console.log('Master database reset completed');
+    console.log('Database reset completed');
 }
 
-resetMasterDatabase().catch((error) => {
-    console.error('Master database reset failed:', error.message);
+resetDatabase().catch((error) => {
+    console.error('Database reset failed:', error.message);
     Connection.getInstance()
         .close()
         .then(() => {
