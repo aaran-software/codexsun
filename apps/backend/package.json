@@ -13,11 +13,13 @@
     "jtest": "jest --detectOpenHandles",
     "verbose": "pnpm jest --verbose",
     "clear-cache": "pnpm jest --clearCache",
+
     "migrate:master": "tsx cortex/db/migration/master/master-migrate.ts migrate",
     "seed:master": "tsx cortex/db/migration/master/master-seeder.ts seed",
-    "reset:master": "tsx cortex/db/migration/master/master-migrate.ts reset",
-    "seed": "tsx cortex/db/migration/seed-runner.ts",
-    "rollback": "tsx cortex/db/migration/seed-runner.ts rollback"
+
+    "migrate": "tsx cortex/db/migration/tenant/tenant-migrate.ts migrate",
+    "reset": "tsx cortex/db/migration/tenant/tenant-migrate.ts reset",
+    "seed": "tsx cortex/db/migration/tenant/tenant-seeder.ts seed"
   },
   "dependencies": {
     "@jest/test-sequencer": "^30.2.0",

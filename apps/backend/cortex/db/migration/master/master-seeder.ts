@@ -5,10 +5,10 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 /**
- * Path to the master seeders folder.
+ * Path to the master seeder folder.
  */
 const SEEDERS_DIR = path.resolve(__dirname, '../../../migrations/seeder/master');
-console.log(SEEDERS_DIR);
+
 /**
  * Initializes database connection.
  * @returns Initialized Connection instance.
@@ -39,7 +39,7 @@ const getSeederFiles = async (): Promise<string[]> => {
         return seederFiles;
     } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
-        if (error.code === 'ENOENT') {
+        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
             console.log(`No seeder files found in ${SEEDERS_DIR}, skipping seeding`);
             return [];
         }
