@@ -1,4 +1,5 @@
-// cortex/adapters/sqlite.ts
+// cortex/db/adapters/sqlite.ts
+
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';

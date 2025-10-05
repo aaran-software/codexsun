@@ -1,4 +1,5 @@
-// cortex/db.ts
+// cortex/db/db.ts
+
 import { AsyncLocalStorage } from 'async_hooks';
 import { AnyDbClient, QueryResult } from './db-types';
 import { Connection } from './connection';

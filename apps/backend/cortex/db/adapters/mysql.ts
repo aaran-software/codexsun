@@ -1,4 +1,5 @@
-// cortex/adapters/mysql.ts
+// cortex/db/adapters/mysql.ts
+
 import mysql, { Pool as MySqlPool, PoolConnection } from 'mysql2/promise';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 

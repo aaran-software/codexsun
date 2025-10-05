@@ -1,4 +1,5 @@
-// cortex/types.ts
+// cortex/db/types.ts
+
 export interface DbConfig {
     host: string;
     port: number;

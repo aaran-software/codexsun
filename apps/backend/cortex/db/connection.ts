@@ -1,4 +1,5 @@
-// cortex/connection.ts
+// cortex/db/connection.ts
+
 import { DbConfig, AnyDbClient, DBAdapter } from './db-types';
 import { MariaDBAdapter } from './adapters/mariadb';
 import { PostgresAdapter } from './adapters/postgres';

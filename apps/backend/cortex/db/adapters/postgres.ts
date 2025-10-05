@@ -1,4 +1,5 @@
-// cortex/adapters/postgres.ts
+// cortex/db/adapters/postgres.ts
+
 import { Pool, PoolClient } from 'pg';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 
