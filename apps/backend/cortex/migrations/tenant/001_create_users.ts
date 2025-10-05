@@ -1,6 +1,5 @@
-// E:\Workspace\codexsun\apps\backend\cortex\database\migrations\001_create_users.ts
-
-import { BaseMigration } from '../db/migration/base-migration';
+// E:\Workspace\codexsun\apps\backend\cortex\database\001_create_users.ts
+import { BaseMigration } from '../../db/migration/base-migration';
 
 export class CreateUsersMigration extends BaseMigration {
     async up(): Promise<void> {
@@ -9,10 +8,10 @@ export class CreateUsersMigration extends BaseMigration {
             table.string('username');
             table.string('email').unique();
             table.string('password_hash');
-            table.string('mobile');
-            table.string('status');
+            table.string('mobile').nullable();
+            table.string('status').nullable();
             table.string('tenant_id');
-            table.string('role');
+            table.string('role').nullable();
             table.timestamps();
         });
         console.log('Created users table');

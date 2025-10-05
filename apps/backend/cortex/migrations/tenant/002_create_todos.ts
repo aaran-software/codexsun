@@ -1,6 +1,6 @@
-// E:\Workspace\codexsun\apps\backend\cortex\database\migrations\002_create_todos.ts
+// E:\Workspace\codexsun\apps\backend\cortex\migrations\002_create_todos.ts
 
-import { BaseMigration } from '../db/migration/base-migration';
+import { BaseMigration } from '../../db/migration/base-migration';
 
 export class CreateTodosMigration extends BaseMigration {
     async up(): Promise<void> {
