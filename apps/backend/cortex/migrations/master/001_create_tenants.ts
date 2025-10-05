@@ -1,4 +1,4 @@
-// E:\Workspace\codexsun\apps\backend\cortex\migrations\001_create_tenants.ts
+// \cortex\migrations\001_create_tenants.ts
 
 import { BaseMigration } from '../../db/migration/base-migration';
 

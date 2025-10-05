@@ -1,4 +1,5 @@
-// E:\Workspace\codexsun\apps\backend\cortex\database\001_create_users.ts
+// \cortex\database\001_create_users.ts
+
 import { BaseMigration } from '../../db/migration/base-migration';
 
 export class CreateUsersMigration extends BaseMigration {

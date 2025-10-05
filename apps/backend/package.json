@@ -15,7 +15,9 @@
     "clear-cache": "pnpm jest --clearCache",
     "migrate": "tsx cortex/db/migration/migrate.ts",
     "reset:migrate": "tsx cortex/db/migration/reset.ts",
-    "master:reset": "tsx cortex/db/migration/master-reset.ts"
+    "master:reset": "tsx cortex/db/migration/master-reset.ts",
+    "seed": "tsx cortex/db/migration/seed-runner.ts",
+    "rollback": "tsx cortex/db/migration/seed-runner.ts rollback"
   },
   "dependencies": {
     "@jest/test-sequencer": "^30.2.0",

@@ -1,4 +1,4 @@
-// E:\Workspace\codexsun\apps\backend\cortex\migrations\002_create_todos.ts
+// \cortex\migrations\002_create_todos.ts
 
 import { BaseMigration } from '../../db/migration/base-migration';
 

@@ -1,5 +1,3 @@
-// cortex/db/db.ts
-
 import { AsyncLocalStorage } from 'async_hooks';
 import { AnyDbClient, QueryResult } from './db-types';
 import { Connection } from './connection';
@@ -7,7 +5,7 @@ import { getDbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 
 const dbConfig = getDbConfig();
-const tenantStorage = new AsyncLocalStorage<string>();
+export const tenantStorage = new AsyncLocalStorage<string>();
 
 /**
  * Executes a SQL query on the current tenant's database or master database.
