@@ -15,28 +15,28 @@ describe('Tenant Resolver with Email', () => {
         await tenantStorage.run(masterDb, () =>
             query(
                 `
-                CREATE TABLE IF NOT EXISTS tenant_users (
-                    email VARCHAR(255),
-                    tenant_id VARCHAR(50)
-                )
+                    CREATE TABLE IF NOT EXISTS tenant_users (
+                                                                email VARCHAR(255),
+                        tenant_id VARCHAR(50)
+                        )
                 `
             )
         );
         await tenantStorage.run(masterDb, () =>
             query(
                 `
-                CREATE TABLE IF NOT EXISTS tenants (
-                    id VARCHAR(50),
-                    db_connection TEXT
-                )
+                    CREATE TABLE IF NOT EXISTS tenants (
+                                                           id VARCHAR(50),
+                        db_connection TEXT
+                        )
                 `
             )
         );
         await tenantStorage.run(masterDb, () =>
             query(
                 `
-                INSERT INTO tenant_users (email, tenant_id)
-                VALUES (?, ?), (?, ?)
+                    INSERT INTO tenant_users (email, tenant_id)
+                    VALUES (?, ?), (?, ?)
                 `,
                 ['john@tenant1.com', 'tenant1', 'shared@domain.com', 'tenant1']
             )
@@ -44,8 +44,8 @@ describe('Tenant Resolver with Email', () => {
         await tenantStorage.run(masterDb, () =>
             query(
                 `
-                INSERT INTO tenant_users (email, tenant_id)
-                VALUES (?, ?)
+                    INSERT INTO tenant_users (email, tenant_id)
+                    VALUES (?, ?)
                 `,
                 ['shared@domain.com', 'tenant2']
             )
@@ -53,10 +53,10 @@ describe('Tenant Resolver with Email', () => {
         await tenantStorage.run(masterDb, () =>
             query(
                 `
-                INSERT INTO tenants (id, db_connection)
-                VALUES (?, ?)
+                    INSERT INTO tenants (id, db_connection)
+                    VALUES (?, ?)
                 `,
-                ['tenant1', 'postgresql://localhost/tenant1_db']
+                ['tenant1', 'mariadb://localhost/tenant1_db']
             )
         );
     });
@@ -65,13 +65,21 @@ describe('Tenant Resolver with Email', () => {
         // Clean up test data
         await tenantStorage.run(masterDb, () => query('DROP TABLE IF EXISTS tenant_users'));
         await tenantStorage.run(masterDb, () => query('DROP TABLE IF EXISTS tenants'));
-        await Connection.getInstance().close();
+        const conn = Connection.getInstance();
+        if (conn) {
+            await conn.close();
+        }
     });
 
     test('resolves tenant from email in master DB', async () => {
         const req = { body: { email: 'john@tenant1.com', password: 'pass123' } };
         const tenant = await resolveTenant(req);
-        expect(tenant).toEqual({ id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' });
+        expect(tenant).toEqual({ id: 'tenant1', dbConnection: 'mariadb://localhost/tenant1_db' });
+    });
+
+    test('throws error for missing email in request body', async () => {
+        const req = { body: { password: 'pass123' } } as { body: Partial<{ email: string; password: string }> };
+        await expect(resolveTenant(req)).rejects.toThrow('Email is required');
     });
 
     test('throws error for email not found in master DB', async () => {
@@ -82,5 +90,19 @@ describe('Tenant Resolver with Email', () => {
     test('throws error for email associated with multiple tenants', async () => {
         const req = { body: { email: 'shared@domain.com', password: 'pass123' } };
         await expect(resolveTenant(req)).rejects.toThrow('Multiple tenants found for email');
+    });
+
+    test('throws error for tenant not found in tenants table', async () => {
+        await tenantStorage.run(masterDb, () =>
+            query(
+                `
+                    INSERT INTO tenant_users (email, tenant_id)
+                    VALUES (?, ?)
+                `,
+                ['test@tenant2.com', 'tenant2']
+            )
+        );
+        const req = { body: { email: 'test@tenant2.com', password: 'pass123' } };
+        await expect(resolveTenant(req)).rejects.toThrow('Tenant not found');
     });
 });
