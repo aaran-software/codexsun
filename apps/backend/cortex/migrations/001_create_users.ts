@@ -1,7 +1,8 @@
-import { BaseMigration } from '../../migration/base-migration';
+// E:\Workspace\codexsun\apps\backend\cortex\database\migrations\001_create_users.ts
 
-export default class Migration extends BaseMigration {
+import { BaseMigration } from '../db/migration/base-migration';
 
+export class CreateUsersMigration extends BaseMigration {
     async up(): Promise<void> {
         await this.schema.create('users', (table) => {
             table.id();
@@ -14,9 +15,13 @@ export default class Migration extends BaseMigration {
             table.string('role');
             table.timestamps();
         });
+        console.log('Created users table');
     }
 
     async down(): Promise<void> {
         await this.schema.dropTable('users');
+        console.log('Dropped users table');
     }
 }
+
+export default CreateUsersMigration;

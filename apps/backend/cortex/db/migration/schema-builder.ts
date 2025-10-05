@@ -1,7 +1,7 @@
-import { QueryResult } from '../db/db-types';
-import { query } from '../db/db';
+// E:\Workspace\codexsun\apps\backend\cortex\database\migrations\schema-builder.ts
+import { QueryResult } from '../db-types';
+import { query } from '../mdb';
 
-// Schema builder class
 export class SchemaBuilder {
     private columns: string[] = [];
     public readonly tableName: string;
@@ -56,10 +56,10 @@ export class SchemaBuilder {
         return `DROP TABLE IF EXISTS ${this.tableName};`;
     }
 
-    nullable():this {
+    nullable(): this {
         const lastColumn = this.columns[this.columns.length - 1];
-        if (lastColumn.includes('NULL')) {
-            this.columns[this.columns.length - 1] = lastColumn.replace('NULL', 'NULL');
+        if (lastColumn.includes('NOT NULL')) {
+            this.columns[this.columns.length - 1] = lastColumn.replace('NOT NULL', '');
         }
         return this;
     }
