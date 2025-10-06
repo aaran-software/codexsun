@@ -107,4 +107,5 @@ describe("[1.] SqliteAdapter", () => {
         const result = await client.query("INSERT INTO table (name) VALUES (?)", ["test"]);
         expect(result).toEqual({ rows: [], rowCount: 1, insertId: 42 });
     });
+
 });
