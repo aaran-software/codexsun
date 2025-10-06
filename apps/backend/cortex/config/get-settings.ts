@@ -76,8 +76,10 @@ export function getSettings(): AppSettings {
         VITE_APP_URL: requireStr("VITE_APP_URL", "http://localhost:3006"),
         APP_PORT: parseIntSafe(process.env.APP_PORT, 3006),
         APP_HOST: requireStr("APP_HOST", "0.0.0.0"), // Bind all in prod
+
         MASTER_DB: requireStr("MASTER_DB", "master_db"),
         TENANCY: parseBool(process.env.TENANCY, true), // Default on
+
         DB_DRIVER: requireDriver("DB_DRIVER", "mariadb"),
         DB_HOST: requireStr("DB_HOST", "127.0.0.1"),
         DB_PORT: parseIntSafe(process.env.DB_PORT, 3306),

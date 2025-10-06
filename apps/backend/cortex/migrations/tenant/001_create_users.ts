@@ -9,10 +9,10 @@ export class CreateUsersMigration extends BaseMigration {
             table.string('username');
             table.string('email').unique();
             table.string('password_hash');
-            table.string('mobile').nullable();
-            table.string('status').nullable();
+            table.string('mobile').null();
+            table.string('status').null();
             table.string('tenant_id');
-            table.string('role').nullable();
+            table.string('role').null();
             table.timestamps();
         });
         console.log('Created users table');

@@ -1,5 +1,5 @@
-// /opt/codexsun/erp/src/db/tenant-migrate.ts
-import {query, tenantStorage, withTransaction} from '../../db';
+// E:\Workspace\codexsun\apps\backend\cortex\db\migration\tenant\tenant-migrate.ts
+import { query, tenantStorage, withTransaction } from '../../db';
 import { Connection } from '../../connection';
 import { getDbConfig } from '../../../config/db-config';
 import * as fs from 'fs/promises';
@@ -128,25 +128,22 @@ const getMigrationFiles = async (): Promise<string[]> => {
 
 const applyMigration = async (fileName: string, tenantDb: string): Promise<void> => {
     const migrationName = fileName.replace(/\.ts$/, '');
+    console.log(`Checking migration: ${migrationName}`);
     const migrationCheck = await tenantStorage.run(tenantDb, () =>
         query(`SELECT * FROM migrations WHERE name = ?`, [migrationName])
     );
     if (migrationCheck.rows.length === 0) {
+        console.log(`Applying migration: ${migrationName}`);
         const migrationPath = path.join(MIGRATIONS_DIR, fileName);
-        const migrationModule = await import(`file://${migrationPath.replace(/\\/g, '/')}`);
+        console.log(`Loading migration from: ${migrationPath}`);
+        const migrationModule = require(migrationPath);
         const MigrationClass = Object.values(migrationModule)[0] as new (dbName: string) => { up: () => Promise<void> };
         const migration = new MigrationClass(tenantDb);
-        try {
-            await tenantStorage.run(tenantDb, () => withTransaction(async (client) => {
-                await migration.up();
-                await client.query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
-            }));
-            console.log(`Applied migration ${migrationName} on ${tenantDb}`);
-        } catch (err: unknown) {
-            const error = err instanceof Error ? err : new Error('Unknown error');
-            console.error(`Error running migration ${migrationName} on ${tenantDb}: ${error.message}`);
-            throw error;
-        }
+        await tenantStorage.run(tenantDb, () => withTransaction(async (client) => {
+            await migration.up();
+            await client.query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
+        }));
+        console.log(`Applied migration ${migrationName} on ${tenantDb}`);
     } else {
         console.log(`Migration ${migrationName} already applied on ${tenantDb}`);
     }
@@ -155,8 +152,8 @@ const applyMigration = async (fileName: string, tenantDb: string): Promise<void>
 const dropTenantTables = async (tenantDb: string): Promise<void> => {
     try {
         await tenantStorage.run(tenantDb, () => withTransaction(async (client) => {
-            await client.query(`DROP TABLE IF EXISTS users`);
             await client.query(`DROP TABLE IF EXISTS todos`);
+            await client.query(`DROP TABLE IF EXISTS users`);
             await client.query(`DROP TABLE IF EXISTS migrations`);
         }));
         console.log(`Dropped tables in ${tenantDb}`);
@@ -211,23 +208,16 @@ export async function tenantMigrate(): Promise<void> {
     }
 };
 
-export async function resetTenantDatabase(): Promise<void> {
+export async function resetTenantDatabase(tenantDb: string): Promise<void> {
     console.log('Starting tenant database reset');
     const config = getDbConfig();
     validateEnvVariables();
     logConnectionDetails(config);
     const conn = await initializeConnection(config);
     try {
-        const tenantDbs = await getTenantDbs();
-        if (tenantDbs.length === 0) {
-            console.log('No tenant databases to reset');
-            return;
-        }
-        for (const tenantDb of tenantDbs) {
-            await dropTenantTables(tenantDb);
-            await dropTenantDatabase(tenantDb);
-        }
-        console.log('Tenant databases reset completed');
+        await dropTenantTables(tenantDb);
+        await dropTenantDatabase(tenantDb);
+        console.log('Tenant database reset completed');
     } finally {
         await conn.close();
         console.log('Database connection closed');
@@ -239,7 +229,10 @@ export async function executeTenantOperation(operation: 'migrate' | 'reset'): Pr
         if (operation === 'migrate') {
             await tenantMigrate();
         } else if (operation === 'reset') {
-            await resetTenantDatabase();
+            const tenantDbs = await getTenantDbs();
+            for (const tenantDb of tenantDbs) {
+                await resetTenantDatabase(tenantDb);
+            }
         } else {
             throw new Error(`Invalid operation: ${operation}. Use 'migrate' or 'reset'.`);
         }
