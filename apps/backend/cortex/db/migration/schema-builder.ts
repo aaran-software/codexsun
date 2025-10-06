@@ -9,7 +9,7 @@ class ForeignKeyBuilder {
     private referencedTable: string | null = null;
     private referencedColumn: string | null = null;
     private columnType: string = 'INT';
-    private cascasde: string = 'CASCADE';
+    private cascade: string = 'CASCADE';
     private readonly schemaBuilder: SchemaBuilder;
 
     constructor(column: string, schemaBuilder: SchemaBuilder) {
@@ -40,7 +40,7 @@ class ForeignKeyBuilder {
         if (!['CASCADE', 'RESTRICT', 'SET NULL'].includes(action)) {
             throw new Error('Invalid ON DELETE action; use CASCADE, RESTRICT, or SET NULL');
         }
-        this.cascasde = action;
+        this.cascade = action;
         return this;
     }
 
@@ -56,9 +56,9 @@ class ForeignKeyBuilder {
         if (!this.referencedTable || !this.referencedColumn) {
             throw new Error('Foreign key incomplete: reference and onTable must be specified');
         }
+        // Only add FK constraint; assume column pre-defined
         this.schemaBuilder['columns'].push(
-            `${this.column} ${this.columnType} NOT NULL`,
-            `FOREIGN KEY (\`${this.column}\`) REFERENCES \`${this.referencedTable}\`(\`${this.referencedColumn}\`) ON DELETE ${this.onDelete}`
+            `FOREIGN KEY (\`${this.column}\`) REFERENCES \`${this.referencedTable}\`(\`${this.referencedColumn}\`) ON DELETE ${this.cascade}`
         );
     }
 }
@@ -279,7 +279,6 @@ export class SchemaBuilder {
 
     async execute(): Promise<QueryResult<unknown>> {
         try {
-            // Ensure InnoDB and utf8mb4 are added if not explicitly set
             if (!this.tableOptions.some(opt => opt.startsWith('ENGINE='))) {
                 this.tableOptions.push('ENGINE=InnoDB');
             }
@@ -291,11 +290,11 @@ export class SchemaBuilder {
             const tableOptions = this.tableOptions.length ? ' ' + this.tableOptions.join(' ') : '';
             const sql = `CREATE TABLE IF NOT EXISTS \`${this.tableName}\` (${columnDefinitions})${tableOptions};`;
             console.log(`Executing SQL: ${sql}`);
-            const result = await query<unknown>(sql, []);
+            const result = await query<unknown>(sql, [], this.dbName);
 
             for (const indexSql of this.indexes) {
                 console.log(`Executing index SQL: ${indexSql}`);
-                await query<unknown>(indexSql, []);
+                await query<unknown>(indexSql, [], this.dbName);
             }
 
             return result;
@@ -310,7 +309,7 @@ export class SchemaBuilder {
         try {
             const sql = `DROP TABLE IF EXISTS \`${this.tableName}\`;`;
             console.log(`Executing drop SQL: ${sql}`);
-            return await query<unknown>(sql, []);
+            return await query<unknown>(sql, [], this.dbName);
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown database error');
             console.error(`Error dropping table ${this.tableName}: ${error.message}`, { sql: (err as any).sql || 'unknown' });

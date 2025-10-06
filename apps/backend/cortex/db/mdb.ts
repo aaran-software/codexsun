@@ -7,11 +7,12 @@ import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 
 const dbConfig = getDbConfig();
 
-export async function query<T>(text: string, params: any[] = []): Promise<QueryResult<T>> {
-    const database = dbConfig.database;
-    if (!database) {
+export async function query<T>(text: string, params: any[] = [], dbName?: string): Promise<QueryResult<T>> {
+    const database = dbName !== undefined ? dbName : dbConfig.database;
+    if (database == null) {
         throw new Error('Database name is required');
     }
+    const effectiveDb = database === '' ? undefined : database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
@@ -21,7 +22,7 @@ export async function query<T>(text: string, params: any[] = []): Promise<QueryR
         }
 
         logQuery('start', { sql: text, params, db: database });
-        client = await Connection.getInstance().getClient(database);
+        client = await Connection.getInstance().getClient(effectiveDb);
         const result = await client.query(text, params);
         logQuery('end', { sql: text, params, db: database, duration: Date.now() - start });
 
@@ -46,17 +47,18 @@ export async function query<T>(text: string, params: any[] = []): Promise<QueryR
     }
 }
 
-export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>): Promise<T> {
-    const database = dbConfig.database;
-    if (!database) {
+export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>, dbName?: string): Promise<T> {
+    const database = dbName !== undefined ? dbName : dbConfig.database;
+    if (database == null) {
         throw new Error('Database name is required');
     }
+    const effectiveDb = database === '' ? undefined : database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
         logTransaction('start', { db: database });
-        client = await Connection.getInstance().getClient(database);
+        client = await Connection.getInstance().getClient(effectiveDb);
         await client.query('START TRANSACTION');
 
         const result = await callback(client);
@@ -90,16 +92,17 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
     }
 }
 
-export async function healthCheck(): Promise<boolean> {
-    const database = dbConfig.database;
-    if (!database) {
+export async function healthCheck(dbName?: string): Promise<boolean> {
+    const database = dbName !== undefined ? dbName : dbConfig.database;
+    if (database == null) {
         throw new Error('Database name is required');
     }
+    const effectiveDb = database === '' ? undefined : database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
-        client = await Connection.getInstance().getClient(database);
+        client = await Connection.getInstance().getClient(effectiveDb);
         await client.query('SELECT 1');
         logHealthCheck('success', { database, duration: Date.now() - start });
         return true;

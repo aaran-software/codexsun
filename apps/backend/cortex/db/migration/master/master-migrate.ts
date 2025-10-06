@@ -56,10 +56,10 @@ const initializeConnection = async (config: ReturnType<typeof getDbConfig>, noDb
  */
 const ensureMasterDatabase = async (): Promise<void> => {
     try {
-        const dbCheck = await query(`SHOW DATABASES LIKE ?`, [MASTER_DB]);
+        const dbCheck = await query(`SHOW DATABASES LIKE ?`, [MASTER_DB], '');
         if (dbCheck.rowCount === 0) {
             console.warn(`Master database '${MASTER_DB}' does not exist. Creating it now.`);
-            await query(`CREATE DATABASE \`${MASTER_DB}\``);
+            await query(`CREATE DATABASE \`${MASTER_DB}\``, [], '');
             console.log(`Created master database: ${MASTER_DB}`);
         } else {
             console.log(`Master database '${MASTER_DB}' already exists.`);
@@ -84,6 +84,8 @@ const createMigrationsTable = async (): Promise<void> => {
                     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     );
             `,
+            [],
+            MASTER_DB
         );
         console.log('Created migrations table in master_db');
     } catch (err: unknown) {
@@ -99,16 +101,24 @@ const createMigrationsTable = async (): Promise<void> => {
  */
 const getMigrationFiles = async (): Promise<string[]> => {
     try {
+        console.log(`Checking migration directory: ${MIGRATIONS_DIR}`);
+        await fs.access(MIGRATIONS_DIR);
         const files = await fs.readdir(MIGRATIONS_DIR);
-        return files
+        const migrationFiles = files
             .filter((file) => file.match(/^\d+_.+\.ts$/))
             .sort((a, b) => {
                 const aTimestamp = parseInt(a.split('_')[0], 10);
                 const bTimestamp = parseInt(b.split('_')[0], 10);
                 return aTimestamp - bTimestamp;
             });
+        console.log(`Found migration files: ${migrationFiles.join(', ') || 'none'}`);
+        return migrationFiles;
     } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
+        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+            console.log(`Migration directory ${MIGRATIONS_DIR} does not exist, returning empty list`);
+            return [];
+        }
         console.error(`Error reading migration files: ${error.message}`);
         throw error;
     }
@@ -120,23 +130,26 @@ const getMigrationFiles = async (): Promise<string[]> => {
  */
 const applyMigration = async (fileName: string): Promise<void> => {
     const migrationName = fileName.replace(/\.ts$/, '');
-    const migrationCheck = await query(`SELECT * FROM migrations WHERE name = ?`, [migrationName]);
+    console.log(`Checking migration: ${migrationName}`);
+    const migrationCheck = await query(`SELECT * FROM migrations WHERE name = ?`, [migrationName], MASTER_DB);
     if (migrationCheck.rowCount === 0) {
+        console.log(`Applying migration: ${migrationName}`);
         const migrationPath = path.join(MIGRATIONS_DIR, fileName);
-        const migrationModule = await import(`file://${migrationPath.replace(/\\/g, '/')}`);
+        console.log(`Loading migration from: ${migrationPath}`);
+        const migrationModule = require(migrationPath);
         const MigrationClass = Object.values(migrationModule)[0] as new (dbName: string) => { up: () => Promise<void> };
         const migration = new MigrationClass(MASTER_DB);
-        await query('BEGIN');
+        await query('BEGIN', [], MASTER_DB);
         try {
             await migration.up();
-            await query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
-            await query('COMMIT');
+            await query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName], MASTER_DB);
+            await query('COMMIT', [], MASTER_DB);
             console.log(`Applied migration: ${migrationName}`);
         } catch (err: unknown) {
-            await query('ROLLBACK');
+            await query('ROLLBACK', [], MASTER_DB);
             const error = err instanceof Error ? err : new Error('Unknown error');
             console.error(`Error running migration ${migrationName}: ${error.message}`, {
-                sql: (err instanceof Error && 'sql' in err) ? err.sql : 'unknown',
+                sql: (err as any).sql || 'unknown',
             });
             throw error;
         }
@@ -150,13 +163,15 @@ const applyMigration = async (fileName: string): Promise<void> => {
  */
 const dropMasterTables = async (): Promise<void> => {
     try {
-        await query('BEGIN');
-        await query(`DROP TABLE IF EXISTS tenants`);
-        await query(`DROP TABLE IF EXISTS migrations`);
-        await query('COMMIT');
-        console.log('Dropped tenants and migrations tables in master_db');
+        await query('BEGIN', [], MASTER_DB);
+        // Drop tenant_users first due to FK dependency
+        await query(`DROP TABLE IF EXISTS tenant_users`, [], MASTER_DB);
+        await query(`DROP TABLE IF EXISTS tenants`, [], MASTER_DB);
+        await query(`DROP TABLE IF EXISTS migrations`, [], MASTER_DB);
+        await query('COMMIT', [], MASTER_DB);
+        console.log('Dropped tenant_users, tenants, and migrations tables in master_db');
     } catch (err: unknown) {
-        await query('ROLLBACK');
+        await query('ROLLBACK', [], MASTER_DB);
         const error = err instanceof Error ? err : new Error('Unknown error');
         console.error(`Error dropping tables in master_db: ${error.message}`);
         throw error;
@@ -169,7 +184,7 @@ const dropMasterTables = async (): Promise<void> => {
 const dropMasterDatabase = async (): Promise<void> => {
     try {
         console.log(`Dropping master database: ${MASTER_DB}`);
-        await query(`DROP DATABASE IF EXISTS \`${MASTER_DB}\``);
+        await query(`DROP DATABASE IF EXISTS \`${MASTER_DB}\``, [], '');
     } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
         console.error(`Error dropping master database ${MASTER_DB}: ${error.message}`);

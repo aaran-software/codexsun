@@ -1,4 +1,4 @@
-// \cortex\migrations\002_tenant_users.ts
+// \cortex\migrations\master\002_create_tenant_users.ts
 
 import { BaseMigration } from '../../db/migration/base-migration';
 
@@ -9,9 +9,7 @@ export class CreateTenantUsersMigration extends BaseMigration {
             table.string('email', 255).unique().notNull();
             table.string('tenant_id', 50).notNull();
             table.timestamps();
-
-            // Foreign key constraint linking to tenants table
-            table.foreignKey('tenant_id').reference('tenant_id').onTable('tenants').withType('VARCHAR(50)').onDelete('CASCADE');
+            table.foreignKey('tenant_id').reference('tenant_id').onTable('tenants').withType('VARCHAR(50)').onDelete('CASCADE').build();
         });
         console.log('Created tenant_users table');
     }
