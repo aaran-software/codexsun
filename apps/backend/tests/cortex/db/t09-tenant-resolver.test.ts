@@ -1,12 +1,12 @@
 // cortex/db/t09-tenant-resolver.test.ts
 
-import { resolveTenant } from "./tenant-resolver";
-import { query } from "./db";
-import { getDbConfig } from "../config/db-config";
-import { tenantStorage } from "./db";
+import { resolveTenant } from "../../../cortex/core/tenant/tenant-resolver";
+import { query } from "../../../cortex/db/db";
+import { getDbConfig } from "../../../cortex/config/db-config";
+import { tenantStorage } from "../../../cortex/db/db";
 
-jest.mock("./db");
-jest.mock("../config/db-config");
+jest.mock("../../../cortex/db/db");
+jest.mock("../../../cortex/config/db-config");
 
 describe("[1.] resolveTenant", () => {
     let mockConfig;
