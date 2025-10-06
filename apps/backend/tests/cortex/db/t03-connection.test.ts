@@ -93,8 +93,8 @@ describe("[1.] Connection", () => {
         expect(Connection.getInstance().getConfig()).toEqual(mockConfig);
     });
 
+
     it("[test 8] handles init error with retry in production", async () => {
-        jest.useFakeTimers();
         process.env.NODE_ENV = "production";
         const mockInitPool = jest.fn()
             .mockRejectedValueOnce(new Error("fail"))
@@ -104,13 +104,10 @@ describe("[1.] Connection", () => {
             getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
             closePool: jest.fn().mockResolvedValue(undefined),
         }));
-        const initPromise = Connection.initialize(mockConfig);
-        jest.advanceTimersByTime(5000);
-        await initPromise;
+        await Connection.initialize(mockConfig);
         expect(mockInitPool).toHaveBeenCalledTimes(2); // Initial + retry
         process.env.NODE_ENV = "test";
-        jest.useRealTimers();
-    });
+    }, 10000);
 
     it("[test 9] throws on init error in non-production", async () => {
         process.env.NODE_ENV = "test";
