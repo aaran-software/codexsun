@@ -1,10 +1,10 @@
 // cortex/db/connection.ts
-
 import { DbConfig, AnyDbClient, DBAdapter } from './db-types';
 import { MariaDBAdapter } from './adapters/mariadb';
 import { PostgresAdapter } from './adapters/postgres';
 import { MysqlAdapter } from './adapters/mysql';
 import { SqliteAdapter } from './adapters/sqlite';
+import { logConnection } from '../config/logger';
 
 export class Connection {
     private readonly config: DbConfig;
@@ -31,9 +31,6 @@ export class Connection {
         }
     }
 
-    /**
-     * Initialize the singleton connection instance.
-     */
     static async initialize(config: DbConfig): Promise<Connection> {
         if (!Connection.instance) {
             Connection.instance = new Connection(config);
@@ -42,9 +39,6 @@ export class Connection {
         return Connection.instance;
     }
 
-    /**
-     * Get the singleton connection instance.
-     */
     static getInstance(): Connection {
         if (!Connection.instance) {
             throw new Error('Connection not initialized. Call initialize first.');
@@ -53,16 +47,31 @@ export class Connection {
     }
 
     async init(): Promise<void> {
+        const start = Date.now();
+        const connectionString = this.getConnectionString();
         try {
+            logConnection('start', { db: this.config.database, connectionString });
             if (this.adapter.initPool) {
-                await this.adapter.initPool(this.config);
+                await this.adapter.initPool({
+                    host: this.config.host,
+                    port: this.config.port,
+                    user: this.config.user,
+                    password: this.config.password,
+                    ssl: this.config.ssl,
+                    connectionLimit: this.config.connectionLimit,
+                    acquireTimeout: this.config.acquireTimeout,
+                    idleTimeout: this.config.idleTimeout,
+                });
             }
+            logConnection('success', { db: this.config.database, connectionString, duration: Date.now() - start });
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Failed to initialize pool: ${error.message}`);
-            } else {
-                throw new Error(`Failed to initialize pool: Unknown error`);
+            const errMsg = (error as Error).message || 'Unknown init error';
+            logConnection('error', { db: this.config.database, connectionString, duration: Date.now() - start, error: errMsg });
+            if (process.env.NODE_ENV === 'production') {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                return this.init(); // Retry once
             }
+            throw new Error(`Failed to initialize pool: ${errMsg}`);
         }
     }
 
@@ -73,11 +82,8 @@ export class Connection {
             }
             Connection.instance = null;
         } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Failed to close pool: ${error.message}`);
-            } else {
-                throw new Error(`Failed to close pool: Unknown error`);
-            }
+            const errMsg = (error as Error).message || 'Unknown error';
+            throw new Error(`Failed to close pool: ${errMsg}`);
         }
     }
 
@@ -87,5 +93,9 @@ export class Connection {
 
     getConfig(): DbConfig {
         return this.config;
+    }
+
+    private getConnectionString(): string {
+        return `${this.config.type}://${this.config.user}@${this.config.host}:${this.config.port}/${this.config.database}`;
     }
 }

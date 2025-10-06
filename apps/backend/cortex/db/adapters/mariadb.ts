@@ -14,9 +14,10 @@ export class MariaDBAdapter implements DBAdapter {
             port: config.port,
             user: config.user,
             password: config.password,
-            connectionLimit: 10,
-            acquireTimeout: 10000,
-            idleTimeout: 30000,
+            connectionLimit: config.connectionLimit || 50,
+            acquireTimeout: config.acquireTimeout || 30000,
+            idleTimeout: config.idleTimeout || 60000,
+            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : false, // Enforce SSL in prod
         });
         MariaDBAdapter.poolsInitialized = true;
     }
@@ -33,33 +34,26 @@ export class MariaDBAdapter implements DBAdapter {
         if (!MariaDBAdapter.pool) {
             throw new Error('Pool not initialized. Call initPool first.');
         }
+        const connection = await MariaDBAdapter.pool.getConnection();
         try {
-            const connection = await MariaDBAdapter.pool.getConnection();
             if (database) {
                 await connection.query(`USE \`${database}\``);
             }
-            await connection.query('SELECT 1');
+            await connection.query('SELECT 1'); // Health ping
             return {
                 query: async (text: string, params?: any[]) => {
-                    try {
-                        const result = await connection.query(text, params);
-                        return {
-                            rows: Array.isArray(result) ? result : [],
-                            rowCount: (result as any).affectedRows || (Array.isArray(result) ? result.length : 0),
-                            insertId: (result as any).insertId || undefined,
-                        };
-                    } catch (err) {
-                        if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                            console.error('MariaDB query error:', err);
-                        }
-                        throw err;
-                    }
+                    const result = await connection.query(text, params);
+                    return {
+                        rows: Array.isArray(result) ? result : [],
+                        rowCount: (result as any).affectedRows || (Array.isArray(result) ? result.length : 0),
+                        insertId: (result as any).insertId || undefined,
+                    };
                 },
                 end: () => connection.end(),
                 release: () => connection.release(),
             };
         } catch (err) {
-            if (process.env.SUPPRESS_DB_LOGS !== 'true') {
+            if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
                 console.error('MariaDB connection error:', err);
             }
             throw err;
@@ -67,13 +61,7 @@ export class MariaDBAdapter implements DBAdapter {
     }
 
     async connect(config: DbConfig): Promise<AnyDbClient> {
-        await this.initPool({
-            host: config.host,
-            port: config.port,
-            user: config.user,
-            password: config.password,
-            ssl: config.ssl
-        });
+        await this.initPool(config);
         return this.getConnection(config.database);
     }
 

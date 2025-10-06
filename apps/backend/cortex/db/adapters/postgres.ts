@@ -1,23 +1,23 @@
 // cortex/db/adapters/postgres.ts
 
-import { Pool, PoolClient } from 'pg';
+import pg from 'pg';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 
 export class PostgresAdapter implements DBAdapter {
-    private static pool: Pool | null = null;
+    private static pool: pg.Pool | null = null;
     private static poolsInitialized = false;
 
     async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
         if (PostgresAdapter.poolsInitialized) return;
-        PostgresAdapter.pool = new Pool({
+        PostgresAdapter.pool = new pg.Pool({
             host: config.host,
             port: config.port,
             user: config.user,
             password: config.password,
-            ssl: config.ssl ? { rejectUnauthorized: false } : false,
-            max: 10,
-            connectionTimeoutMillis: 10000,
-            idleTimeoutMillis: 30000,
+            max: config.connectionLimit || 50,
+            connectionTimeoutMillis: config.acquireTimeout || 30000,
+            idleTimeoutMillis: config.idleTimeout || 60000,
+            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : false,
         });
         PostgresAdapter.poolsInitialized = true;
     }
@@ -34,46 +34,33 @@ export class PostgresAdapter implements DBAdapter {
         if (!PostgresAdapter.pool) {
             throw new Error('Pool not initialized. Call initPool first.');
         }
+        const client = await PostgresAdapter.pool.connect();
         try {
-            const connection: PoolClient = await PostgresAdapter.pool.connect();
             if (database) {
-                await connection.query(`SET search_path TO ${database}`);
+                await client.query(`SET search_path TO "${database}"`);
             }
-            await connection.query('SELECT 1');
+            await client.query('SELECT 1');
             return {
                 query: async (text: string, params?: any[]) => {
-                    try {
-                        const result = await connection.query(text, params);
-                        return {
-                            rows: result.rows,
-                            rowCount: result.rowCount || 0,
-                            insertId: result.rows[0]?.id || undefined,
-                        };
-                    } catch (err) {
-                        if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                            console.error('PostgreSQL query error:', err);
-                        }
-                        throw err;
-                    }
+                    const result = await client.query(text, params);
+                    return {
+                        rows: result.rows || [],
+                        rowCount: result.rowCount || 0,
+                        insertId: undefined, // Postgres doesn't have insertId like MySQL
+                    };
                 },
-                release: () => connection.release(),
+                release: () => client.release(),
             };
         } catch (err) {
-            if (process.env.SUPPRESS_DB_LOGS !== 'true') {
-                console.error('PostgreSQL connection error:', err);
+            if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
+                console.error('Postgres connection error:', err);
             }
             throw err;
         }
     }
 
     async connect(config: DbConfig): Promise<AnyDbClient> {
-        await this.initPool({
-            host: config.host,
-            port: config.port,
-            user: config.user,
-            password: config.password,
-            ssl: config.ssl,
-        });
+        await this.initPool(config);
         return this.getConnection(config.database);
     }
 
@@ -88,7 +75,7 @@ export class PostgresAdapter implements DBAdapter {
         return {
             rows: result.rows || [],
             rowCount: result.rowCount || 0,
-            insertId: result.insertId,
+            insertId: undefined,
         };
     }
 

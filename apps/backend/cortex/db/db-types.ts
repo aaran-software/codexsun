@@ -8,6 +8,9 @@ export interface DbConfig {
     password: string;
     type: 'mariadb' | 'postgres' | 'mysql' | 'sqlite';
     ssl?: boolean;
+    connectionLimit?: number;
+    acquireTimeout?: number;
+    idleTimeout?: number;
 }
 
 export interface AnyDbClient {

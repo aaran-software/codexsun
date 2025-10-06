@@ -1,5 +1,4 @@
-// Loads and exposes all app & database environment variables in a typed, parsed form.
-
+// E:\Workspace\codexsun\apps\backend\cortex\config\get-settings.ts
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -14,7 +13,7 @@ export interface AppSettings {
     APP_PORT: number;
     APP_HOST: string;
     MASTER_DB: string;
-    TENANCY: boolean; // Added to control tenancy mode
+    TENANCY: boolean;
     DB_DRIVER: Driver;
     DB_HOST: string;
     DB_PORT: number;
@@ -47,46 +46,46 @@ function requireStr(key: string, fallback?: string): string {
 
 function requireDriver(key: string, fallback: Driver): Driver {
     const raw = (process.env[key] ?? fallback) as string;
-    const drv = raw.toLowerCase();
-    if (drv === "postgres" || drv === "mysql" || drv === "mariadb" || drv === "sqlite") {
-        return drv as Driver;
+    const drv = raw.toLowerCase() as Driver;
+    if (['postgres', 'mysql', 'mariadb', 'sqlite'].includes(drv)) {
+        return drv;
     }
-    throw new Error(
-        `Invalid ${key}: expected one of "postgres" | "mysql" | "mariadb" | "sqlite", got "${raw}"`
-    );
+    throw new Error(`Invalid ${key}: expected "postgres|mysql|mariadb|sqlite", got "${raw}"`);
 }
 
-/**
- * Read and cache settings from process.env (loaded via dotenv).
- * Call this anywhere to get typed settings.
- */
 export function getSettings(): AppSettings {
     if (_settings) return _settings;
 
+    // Prod validation: Ensure sensitive vars
+    if (process.env.NODE_ENV === 'production') {
+        const appKey = process.env.APP_KEY ?? '';
+        if (appKey.trim() === '' || appKey === 'SomeKey') {
+            throw new Error('Production requires secure APP_KEY and DB_PASS');
+        }
+        const dbPass = process.env.DB_PASS ?? '';
+        if (dbPass.trim() === '') {
+            throw new Error('Production requires secure APP_KEY and DB_PASS');
+        }
+    }
+
     _settings = {
-        // App
         APP_NAME: requireStr("APP_NAME", "CodexSun"),
         APP_VERSION: requireStr("APP_VERSION", "1.0.0"),
-        APP_DEBUG: parseBool(process.env.APP_DEBUG, true),
-        APP_KEY: requireStr("APP_KEY", "SomeKey"),
+        APP_DEBUG: parseBool(process.env.APP_DEBUG, process.env.NODE_ENV !== 'production'), // Debug off in prod
+        APP_KEY: requireStr("APP_KEY"),
         VITE_APP_URL: requireStr("VITE_APP_URL", "http://localhost:3006"),
         APP_PORT: parseIntSafe(process.env.APP_PORT, 3006),
-        APP_HOST: requireStr("APP_HOST", "localhost"),
+        APP_HOST: requireStr("APP_HOST", "0.0.0.0"), // Bind all in prod
         MASTER_DB: requireStr("MASTER_DB", "master_db"),
-        TENANCY: parseBool(process.env.TENANCY, false),
-
-        // Database
+        TENANCY: parseBool(process.env.TENANCY, true), // Default on
         DB_DRIVER: requireDriver("DB_DRIVER", "mariadb"),
         DB_HOST: requireStr("DB_HOST", "127.0.0.1"),
         DB_PORT: parseIntSafe(process.env.DB_PORT, 3306),
-        DB_USER: requireStr("DB_USER", "root"),
-        DB_PASS: requireStr("DB_PASS", "password"),
+        DB_USER: requireStr("DB_USER"),
+        DB_PASS: requireStr("DB_PASS"),
         DB_NAME: requireStr("DB_NAME", "test_db"),
-        DB_SSL: parseBool(process.env.DB_SSL, false),
+        DB_SSL: parseBool(process.env.DB_SSL, process.env.NODE_ENV === 'production'), // Enforce in prod
     };
 
     return _settings;
 }
-
-// Convenience export for global access
-export const settings: AppSettings = getSettings();
