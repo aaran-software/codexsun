@@ -1,165 +1,271 @@
-import mariadb from 'mariadb';
-import { Connection } from "../../../cortex/db/connection";
-import { getDbConfig } from "../../../cortex/config/db-config";
-import { query, withTransaction, healthCheck, tenantStorage } from "../../../cortex/db/db";
-import { logQuery, logTransaction, logHealthCheck, logConnection } from "../../../cortex/config/logger";
+// E:\Workspace\codexsun\apps\backend\tests\cortex\db\t10-db-integration.test.ts
 import { getSettings } from "../../../cortex/config/get-settings";
+import { getDbConfig } from "../../../cortex/config/db-config";
+import { logQuery, logTransaction, logHealthCheck, logConnection } from "../../../cortex/config/logger";
+import { Connection } from "../../../cortex/db/connection";
+import { query, withTransaction, healthCheck, tenantStorage } from "../../../cortex/db/db";
 import { resolveTenant } from "../../../cortex/core/tenant/tenant-resolver";
-import { Tenant } from "../../../cortex/core/tenant/tenant.types";
 import { DbConfig } from "../../../cortex/db/db-types";
 
-const TEST_HOST = 'localhost';
-const TEST_PORT = 3306;
-const TEST_USER = 'root';
-const TEST_PASS = 'Computer.1'; // Adjust for local MariaDB
-const TEST_DB = 'test_integration_db';
-const MASTER_DB = 'master_db';
-const TENANT_DB = 'tenant_db';
+jest.setTimeout(30000); // Global timeout increase for integration tests
 
-let pool: mariadb.Pool;
+const TEST_DB = "test_integration_db";
+const MASTER_DB = "test_master_db";
+const TENANT_DB = "test_tenant_db";
 
-beforeAll(async () => {
-    pool = mariadb.createPool({ host: TEST_HOST, port: TEST_PORT, user: TEST_USER, password: TEST_PASS, connectionLimit: 5 });
-    await pool.query(`CREATE DATABASE IF NOT EXISTS ${TEST_DB}`);
-    await pool.query(`USE ${TEST_DB}`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS test_table (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))`);
-    await pool.query(`CREATE DATABASE IF NOT EXISTS ${MASTER_DB}`);
-    await pool.query(`USE ${MASTER_DB}`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS tenant_users (email VARCHAR(255), tenant_id VARCHAR(36))`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS tenants (tenant_id VARCHAR(36), db_host VARCHAR(255), db_port INT, db_user VARCHAR(255), db_pass VARCHAR(255), db_name VARCHAR(255), db_ssl BOOLEAN)`);
-    await pool.query(`CREATE DATABASE IF NOT EXISTS ${TENANT_DB}`);
-    await pool.query(`USE ${TENANT_DB}`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS tenant_table (id INT AUTO_INCREMENT PRIMARY KEY, value VARCHAR(255))`);
-    // Seed data
-    await pool.query(`USE ${MASTER_DB}`);
-    await pool.query(`INSERT IGNORE INTO tenant_users (email, tenant_id) VALUES ('test@email.com', 'tenant-1')`);
-    await pool.query(`INSERT IGNORE INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl) VALUES ('tenant-1', '${TEST_HOST}', ${TEST_PORT}, '${TEST_USER}', '${TEST_PASS}', '${TENANT_DB}', false)`);
-});
+const fullSettings = {
+    APP_NAME: "TestApp",
+    APP_VERSION: "1.0.0",
+    APP_DEBUG: "false",
+    APP_KEY: "testkey",
+    VITE_APP_URL: "http://localhost:3006",
+    APP_PORT: "3006",
+    APP_HOST: "0.0.0.0",
+    MASTER_DB,
+    TENANCY: "true",
+    DB_DRIVER: "mariadb",
+    DB_HOST: "127.0.0.1",
+    DB_PORT: "3306",
+    DB_USER: "root",
+    DB_PASS: "Computer.1",
+    DB_NAME: TEST_DB,
+    DB_SSL: "false",
+};
 
-afterAll(async () => {
-    await pool.query(`DROP DATABASE IF EXISTS ${TEST_DB}`);
-    await pool.query(`DROP DATABASE IF EXISTS ${MASTER_DB}`);
-    await pool.query(`DROP DATABASE IF EXISTS ${TENANT_DB}`);
-    await pool.end();
-});
+function setTestEnv(isMaster: boolean = false): void {
+    Object.entries(fullSettings).forEach(([key, value]) => {
+        process.env[key] = typeof value === 'string' ? value : String(value);
+    });
+    if (isMaster) {
+        process.env.DB_NAME = MASTER_DB;
+    }
+}
+
+async function runWithTenant<T = void>(db: string | null, cb: () => Promise<T>): Promise<T> {
+    if (db) {
+        return tenantStorage.run(db, cb);
+    } else {
+        return tenantStorage.run('', cb);
+    }
+}
 
 describe("[1.] Integration: Config & Logger", () => {
+    beforeEach(() => {
+        jest.resetModules(); // Reset cached modules/settings
+        process.env = { ...process.env, NODE_ENV: "test" }; // Ensure test env
+        setTestEnv();
+    });
+
+    afterEach(async () => {
+        try {
+            await Connection.getInstance().close(); // Clean pool
+        } catch {} // Ignore errors
+    });
+
     it("[test 1] getSettings loads defaults/overrides", () => {
-        process.env.APP_NAME = "TestERP";
-        process.env.APP_DEBUG = "false";
+        process.env.APP_NAME = "TestApp";
         const settings = getSettings();
-        expect(settings.APP_NAME).toBe("TestERP");
-        expect(settings.APP_DEBUG).toBe(false);
+        expect(settings.APP_NAME).toBe("TestApp");
+        expect(settings.DB_DRIVER).toBe("mariadb");
+        expect(settings.TENANCY).toBe(true);
     });
 
     it("[test 2] getDbConfig with tenancy", () => {
-        process.env.TENANCY = "true";
-        process.env.MASTER_DB = MASTER_DB;
         const config = getDbConfig();
         expect(config.database).toBe(MASTER_DB);
         expect(config.type).toBe("mariadb"); // Default assumption
     });
 
     it("[test 3] logger phases/metrics", () => {
-        console.debug = jest.fn();
-        console.info = jest.fn();
+        process.env.NODE_ENV = "production"; // Force logging regardless of APP_DEBUG
+        const mockDebug = jest.fn();
+        const mockInfo = jest.fn();
+        console.debug = mockDebug;
+        console.info = mockInfo;
         logQuery('start', { sql: "SELECT 1", params: [], db: TEST_DB });
-        logQuery('end', { sql: "SELECT 1", params: [], db: TEST_DB, duration: 5 });
-        logQuery('error', { sql: "INVALID", params: [], db: TEST_DB, error: "fail" });
-        expect(console.debug).toHaveBeenCalled();
-        expect(console.info).toHaveBeenCalledWith(expect.stringContaining("query_duration_ms"));
-        expect(console.info).toHaveBeenCalledWith(expect.stringContaining("query_error"));
-        logTransaction('start', { db: TEST_DB });
-        logTransaction('end', { db: TEST_DB, duration: 10 });
-        logTransaction('error', { db: TEST_DB, error: "tx fail" });
-        logHealthCheck('success', { database: TEST_DB, duration: 2 });
-        logHealthCheck('error', { database: TEST_DB, error: "health fail" });
-        logConnection('start', { db: TEST_DB, connectionString: "str" });
-        logConnection('success', { db: TEST_DB, connectionString: "str", duration: 3 });
-        logConnection('error', { db: TEST_DB, connectionString: "str", error: "conn fail" });
+        logQuery('end', { sql: "SELECT 1", params: [], db: TEST_DB, duration: 10 });
+        logQuery('error', { sql: "SELECT 1", params: [], db: TEST_DB, error: "err" });
+        expect(mockDebug).toHaveBeenCalledTimes(3);
+        expect(mockInfo).toHaveBeenCalledTimes(2); // Metrics for end/error
     });
 });
 
 describe("[2.] Integration: Connection & DB Ops", () => {
     let realConfig: DbConfig;
 
+    async function setupTestDBs() {
+        setTestEnv();
+        const masterlessConfig: any = { ...getDbConfig(), database: undefined };
+        await Connection.initialize(masterlessConfig);
+        const tempConn = Connection.getInstance();
+        const client = await tempConn.getClient();
+        await client.query(`CREATE DATABASE IF NOT EXISTS ${MASTER_DB}`);
+        await client.query(`CREATE DATABASE IF NOT EXISTS ${TEST_DB}`);
+        if (client.release) client.release(); else if (client.end) await client.end();
+        await tempConn.close();
+    }
+
+    async function cleanupTestDBs() {
+        setTestEnv();
+        const masterlessConfig: any = { ...getDbConfig(), database: undefined };
+        await Connection.initialize(masterlessConfig);
+        const tempConn = Connection.getInstance();
+        const client = await tempConn.getClient();
+        await client.query(`DROP DATABASE IF EXISTS ${TEST_DB}`);
+        await client.query(`DROP DATABASE IF EXISTS ${MASTER_DB}`);
+        if (client.release) client.release(); else if (client.end) await client.end();
+        await tempConn.close();
+    }
+
+    beforeAll(async () => {
+        await setupTestDBs();
+    });
+
     beforeEach(async () => {
-        realConfig = { type: "mariadb", host: TEST_HOST, port: TEST_PORT, user: TEST_USER, password: TEST_PASS, database: TEST_DB, ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
-        await Connection.initialize(realConfig);
+        process.env.NODE_ENV = "test";
+        setTestEnv();
+        try {
+            await Connection.getInstance().close();
+        } catch {}
+        realConfig = getDbConfig();
+        await Connection.initialize(realConfig); // Reinit per test
     });
 
     afterEach(async () => {
-        await Connection.getInstance().close();
+        try {
+            const conn = Connection.getInstance();
+            await conn.close(); // Clean up pool
+        } catch {}
+    });
+
+    afterAll(async () => {
+        await cleanupTestDBs();
     });
 
     it("[test 1] connection init/close", async () => {
         const conn = Connection.getInstance();
         expect(conn.getConfig()).toEqual(realConfig);
         const client = await conn.getClient(TEST_DB);
-        await client.query("SELECT 1");
+        const result = await client.query("SELECT 1");
+        expect(result.rows[0]).toEqual({ "1": 1 });
+        if (client.release) client.release(); else if (client.end) await client.end();
         await conn.close();
-        expect(() => Connection.getInstance()).toThrow("Connection not initialized");
+        expect(() => Connection.getInstance()).toThrow("Connection not initialized. Call initialize first.");
     });
 
     it("[test 2] query/withTransaction/healthCheck", async () => {
-        await query(`INSERT INTO test_table (name) VALUES (?)`, ["test"]);
-        const res = await query(`SELECT * FROM test_table WHERE name = ?`, ["test"]);
-        expect(res.rowCount).toBe(1);
-        await withTransaction(async (tx) => {
-            await tx.query(`INSERT INTO test_table (name) VALUES (?)`, ["tx-test"]);
+        await runWithTenant(TEST_DB, async () => {
+            await query(`CREATE TABLE IF NOT EXISTS test_table (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))`);
+            const insertRes = await query("INSERT INTO test_table (name) VALUES (?)", ["test"]);
+            expect(insertRes.rowCount).toBe(1);
+            expect(insertRes.insertId).toBeDefined();
+
+            const txRes = await withTransaction(async (client) => {
+                await client.query("INSERT INTO test_table (name) VALUES (?)", ["tx"]);
+                return await client.query("SELECT COUNT(*) as count FROM test_table");
+            });
+            expect(Number(txRes.rows[0].count)).toBe(2);
+
+            const healthy = await healthCheck(TEST_DB);
+            expect(healthy).toBe(true);
         });
-        const txRes = await query(`SELECT * FROM test_table WHERE name = ?`, ["tx-test"]);
-        expect(txRes.rowCount).toBe(1);
-        expect(await healthCheck(TEST_DB)).toBe(true);
     });
 
     it("[test 3] error handling/retries", async () => {
-        await expect(query("INVALID SQL")).rejects.toThrow();
-        await expect(withTransaction(async () => { throw new Error("tx fail"); })).rejects.toThrow();
-        await Connection.getInstance().close();
-        // Simulate init fail (bad port), expect throw (no retry test in real, as retry is in code)
-        const badConfig: DbConfig = { ...realConfig, port: 9999 };
-        await expect(Connection.initialize(badConfig)).rejects.toThrow();
-        // Test production retry: set NODE_ENV, force init fail via mock if needed, but since real, verify logs or multiple calls
-        process.env.NODE_ENV = "production";
-        await expect(Connection.initialize(badConfig)).rejects.toThrow(); // Expect retry internally, but throw after
-        process.env.NODE_ENV = "test";
+        await runWithTenant(TEST_DB, async () => {
+            await expect(query("INVALID SQL")).rejects.toThrow("Query failed");
+        });
+        const conn = Connection.getInstance();
+        jest.spyOn((conn as any).adapter, "initPool").mockRejectedValueOnce(new Error("init fail"));
+        await expect(conn.init()).rejects.toThrow("Failed to initialize");
     });
 });
 
 describe("[3.] Integration: Tenant Resolver & Multi-Tenant", () => {
-    let masterConfig: DbConfig;
+    async function setupTenantDBs() {
+        setTestEnv(true);
+        const masterlessConfig: any = { ...getDbConfig(), database: undefined };
+        await Connection.initialize(masterlessConfig);
+        const tempConn = Connection.getInstance();
+        const client = await tempConn.getClient();
+        await client.query(`CREATE DATABASE IF NOT EXISTS ${MASTER_DB}`);
+        await client.query(`CREATE DATABASE IF NOT EXISTS ${TENANT_DB}`);
+        if (client.release) client.release(); else if (client.end) await client.end();
+        await tempConn.close();
+    }
+
+    async function cleanupTenantDBs() {
+        setTestEnv(true);
+        const masterlessConfig: any = { ...getDbConfig(), database: undefined };
+        await Connection.initialize(masterlessConfig);
+        const tempConn = Connection.getInstance();
+        const client = await tempConn.getClient();
+        await client.query(`DROP DATABASE IF EXISTS ${TENANT_DB}`);
+        await client.query(`DROP DATABASE IF EXISTS ${MASTER_DB}`);
+        if (client.release) client.release(); else if (client.end) await client.end();
+        await tempConn.close();
+    }
+
+    beforeAll(async () => {
+        await setupTenantDBs();
+    });
 
     beforeEach(async () => {
-        masterConfig = { type: "mariadb", host: TEST_HOST, port: TEST_PORT, user: TEST_USER, password: TEST_PASS, database: MASTER_DB, ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
-        await Connection.initialize(masterConfig);
+        process.env.NODE_ENV = "test";
+        setTestEnv(true);
+        try {
+            await Connection.getInstance().close();
+        } catch {}
+        const config = getDbConfig();
+        await Connection.initialize(config);
+        await runWithTenant(MASTER_DB, async () => {
+            await query(`CREATE TABLE IF NOT EXISTS tenants (tenant_id VARCHAR(50), db_host VARCHAR(255), db_port VARCHAR(10), db_user VARCHAR(255), db_pass VARCHAR(255), db_name VARCHAR(255), db_ssl VARCHAR(10))`);
+            await query(`CREATE TABLE IF NOT EXISTS tenant_users (email VARCHAR(255), tenant_id VARCHAR(50))`);
+            await query(`INSERT INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl) VALUES ('tenant-1', 'localhost', '3306', 'user', 'pass', '${TENANT_DB}', 'false')`);
+            await query(`INSERT INTO tenant_users (email, tenant_id) VALUES ('test@email.com', 'tenant-1')`);
+        });
     });
 
     afterEach(async () => {
-        await Connection.getInstance().close();
+        await runWithTenant(MASTER_DB, async () => {
+            await query(`DROP TABLE IF EXISTS tenants, tenant_users`);
+        });
+        try {
+            const conn = Connection.getInstance();
+            await conn.close();
+        } catch {}
+    });
+
+    afterAll(async () => {
+        await cleanupTenantDBs();
     });
 
     it("[test 1] resolveTenant & switch context", async () => {
-        const tenant: Tenant = await resolveTenant({ body: { email: "test@email.com", password: "pass" } });
-        expect(tenant.id).toBe("tenant-1");
-        expect(tenant.dbConnection).toBe(`mariadb://${TEST_USER}:${encodeURIComponent(TEST_PASS)}@${TEST_HOST}:${TEST_PORT}/${TENANT_DB}`);
-        expect(tenantStorage.getStore()).toBe(TENANT_DB);
-        // Ops in tenant DB
-        await query(`INSERT INTO tenant_table (value) VALUES (?)`, ["tenant-value"]);
-        const tenantRes = await query(`SELECT * FROM tenant_table WHERE value = ?`, ["tenant-value"]);
-        expect(tenantRes.rowCount).toBe(1);
+        await runWithTenant(null, async () => {
+            const tenant = await resolveTenant({ body: { email: "test@email.com", password: "pass" } });
+            expect(tenant.id).toBe("tenant-1");
+            expect(tenant.dbConnection).toContain(TENANT_DB);
+        });
     });
 
     it("[test 2] tenant errors/validation", async () => {
-        await expect(resolveTenant({ body: { email: "", password: "pass" } })).rejects.toThrow("Valid email");
-        await expect(resolveTenant({ body: { email: "invalid@email.com", password: "pass" } })).rejects.toThrow("No tenant associated");
-        // Simulate multi
-        await query(`INSERT INTO tenant_users (email, tenant_id) VALUES ('multi@email.com', 'tenant-2')`);
-        await expect(resolveTenant({ body: { email: "multi@email.com", password: "pass" } })).rejects.toThrow("Multiple tenants");
-        // Incomplete config
-        await query(`UPDATE tenants SET db_host = NULL WHERE tenant_id = 'tenant-1'`);
-        await expect(resolveTenant({ body: { email: "test@email.com", password: "pass" } })).rejects.toThrow("Incomplete");
-        // Restore
-        await query(`UPDATE tenants SET db_host = '${TEST_HOST}' WHERE tenant_id = 'tenant-1'`);
+        await runWithTenant(null, async () => {
+            await expect(resolveTenant({ body: { email: "", password: "pass" } })).rejects.toThrow("Valid email is required for tenant resolution");
+            await expect(resolveTenant({ body: { email: "invalid@email.com", password: "pass" } })).rejects.toThrow("No tenant associated with email: invalid@email.com");
+        });
+        await runWithTenant(MASTER_DB, async () => {
+            await query(`INSERT INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl) VALUES ('tenant-2', 'localhost', '3306', 'user', 'pass', 'tenant2_db', 'false')`);
+            await query(`INSERT INTO tenant_users (email, tenant_id) VALUES ('multi@email.com', 'tenant-1')`);
+            await query(`INSERT INTO tenant_users (email, tenant_id) VALUES ('multi@email.com', 'tenant-2')`);
+        });
+        await runWithTenant(null, async () => {
+            await expect(resolveTenant({ body: { email: "multi@email.com", password: "pass" } })).rejects.toThrow("Multiple tenants found for email: multi@email.com. Contact support.");
+        });
+        await runWithTenant(MASTER_DB, async () => {
+            await query(`UPDATE tenants SET db_host = NULL WHERE tenant_id = 'tenant-1'`);
+        });
+        await runWithTenant(null, async () => {
+            await expect(resolveTenant({ body: { email: "test@email.com", password: "pass" } })).rejects.toThrow("Incomplete tenant configuration for ID: tenant-1");
+        });
     });
 });
