@@ -53,13 +53,13 @@ describe("[1.] SqliteAdapter", () => {
         expect(client).toBeDefined();
     });
 
-    it"[test 6] disconnects client", async () => {
+    it("[test 6] disconnects client", async () => {
         const mockClient = { query: jest.fn(), end: jest.fn().mockResolvedValue(undefined) };
         await adapter.disconnect(mockClient);
         expect(mockClient.end).toHaveBeenCalled();
     });
 
-    it"[test 7] queries with client for SELECT", async () => {
+    it("[test 7] queries with client for SELECT", async () => {
         const mockStmt = {
             all: jest.fn().mockResolvedValue([{ id: 1 }]),
             run: jest.fn().mockResolvedValue({ changes: 0, lastID: undefined }),
@@ -71,32 +71,32 @@ describe("[1.] SqliteAdapter", () => {
         expect(result).toEqual({ rows: [{ id: 1 }], rowCount: 1, insertId: undefined });
     });
 
-    it"[test 8] begins transaction", async () => {
+    it("[test 8] begins transaction", async () => {
         const mockClient = { query: jest.fn() };
         await adapter.beginTransaction(mockClient);
         expect(mockClient.query).toHaveBeenCalledWith("BEGIN TRANSACTION");
     });
 
-    it"[test 9] commits transaction", async () => {
+    it("[test 9] commits transaction", async () => {
         const mockClient = { query: jest.fn() };
         await adapter.commitTransaction(mockClient);
         expect(mockClient.query).toHaveBeenCalledWith("COMMIT");
     });
 
-    it"[test 10] rollbacks transaction", async () => {
+    it("[test 10] rollbacks transaction", async () => {
         const mockClient = { query: jest.fn() };
         await adapter.rollbackTransaction(mockClient);
         expect(mockClient.query).toHaveBeenCalledWith("ROLLBACK");
     });
 
-    it"[test 11] catches getConnection error", async () => {
+    it("[test 11] catches getConnection error", async () => {
         mockDb.exec.mockRejectedValueOnce(new Error("exec fail"));
         console.error = jest.fn();
         await expect(adapter.getConnection("test.db")).rejects.toThrow("exec fail");
         expect(console.error).toHaveBeenCalledWith("SQLite connection error:", expect.any(Error));
     });
 
-    it"[test 12] queries with client for INSERT", async () => {
+    it("[test 12] queries with client for INSERT", async () => {
         const mockStmt = {
             all: jest.fn().mockResolvedValue([]),
             run: jest.fn().mockResolvedValue({ changes: 1, lastID: 42 }),
