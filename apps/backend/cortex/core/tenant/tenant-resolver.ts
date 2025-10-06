@@ -1,10 +1,7 @@
-// tenant-resolver.ts
 import { Tenant, TenantUser } from './tenant.types';
 import { query } from '../../db/db'; // Use db.ts for consistent querying
 import { getDbConfig } from '../../config/db-config';
 import { tenantStorage } from '../../db/db'; // For tenant context isolation
-
-const dbConfig = getDbConfig(); // Master DB config
 
 /**
  * Resolves the tenant based on the provided email from the request body.
@@ -17,6 +14,7 @@ const dbConfig = getDbConfig(); // Master DB config
  * @throws Error with specific messages for validation or query failures.
  */
 export async function resolveTenant(req: { body: { email: string; password: string } }): Promise<Tenant> {
+    const dbConfig = getDbConfig(); // Master DB config
     const { email } = req.body;
 
     // Input validation

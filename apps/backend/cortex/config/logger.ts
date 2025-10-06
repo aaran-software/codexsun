@@ -1,5 +1,4 @@
-// logger.ts (Enhance for production metrics)
-import { settings } from './get-settings';
+import { getSettings } from './get-settings';
 
 interface QueryLog { sql: string; params: any[]; db: string; duration?: number; error?: string; }
 interface TransactionLog { db: string; duration?: number; error?: string; }
@@ -7,6 +6,7 @@ interface HealthCheckLog { database: string; duration?: number; error?: string; 
 interface ConnectionLog { db: string; connectionString: string; duration?: number; error?: string; }
 
 export function logQuery(phase: 'start' | 'end' | 'error', data: QueryLog): void {
+    const settings = getSettings();
     if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') { // Log in prod too
         console.debug(`Query ${phase}:`, data);
     }
@@ -15,6 +15,7 @@ export function logQuery(phase: 'start' | 'end' | 'error', data: QueryLog): void
 }
 
 export function logTransaction(phase: 'start' | 'end' | 'error', data: TransactionLog): void {
+    const settings = getSettings();
     if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
         console.debug(`Transaction ${phase}:`, data);
     }
@@ -23,6 +24,7 @@ export function logTransaction(phase: 'start' | 'end' | 'error', data: Transacti
 }
 
 export function logHealthCheck(phase: 'success' | 'error', data: HealthCheckLog): void {
+    const settings = getSettings();
     if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
         console.debug(`Health check ${phase}:`, data);
     }
@@ -31,6 +33,7 @@ export function logHealthCheck(phase: 'success' | 'error', data: HealthCheckLog)
 }
 
 export function logConnection(phase: 'start' | 'success' | 'error', data: ConnectionLog): void {
+    const settings = getSettings();
     if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
         console.debug(`Connection ${phase}:`, data);
     }

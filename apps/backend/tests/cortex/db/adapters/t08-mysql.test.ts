@@ -59,9 +59,9 @@ describe("[1.] MysqlAdapter", () => {
     });
 
     it("[test 6] queries with client", async () => {
-        const mockClient = { query: jest.fn().mockResolvedValue([[{ id: 1 }], { insertId: 1 }]) };
+        const mockClient = { query: jest.fn().mockResolvedValue({ rows: [{ id: 1 }], rowCount: 1, insertId: undefined }) };
         const result = await adapter.query(mockClient, "SELECT *", []);
-        expect(result).toEqual({ rows: [{ id: 1 }], rowCount: 1, insertId: 1 });
+        expect(result).toEqual({ rows: [{ id: 1 }], rowCount: 1, insertId: undefined });
     });
 
     it("[test 7] begins transaction", async () => {
