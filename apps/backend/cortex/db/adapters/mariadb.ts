@@ -1,5 +1,3 @@
-// cortex/db/adapters/mariadb.ts
-
 import mariadb from 'mariadb';
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 
@@ -17,16 +15,17 @@ export class MariaDBAdapter implements DBAdapter {
             connectionLimit: config.connectionLimit || 50,
             acquireTimeout: config.acquireTimeout || 30000,
             idleTimeout: config.idleTimeout || 60000,
-            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : false, // Enforce SSL in prod
+            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : false,
         });
         MariaDBAdapter.poolsInitialized = true;
     }
 
     async closePool(): Promise<void> {
         if (MariaDBAdapter.pool) {
-            await MariaDBAdapter.pool.end();
+            await MariaDBAdapter.pool.end(); // Terminate all connections
             MariaDBAdapter.pool = null;
             MariaDBAdapter.poolsInitialized = false;
+            console.log('MariaDB pool fully closed');
         }
     }
 
@@ -53,6 +52,7 @@ export class MariaDBAdapter implements DBAdapter {
                 release: () => connection.release(),
             };
         } catch (err) {
+            if (connection.release) connection.release();
             if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
                 console.error('MariaDB connection error:', err);
             }

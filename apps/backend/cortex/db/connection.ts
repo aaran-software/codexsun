@@ -31,10 +31,11 @@ export class Connection {
     }
 
     static async initialize(config: DbConfig): Promise<Connection> {
-        if (!Connection.instance) {
-            Connection.instance = new Connection(config);
-            await Connection.instance.init();
+        if (Connection.instance) {
+            await Connection.instance.close(); // Ensure previous instance is closed
         }
+        Connection.instance = new Connection(config);
+        await Connection.instance.init();
         return Connection.instance;
     }
 
@@ -80,8 +81,10 @@ export class Connection {
                 await this.adapter.closePool();
             }
             Connection.instance = null;
+            console.log('Connection fully closed');
         } catch (error) {
             const errMsg = (error as Error).message || 'Unknown error';
+            console.error(`Failed to close pool: ${errMsg}`);
             throw new Error(`Failed to close pool: ${errMsg}`);
         }
     }
