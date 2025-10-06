@@ -87,4 +87,24 @@ describe("[1.] MysqlAdapter", () => {
         mockPool.getConnection.mockRejectedValue(new Error("conn fail"));
         await expect(adapter.getConnection("db")).rejects.toThrow("conn fail");
     });
+
+    it("[test 11] skips init if initialized", async () => {
+        (MysqlAdapter as any).poolsInitialized = true;
+        await adapter.initPool(mockConfig);
+        expect(mysql.createPool).not.toHaveBeenCalled();
+    });
+
+    it("[test 12] catches getConnection error", async () => {
+        await adapter.initPool(mockConfig);
+        mockConnection.query.mockRejectedValueOnce(new Error("fail"));
+        console.error = jest.fn();
+        await expect(adapter.getConnection("db")).rejects.toThrow("fail");
+        expect(console.error).toHaveBeenCalledWith("MySQL connection error:", expect.any(Error));
+    });
+
+    it("[test 13] disconnect with end if no release", async () => {
+        const mockClient = { query: jest.fn(), release: undefined, end: jest.fn() };
+        await adapter.disconnect(mockClient);
+        expect(mockClient.end).toHaveBeenCalled();
+    });
 });

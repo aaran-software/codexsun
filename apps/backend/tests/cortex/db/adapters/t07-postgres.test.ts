@@ -98,12 +98,6 @@ describe("[1.] PostgresAdapter", () => {
         mockClient.query.mockRejectedValueOnce(new Error("fail"));
         console.error = jest.fn();
         await expect(adapter.getConnection("db")).rejects.toThrow("fail");
-        expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Postgres connection error"));
-    });
-
-    it("[test 13] disconnect with end if no release", async () => {
-        const mockClient = { query: jest.fn(), release: undefined, end: jest.fn() };
-        await adapter.disconnect(mockClient);
-        expect(mockClient.end).toHaveBeenCalled();
+        expect(console.error).toHaveBeenCalledWith("Postgres connection error:", expect.any(Error));
     });
 });

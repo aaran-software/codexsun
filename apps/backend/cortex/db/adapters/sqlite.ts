@@ -1,18 +1,14 @@
-// cortex/db/adapters/sqlite.ts
-
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { open } from "sqlite";
+import sqlite3 from "sqlite3";
 import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
 
 export class SqliteAdapter implements DBAdapter {
-    // No static db; open per connection for multi-file support
-
     async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
-        // No-op for SQLite; no pool needed
+        // No pool for SQLite
     }
 
     async closePool(): Promise<void> {
-        // No-op; connections closed per client
+        // No pool for SQLite
     }
 
     async getConnection(database: string): Promise<AnyDbClient> {
@@ -20,33 +16,34 @@ export class SqliteAdapter implements DBAdapter {
             throw new Error('Database filename is required for SQLite');
         }
         const db = await open({
-            filename: database || ':memory:',
+            filename: database,
             driver: sqlite3.Database,
         });
-        await db.exec('SELECT 1'); // Health ping equivalent
-        return {
-            query: async (text: string, params?: any[]) => {
-                const stmt = await db.prepare(text);
-                let rows: any[] = [];
-                let rowCount = 0;
-                let insertId: number | undefined;
-                if (text.trim().toUpperCase().startsWith('SELECT')) {
-                    rows = await stmt.all(...(params ?? []));
-                    rowCount = rows.length;
-                } else {
-                    await stmt.run(...(params ?? []));
-                    rowCount = (stmt as any).changes || 0;
-                    insertId = (stmt as any).lastID;
-                }
-                await stmt.finalize();
-                return {
-                    rows,
-                    rowCount,
-                    insertId,
-                };
-            },
-            end: async () => await db.close(),
-        };
+        try {
+            await db.exec('SELECT 1');
+            return {
+                query: async (text: string, params: any[] = []) => {
+                    const stmt = await db.prepare(text);
+                    try {
+                        if (text.trim().toUpperCase().startsWith('SELECT') || text.trim().toUpperCase().startsWith('WITH')) {
+                            const rows = await stmt.all(...params);
+                            return { rows, rowCount: rows.length, insertId: undefined };
+                        } else {
+                            const result = await stmt.run(...params);
+                            return { rows: [], rowCount: result.changes, insertId: result.lastID };
+                        }
+                    } finally {
+                        await stmt.finalize();
+                    }
+                },
+                end: async () => await db.close(),
+            };
+        } catch (err) {
+            if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
+                console.error('SQLite connection error:', err);
+            }
+            throw err;
+        }
     }
 
     async connect(config: DbConfig): Promise<AnyDbClient> {
