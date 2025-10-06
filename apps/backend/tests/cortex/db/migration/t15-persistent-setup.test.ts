@@ -39,22 +39,17 @@ describe("Persistent DB Setup: Create/Keep Master Tables & Data", () => {
         }
         // Ensure connection to master_db
         await Connection.initialize({ ...config, database: MASTER_DB_NAME });
-        // Check if migrations table exists
-        const tablesCheck = await query<{ [key: string]: string }>(`SHOW TABLES`, [], MASTER_DB_NAME).catch(() => ({ rows: [] }));
-        if (!tablesCheck.rows.some((row) => row[`Tables_in_${MASTER_DB_NAME}`] === 'migrations')) {
-            console.log('Running migrations to create tables');
-            await masterMigrate();
-        } else {
-            console.log('Migrations table exists, skipping migrations');
-        }
-        // Check if tenants table has data
-        const tenantsCheck = await query<TenantCountRow>(`SELECT COUNT(*) as count FROM tenants`, [], MASTER_DB_NAME).catch(() => ({ rows: [{ count: 0 }] }));
-        if (tenantsCheck.rows[0].count === 0) {
-            console.log('Running seeder to populate data');
-            await masterSeed();
-        } else {
-            console.log('Tenants table already has data, skipping seeding');
-        }
+        // Clear existing data to force fresh migrations and seeding
+        console.log('Clearing existing tables to ensure fresh setup');
+        await query(`DROP TABLE IF EXISTS tenant_users`, [], MASTER_DB_NAME).catch(() => {});
+        await query(`DROP TABLE IF EXISTS tenants`, [], MASTER_DB_NAME).catch(() => {});
+        await query(`DROP TABLE IF EXISTS migrations`, [], MASTER_DB_NAME).catch(() => {});
+        // Run migrations
+        console.log('Running migrations to create tables');
+        await masterMigrate();
+        // Run seeding
+        console.log('Running seeder to populate data');
+        await masterSeed();
         // Re-init connection for tests
         await Connection.initialize({ ...config, database: MASTER_DB_NAME });
     });
@@ -64,10 +59,16 @@ describe("Persistent DB Setup: Create/Keep Master Tables & Data", () => {
         expect(healthy).toBe(true);
         const tables = await query<{ [key: string]: string }>(`SHOW TABLES`, [], MASTER_DB_NAME);
         expect(tables.rows.length).toBeGreaterThanOrEqual(3); // migrations, tenants, tenant_users
+        console.log('Tables found:', tables.rows.map((row) => row[`Tables_in_${MASTER_DB_NAME}`]));
         const tenants = await query<TenantRow>(`SELECT * FROM tenants WHERE tenant_id = 'default'`, [], MASTER_DB_NAME);
+        console.log('Tenants found:', tenants.rows);
         expect(tenants.rows.length).toBe(1);
-        const users = await query<UserRow>(`SELECT * FROM tenant_users WHERE tenant_id = 'default'`, [], MASTER_DB_NAME);
+        expect(tenants.rows[0].tenant_id).toBe('default');
+        const users = await query<UserRow>(`SELECT * FROM tenant_users WHERE tenant_id = 'default' ORDER BY email`, [], MASTER_DB_NAME);
+        console.log('Users found:', users.rows);
         expect(users.rows.length).toBe(2);
+        expect(users.rows[0].email).toBe('admin@default.com');
+        expect(users.rows[1].email).toBe('user@default.com');
     });
 
     afterAll(async () => {
