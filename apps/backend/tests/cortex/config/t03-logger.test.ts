@@ -32,6 +32,16 @@ describe("[1.] logger", () => {
             logQuery('start', { sql: "SELECT 1", params: [], db: "test" });
             expect(console.debug).not.toHaveBeenCalled();
         });
+
+        it("[test 4] metrics in non-debug", () => {
+            logQuery('end', { sql: "SELECT 1", params: [], db: "test", duration: 10 });
+            expect(console.info).toHaveBeenCalledWith(expect.stringContaining("query_duration_ms"));
+        });
+
+        it("[test 5] error metrics in non-prod", () => {
+            logQuery('error', { sql: "SELECT 1", params: [], db: "test", error: "fail" });
+            expect(console.info).toHaveBeenCalledWith(expect.stringContaining("query_error"));
+        });
     });
 
     describe("[3.] logTransaction", () => {

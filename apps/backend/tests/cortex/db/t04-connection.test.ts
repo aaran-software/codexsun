@@ -130,4 +130,25 @@ describe("[1.] Connection", () => {
         await Connection.initialize(mockConfig);
         await expect(Connection.getInstance().close()).rejects.toThrow("Failed to close pool: close fail");
     });
+
+    it("[test 11] initializes with postgres", async () => {
+        mockConfig.type = "postgres";
+        (PostgresAdapter as unknown as jest.Mock).mockImplementation(() => ({ initPool: jest.fn().mockResolvedValue(undefined), getConnection: jest.fn(), closePool: jest.fn() }));
+        await Connection.initialize(mockConfig);
+        expect(PostgresAdapter).toHaveBeenCalled();
+    });
+
+    it("[test 12] initializes with mysql", async () => {
+        mockConfig.type = "mysql";
+        (MysqlAdapter as unknown as jest.Mock).mockImplementation(() => ({ initPool: jest.fn().mockResolvedValue(undefined), getConnection: jest.fn(), closePool: jest.fn() }));
+        await Connection.initialize(mockConfig);
+        expect(MysqlAdapter).toHaveBeenCalled();
+    });
+
+    it("[test 13] initializes with sqlite", async () => {
+        mockConfig.type = "sqlite";
+        (SqliteAdapter as jest.Mock).mockImplementation(() => ({ initPool: jest.fn().mockResolvedValue(undefined), getConnection: jest.fn(), closePool: jest.fn() }));
+        await Connection.initialize(mockConfig);
+        expect(SqliteAdapter).toHaveBeenCalled();
+    });
 });

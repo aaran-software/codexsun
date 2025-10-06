@@ -87,4 +87,24 @@ describe("[1.] MariaDBAdapter", () => {
         mockPool.getConnection.mockRejectedValue(new Error("conn fail"));
         await expect(adapter.getConnection("db")).rejects.toThrow("conn fail");
     });
+
+    it("[test 11] skips init if initialized", async () => {
+        (MariaDBAdapter as any).poolsInitialized = true;
+        await adapter.initPool(mockConfig);
+        expect(mariadb.createPool).not.toHaveBeenCalled();
+    });
+
+    it("[test 12] catches getConnection error", async () => {
+        await adapter.initPool(mockConfig);
+        mockConnection.query.mockRejectedValueOnce(new Error("fail"));
+        console.error = jest.fn();
+        await expect(adapter.getConnection("db")).rejects.toThrow();
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    it("[test 13] disconnect with end if no release", async () => {
+        const mockClient = { query: jest.fn(), release: undefined, end: jest.fn() };
+        await adapter.disconnect(mockClient);
+        expect(mockClient.end).toHaveBeenCalled();
+    });
 });

@@ -120,5 +120,6 @@ describe("[1.] db", () => {
             await healthCheck();
             expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Failed to release"));
         });
+
     });
 });
