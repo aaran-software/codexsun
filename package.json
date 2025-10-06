@@ -5,7 +5,7 @@
     "clean": "pnpm store prune && pnpm -r exec -- cmd /C \"del /S /Q node_modules dist build out 2>nul\" && del /Q pnpm-lock.yaml && pnpm install --force",
     "dev:all": "concurrently \"pnpm --filter frontend web\" \"pnpm --filter backend api\""
   },
-  "packageManager": "pnpm@10.18.0",
+  "packageManager": "pnpm@10.18.1",
   "engines": {
     "node": ">=18"
   },
