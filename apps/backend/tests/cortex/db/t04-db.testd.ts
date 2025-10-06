@@ -1,10 +1,10 @@
 // cortex/db/t04-db.test.ts
 
 import { AsyncLocalStorage } from "async_hooks";
-import { query, withTransaction, healthCheck, tenantStorage } from "./db";
-import { Connection } from "./connection";
-import { getDbConfig } from "../config/db-config";
-import { logQuery, logTransaction, logHealthCheck } from "../config/logger";
+import { query, withTransaction, healthCheck, tenantStorage } from "../../../cortex/db/db";
+import { Connection } from "../../../cortex/db/connection";
+import { getDbConfig } from "../../../cortex/config/db-config";
+import { logQuery, logTransaction, logHealthCheck } from "../../../cortex/config/logger";
 
 jest.mock("./connection");
 jest.mock("../config/db-config");
@@ -12,7 +12,7 @@ jest.mock("../config/logger");
 
 describe("[1.] db", () => {
     let mockConfig;
-    let mockClient;
+    let mockClient: { query: any; release: any; end?: jest.Mock<any, any, any>; };
 
     beforeEach(() => {
         mockConfig = { database: "master" };
@@ -81,7 +81,7 @@ describe("[1.] db", () => {
 
         it("[test 3] handles rollback error", async () => {
             const callback = jest.fn().mockRejectedValue(new Error("tx fail"));
-            mockClient.query.mockImplementation((sql) => {
+            mockClient.query.mockImplementation((sql: string) => {
                 if (sql === "ROLLBACK") throw new Error("rollback fail");
                 return Promise.resolve();
             });

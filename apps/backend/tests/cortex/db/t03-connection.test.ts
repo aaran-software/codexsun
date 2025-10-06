@@ -1,5 +1,3 @@
-// cortex/db/t03-connection.test.ts
-
 import { Connection } from "../../../cortex/db/connection";
 import { getDbConfig } from "../../../cortex/config/db-config";
 import { MariaDBAdapter } from "../../../cortex/db/adapters/mariadb";
@@ -22,12 +20,17 @@ describe("[1.] Connection", () => {
     beforeEach(() => {
         mockConfig = { type: "mariadb", host: "localhost", port: 3306, user: "user", password: "pass", database: "db", ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
         (getDbConfig as jest.Mock).mockReturnValue(mockConfig);
+        (Connection as any).instance = null; // Reset singleton
         jest.clearAllMocks();
     });
 
     it("[test 1] initializes singleton with config and calls init", async () => {
         const mockInitPool = jest.fn().mockResolvedValue(undefined);
-        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({ initPool: mockInitPool }));
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
+            initPool: mockInitPool,
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
+            closePool: jest.fn().mockResolvedValue(undefined),
+        }));
 
         const conn = await Connection.initialize(mockConfig);
         expect(conn).toBeInstanceOf(Connection);
@@ -36,11 +39,16 @@ describe("[1.] Connection", () => {
     });
 
     it("[test 2] throws on unsupported type", () => {
-        mockConfig.type = "invalid";
+        (mockConfig as any).type = "invalid";
         expect(() => new (Connection as any)(mockConfig)).toThrow("Unsupported database type: invalid");
     });
 
     it("[test 3] gets instance after initialize", async () => {
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
+            initPool: jest.fn().mockResolvedValue(undefined),
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
+            closePool: jest.fn().mockResolvedValue(undefined),
+        }));
         await Connection.initialize(mockConfig);
         expect(Connection.getInstance()).toBeDefined();
     });
@@ -52,7 +60,11 @@ describe("[1.] Connection", () => {
 
     it("[test 5] closes pool and resets instance", async () => {
         const mockClosePool = jest.fn().mockResolvedValue(undefined);
-        (MariaDBAdapter as jest.Mock).mockImplementation(() => ({ closePool: mockClosePool }));
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
+            initPool: jest.fn().mockResolvedValue(undefined),
+            closePool: mockClosePool,
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
+        }));
         await Connection.initialize(mockConfig);
         await Connection.getInstance().close();
         expect(mockClosePool).toHaveBeenCalled();
@@ -61,47 +73,62 @@ describe("[1.] Connection", () => {
 
     it("[test 6] gets client from adapter", async () => {
         const mockGetConnection = jest.fn().mockResolvedValue({ query: jest.fn() });
-        (MariaDBAdapter as jest.Mock).mockImplementation(() => ({ getConnection: mockGetConnection }));
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
+            initPool: jest.fn().mockResolvedValue(undefined),
+            getConnection: mockGetConnection,
+            closePool: jest.fn().mockResolvedValue(undefined),
+        }));
         await Connection.initialize(mockConfig);
         await Connection.getInstance().getClient("testdb");
         expect(mockGetConnection).toHaveBeenCalledWith("testdb");
     });
 
     it("[test 7] gets config", async () => {
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
+            initPool: jest.fn().mockResolvedValue(undefined),
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
+            closePool: jest.fn().mockResolvedValue(undefined),
+        }));
         await Connection.initialize(mockConfig);
         expect(Connection.getInstance().getConfig()).toEqual(mockConfig);
     });
 
     it("[test 8] handles init error with retry in production", async () => {
+        jest.useFakeTimers();
         process.env.NODE_ENV = "production";
         const mockInitPool = jest.fn()
             .mockRejectedValueOnce(new Error("fail"))
             .mockResolvedValueOnce(undefined);
-        (MariaDBAdapter as jest.Mock).mockImplementation(() => ({
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
             initPool: mockInitPool,
-            getConnection: jest.fn(), // Ensure other required methods are mocked
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
+            closePool: jest.fn().mockResolvedValue(undefined),
         }));
-        await Connection.initialize(mockConfig);
-        expect(mockInitPool).toHaveBeenCalledTimes(2);
+        const initPromise = Connection.initialize(mockConfig);
+        jest.advanceTimersByTime(5000);
+        await initPromise;
+        expect(mockInitPool).toHaveBeenCalledTimes(2); // Initial + retry
         process.env.NODE_ENV = "test";
+        jest.useRealTimers();
     });
 
     it("[test 9] throws on init error in non-production", async () => {
         process.env.NODE_ENV = "test";
         const mockInitPool = jest.fn().mockRejectedValue(new Error("fail"));
-        (MariaDBAdapter as jest.Mock).mockImplementation(() => ({
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
             initPool: mockInitPool,
-            getConnection: jest.fn(),
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
+            closePool: jest.fn().mockResolvedValue(undefined),
         }));
         await expect(Connection.initialize(mockConfig)).rejects.toThrow("Failed to initialize pool: fail");
     });
 
     it("[test 10] handles close error", async () => {
         const mockClosePool = jest.fn().mockRejectedValue(new Error("close fail"));
-        (MariaDBAdapter as jest.Mock).mockImplementation(() => ({
+        (MariaDBAdapter as unknown as jest.Mock).mockImplementation(() => ({
             initPool: jest.fn().mockResolvedValue(undefined),
             closePool: mockClosePool,
-            getConnection: jest.fn(),
+            getConnection: jest.fn().mockResolvedValue({ query: jest.fn() }),
         }));
         await Connection.initialize(mockConfig);
         await expect(Connection.getInstance().close()).rejects.toThrow("Failed to close pool: close fail");
