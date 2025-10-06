@@ -1,5 +1,3 @@
-// cortex/db/t09-tenant-resolver.test.ts
-
 import { resolveTenant } from "../../../cortex/core/tenant/tenant-resolver";
 import { query } from "../../../cortex/db/db";
 import { getDbConfig } from "../../../cortex/config/db-config";
@@ -46,7 +44,7 @@ describe("[1.] resolveTenant", () => {
         (query as jest.Mock).mockResolvedValueOnce({ rows: [{ tenantId: "1" }] }).mockResolvedValueOnce({ rows: [{ tenant_id: "1", db_host: "host", db_port: "3306", db_user: "user", db_pass: null, db_name: "db", db_ssl: "false" }] });
         const tenant = await resolveTenant({ body: { email: "test@email.com", password: "pass" } });
         expect(tenant).toEqual({ id: "1", dbConnection: "mariadb://user@host:3306/db" });
-        expect(tenantStorage.getStore()).toBe("db");
+        expect(tenantStorage.enterWith).toHaveBeenCalledWith("db");
     });
 
     it("[test 7] resolves tenant with pass and ssl", async () => {
@@ -54,6 +52,7 @@ describe("[1.] resolveTenant", () => {
         const tenant = await resolveTenant({ body: { email: "test@email.com", password: "pass" } });
         expect(tenant.dbConnection).toContain("%40ss"); // encoded
         expect(tenant.dbConnection).toContain("?ssl=true");
+        expect(tenantStorage.enterWith).toHaveBeenCalledWith("db");
     });
 
     it("[test 8] handles resolution error", async () => {
