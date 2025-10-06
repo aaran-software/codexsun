@@ -1,3 +1,5 @@
+// cortex/migrations/seeder/master/002_tenant_user_seeder.ts
+
 import { query } from '../../../db/mdb';
 
 /**

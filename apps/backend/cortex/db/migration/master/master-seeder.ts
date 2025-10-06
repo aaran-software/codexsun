@@ -16,7 +16,7 @@ const SEEDERS_DIR = path.resolve(__dirname, '../../../migrations/seeder/master')
 const initializeConnection = async (): Promise<Connection> => {
     console.log('Initializing database connection');
     const config = getDbConfig();
-    await Connection.initialize(config);
+    await Connection.initialize({ ...config, database: process.env.MASTER_DB_NAME || 'master_db' });
     return Connection.getInstance();
 };
 
@@ -26,7 +26,8 @@ const initializeConnection = async (): Promise<Connection> => {
  */
 const getSeederFiles = async (): Promise<string[]> => {
     try {
-        await fs.access(SEEDERS_DIR); // Check if directory exists
+        console.log(`Checking seeder directory: ${SEEDERS_DIR}`);
+        await fs.access(SEEDERS_DIR);
         const files = await fs.readdir(SEEDERS_DIR);
         const seederFiles = files
             .filter((file) => file.match(/^\d+_.+\.ts$/))
@@ -56,7 +57,8 @@ const applySeeder = async (fileName: string): Promise<void> => {
     const seederName = fileName.replace(/\.ts$/, '');
     console.log(`Applying seeder: ${seederName}`);
     const seederPath = path.join(SEEDERS_DIR, fileName);
-    const seederModule = await import(`file://${seederPath.replace(/\\/g, '/')}`);
+    console.log(`Loading seeder from: ${seederPath}`);
+    const seederModule = require(seederPath);
     const SeederClass = Object.values(seederModule)[0] as new () => { up: () => Promise<void> };
     const seeder = new SeederClass();
     try {
@@ -77,7 +79,8 @@ const rollbackSeeder = async (fileName: string): Promise<void> => {
     const seederName = fileName.replace(/\.ts$/, '');
     console.log(`Rolling back seeder: ${seederName}`);
     const seederPath = path.join(SEEDERS_DIR, fileName);
-    const seederModule = await import(`file://${seederPath.replace(/\\/g, '/')}`);
+    console.log(`Loading seeder from: ${seederPath}`);
+    const seederModule = require(seederPath);
     const SeederClass = Object.values(seederModule)[0] as new () => { down: () => Promise<void> };
     const seeder = new SeederClass();
     try {
