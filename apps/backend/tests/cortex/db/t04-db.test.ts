@@ -6,9 +6,9 @@ import { Connection } from "../../../cortex/db/connection";
 import { getDbConfig } from "../../../cortex/config/db-config";
 import { logQuery, logTransaction, logHealthCheck } from "../../../cortex/config/logger";
 
-jest.mock("./connection");
-jest.mock("../config/db-config");
-jest.mock("../config/logger");
+jest.mock("../../../cortex/db/connection");
+jest.mock("../../../cortex/config/db-config");
+jest.mock("../../../cortex/config/logger");
 
 describe("[1.] db", () => {
     let mockConfig;

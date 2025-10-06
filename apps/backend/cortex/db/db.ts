@@ -1,11 +1,9 @@
-// db.ts
 import { AsyncLocalStorage } from 'async_hooks';
 import { AnyDbClient, QueryResult } from './db-types';
 import { Connection } from './connection';
 import { getDbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 
-const dbConfig = getDbConfig();
 export const tenantStorage = new AsyncLocalStorage<string>(); // Tenant DB context
 
 /**
@@ -18,6 +16,7 @@ export const tenantStorage = new AsyncLocalStorage<string>(); // Tenant DB conte
  * @throws Error with detailed message on failure.
  */
 export async function query<T>(sql: string, params: any[] = []): Promise<QueryResult<T>> {
+    const dbConfig = getDbConfig();
     const db = tenantStorage.getStore() || dbConfig.database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
@@ -62,6 +61,7 @@ export async function query<T>(sql: string, params: any[] = []): Promise<QueryRe
  * @throws Error on transaction failure.
  */
 export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>): Promise<T> {
+    const dbConfig = getDbConfig();
     const db = tenantStorage.getStore() || dbConfig.database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
@@ -108,7 +108,7 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
  * @param database - Optional database name (defaults to current context).
  * @returns True if healthy, false otherwise.
  */
-export async function healthCheck(database: string = tenantStorage.getStore() || dbConfig.database): Promise<boolean> {
+export async function healthCheck(database: string = tenantStorage.getStore() || getDbConfig().database): Promise<boolean> {
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
