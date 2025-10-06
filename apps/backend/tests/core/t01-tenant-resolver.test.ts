@@ -1,70 +1,75 @@
 import { resolveTenant } from '../../cortex/core/tenant/tenant-resolver';
 import { Tenant } from '../../cortex/core/tenant/tenant.types';
-import { query, tenantStorage } from '../../cortex/db/db';
 import { Connection } from '../../cortex/db/connection';
 import { getDbConfig } from '../../cortex/config/db-config';
+import { query } from '../../cortex/db/db';
 
 describe('Tenant Resolver with Email', () => {
-    const masterDb = process.env.MASTER_DB_NAME || 'master_db';
+    const masterDb = getDbConfig().database;
 
     beforeAll(async () => {
-        // Initialize connection to master DB
         await Connection.initialize(getDbConfig());
+        await query(`CREATE DATABASE IF NOT EXISTS \`${masterDb}\``);
+        await query(
+            `USE \`${masterDb}\``,
+            [],
+            masterDb
+        );
+        await query(
+            `
+                CREATE TABLE IF NOT EXISTS tenants (
+                    id VARCHAR(50),
+                    db_connection TEXT
+                )
+            `,
+            [],
+            masterDb
+        );
+        await query(
+            `
+                CREATE TABLE IF NOT EXISTS tenant_users (
+                    email VARCHAR(255),
+                    tenant_id VARCHAR(50)
+                )
+            `,
+            [],
+            masterDb
+        );
+    });
 
-        // Seed master DB with test data
-        await tenantStorage.run(masterDb, () =>
-            query(
-                `
-                    CREATE TABLE IF NOT EXISTS tenant_users (
-                                                                email VARCHAR(255),
-                        tenant_id VARCHAR(50)
-                        )
-                `
-            )
+    beforeEach(async () => {
+        await query('DELETE FROM tenant_users', [], masterDb);
+        await query('DELETE FROM tenants', [], masterDb);
+
+        await query(
+            `
+                INSERT INTO tenants (id, db_connection)
+                VALUES (?, ?)
+            `,
+            ['tenant1', 'mariadb://localhost/tenant1_db'],
+            masterDb
         );
-        await tenantStorage.run(masterDb, () =>
-            query(
-                `
-                    CREATE TABLE IF NOT EXISTS tenants (
-                                                           id VARCHAR(50),
-                        db_connection TEXT
-                        )
-                `
-            )
+        await query(
+            `
+                INSERT INTO tenant_users (email, tenant_id)
+                VALUES (?, ?), (?, ?)
+            `,
+            ['john@tenant1.com', 'tenant1', 'shared@domain.com', 'tenant1'],
+            masterDb
         );
-        await tenantStorage.run(masterDb, () =>
-            query(
-                `
-                    INSERT INTO tenant_users (email, tenant_id)
-                    VALUES (?, ?), (?, ?)
-                `,
-                ['john@tenant1.com', 'tenant1', 'shared@domain.com', 'tenant1']
-            )
-        );
-        await tenantStorage.run(masterDb, () =>
-            query(
-                `
-                    INSERT INTO tenant_users (email, tenant_id)
-                    VALUES (?, ?)
-                `,
-                ['shared@domain.com', 'tenant2']
-            )
-        );
-        await tenantStorage.run(masterDb, () =>
-            query(
-                `
-                    INSERT INTO tenants (id, db_connection)
-                    VALUES (?, ?)
-                `,
-                ['tenant1', 'mariadb://localhost/tenant1_db']
-            )
+        await query(
+            `
+                INSERT INTO tenant_users (email, tenant_id)
+                VALUES (?, ?)
+            `,
+            ['shared@domain.com', 'tenant2'],
+            masterDb
         );
     });
 
     afterAll(async () => {
-        // Clean up test data
-        await tenantStorage.run(masterDb, () => query('DROP TABLE IF EXISTS tenant_users'));
-        await tenantStorage.run(masterDb, () => query('DROP TABLE IF EXISTS tenants'));
+        await query('DROP TABLE IF EXISTS tenant_users', [], masterDb);
+        await query('DROP TABLE IF EXISTS tenants', [], masterDb);
         const conn = Connection.getInstance();
         if (conn) {
             await conn.close();
@@ -78,7 +83,7 @@ describe('Tenant Resolver with Email', () => {
     });
 
     test('throws error for missing email in request body', async () => {
-        const req = { body: { password: 'pass123' } } as { body: Partial<{ email: string; password: string }> };
+        const req = { body: { email: '', password: 'pass123' } } as { body: { email: string; password: string } };
         await expect(resolveTenant(req)).rejects.toThrow('Email is required');
     });
 
@@ -93,14 +98,13 @@ describe('Tenant Resolver with Email', () => {
     });
 
     test('throws error for tenant not found in tenants table', async () => {
-        await tenantStorage.run(masterDb, () =>
-            query(
-                `
-                    INSERT INTO tenant_users (email, tenant_id)
-                    VALUES (?, ?)
-                `,
-                ['test@tenant2.com', 'tenant2']
-            )
+        await query(
+            `
+                INSERT INTO tenant_users (email, tenant_id)
+                VALUES (?, ?)
+            `,
+            ['test@tenant2.com', 'tenant2'],
+            masterDb
         );
         const req = { body: { email: 'test@tenant2.com', password: 'pass123' } };
         await expect(resolveTenant(req)).rejects.toThrow('Tenant not found');

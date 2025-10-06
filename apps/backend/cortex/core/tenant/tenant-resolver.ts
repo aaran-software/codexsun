@@ -1,14 +1,6 @@
 import { Tenant, TenantUser } from './tenant.types';
-import { query } from '../../db/db';
-import { getDbConfig } from '../../config/db-config';
+import { query } from '../../db/mdb';
 
-/**
- * Resolves a tenant based on the user's email from the master database.
- * Used in multi-tenant ERP to identify the tenant database for user requests.
- * @param req - Request object containing email and password in the body.
- * @returns A promise resolving to the Tenant object with id and dbConnection.
- * @throws Error if email is missing, not associated with a tenant, associated with multiple tenants, or tenant not found.
- */
 export async function resolveTenant(req: { body: { email: string; password: string } }): Promise<Tenant> {
     const { email } = req.body;
 
@@ -16,7 +8,6 @@ export async function resolveTenant(req: { body: { email: string; password: stri
         throw new Error('Email is required');
     }
 
-    // Query tenant_users table in master DB to find tenant ID
     const users = await query<TenantUser>(
         'SELECT email, tenant_id AS tenantId FROM tenant_users WHERE email = ?',
         [email]
@@ -32,9 +23,16 @@ export async function resolveTenant(req: { body: { email: string; password: stri
 
     const tenantId = users.rows[0].tenantId;
 
-    // Query tenants table in master DB to get tenant details
-    const tenantRes = await query<Tenant>(
-        'SELECT id, db_connection AS dbConnection FROM tenants WHERE id = ?',
+    const tenantRes = await query<{
+        tenant_id: string;
+        db_host: string;
+        db_port: string;
+        db_user: string;
+        db_pass: string | null;
+        db_name: string;
+        db_ssl: string | null;
+    }>(
+        'SELECT tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl FROM tenants WHERE tenant_id = ?',
         [tenantId]
     );
 
@@ -42,5 +40,8 @@ export async function resolveTenant(req: { body: { email: string; password: stri
         throw new Error('Tenant not found');
     }
 
-    return tenantRes.rows[0];
+    const { tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl } = tenantRes.rows[0];
+    const dbConnection = `mariadb://${db_user}${db_pass ? `:${db_pass}` : ''}@${db_host}:${db_port}/${db_name}${db_ssl === 'true' ? '?ssl=true' : ''}`;
+
+    return { id: tenant_id, dbConnection };
 }

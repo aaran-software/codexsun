@@ -4,6 +4,65 @@ import { query } from '../mdb';
 // Enhanced validation to prevent SQL injection and reserved keywords
 const isValidName = (name: string): boolean => /^[a-zA-Z][a-zA-Z0-9_]*$/.test(name) && !['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE'].includes(name.toUpperCase());
 
+class ForeignKeyBuilder {
+    private column: string;
+    private referencedTable: string | null = null;
+    private referencedColumn: string | null = null;
+    private columnType: string = 'INT';
+    private cascasde: string = 'CASCADE';
+    private readonly schemaBuilder: SchemaBuilder;
+
+    constructor(column: string, schemaBuilder: SchemaBuilder) {
+        if (!column || !isValidName(column)) {
+            throw new Error('Invalid or reserved column name');
+        }
+        this.column = column;
+        this.schemaBuilder = schemaBuilder;
+    }
+
+    reference(referencedColumn: string): this {
+        if (!referencedColumn || !isValidName(referencedColumn)) {
+            throw new Error('Invalid or reserved referenced column name');
+        }
+        this.referencedColumn = referencedColumn;
+        return this;
+    }
+
+    onTable(referencedTable: string): this {
+        if (!referencedTable || !isValidName(referencedTable)) {
+            throw new Error('Invalid or reserved referenced table name');
+        }
+        this.referencedTable = referencedTable;
+        return this;
+    }
+
+    onDelete(action: string): this {
+        if (!['CASCADE', 'RESTRICT', 'SET NULL'].includes(action)) {
+            throw new Error('Invalid ON DELETE action; use CASCADE, RESTRICT, or SET NULL');
+        }
+        this.cascasde = action;
+        return this;
+    }
+
+    withType(columnType: string): this {
+        if (!['INT', 'VARCHAR(50)', 'VARCHAR(255)'].includes(columnType)) {
+            throw new Error('Invalid column type for foreign key; use INT, VARCHAR(50), or VARCHAR(255)');
+        }
+        this.columnType = columnType;
+        return this;
+    }
+
+    build(): void {
+        if (!this.referencedTable || !this.referencedColumn) {
+            throw new Error('Foreign key incomplete: reference and onTable must be specified');
+        }
+        this.schemaBuilder['columns'].push(
+            `${this.column} ${this.columnType} NOT NULL`,
+            `FOREIGN KEY (\`${this.column}\`) REFERENCES \`${this.referencedTable}\`(\`${this.referencedColumn}\`) ON DELETE ${this.onDelete}`
+        );
+    }
+}
+
 export class SchemaBuilder {
     private columns: string[] = [];
     private indexes: string[] = [];
@@ -136,15 +195,24 @@ export class SchemaBuilder {
         return this;
     }
 
-    nullable(): this {
+    null(): this {
         const lastColumn = this.columns[this.columns.length - 1];
         if (!lastColumn) {
-            throw new Error('No column defined to apply nullable');
+            throw new Error('No column defined to apply null');
         }
         if (lastColumn.includes('NOT NULL') && !lastColumn.includes('PRIMARY KEY')) {
             this.columns[this.columns.length - 1] = lastColumn.replace(' NOT NULL', '');
-        } else if (!lastColumn.includes('NULL') && !lastColumn.includes('UNIQUE') && !lastColumn.includes('PRIMARY KEY')) {
-            this.columns[this.columns.length - 1] = `${lastColumn} NULL`;
+        }
+        return this;
+    }
+
+    notNull(): this {
+        const lastColumn = this.columns[this.columns.length - 1];
+        if (!lastColumn) {
+            throw new Error('No column defined to apply notNull');
+        }
+        if (!lastColumn.includes('NOT NULL') && !lastColumn.includes('PRIMARY KEY')) {
+            this.columns[this.columns.length - 1] = `${lastColumn} NOT NULL`;
         }
         return this;
     }
@@ -157,22 +225,14 @@ export class SchemaBuilder {
         return this;
     }
 
-    foreignKey(column: string, referencedTable: string, referencedColumn: string = 'id', columnType: string = 'INT'): this {
-        if (!column || !isValidName(column) || !referencedTable || !isValidName(referencedTable) || !isValidName(referencedColumn)) {
-            throw new Error('Invalid or reserved column or table name');
-        }
-        if (!['INT', 'VARCHAR(255)'].includes(columnType)) {
-            throw new Error('Invalid column type for foreign key; use INT or VARCHAR(255)');
-        }
-        this.columns.push(
-            `${column} ${columnType} NOT NULL`,
-            `FOREIGN KEY (\`${column}\`) REFERENCES \`${referencedTable}\`(\`${referencedColumn}\`) ON DELETE CASCADE`
-        );
-        return this;
+    foreignKey(column: string): ForeignKeyBuilder {
+        return new ForeignKeyBuilder(column, this);
     }
 
     reference(column: string, referencedTable: string, referencedColumn: string = 'id', columnType: string = 'INT'): this {
-        return this.foreignKey(column, referencedTable, referencedColumn, columnType);
+        const fkBuilder = this.foreignKey(column).reference(referencedColumn).onTable(referencedTable).withType(columnType);
+        fkBuilder.build();
+        return this;
     }
 
     default(value: string | number | boolean): this {
@@ -183,6 +243,8 @@ export class SchemaBuilder {
         const valueStr = typeof value === 'string' ? `'${value}'` : value;
         if (lastColumn.includes('DEFAULT')) {
             this.columns[this.columns.length - 1] = lastColumn.replace(/DEFAULT [^,)]+/, `DEFAULT ${valueStr}`);
+        } else if (lastColumn.includes('NOT NULL')) {
+            this.columns[this.columns.length - 1] = lastColumn.replace('NOT NULL', `NOT NULL DEFAULT ${valueStr}`);
         } else {
             this.columns[this.columns.length - 1] = `${lastColumn} DEFAULT ${valueStr}`;
         }
@@ -201,6 +263,7 @@ export class SchemaBuilder {
         if (!['InnoDB', 'MyISAM'].includes(engine)) {
             throw new Error('Invalid table engine; use InnoDB or MyISAM');
         }
+        this.tableOptions = this.tableOptions.filter(opt => !opt.startsWith('ENGINE='));
         this.tableOptions.push(`ENGINE=${engine}`);
         return this;
     }
@@ -209,19 +272,27 @@ export class SchemaBuilder {
         if (!['utf8mb4', 'latin1', 'utf8'].includes(charset)) {
             throw new Error('Invalid charset; use utf8mb4, latin1, or utf8');
         }
+        this.tableOptions = this.tableOptions.filter(opt => !opt.startsWith('CHARSET='));
         this.tableOptions.push(`CHARSET=${charset}`);
         return this;
     }
 
     async execute(): Promise<QueryResult<any>> {
         try {
+            // Ensure InnoDB and utf8mb4 are added if not explicitly set
+            if (!this.tableOptions.some(opt => opt.startsWith('ENGINE='))) {
+                this.tableOptions.push('ENGINE=InnoDB');
+            }
+            if (!this.tableOptions.some(opt => opt.startsWith('CHARSET='))) {
+                this.tableOptions.push('CHARSET=utf8mb4');
+            }
+
             const columnDefinitions = this.columns.join(', ');
             const tableOptions = this.tableOptions.length ? ' ' + this.tableOptions.join(' ') : '';
             const sql = `CREATE TABLE IF NOT EXISTS \`${this.tableName}\` (${columnDefinitions})${tableOptions};`;
             console.log(`Executing SQL: ${sql}`);
             const result = await query(sql, [], this.dbName);
 
-            // Execute index creation queries
             for (const indexSql of this.indexes) {
                 console.log(`Executing index SQL: ${indexSql}`);
                 await query(indexSql, [], this.dbName);
@@ -248,8 +319,16 @@ export class SchemaBuilder {
     }
 
     getSql(): string {
+        const finalTableOptions = [...this.tableOptions];
+        if (!finalTableOptions.some(opt => opt.startsWith('ENGINE='))) {
+            finalTableOptions.push('ENGINE=InnoDB');
+        }
+        if (!finalTableOptions.some(opt => opt.startsWith('CHARSET='))) {
+            finalTableOptions.push('CHARSET=utf8mb4');
+        }
+
         const columnDefinitions = this.columns.join(', ');
-        const tableOptions = this.tableOptions.length ? ' ' + this.tableOptions.join(' ') : '';
+        const tableOptions = finalTableOptions.length ? ' ' + finalTableOptions.join(' ') : '';
         return `CREATE TABLE IF NOT EXISTS \`${this.tableName}\` (${columnDefinitions})${tableOptions};`;
     }
 

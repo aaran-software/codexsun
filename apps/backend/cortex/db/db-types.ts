@@ -22,6 +22,13 @@ export interface QueryResult<T> {
     insertId?: number;
 }
 
+export interface ShowCreateTableResult {
+    'Table': string;
+    'Create Table': string;
+}
+
+export type QueryFunction = <T = any>(sql: string, params?: any[], dbName?: string) => Promise<QueryResult<T>>;
+
 export interface DBAdapter {
     initPool?: (config: Omit<DbConfig, 'database' | 'type'>) => Promise<void>;
     closePool?: () => Promise<void>;
