@@ -65,7 +65,7 @@ export interface TodoItemData {
     tenantId: string;
 }
 
-export interface TodoInventoryItem {
+export interface TodoItem {
     slug: string;
     title: string;
     tenantId: string;
@@ -85,8 +85,8 @@ export interface UserResponse {
     user: StoredUser;
 }
 
-export interface InventoryResponse {
-    item: TodoInventoryItem;
+export interface TodoResponse {
+    item: TodoItem;
 }
 
 export type Role = 'admin' | 'user' | 'viewer';
