@@ -1,7 +1,7 @@
-import { authMiddleware } from '../../cortex/core/auth-middleware';
-import { RequestContext, Tenant, User, PermissionCheck } from '../../cortex/core/tenant.types';
+import { authMiddleware } from '../../../cortex/core/auth/auth-middleware';
+import { RequestContext, Tenant, User, PermissionCheck } from '../../../cortex/core/app.types';
 
-describe('[12.] Auth Middleware', () => {
+describe('[26.] Auth Middleware', () => {
     test('[test 1] allows request with sufficient role', async () => {
         const req = {
             context: {
