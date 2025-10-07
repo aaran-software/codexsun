@@ -18,7 +18,6 @@
     "seed:master": "tsx cortex/db/migration/master/master-seeder.ts seed",
     "migrate:tenant": "tsx cortex/db/migration/tenant/tenant-migrate.ts migrate",
     "migrate:tenant-reset": "tsx cortex/db/migration/tenant/tenant-migrate.ts reset",
-    "reset": "tsx cortex/db/migration/tenant/tenant-migrate.ts reset",
     "seed": "tsx cortex/db/migration/tenant/tenant-seeder.ts seed"
   },
   "dependencies": {

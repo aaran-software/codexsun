@@ -24,9 +24,10 @@ const logConnectionDetails = (config: ReturnType<typeof getDbConfig>): void => {
     console.log(`  SSL: ${config.ssl ? 'Enabled' : 'Disabled'}`);
 };
 
-const initializeConnection = async (config: ReturnType<typeof getDbConfig>): Promise<Connection> => {
+const initializeConnection = async (config: ReturnType<typeof getDbConfig>, noDb: boolean = false): Promise<Connection> => {
     console.log('Initializing database connection');
-    await Connection.initialize(config);
+    const initConfig = noDb ? { ...config, database: '' } : config;
+    await Connection.initialize(initConfig);
     return Connection.getInstance();
 };
 
@@ -61,6 +62,7 @@ const ensureTenantDatabase = async (tenantDb: string): Promise<void> => {
 
 const getTenantDbs = async (): Promise<string[]> => {
     try {
+        await Connection.initialize({ ...getDbConfig(), database: MASTER_DB });
         const tenantsResult = await tenantStorage.run(MASTER_DB, () =>
             query(`SELECT db_name FROM tenants`, [])
         );
@@ -78,20 +80,20 @@ const createMigrationsTable = async (tenantDb: string): Promise<void> => {
     try {
         const dbType = getDbType();
         let createSql = `
-      CREATE TABLE IF NOT EXISTS migrations (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL UNIQUE,
-        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
+            CREATE TABLE IF NOT EXISTS migrations (
+                                                      id INT AUTO_INCREMENT PRIMARY KEY,
+                                                      name VARCHAR(255) NOT NULL UNIQUE,
+                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+        `;
         if (dbType === 'postgres') {
             createSql = `
-        CREATE TABLE IF NOT EXISTS migrations (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL UNIQUE,
-          applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
+                CREATE TABLE IF NOT EXISTS migrations (
+                                                          id SERIAL PRIMARY KEY,
+                                                          name VARCHAR(255) NOT NULL UNIQUE,
+                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+            `;
         }
         await tenantStorage.run(tenantDb, () => query(createSql, []));
         console.log(`Created migrations table in ${tenantDb}`);
@@ -213,7 +215,7 @@ export async function resetTenantDatabase(tenantDb: string): Promise<void> {
     const config = getDbConfig();
     validateEnvVariables();
     logConnectionDetails(config);
-    const conn = await initializeConnection(config);
+    const conn = await initializeConnection(config, true);
     try {
         await dropTenantTables(tenantDb);
         await dropTenantDatabase(tenantDb);
