@@ -3,7 +3,7 @@ import { getTenantDbConnection } from '../../db/db-context-switcher';
 import * as jwt from 'jsonwebtoken';
 
 // Retrieve JWT_SECRET from environment (fallback for dev/testing)
-const JWT_SECRET = process.env.APP_KEY || 'default-secret-please-replace';
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
 
 // Query user from tenant DB
 async function queryUser(connection: DbConnection, email: string): Promise<any> {
