@@ -185,3 +185,31 @@ PASS  tests/cortex/tenant/t22-tenant-middleware.test.ts
 √ [test 3] skips tenant resolution for no authorization header (1 ms)
 √ [test 4] calls next with error for non-existent tenant (5 ms)
 
+
+PASS  tests/cortex/user/t24-user-controller.test.ts
+[24.] User Controller
+√ [test 1] creates user and returns user data for v1 (6 ms)
+√ [test 2] creates user and returns user data for v2 (1 ms)
+√ [test 3] creates user with default version when version is undefined (1 ms)
+√ [test 4] rejects user creation for missing tenant context (11 ms)
+√ [test 5] rejects user creation for missing user context (1 ms)
+√ [test 6] rejects user creation for non-admin user (1 ms)
+√ [test 7] handles tenant mismatch error from createUserService (1 ms)
+√ [test 8] handles user already exists error from createUserService (1 ms)
+√ [test 9] handles unexpected error from createUserService (1 ms)
+√ [test 10] handles non-Error object thrown from createUserService
+
+
+PASS  tests/cortex/todo/t25-todo-controller.test.ts
+[25.] Todo Controller
+√ [test 1] creates todo item and returns item data for v1 (4 ms)
+√ [test 2] creates todo item and returns item data for v2 (1 ms)
+√ [test 3] creates todo item with default version when version is undefined (1 ms)
+√ [test 4] rejects todo item creation for missing tenant context (11 ms)
+√ [test 5] rejects todo item creation for missing user context (1 ms)
+√ [test 6] rejects todo item creation for non-admin user (1 ms)
+√ [test 7] handles tenant mismatch error from createTodoItemService (1 ms)
+√ [test 8] handles duplicate slug error from createTodoItemService (1 ms)
+√ [test 9] handles unexpected error from createTodoItemService (1 ms)
+√ [test 10] handles non-Error object thrown from createTodoItemService (1 ms)
+

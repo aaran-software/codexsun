@@ -13,7 +13,7 @@ jest.mock('../../../cortex/core/user/user-service', () => ({
     createUser: jest.fn(),
 }));
 
-describe('[10.] User Controller', () => {
+describe('[24.] User Controller', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });

@@ -1,8 +1,5 @@
-// /tests/cortex/todo/t25-todo-controller.test.ts
-// Expert mode: Updated tests for versioning, fixed Omit<TodoItemData, 'tenantId'>, mocked logError, achieved full coverage.
-
 import { createTodoItem } from '../../../cortex/core/todo/todo-controller';
-import { RequestContext, Tenant, User, TodoItemData } from '../../../cortex/core/app.types';
+import { RequestContext, TodoItemData } from '../../../cortex/core/app.types';
 import { logError } from '../../../cortex/config/logger';
 import { createTodoItem as createTodoItemService } from '../../../cortex/core/todo/todo-service';
 
@@ -16,7 +13,7 @@ jest.mock('../../../cortex/core/todo/todo-service', () => ({
     createTodoItem: jest.fn(),
 }));
 
-describe('[11.] Todo Controller', () => {
+describe('[25.] Todo Controller', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
