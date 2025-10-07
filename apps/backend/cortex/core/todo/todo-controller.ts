@@ -1,8 +1,8 @@
-import { RequestContext, InventoryItemData, InventoryResponse } from '../app.types';
-import { createInventoryItem as createInventoryItemService } from './inventory-service';
+import { RequestContext, TodoItemData, InventoryResponse } from '../app.types';
+import { createInventoryItem as createInventoryItemService } from './todo-service';
 import { handleError } from '../error/error-handler';
 
-export async function createInventoryItem(req: { body: InventoryItemData; context: RequestContext }): Promise<InventoryResponse> {
+export async function createInventoryItem(req: { body: TodoItemData; context: RequestContext }): Promise<InventoryResponse> {
     try {
         const { tenant, user } = req.context;
         if (!tenant) {

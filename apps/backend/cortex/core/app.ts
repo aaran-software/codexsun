@@ -1,6 +1,6 @@
 import { login } from './auth/login-controller';
 import { createUser } from './user/user-controller';
-import { createInventoryItem } from './inventory/inventory-controller';
+import { createInventoryItem } from './todo/inventory-controller';
 import { tenantMiddleware } from './tenant/tenant-middleware';
 import { authMiddleware } from './auth/auth-middleware';
 import { rateLimiter } from './auth/rate-limiter';

@@ -59,16 +59,15 @@ export interface StoredUser {
     tenantId: string;
 }
 
-export interface InventoryItemData {
-    name: string;
-    quantity: number;
+export interface TodoItemData {
+    slug: string;
+    title: string;
     tenantId: string;
 }
 
-export interface StoredInventoryItem {
-    id: string;
-    name: string;
-    quantity: number;
+export interface TodoInventoryItem {
+    slug: string;
+    title: string;
     tenantId: string;
 }
 
@@ -87,7 +86,7 @@ export interface UserResponse {
 }
 
 export interface InventoryResponse {
-    item: StoredInventoryItem;
+    item: TodoInventoryItem;
 }
 
 export type Role = 'admin' | 'user' | 'viewer';
