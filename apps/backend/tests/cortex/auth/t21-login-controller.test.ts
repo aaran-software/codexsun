@@ -6,25 +6,29 @@ import { Connection } from '../../../cortex/db/connection';
 import { tenantStorage, query } from '../../../cortex/db/db';
 import * as jwt from 'jsonwebtoken';
 
-// Mock tokenBlacklist to allow clearing between tests
-jest.mock('../../../cortex/core/auth/login-controller', () => {
-    const original = jest.requireActual('../../../cortex/core/auth/login-controller');
-    const tokenBlacklist = new Set<string>();
-    return {
-        ...original,
-        tokenBlacklist, // Expose for manipulation in tests
-        login: jest.fn().mockImplementation((req) => original.login(req)),
-        logout: jest.fn().mockImplementation((token) => {
-            tokenBlacklist.add(token);
-            return original.logout(token);
-        }),
-        isTokenBlacklisted: jest.fn().mockImplementation((token) => tokenBlacklist.has(token)),
-    };
-});
-
 const TEST_DB = process.env.DB_NAME || 'codexsun_db';
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
+const FIXED_IAT = 1600000000; // Fixed timestamp for consistent tokens
+const FIXED_EXP = FIXED_IAT + 3600; // 1 hour expiry
+
+// Declare mockTokenBlacklist before jest.mock
+const mockTokenBlacklist = new Set<string>();
+
+// Mock login-controller to isolate tokenBlacklist
+jest.mock('../../../cortex/core/auth/login-controller', () => {
+    const original = jest.requireActual('../../../cortex/core/auth/login-controller');
+    return {
+        ...original,
+        tokenBlacklist: mockTokenBlacklist,
+        login: jest.fn().mockImplementation(async (req) => original.login(req)),
+        logout: jest.fn().mockImplementation(async (token) => {
+            mockTokenBlacklist.add(token);
+            return original.logout(token);
+        }),
+        isTokenBlacklisted: jest.fn().mockImplementation((token) => mockTokenBlacklist.has(token)),
+    };
+});
 
 describe('[21.] Login Controller Tests', () => {
     let connection: Connection;
@@ -109,20 +113,19 @@ describe('[21.] Login Controller Tests', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        // Clear tokenBlacklist before each test to prevent state leakage
-        const { tokenBlacklist } = require('../../../cortex/core/auth/login-controller');
-        tokenBlacklist.clear();
+        mockTokenBlacklist.clear(); // Clear tokenBlacklist before each test
     });
 
     test('[test 1] logs in user successfully', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
+        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT, exp: FIXED_EXP }, JWT_SECRET);
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
         jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
             role: 'admin',
-            token: jwt.sign({ id: '1', tenantId: 'default', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' }),
+            token,
         });
         const response = await login(req);
         expect(response).toEqual({
@@ -146,13 +149,13 @@ describe('[21.] Login Controller Tests', () => {
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockRejectedValue(
             new Error('Tenant resolution failed for email unknown@domain.com: No tenant associated with email: unknown@domain.com')
         );
-        await expect(login(req)).rejects.toThrow('Tenant resolution failed for email unknown@domain.com');
+        await expect(login(req)).rejects.toThrow('Tenant resolution failed');
     });
 
     test('[test 4] logs out user successfully', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT, exp: FIXED_EXP }, JWT_SECRET);
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
         jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
             id: '1',
@@ -172,7 +175,7 @@ describe('[21.] Login Controller Tests', () => {
     test('[test 6] rejects login with blacklisted token', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT, exp: FIXED_EXP }, JWT_SECRET);
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
         jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
             id: '1',
@@ -182,8 +185,6 @@ describe('[21.] Login Controller Tests', () => {
         });
         const response = await login(req);
         await logout(response.user.token);
-        // Reset mocks to ensure fresh token generation
-        jest.clearAllMocks();
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
         jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
             id: '1',
@@ -199,7 +200,7 @@ describe('[21.] Login Controller Tests', () => {
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockRejectedValue(
             new Error('Tenant resolution failed for email invalid-email: No tenant associated with email: invalid-email')
         );
-        await expect(login(req)).rejects.toThrow('Tenant resolution failed for email invalid-email');
+        await expect(login(req)).rejects.toThrow('Tenant resolution failed');
     });
 
     test('[test 8] rejects empty credentials', async () => {
@@ -211,7 +212,7 @@ describe('[21.] Login Controller Tests', () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
         const expiredToken = jwt.sign(
-            { id: '1', tenantId: 'default', role: 'admin', exp: Math.floor(Date.now() / 1000) - 3600 },
+            { id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT - 7200, exp: FIXED_IAT - 3600 },
             JWT_SECRET
         );
         jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);

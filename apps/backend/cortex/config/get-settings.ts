@@ -21,6 +21,7 @@ export interface AppSettings {
     DB_PASS: string;
     DB_NAME: string;
     DB_SSL: boolean;
+    JWT_SECRET: string;
 }
 
 let _settings: AppSettings | null = null;
@@ -87,6 +88,8 @@ export function getSettings(): AppSettings {
         DB_PASS: requireStr("DB_PASS"),
         DB_NAME: requireStr("DB_NAME", "test_db"),
         DB_SSL: parseBool(process.env.DB_SSL, process.env.NODE_ENV === 'production'), // Enforce in prod
+
+        JWT_SECRET: requireStr("JWT_SECRET"), // Secret for JWT tokens
     };
 
     return _settings;
