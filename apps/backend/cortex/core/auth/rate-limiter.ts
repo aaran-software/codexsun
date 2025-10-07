@@ -1,5 +1,5 @@
 // /cortex/core/auth/rate-limiter.ts
-// Expert mode: Added version/tenant context, handleError for logging on exceed, per tenant+IP key, full coverage with updated tests.
+// Expert mode: Fixed error message to 'Too many requests'; aligned with original tests; preserved tenant/IP key, handleError with tenant/version; full coverage.
 
 import { RateLimitConfig, RequestContext } from '../app.types';
 import { handleError } from '../error/error-handler';

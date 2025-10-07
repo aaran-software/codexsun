@@ -1,5 +1,5 @@
 // /tests/cortex/auth/t27-rate-limiter.test.ts
-// Expert mode: Updated req with tenant/version, mocked handleError, verified logging on exceed, per tenant+IP, full coverage.
+// Expert mode: Updated error message expectations to 'Too many requests'; mocked handleError; verified logging on exceed; per tenant+IP; full coverage.
 
 import { rateLimiter } from '../../../cortex/core/auth/rate-limiter';
 import { RateLimitConfig, RequestContext } from '../../../cortex/core/app.types';

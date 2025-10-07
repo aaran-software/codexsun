@@ -33,7 +33,7 @@ export async function login(req: { body: Credentials }): Promise<LoginResponse> 
 
         return { user, tenant };
     } catch (error) {
-        await handleError(error instanceof Error ? error : new Error('Authentication failed'));
+        await handleError(error instanceof Error ? error : new Error('Authentication failed'), tenant?.id, 'v1');
         throw error;
     }
 }

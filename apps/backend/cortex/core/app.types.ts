@@ -1,5 +1,3 @@
-// cortex/core/tenant/tenant.types.ts
-
 /**
  * Interface representing a tenant in the multi-tenant ERP system.
  */
