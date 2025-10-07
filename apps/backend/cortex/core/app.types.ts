@@ -21,7 +21,10 @@ export interface TenantUser {
  */
 export interface DbConnection {
     database: string;
-    query: (sql: string, params?: any[]) => Promise<{ rows: any[] }>;
+    query: (sql: string, params?: any[]) => Promise<{
+        insertId?: number;
+        rows: any[]
+    }>;
     release: () => Promise<void>;
 }
 

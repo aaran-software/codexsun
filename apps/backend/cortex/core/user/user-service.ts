@@ -4,8 +4,8 @@ import { getTenantDbConnection } from '../../db/db-context-switcher';
 // Query user from tenant DB by id or email
 async function queryUser(connection: DbConnection, id?: string, email?: string): Promise<any> {
     const queryStr = id
-        ? 'SELECT id, username AS name, email, tenant_id FROM users WHERE id = ?'
-        : 'SELECT id, username AS name, email, tenant_id FROM users WHERE email = ?';
+        ? 'SELECT id, username AS name, email, tenant_id AS tenantId FROM users WHERE id = ?'
+        : 'SELECT id, username AS name, email, tenant_id AS tenantId FROM users WHERE email = ?';
     const param = id || email;
     const result = await connection.query(queryStr, [param]);
     return result.rows[0] || null;
@@ -50,7 +50,7 @@ export async function getUser(id: string, tenant: Tenant): Promise<StoredUser> {
     try {
         const user = await queryUser(connection, id);
 
-        if (!user || user.tenant_id !== tenant.id) {
+        if (!user || user.tenantId !== tenant.id) {
             throw new Error('User not found');
         }
 

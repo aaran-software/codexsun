@@ -29,12 +29,12 @@ describe('[5.] User Service', () => {
         await tenantStorage.run(TEST_DB, () =>
             query(`
                 CREATE TABLE users (
-                    id VARCHAR(255) PRIMARY KEY,
-                    username VARCHAR(255),
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    tenant_id VARCHAR(50) NOT NULL,
-                    created_at DATETIME,
-                    updated_at DATETIME
+                                       id VARCHAR(255) PRIMARY KEY,
+                                       username VARCHAR(255),
+                                       email VARCHAR(255) UNIQUE NOT NULL,
+                                       tenant_id VARCHAR(50) NOT NULL,
+                                       created_at DATETIME,
+                                       updated_at DATETIME
                 )
             `, [])
         );
@@ -93,5 +93,49 @@ describe('[5.] User Service', () => {
         const userData: UserData = { name: 'John Doe', email: 'john@tenant1.com', tenantId: 'tenant2' };
 
         await expect(createUser(userData, tenant)).rejects.toThrow('Tenant mismatch');
+    });
+
+    test('[test 4] rejects user creation with duplicate email', async () => {
+        const tenant: Tenant = {
+            id: 'tenant1',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+        const userData: UserData = { name: 'Duplicate User', email: 'existing@tenant1.com', tenantId: 'tenant1' };
+
+        await expect(createUser(userData, tenant)).rejects.toThrow('User already exists');
+    });
+
+    test('[test 5] rejects user fetch with non-existent ID', async () => {
+        const tenant: Tenant = {
+            id: 'tenant1',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+
+        await expect(getUser('nonexistent', tenant)).rejects.toThrow('User not found');
+    });
+
+    test('[test 6] creates user in different tenant DB', async () => {
+        // Seed second tenant user
+        await tenantStorage.run(TEST_DB, () =>
+            query(
+                `INSERT INTO users (id, username, email, tenant_id, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, NOW(), NOW())`,
+                ['user2', 'Tenant2 User', 'user@tenant2.com', 'tenant2']
+            )
+        );
+
+        const tenant: Tenant = {
+            id: 'tenant2',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+        const userData: UserData = { name: 'Jane Doe', email: 'jane@tenant2.com', tenantId: 'tenant2' };
+
+        const user = await createUser(userData, tenant);
+        expect(user).toMatchObject({
+            id: expect.any(String),
+            name: 'Jane Doe',
+            email: 'jane@tenant2.com',
+            tenantId: 'tenant2',
+        });
     });
 });
