@@ -1,20 +1,17 @@
+import * as jwt from 'jsonwebtoken';
 import { Tenant, User, RequestContext } from '../app.types';
-import { mockTenantLookup } from '../mock-master-db';
 import { handleError } from '../error/error-handler';
+import { query, tenantStorage } from '../../db/db';
 
-// Mock JWT verification (replace with actual JWT library like jsonwebtoken in production)
-const mockJwtVerify = async (token: string): Promise<User | null> => {
-    const validTokens = [
-        'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature',
-        'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6InVzZXIifQ.signature',
-    ];
-    if (!validTokens.includes(token)) {
-        return null;
-    }
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return { id: payload.id, tenantId: payload.tenantId, role: payload.role, token };
-};
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
 
+/**
+ * Middleware to verify JWT token and set tenant and user in request context.
+ * Queries the master database for tenant details and stores the tenant DB name in AsyncLocalStorage.
+ * @param req Request with authorization header and context
+ * @param res Response object (unused)
+ * @param next Callback to pass control to the next middleware
+ */
 export async function tenantMiddleware(
     req: { headers: { authorization?: string }; context: RequestContext },
     res: any,
@@ -27,21 +24,45 @@ export async function tenantMiddleware(
         }
 
         const token = authHeader.split(' ')[1];
-        const user = await mockJwtVerify(token);
+        const payload = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
 
-        if (!user) {
-            throw new Error('Invalid token');
+        const tenantRes = await query<{
+            tenant_id: string;
+            db_host: string;
+            db_port: string;
+            db_user: string;
+            db_pass: string | null;
+            db_name: string;
+            db_ssl: string | null;
+        }>(
+            'SELECT tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl FROM tenants WHERE tenant_id = ?',
+            [payload.tenantId]
+        );
+
+        if (tenantRes.rows.length === 0) {
+            throw new Error(`Tenant not found for ID: ${payload.tenantId}`);
         }
 
-        const tenant = await mockTenantLookup(user.tenantId);
-        if (!tenant) {
-            throw new Error('Tenant not found');
+        const { tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl } = tenantRes.rows[0];
+
+        if (!db_host || !db_port || !db_user || !db_name) {
+            throw new Error(`Incomplete tenant configuration for ID: ${tenant_id}`);
         }
+
+        const protocol = 'mariadb';
+        const sslParam = db_ssl === 'true' ? '?ssl=true' : '';
+        const passPart = db_pass ? `:${encodeURIComponent(db_pass)}` : '';
+        const dbConnection = `${protocol}://${db_user}${passPart}@${db_host}:${db_port}/${db_name}${sslParam}`;
+
+        const tenant: Tenant = { id: tenant_id, dbConnection };
+        const user: User = { id: payload.id, tenantId: payload.tenantId, role: payload.role, token };
 
         req.context = { tenant, user };
+        tenantStorage.enterWith(db_name);
         next();
     } catch (error) {
-        await handleError(error instanceof Error ? error : new Error('Unknown error'), undefined);
-        next(error instanceof Error ? error : new Error('Unknown error'));
+        const err = error instanceof Error ? error : new Error('Unknown error');
+        await handleError(err);
+        next(err);
     }
 }

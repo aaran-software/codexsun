@@ -164,4 +164,24 @@ PASS  tests/cortex/todo/t20-todo-service.test.ts
 √ [test 8] rejects todo fetch with valid ID but wrong tenant (3 ms)
 √ [test 9] creates todo item in different tenant DB (10 ms)
 
+PASS  tests/cortex/auth/t21-login-controller.test.ts
+[21.] Login Controller Tests
+√ [test 1] logs in user successfully (14 ms)
+√ [test 2] rejects invalid password (13 ms)
+√ [test 3] rejects unknown email (1 ms)
+√ [test 4] logs out user successfully (3 ms)
+√ [test 5] rejects logout with empty token (2 ms)
+√ [test 6] rejects login with blacklisted token (2 ms)
+√ [test 7] rejects invalid email format (1 ms)
+√ [test 8] rejects empty credentials (1 ms)
+√ [test 9] rejects expired token (3 ms)
+√ [test 10] rejects missing password (2 ms)
+√ [test 11] verifies token blacklist check (1 ms)
+
+PASS  tests/cortex/tenant/t22-tenant-middleware.test.ts
+[22.] Tenant Middleware Tests
+√ [test 1] sets tenant and user in request context from valid JWT (14 ms)
+√ [test 2] calls next with error for invalid JWT (2 ms)
+√ [test 3] skips tenant resolution for no authorization header (1 ms)
+√ [test 4] calls next with error for non-existent tenant (5 ms)
 
