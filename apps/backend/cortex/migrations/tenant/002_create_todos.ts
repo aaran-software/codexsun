@@ -1,4 +1,4 @@
-// \cortex\migrations\002_create_todos.ts
+// cortex/migrations/tenant/002_create_todos.ts
 
 import { BaseMigration } from '../../db/migration/base-migration';
 

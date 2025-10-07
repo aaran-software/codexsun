@@ -1,4 +1,4 @@
-import { Tenant, DbConnection } from '../core/tenant/tenant.types';
+import { Tenant, DbConnection } from '../core/app.types';
 import { Connection } from './connection';
 import { logConnection } from '../config/logger';
 

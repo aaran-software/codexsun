@@ -1,46 +1,45 @@
 import { Tenant, Credentials, User, DbConnection, JwtPayload } from '../app.types';
 import { getTenantDbConnection } from '../../db/db-context-switcher';
+import * as jwt from 'jsonwebtoken';
 
-// Mock JWT (replace with actual JWT library like jsonwebtoken in production)
-const mockJwtSign = (payload: JwtPayload): string => {
-    const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64').replace(/[^A-Za-z0-9-_]/g, '');
-    return `mocked.${encodedPayload}.signature`;
-};
+// Retrieve JWT_SECRET from environment (fallback for dev/testing)
+const JWT_SECRET = process.env.APP_KEY || 'default-secret-please-replace';
 
-// Mock password hashing (replace with actual bcrypt or similar in production)
-const mockComparePassword = async (password: string, hashed: string): Promise<boolean> => {
-    return password === 'pass123' && hashed === 'hashed_pass123';
-};
-
-// Mock DB query for user (replace with actual DB query in production)
-const mockUserQuery = async (connection: DbConnection, email: string): Promise<any> => {
-    const mockUsers = [
-        { id: 'user1', email: 'john@tenant1.com', tenantId: 'tenant1', password: 'hashed_pass123', role: 'admin' },
-    ];
-    return mockUsers.find(user => user.email === email) || null;
-};
+// Query user from tenant DB
+async function queryUser(connection: DbConnection, email: string): Promise<any> {
+    const result = await connection.query(
+        'SELECT id, email, password_hash, tenant_id, role FROM users WHERE email = ?',
+        [email]
+    );
+    return result.rows[0] || null;
+}
 
 export async function authenticateUser(credentials: Credentials, tenant: Tenant): Promise<User> {
     const { email, password } = credentials;
 
     const connection = await getTenantDbConnection(tenant);
-    const user = await mockUserQuery(connection, email);
+    try {
+        const user = await queryUser(connection, email);
 
-    if (!user || user.tenantId !== tenant.id) {
-        throw new Error('Invalid credentials');
+        if (!user || user.tenant_id !== tenant.id) {
+            throw new Error('Invalid credentials');
+        }
+
+        // Temporary plain password comparison (to be replaced with bcrypt)
+        if (password !== user.password_hash) {
+            throw new Error('Invalid credentials');
+        }
+
+        const payload: JwtPayload = { id: user.id, tenantId: user.tenant_id, role: user.role };
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+
+        return {
+            id: user.id,
+            tenantId: user.tenant_id,
+            role: user.role,
+            token,
+        };
+    } finally {
+        await connection.release();
     }
-
-    const isPasswordValid = await mockComparePassword(password, user.password);
-    if (!isPasswordValid) {
-        throw new Error('Invalid credentials');
-    }
-
-    const token = mockJwtSign({ id: user.id, tenantId: user.tenantId, role: user.role });
-
-    return {
-        id: user.id,
-        tenantId: user.tenantId,
-        role: user.role,
-        token,
-    };
 }
