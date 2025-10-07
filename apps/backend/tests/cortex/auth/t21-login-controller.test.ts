@@ -3,7 +3,6 @@ import { Tenant, Credentials } from '../../../cortex/core/app.types';
 import { Connection } from '../../../cortex/db/connection';
 import { tenantStorage, query } from '../../../cortex/db/db';
 import * as jwt from 'jsonwebtoken';
-import * as authService from '../../../cortex/core/auth/auth-service';
 
 const TEST_DB = process.env.DB_NAME || 'tenant_db';
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
@@ -28,6 +27,36 @@ describe('[21.] Login Controller', () => {
         };
 
         connection = await Connection.initialize(testConfig);
+
+        // Drop and create tenants table in master DB
+        await tenantStorage.run(MASTER_DB, () =>
+            query(`DROP TABLE IF EXISTS tenants`, [])
+        );
+        await tenantStorage.run(MASTER_DB, () =>
+            query(`
+                CREATE TABLE tenants (
+                                         id VARCHAR(255) PRIMARY KEY,
+                                         tenant_id VARCHAR(50) UNIQUE NOT NULL,
+                                         db_host VARCHAR(255),
+                                         db_port VARCHAR(10),
+                                         db_user VARCHAR(255),
+                                         db_pass VARCHAR(255),
+                                         db_name VARCHAR(255) NOT NULL,
+                                         db_ssl VARCHAR(10),
+                                         created_at DATETIME,
+                                         updated_at DATETIME
+                )
+            `, [])
+        );
+
+        // Seed tenants
+        await tenantStorage.run(MASTER_DB, () =>
+            query(
+                `INSERT INTO tenants (id, tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                ['1', 'default', 'localhost', '3306', 'root', '', TEST_DB, 'false']
+            )
+        );
 
         // Drop and create tenant_users table in master DB
         await tenantStorage.run(MASTER_DB, () =>
@@ -71,7 +100,7 @@ describe('[21.] Login Controller', () => {
             )
         );
 
-        // Seed users with plain password (matching auth-service)
+        // Seed users with plain password
         await tenantStorage.run(TEST_DB, () =>
             query(
                 `INSERT INTO users (id, email, password_hash, tenant_id, role, created_at, updated_at)
@@ -85,6 +114,7 @@ describe('[21.] Login Controller', () => {
         // Cleanup test database
         await tenantStorage.run(TEST_DB, () => query(`DROP TABLE IF EXISTS users`, []));
         await tenantStorage.run(MASTER_DB, () => query(`DROP TABLE IF EXISTS tenant_users`, []));
+        await tenantStorage.run(MASTER_DB, () => query(`DROP TABLE IF EXISTS tenants`, []));
         await connection.close();
     });
 
@@ -134,12 +164,34 @@ describe('[21.] Login Controller', () => {
         const token = response.user.token;
 
         await logout(token);
+        await expect(login(req)).rejects.toThrow('Token is blacklisted');
+    });
 
-        // Mock authenticateUser to check blacklist
-        jest.spyOn(authService, 'authenticateUser').mockImplementation(async () => {
-            throw new Error('Token is blacklisted');
+    test('[test 7] rejects login with invalid email format', async () => {
+        const req = { body: { email: 'invalid-email', password: 'pass123' } };
+        await expect(login(req)).rejects.toThrow('Tenant resolution failed');
+    });
+
+    test('[test 8] rejects login with empty credentials', async () => {
+        const req = { body: { email: '', password: '' } };
+        await expect(login(req)).rejects.toThrow('Valid email is required for tenant resolution');
+    });
+
+    test('[test 9] rejects login with expired token', async () => {
+        const req = { body: { email: 'admin@example.com', password: 'pass123' } };
+        // Mock JWT sign to create an expired token
+        jest.spyOn(jwt, 'sign').mockImplementation(() => {
+            const payload = { id: '1', tenantId: 'default', role: 'admin', exp: Math.floor(Date.now() / 1000) - 3600 };
+            return jwt.sign(payload, JWT_SECRET);
         });
 
-        await expect(login(req)).rejects.toThrow('Token is blacklisted');
+        await expect(login(req)).rejects.toThrow('Token is expired');
+
+        jest.restoreAllMocks();
+    });
+
+    test('[test 10] rejects login with missing password', async () => {
+        const req = { body: { email: 'admin@example.com', password: '' } };
+        await expect(login(req)).rejects.toThrow('Invalid credentials');
     });
 });
