@@ -185,6 +185,29 @@ PASS  tests/cortex/tenant/t22-tenant-middleware.test.ts
 √ [test 3] skips tenant resolution for no authorization header (1 ms)
 √ [test 4] calls next with error for non-existent tenant (5 ms)
 
+PASS  tests/cortex/app/t23-app.test.ts
+[23.] App Tests
+√ [test 1] handles successful login with valid credentials (23 ms)
+√ [test 2] rejects login with invalid credentials (16 ms)
+√ [test 3] rejects login with unknown email (6 ms)
+√ [test 4] rejects login when rate limit is exceeded (36 ms)
+√ [test 5] handles unexpected error during login (11 ms)
+√ [test 6] rejects non-POST login requests
+√ [test 7] creates user with valid admin token (2 ms)
+√ [test 8] creates todo item with valid admin token (2 ms)
+√ [test 9] rejects /users request without authorization (4 ms)
+√ [test 10] rejects /todo request without authorization (4 ms)
+√ [test 11] rejects /users request with invalid token (3 ms)
+√ [test 12] rejects /todo request with invalid token (2 ms)
+√ [test 13] rejects /users request with invalid tenant (2 ms)
+√ [test 14] rejects /todo request with insufficient permissions (1 ms)
+√ [test 15] rejects /users request with insufficient permissions (2 ms)
+√ [test 16] rejects non-POST requests to /users
+√ [test 17] rejects non-POST requests to /todo
+√ [test 18] handles service error in user creation (3 ms)
+√ [test 19] handles service error in todo creation (3 ms)
+√ [test 20] rejects unknown routes (3 ms)
+
 
 PASS  tests/cortex/user/t24-user-controller.test.ts
 [24.] User Controller
@@ -212,4 +235,43 @@ PASS  tests/cortex/todo/t25-todo-controller.test.ts
 √ [test 8] handles duplicate slug error from createTodoItemService (1 ms)
 √ [test 9] handles unexpected error from createTodoItemService (1 ms)
 √ [test 10] handles non-Error object thrown from createTodoItemService (1 ms)
+
+PASS  tests/cortex/auth/t26-auth-middleware.test.ts
+[26.] Auth Middleware
+√ [test 1] allows request with sufficient role (3 ms)
+√ [test 2] rejects request with insufficient role (2 ms)
+√ [test 3] rejects request with missing user context (1 ms)
+
+PASS  tests/cortex/auth/t27-rate-limiter.test.ts
+[27.] Rate Limiter
+√ [test 1] allows request within rate limit (3 ms)
+√ [test 2] rejects request exceeding rate limit (1 ms)
+√ [test 3] resets limit after window (2 ms)
+√ [test 4] handles no tenant (global) (1 ms)
+√ [test 5] separate limits per tenant (1 ms)
+
+PASS  tests/cortex/app/t28-app.test.ts
+[28.] Express App Protected Endpoints
+√ [test 1] creates user with admin role (4 ms)
+√ [test 2] rejects user creation with non-admin role (21 ms)
+√ [test 3] rejects request with invalid tenant (4 ms)
+√ [test 4] rejects non-POST requests to /users (1 ms)
+√ [test 5] login and create user in sequence (1 ms)
+√ [test 6] rejects /users request without authorization (3 ms)
+
+
+PASS  tests/cortex/app/t29-api.test.ts
+[29. API] Endpoint Tests
+√ [test 1] POST /login succeeds with valid credentials (5 ms)
+√ [test 2] POST /login fails with invalid credentials (3 ms)
+√ [test 3] POST /login fails with unknown email (3 ms)
+√ [test 4] POST /login fails when rate limit exceeded (3 ms)
+√ [test 5] POST /login handles database connection error (3 ms)
+√ [test 6] POST /users creates user with valid admin token (2 ms)
+√ [test 7] POST /todo creates todo with valid admin token (1 ms)
+√ [test 8] POST /users fails without authorization (4 ms)
+√ [test 9] POST /todo fails with invalid token (3 ms)
+√ [test 10] POST /users fails with insufficient permissions (2 ms)
+√ [test 11] GET /login returns 404 for non-POST requests
+√ [test 12] POST /unknown returns 404 for unknown routes (1 ms)
 
