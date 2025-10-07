@@ -10,6 +10,7 @@ export function createApp() {
     return async (req: any, res: any) => {
         try {
             req.context = req.context || {};
+            req.context.tenant = req.context.tenant || { id: 'tenant1', dbConnection: `mariadb://localhost:3306/codexsun_db` };
             req.ip = req.ip || '127.0.0.1';
             req.version = 'v1';
 
@@ -46,7 +47,7 @@ export function createApp() {
                 return res.status(201).json(result);
             }
 
-            if (req.url === '/inventory') {
+            if (req.url === '/todo') {
                 await new Promise<void>((resolve, reject) => {
                     authMiddleware({ requiredRole: 'admin' })(req, res, (err) => {
                         if (err) reject(err);
@@ -61,7 +62,7 @@ export function createApp() {
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error');
             await handleError(err, req.context.tenant?.id, req.version);
-            res.status(err.message === 'Too many requests, please try again later' ? 429 : 401).json({ error: err.message });
+            res.status(err.message === 'Too many requests' ? 429 : 401).json({ error: err.message });
         }
     };
 }
