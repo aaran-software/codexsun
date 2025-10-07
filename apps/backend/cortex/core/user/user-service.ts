@@ -1,5 +1,9 @@
+// /cortex/core/user/user-service.ts
+// Expert mode: Simplified error handling to ensure logError is called for connection failures, maintaining full coverage with versioning.
+
 import { Tenant, UserData, StoredUser, DbConnection } from '../app.types';
 import { getTenantDbConnection } from '../../db/db-context-switcher';
+import { logError } from '../../config/logger';
 
 // Query user from tenant DB by id or email
 async function queryUser(connection: DbConnection, id?: string, email?: string): Promise<any> {
@@ -23,19 +27,27 @@ async function createUserInDb(connection: DbConnection, userData: UserData): Pro
     return { id: insertedId, name, email, tenantId };
 }
 
-export async function createUser(userData: UserData, tenant: Tenant, apiVersion: string): Promise<StoredUser> {
+export async function createUser(userData: UserData, tenant: Tenant, version: string = 'v1'): Promise<StoredUser> {
     const { tenantId } = userData;
 
     if (tenantId !== tenant.id) {
-        throw new Error('Tenant mismatch');
+        const error = new Error('Tenant mismatch');
+        logError('error', { tenantId: tenant.id, version, error: error.message });
+        throw error;
     }
 
-    const connection = await getTenantDbConnection(tenant);
+    const connection = await getTenantDbConnection(tenant).catch((error) => {
+        logError('error', { tenantId: tenant.id, version, error: error.message || 'Connection failed' });
+        throw error;
+    });
+
     try {
         const existingUser = await queryUser(connection, undefined, userData.email);
 
         if (existingUser) {
-            throw new Error('User already exists');
+            const error = new Error('User already exists');
+            logError('error', { tenantId: tenant.id, version, error: error.message });
+            throw error;
         }
 
         const user = await createUserInDb(connection, userData);
@@ -46,12 +58,18 @@ export async function createUser(userData: UserData, tenant: Tenant, apiVersion:
 }
 
 export async function getUser(id: string, tenant: Tenant): Promise<StoredUser> {
-    const connection = await getTenantDbConnection(tenant);
+    const connection = await getTenantDbConnection(tenant).catch((error) => {
+        logError('error', { tenantId: tenant.id, version: 'unknown', error: error.message || 'Connection failed' });
+        throw error;
+    });
+
     try {
         const user = await queryUser(connection, id);
 
         if (!user || user.tenantId !== tenant.id) {
-            throw new Error('User not found');
+            const error = new Error('User not found');
+            logError('error', { tenantId: tenant.id, version: 'unknown', error: error.message });
+            throw error;
         }
 
         return user;
