@@ -1,13 +1,17 @@
+// /cortex/config/logger.ts
+// Expert mode: Added logError function to handle generic error logging, maintaining existing logging functionality.
+
 import { getSettings } from './get-settings';
 
 interface QueryLog { sql: string; params: any[]; db: string; duration?: number; error?: string; }
 interface TransactionLog { db: string; duration?: number; error?: string; }
 interface HealthCheckLog { database: string; duration?: number; error?: string; }
 interface ConnectionLog { db: string; connectionString: string; duration?: number; error?: string; }
+interface ErrorLog { tenantId: string; version: string; error: string; }
 
 export function logQuery(phase: 'start' | 'end' | 'error', data: QueryLog): void {
     const settings = getSettings();
-    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') { // Log in prod too
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
         console.debug(`Query ${phase}:`, data);
     }
     if (phase === 'end') logMetrics('query_duration_ms', data.duration || 0, { db: data.db });
@@ -41,7 +45,14 @@ export function logConnection(phase: 'start' | 'success' | 'error', data: Connec
     else if (phase === 'error') logMetrics('connection_error', 1, { db: data.db });
 }
 
+export function logError(phase: 'error', data: ErrorLog): void {
+    const settings = getSettings();
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
+        console.debug(`Error ${phase}:`, data);
+    }
+    logMetrics('error_count', 1, { tenantId: data.tenantId, version: data.version });
+}
+
 function logMetrics(metric: string, value: number, labels: Record<string, string>): void {
-    // In prod, integrate with Prometheus/CloudWatch; stub for now
     console.info(`METRIC: ${metric} ${value} ${JSON.stringify(labels)}`);
 }

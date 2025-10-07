@@ -13,12 +13,12 @@ export function createApp() {
             req.ip = req.ip || '127.0.0.1';
 
             if (req.method === 'POST' && req.url === '/login') {
-                const rateLimitErr = await new Promise<Error | undefined>((resolve) => {
-                    rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 })(req, res, (err) => resolve(err));
+                await new Promise<void>((resolve, reject) => {
+                    rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 })(req, res, (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
                 });
-                if (rateLimitErr) {
-                    return res.status(429).json({ error: rateLimitErr.message });
-                }
                 const result = await login(req);
                 return res.status(200).json(result);
             }
@@ -27,39 +27,40 @@ export function createApp() {
                 return res.status(404).json({ error: 'Not found' });
             }
 
-            const tenantErr = await new Promise<Error | undefined>((resolve) => {
-                tenantMiddleware(req, res, (err) => resolve(err));
+            await new Promise<void>((resolve, reject) => {
+                tenantMiddleware(req, res, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
             });
-            if (tenantErr) {
-                return res.status(401).json({ error: tenantErr.message });
-            }
 
             if (req.url === '/users') {
-                const authErr = await new Promise<Error | undefined>((resolve) => {
-                    authMiddleware({ requiredRole: 'admin' })(req, res, (err) => resolve(err));
+                await new Promise<void>((resolve, reject) => {
+                    authMiddleware({ requiredRole: 'admin' })(req, res, (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
                 });
-                if (authErr) {
-                    return res.status(401).json({ error: authErr.message });
-                }
                 const result = await createUser(req);
                 return res.status(201).json(result);
             }
 
             if (req.url === '/inventory') {
-                const authErr = await new Promise<Error | undefined>((resolve) => {
-                    authMiddleware({ requiredRole: 'admin' })(req, res, (err) => resolve(err));
+                await new Promise<void>((resolve, reject) => {
+                    authMiddleware({ requiredRole: 'admin' })(req, res, (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
                 });
-                if (authErr) {
-                    return res.status(401).json({ error: authErr.message });
-                }
                 const result = await createInventoryItem(req);
                 return res.status(201).json(result);
             }
 
             return res.status(404).json({ error: 'Not found' });
         } catch (error) {
-            await handleError(error instanceof Error ? error : new Error('Unknown error'), undefined);
-            res.status(401).json({ error: (error instanceof Error ? error : new Error('Unknown error')).message });
+            const err = error instanceof Error ? error : new Error('Unknown error');
+            await handleError(err);
+            res.status(err.message === 'Too many requests, please try again later' ? 429 : 401).json({ error: err.message });
         }
     };
 }
