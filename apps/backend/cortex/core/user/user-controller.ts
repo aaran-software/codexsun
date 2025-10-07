@@ -1,12 +1,9 @@
-// /cortex/core/user/user-controller.ts
-// Expert mode: Fixed error handling to properly throw 'Unknown error' for non-Error objects, ensuring test coverage for all error paths.
-
 import { RequestContext, UserResponse, UserData } from '../app.types';
 import { createUser as createUserService } from './user-service';
 import { handleError } from '../error/error-handler';
 
 export async function createUser(
-    req: { body: UserData; context: RequestContext; version?: string },
+    req: { body: Omit<UserData, 'tenantId'>; context: RequestContext; version?: string },
 ): Promise<UserResponse> {
     try {
         const { tenant, user } = req.context;

@@ -1,6 +1,3 @@
-// /cortex/core/user/t24-user-controller.test.ts
-// Expert mode: Updated test suite to ensure full coverage, including non-Error object handling, with consistent mocking and error validation.
-
 import { createUser } from '../../../cortex/core/user/user-controller';
 import { RequestContext, Tenant, User, UserData } from '../../../cortex/core/app.types';
 import { logError } from '../../../cortex/config/logger';
@@ -26,7 +23,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockResolvedValue(mockUser);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
@@ -49,7 +46,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockResolvedValue(mockUser);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
@@ -72,7 +69,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockResolvedValue(mockUser);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
@@ -92,7 +89,7 @@ describe('[10.] User Controller', () => {
 
     test('[test 4] rejects user creation for missing tenant context', async () => {
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {} as RequestContext,
             version: 'v1',
         };
@@ -108,7 +105,7 @@ describe('[10.] User Controller', () => {
 
     test('[test 5] rejects user creation for missing user context', async () => {
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: undefined,
@@ -127,7 +124,7 @@ describe('[10.] User Controller', () => {
 
     test('[test 6] rejects user creation for non-admin user', async () => {
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'user1', tenantId: 'tenant1', role: 'user', token: 'mocked.token' },
@@ -149,7 +146,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockRejectedValue(error);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
@@ -175,7 +172,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockRejectedValue(error);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
@@ -201,7 +198,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockRejectedValue(error);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
@@ -227,7 +224,7 @@ describe('[10.] User Controller', () => {
         (createUserService as jest.Mock).mockRejectedValue(error);
 
         const req = {
-            body: { name: 'John Doe', email: 'john@tenant1.com' },
+            body: { name: 'John Doe', email: 'john@tenant1.com' } as Omit<UserData, 'tenantId'>,
             context: {
                 tenant: { id: 'tenant1', dbConnection: 'postgresql://localhost/tenant1_db' },
                 user: { id: 'admin1', tenantId: 'tenant1', role: 'admin', token: 'mocked.token' },
