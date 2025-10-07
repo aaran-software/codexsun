@@ -1,22 +1,19 @@
-import { createApp } from '../../cortex/core/app';
-import { LoginResponse, UserResponse, InventoryResponse } from '../../cortex/core/tenant.types';
+import { createApp } from '../../../cortex/core/app';
+import { LoginResponse, UserResponse, TodoResponse } from '../../../cortex/core/app.types';
 
-jest.mock('../../cortex/core/tenant-middleware');
-jest.mock('../../cortex/core/auth-middleware');
-jest.mock('../../cortex/core/user-controller');
-jest.mock('../../cortex/core/inventory-controller');
-jest.mock('../../cortex/core/login-controller');
+jest.mock('../../../cortex/core/tenant/tenant-middleware');
+jest.mock('../../../cortex/core/auth/auth-middleware');
+jest.mock('../../../cortex/core/user/user-controller');
+jest.mock('../../../cortex/core/auth/login-controller');
 
-import { tenantMiddleware } from '../../cortex/core/tenant-middleware';
-import { authMiddleware } from '../../cortex/core/auth-middleware';
-import { createUser } from '../../cortex/core/user-controller';
-import { createInventoryItem } from '../../cortex/core/inventory-controller';
-import { login } from '../../cortex/core/login-controller';
+import { tenantMiddleware } from '../../../cortex/core/tenant/tenant-middleware';
+import { authMiddleware } from '../../../cortex/core/auth/auth-middleware';
+import { createUser } from '../../../cortex/core/user/user-controller';
+import { login } from '../../../cortex/core/auth/login-controller';
 
 const mockTenantMiddleware = tenantMiddleware as jest.Mock;
 const mockAuthMiddleware = authMiddleware as jest.Mock;
 const mockCreateUser = createUser as jest.Mock;
-const mockCreateInventoryItem = createInventoryItem as jest.Mock;
 const mockLogin = login as jest.Mock;
 
 describe('[28.] Express App Protected Endpoints', () => {
@@ -59,11 +56,6 @@ describe('[28.] Express App Protected Endpoints', () => {
                 user: { id: 'user1', name: req.body.name, email: req.body.email, tenantId: req.context.tenantId },
             })
         );
-        mockCreateInventoryItem.mockImplementation((req: any) =>
-            Promise.resolve({
-                item: { id: 'item1', name: req.body.name, quantity: req.body.quantity, tenantId: req.context.tenantId },
-            })
-        );
         mockLogin.mockImplementation(() =>
             Promise.resolve({
                 user: { id: 'user1', tenantId: 'tenant1', role: 'admin', token: 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature' },
@@ -100,35 +92,8 @@ describe('[28.] Express App Protected Endpoints', () => {
         expect(mockCreateUser).not.toHaveBeenCalled();
     });
 
-    test('[test 3] creates inventory item with admin role', async () => {
-        const app = createApp();
-        const response = await mockRequest(app, 'POST', '/inventory', {
-            name: 'Widget',
-            quantity: 100,
-        }, 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature');
-        expect(response.status).toBe(201);
-        expect(response.body).toEqual({
-            item: { id: 'item1', name: 'Widget', quantity: 100, tenantId: 'tenant1' },
-        });
-        expect(mockTenantMiddleware).toHaveBeenCalledTimes(1);
-        expect(mockAuthMiddleware).toHaveBeenCalledTimes(1);
-        expect(mockCreateInventoryItem).toHaveBeenCalledTimes(1);
-    });
 
-    test('[test 4] rejects inventory item creation with non-admin role', async () => {
-        const app = createApp();
-        const response = await mockRequest(app, 'POST', '/inventory', {
-            name: 'Widget',
-            quantity: 100,
-        }, 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6InVzZXIifQ.signature');
-        expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: 'Insufficient permissions' });
-        expect(mockTenantMiddleware).toHaveBeenCalledTimes(1);
-        expect(mockAuthMiddleware).toHaveBeenCalledTimes(1);
-        expect(mockCreateInventoryItem).not.toHaveBeenCalled();
-    });
-
-    test('[test 5] rejects request with invalid tenant', async () => {
+    test('[test 3] rejects request with invalid tenant', async () => {
         const app = createApp();
         mockTenantMiddleware.mockImplementationOnce((req: any, res: any, next: (err?: Error) => void) => {
             next(new Error('Invalid tenant'));
@@ -144,7 +109,7 @@ describe('[28.] Express App Protected Endpoints', () => {
         expect(mockCreateUser).not.toHaveBeenCalled();
     });
 
-    test('[test 6] rejects non-POST requests to /users', async () => {
+    test('[test 4] rejects non-POST requests to /users', async () => {
         const app = createApp();
         const response = await mockRequest(app, 'GET', '/users', {}, 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature');
         expect(response.status).toBe(404);
@@ -154,7 +119,7 @@ describe('[28.] Express App Protected Endpoints', () => {
         expect(mockCreateUser).not.toHaveBeenCalled();
     });
 
-    test('[test 7] login and create user in sequence', async () => {
+    test('[test 5] login and create user in sequence', async () => {
         const app = createApp();
         const loginResponse = await mockRequest(app, 'POST', '/login', {
             email: 'john@tenant1.com',
@@ -176,17 +141,7 @@ describe('[28.] Express App Protected Endpoints', () => {
         expect(mockCreateUser).toHaveBeenCalledTimes(1);
     });
 
-    test('[test 8] rejects non-POST requests to /inventory', async () => {
-        const app = createApp();
-        const response = await mockRequest(app, 'GET', '/inventory', {}, 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature');
-        expect(response.status).toBe(404);
-        expect(response.body).toEqual({ error: 'Not found' });
-        expect(mockTenantMiddleware).not.toHaveBeenCalled();
-        expect(mockAuthMiddleware).not.toHaveBeenCalled();
-        expect(mockCreateInventoryItem).not.toHaveBeenCalled();
-    });
-
-    test('[test 9] rejects /users request without authorization', async () => {
+    test('[test 6] rejects /users request without authorization', async () => {
         const app = createApp();
         mockTenantMiddleware.mockImplementationOnce((req: any, res: any, next: (err?: Error) => void) => {
             next(new Error('No token provided'));
