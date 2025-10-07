@@ -1,25 +1,27 @@
 import { Tenant, UserData, StoredUser, DbConnection } from '../app.types';
 import { getTenantDbConnection } from '../../db/db-context-switcher';
 
-// Mock DB query for user (replace with actual DB query in production)
-const mockUserQuery = async (connection: DbConnection, id?: string, email?: string): Promise<any> => {
-    const mockUsers: StoredUser[] = [
-        { id: 'user1', name: 'Existing User', email: 'existing@tenant1.com', tenantId: 'tenant1' },
-    ];
-    if (id) {
-        return mockUsers.find(user => user.id === id) || null;
-    }
-    if (email) {
-        return mockUsers.find(user => user.email === email) || null;
-    }
-    return null;
-};
+// Query user from tenant DB by id or email
+async function queryUser(connection: DbConnection, id?: string, email?: string): Promise<any> {
+    const queryStr = id
+        ? 'SELECT id, username AS name, email, tenant_id FROM users WHERE id = ?'
+        : 'SELECT id, username AS name, email, tenant_id FROM users WHERE email = ?';
+    const param = id || email;
+    const result = await connection.query(queryStr, [param]);
+    return result.rows[0] || null;
+}
 
-// Mock user creation (replace with actual DB insert in production)
-const mockCreateUser = async (connection: DbConnection, userData: UserData): Promise<StoredUser> => {
+// Create user in tenant DB
+async function createUserInDb(connection: DbConnection, userData: UserData): Promise<StoredUser> {
     const { name, email, tenantId } = userData;
-    return { id: 'user1', name, email, tenantId };
-};
+    const result = await connection.query(
+        `INSERT INTO users (id, username, email, tenant_id, created_at, updated_at)
+         VALUES (UUID(), ?, ?, ?, NOW(), NOW())`,
+        [name, email, tenantId]
+    );
+    const insertedId = result.insertId || (await queryUser(connection, undefined, email)).id;
+    return { id: insertedId, name, email, tenantId };
+}
 
 export async function createUser(userData: UserData, tenant: Tenant): Promise<StoredUser> {
     const { tenantId } = userData;
@@ -29,23 +31,31 @@ export async function createUser(userData: UserData, tenant: Tenant): Promise<St
     }
 
     const connection = await getTenantDbConnection(tenant);
-    const existingUser = await mockUserQuery(connection, undefined, userData.email);
+    try {
+        const existingUser = await queryUser(connection, undefined, userData.email);
 
-    if (existingUser) {
-        throw new Error('User already exists');
+        if (existingUser) {
+            throw new Error('User already exists');
+        }
+
+        const user = await createUserInDb(connection, userData);
+        return user;
+    } finally {
+        await connection.release();
     }
-
-    const user = await mockCreateUser(connection, userData);
-    return user;
 }
 
 export async function getUser(id: string, tenant: Tenant): Promise<StoredUser> {
     const connection = await getTenantDbConnection(tenant);
-    const user = await mockUserQuery(connection, id);
+    try {
+        const user = await queryUser(connection, id);
 
-    if (!user || user.tenantId !== tenant.id) {
-        throw new Error('User not found');
+        if (!user || user.tenant_id !== tenant.id) {
+            throw new Error('User not found');
+        }
+
+        return user;
+    } finally {
+        await connection.release();
     }
-
-    return user;
 }
