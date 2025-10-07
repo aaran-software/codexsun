@@ -1,4 +1,4 @@
-// E:\Workspace\codexsun\apps\backend\cortex\core\app.ts
+// cortex\core\app.ts
 // Expert mode: Typed loginRateLimiter as async middleware for TypeScript compatibility; allows test 5 to inject no-op rate limiter; preserves functionality and test coverage.
 
 import { login } from './auth/login-controller';
@@ -65,6 +65,11 @@ export function createApp(
                 const result = await createTodoItem(req);
                 return res.status(201).json(result);
             }
+
+            if (req.url === '/app') {
+                return "App is running";
+            }
+
 
             return res.status(404).json({ error: 'Not found' });
         } catch (error) {

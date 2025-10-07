@@ -1,3 +1,5 @@
+// index.ts
+
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { getSettings } from './cortex/config/get-settings';
