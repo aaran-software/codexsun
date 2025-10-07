@@ -128,3 +128,40 @@ The code coverage summary is as follows:
 - **Ran all test suites.**
 
 **Status**: All tests passed successfully. No failures reported.
+
+
+
+
+PASS  tests/cortex/auth/t17-auth-service.test.ts
+[17.] Authentication with Tenant Context
+√ [test 1] authenticates user in tenant-specific DB (13 ms)
+√ [test 2] rejects invalid password in tenant DB (10 ms)
+√ [test 3] rejects user with mismatched tenant (3 ms)
+
+PASS  tests/cortex/core/t18-error-handler.test.ts
+[18.] Error Handling
+√ [test 1] logs tenant-specific errors during resolution (4 ms)
+√ [test 2] handles errors without tenant context (1 ms)
+
+PASS  tests/cortex/user/t19-user-service.test.ts
+[19.] User Service
+√ [test 1] creates user in tenant DB (17 ms)
+√ [test 2] fetches user from tenant DB (4 ms)
+√ [test 3] rejects user creation for wrong tenant (10 ms)
+√ [test 4] rejects user creation with duplicate email (4 ms)
+√ [test 5] rejects user fetch with non-existent ID (4 ms)
+√ [test 6] creates user in different tenant DB (15 ms)
+
+PASS  tests/cortex/todo/t20-todo-service.test.ts
+[20.] Todo Service
+√ [test 1] creates todo item in tenant DB (17 ms)
+√ [test 2] fetches todo item from tenant DB (3 ms)
+√ [test 3] rejects todo item creation for wrong tenant (9 ms)
+√ [test 4] rejects todo creation with duplicate slug (9 ms)
+√ [test 5] rejects todo fetch with non-existent ID (3 ms)
+√ [test 6] rejects todo creation with empty title (3 ms)
+√ [test 7] rejects todo creation with empty slug (3 ms)
+√ [test 8] rejects todo fetch with valid ID but wrong tenant (3 ms)
+√ [test 9] creates todo item in different tenant DB (10 ms)
+
+

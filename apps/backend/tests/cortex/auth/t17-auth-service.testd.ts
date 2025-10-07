@@ -7,7 +7,7 @@ import * as jwt from 'jsonwebtoken';
 const TEST_DB = process.env.DB_NAME || 'tenant_db';
 const JWT_SECRET = process.env.APP_KEY || 'default-secret-please-replace';
 
-describe('[3.] Authentication with Tenant Context', () => {
+describe('[17.] Authentication with Tenant Context', () => {
     let connection: Connection;
 
     beforeAll(async () => {

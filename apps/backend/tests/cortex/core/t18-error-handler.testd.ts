@@ -1,6 +1,6 @@
 import { handleError } from '../../../cortex/core/error/error-handler';
 
-describe('[4.] Error Handling', () => {
+describe('[18.] Error Handling', () => {
     test('[test 1] logs tenant-specific errors during resolution', async () => {
         const error = new Error('Email not associated with any tenant');
         const logger = jest.fn();
