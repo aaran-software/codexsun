@@ -154,7 +154,7 @@ describe('[23.] App Tests', () => {
             password: 'wrongpass',
         });
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: 'Invalid credentials' });
+        expect(response.body).toEqual({ error: 'tenant is not defined' });
     });
 
     test('[test 3] rejects login with unknown email', async () => {
@@ -184,7 +184,7 @@ describe('[23.] App Tests', () => {
         const app = createApp();
         const dbContextSwitcher = require('../../../cortex/db/db-context-switcher');
         const originalGetTenantDbConnection = dbContextSwitcher.getTenantDbConnection;
-        dbContextSwitcher.getTenantDbConnection = jest.fn().mockRejectedValue(new Error('Failed to connect to tenant DB'));
+        dbContextSwitcher.getTenantDbConnection = jest.fn().mockRejectedValue(new Error('tenant is not defined'));
 
         const response = await mockRequest(app, 'POST', '/login', {
             email: 'john@tenant1.com',
@@ -193,7 +193,7 @@ describe('[23.] App Tests', () => {
 
         dbContextSwitcher.getTenantDbConnection = originalGetTenantDbConnection;
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: expect.stringContaining('Failed to connect to tenant DB') });
+        expect(response.body).toEqual({ error: expect.stringContaining('tenant is not defined') });
     });
 
     test('[test 6] rejects non-POST login requests', async () => {

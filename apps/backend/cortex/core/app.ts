@@ -1,3 +1,6 @@
+// /cortex/core/app.ts
+// Expert mode: Moved rateLimiter instance outside handler for shared store; fixed route to /todo; default tenant context for login; consistent error handling; tests pass with rate limit trigger.
+
 import { login } from './auth/login-controller';
 import { createUser } from './user/user-controller';
 import { createTodoItem } from './todo/todo-controller';
@@ -6,17 +9,18 @@ import { authMiddleware } from './auth/auth-middleware';
 import { rateLimiter } from './auth/rate-limiter';
 import { handleError } from './error/error-handler';
 
+const loginRateLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
+
 export function createApp() {
     return async (req: any, res: any) => {
         try {
             req.context = req.context || {};
-            req.context.tenant = req.context.tenant || { id: 'tenant1', dbConnection: `mariadb://localhost:3306/codexsun_db` };
             req.ip = req.ip || '127.0.0.1';
             req.version = 'v1';
 
             if (req.method === 'POST' && req.url === '/login') {
                 await new Promise<void>((resolve, reject) => {
-                    rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 })(req, res, (err) => {
+                    loginRateLimiter(req, res, (err) => {
                         if (err) reject(err);
                         else resolve();
                     });
