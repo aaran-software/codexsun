@@ -1,6 +1,5 @@
-import { login, logout, isTokenBlacklisted } from '../../../cortex/core/auth/login-controller';
-import { authenticateUser } from '../../../cortex/core/auth/auth-service';
-import { resolveTenant } from '../../../cortex/core/tenant/tenant-resolver';
+import * as AuthService from '../../../cortex/core/auth/auth-service';
+import * as TenantResolver from '../../../cortex/core/tenant/tenant-resolver';
 import { Tenant, Credentials } from '../../../cortex/core/app.types';
 import { Connection } from '../../../cortex/db/connection';
 import { tenantStorage, query } from '../../../cortex/db/db';
@@ -9,29 +8,10 @@ import * as jwt from 'jsonwebtoken';
 const TEST_DB = process.env.DB_NAME || 'codexsun_db';
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
-const FIXED_IAT = 1600000000; // Fixed timestamp for consistent tokens
-const FIXED_EXP = FIXED_IAT + 3600; // 1 hour expiry
-
-// Declare mockTokenBlacklist before jest.mock
-const mockTokenBlacklist = new Set<string>();
-
-// Mock login-controller to isolate tokenBlacklist
-jest.mock('../../../cortex/core/auth/login-controller', () => {
-    const original = jest.requireActual('../../../cortex/core/auth/login-controller');
-    return {
-        ...original,
-        tokenBlacklist: mockTokenBlacklist,
-        login: jest.fn().mockImplementation(async (req) => original.login(req)),
-        logout: jest.fn().mockImplementation(async (token) => {
-            mockTokenBlacklist.add(token);
-            return original.logout(token);
-        }),
-        isTokenBlacklisted: jest.fn().mockImplementation((token) => mockTokenBlacklist.has(token)),
-    };
-});
 
 describe('[21.] Login Controller Tests', () => {
     let connection: Connection;
+    let loginController: any;
 
     beforeAll(async () => {
         // Initialize MariaDB connection
@@ -111,23 +91,25 @@ describe('[21.] Login Controller Tests', () => {
         await connection.close();
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
         jest.clearAllMocks();
-        mockTokenBlacklist.clear(); // Clear tokenBlacklist before each test
+        delete require.cache[require.resolve('../../../cortex/core/auth/login-controller')];
+        loginController = require('../../../cortex/core/auth/login-controller');
     });
 
     test('[test 1] logs in user successfully', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT, exp: FIXED_EXP }, JWT_SECRET);
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
-        jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
+        const now = Math.floor(Date.now() / 1000);
+        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: now, exp: now + 3600 }, JWT_SECRET);
+        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
             role: 'admin',
             token,
         });
-        const response = await login(req);
+        const response = await loginController.login(req);
         expect(response).toEqual({
             user: { id: '1', tenantId: 'default', role: 'admin', token: expect.any(String) },
             tenant: { id: 'default', dbConnection: expect.any(String) },
@@ -139,101 +121,98 @@ describe('[21.] Login Controller Tests', () => {
     test('[test 2] rejects invalid password', async () => {
         const req = { body: { email: 'admin@example.com', password: 'wrongpass' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
-        jest.spyOn({ authenticateUser }, 'authenticateUser').mockRejectedValue(new Error('Invalid credentials'));
-        await expect(login(req)).rejects.toThrow('Invalid credentials');
+        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(AuthService, 'authenticateUser').mockRejectedValue(new Error('Invalid credentials'));
+        await expect(loginController.login(req)).rejects.toThrow('Invalid credentials');
     });
 
     test('[test 3] rejects unknown email', async () => {
         const req = { body: { email: 'unknown@domain.com', password: 'pass123' } };
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockRejectedValue(
+        jest.spyOn(TenantResolver, 'resolveTenant').mockRejectedValue(
             new Error('Tenant resolution failed for email unknown@domain.com: No tenant associated with email: unknown@domain.com')
         );
-        await expect(login(req)).rejects.toThrow('Tenant resolution failed');
+        await expect(loginController.login(req)).rejects.toThrow('Tenant resolution failed');
     });
 
     test('[test 4] logs out user successfully', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT, exp: FIXED_EXP }, JWT_SECRET);
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
-        jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
+        const now = Math.floor(Date.now() / 1000);
+        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: now, exp: now + 3600 }, JWT_SECRET);
+        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
             role: 'admin',
             token,
         });
-        const response = await login(req);
-        await expect(logout(response.user.token)).resolves.toBeUndefined();
-        expect(isTokenBlacklisted(response.user.token)).toBe(true);
+        const response = await loginController.login(req);
+        await expect(loginController.logout(response.user.token)).resolves.toBeUndefined();
+        expect(loginController.isTokenBlacklisted(response.user.token)).toBe(true);
     });
 
     test('[test 5] rejects logout with empty token', async () => {
-        await expect(logout('')).rejects.toThrow('Token required');
+        await expect(loginController.logout('')).rejects.toThrow('Token required');
     });
 
     test('[test 6] rejects login with blacklisted token', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT, exp: FIXED_EXP }, JWT_SECRET);
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
-        jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
+        const now = Math.floor(Date.now() / 1000);
+        const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: now, exp: now + 3600 }, JWT_SECRET);
+        // Blacklist the token first
+        await loginController.logout(token);
+        // Attempt login with the blacklisted token
+        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
             role: 'admin',
             token,
         });
-        const response = await login(req);
-        await logout(response.user.token);
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
-        jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
-            id: '1',
-            tenantId: 'default',
-            role: 'admin',
-            token,
-        });
-        await expect(login(req)).rejects.toThrow('Token blacklisted');
+        await expect(loginController.login(req)).rejects.toThrow('Token blacklisted');
     });
 
     test('[test 7] rejects invalid email format', async () => {
         const req = { body: { email: 'invalid-email', password: 'pass123' } };
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockRejectedValue(
+        jest.spyOn(TenantResolver, 'resolveTenant').mockRejectedValue(
             new Error('Tenant resolution failed for email invalid-email: No tenant associated with email: invalid-email')
         );
-        await expect(login(req)).rejects.toThrow('Tenant resolution failed');
+        await expect(loginController.login(req)).rejects.toThrow('Tenant resolution failed');
     });
 
     test('[test 8] rejects empty credentials', async () => {
         const req = { body: { email: '', password: '' } };
-        await expect(login(req)).rejects.toThrow('Email and password are required');
+        await expect(loginController.login(req)).rejects.toThrow('Email and password are required');
     });
 
     test('[test 9] rejects expired token', async () => {
         const req = { body: { email: 'admin@example.com', password: 'pass123' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
+        const now = Math.floor(Date.now() / 1000);
         const expiredToken = jwt.sign(
-            { id: '1', tenantId: 'default', role: 'admin', iat: FIXED_IAT - 7200, exp: FIXED_IAT - 3600 },
+            { id: '1', tenantId: 'default', role: 'admin', iat: now - 7200, exp: now - 3600 },
             JWT_SECRET
         );
-        jest.spyOn({ resolveTenant }, 'resolveTenant').mockResolvedValue(tenant);
-        jest.spyOn({ authenticateUser }, 'authenticateUser').mockResolvedValue({
+        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
             role: 'admin',
             token: expiredToken,
         });
-        await expect(login(req)).rejects.toThrow('Token expired');
+        await expect(loginController.login(req)).rejects.toThrow('jwt expired');
     });
 
     test('[test 10] rejects missing password', async () => {
         const req = { body: { email: 'admin@example.com', password: '' } };
-        await expect(login(req)).rejects.toThrow('Email and password are required');
+        await expect(loginController.login(req)).rejects.toThrow('Email and password are required');
     });
 
     test('[test 11] verifies token blacklist check', async () => {
         const token = 'test-token';
-        expect(isTokenBlacklisted(token)).toBe(false);
-        await logout(token);
-        expect(isTokenBlacklisted(token)).toBe(true);
+        expect(loginController.isTokenBlacklisted(token)).toBe(false);
+        await loginController.logout(token);
+        expect(loginController.isTokenBlacklisted(token)).toBe(true);
     });
 });
