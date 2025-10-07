@@ -1,5 +1,5 @@
 import { RequestContext, TodoItemData, InventoryResponse } from '../app.types';
-import { createInventoryItem as createInventoryItemService } from './todo-service';
+import { createTodoItem as createTodoItemService } from './todo-service';
 import { handleError } from '../error/error-handler';
 
 export async function createInventoryItem(req: { body: TodoItemData; context: RequestContext }): Promise<InventoryResponse> {
@@ -13,7 +13,7 @@ export async function createInventoryItem(req: { body: TodoItemData; context: Re
         }
 
         const itemData = { ...req.body, tenantId: tenant.id };
-        const newItem = await createInventoryItemService(itemData, tenant);
+        const newItem = await createTodoItemService(itemData, tenant);
         return { item: newItem };
     } catch (error) {
         await handleError(error instanceof Error ? error : new Error('Unknown error'), req.context.tenant?.id);
