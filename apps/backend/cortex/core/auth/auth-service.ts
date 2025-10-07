@@ -1,5 +1,5 @@
-import { Tenant, Credentials, User, DbConnection, JwtPayload } from './tenant/tenant.types';
-import { getTenantDbConnection } from './db-context-switcher';
+import { Tenant, Credentials, User, DbConnection, JwtPayload } from '../app.types';
+import { getTenantDbConnection } from '../../db/db-context-switcher';
 
 // Mock JWT (replace with actual JWT library like jsonwebtoken in production)
 const mockJwtSign = (payload: JwtPayload): string => {

@@ -1,10 +1,10 @@
-import { login } from './login-controller';
-import { createUser } from './user-controller';
-import { createInventoryItem } from './inventory-controller';
+import { login } from './auth/login-controller';
+import { createUser } from './user/user-controller';
+import { createInventoryItem } from './inventory/inventory-controller';
 import { tenantMiddleware } from './tenant/tenant-middleware';
-import { authMiddleware } from './auth-middleware';
-import { rateLimiter } from './rate-limiter';
-import { handleError } from './error-handler';
+import { authMiddleware } from './auth/auth-middleware';
+import { rateLimiter } from './auth/rate-limiter';
+import { handleError } from './error/error-handler';
 
 export function createApp() {
     return async (req: any, res: any) => {

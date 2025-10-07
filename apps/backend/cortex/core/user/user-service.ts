@@ -1,5 +1,5 @@
-import { Tenant, UserData, StoredUser, DbConnection } from './tenant/tenant.types';
-import { getTenantDbConnection } from './db-context-switcher';
+import { Tenant, UserData, StoredUser, DbConnection } from '../app.types';
+import { getTenantDbConnection } from '../../db/db-context-switcher';
 
 // Mock DB query for user (replace with actual DB query in production)
 const mockUserQuery = async (connection: DbConnection, id?: string, email?: string): Promise<any> => {

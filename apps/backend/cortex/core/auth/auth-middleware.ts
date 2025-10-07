@@ -1,5 +1,5 @@
-import { RequestContext, PermissionCheck } from './tenant/tenant.types';
-import { handleError } from './error-handler';
+import { RequestContext, PermissionCheck } from '../app.types';
+import { handleError } from '../error/error-handler';
 
 export function authMiddleware(permission: PermissionCheck) {
     return async (req: { context: RequestContext }, res: any, next: (error?: Error) => void): Promise<void> => {

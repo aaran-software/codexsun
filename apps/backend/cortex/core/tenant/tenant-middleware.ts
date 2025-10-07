@@ -1,6 +1,6 @@
-import { Tenant, User, RequestContext } from './tenant.types';
-import { mockTenantLookup } from './mock-master-db';
-import { handleError } from './error-handler';
+import { Tenant, User, RequestContext } from '../app.types';
+import { mockTenantLookup } from '../mock-master-db';
+import { handleError } from '../error/error-handler';
 
 // Mock JWT verification (replace with actual JWT library like jsonwebtoken in production)
 const mockJwtVerify = async (token: string): Promise<User | null> => {

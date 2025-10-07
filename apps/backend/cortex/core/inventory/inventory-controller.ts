@@ -1,6 +1,6 @@
-import { RequestContext, InventoryItemData, InventoryResponse } from './tenant/tenant.types';
+import { RequestContext, InventoryItemData, InventoryResponse } from '../app.types';
 import { createInventoryItem as createInventoryItemService } from './inventory-service';
-import { handleError } from './error-handler';
+import { handleError } from '../error/error-handler';
 
 export async function createInventoryItem(req: { body: InventoryItemData; context: RequestContext }): Promise<InventoryResponse> {
     try {

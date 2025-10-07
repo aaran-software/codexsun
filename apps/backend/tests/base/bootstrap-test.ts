@@ -1,4 +1,4 @@
-import { settings } from '../../cortex/config/get-settings';
+import { getSettings } from '../../cortex/config/get-settings';
 import { Connection } from '../../cortex/db/connection';
 import { getDbConfig } from '../../cortex/config/db-config';
 
@@ -14,4 +14,4 @@ afterAll(async () => {
     await connection.close();
 });
 
-export { connection, settings };
+export { connection, getSettings };

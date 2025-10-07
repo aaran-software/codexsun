@@ -1,4 +1,4 @@
-import { Tenant, TenantUser } from './tenant.types';
+import { Tenant, TenantUser } from '../app.types';
 import { query } from '../../db/db'; // Use db.ts for consistent querying
 import { getDbConfig } from '../../config/db-config';
 import { tenantStorage } from '../../db/db'; // For tenant context isolation

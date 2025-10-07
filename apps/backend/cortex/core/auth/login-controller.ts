@@ -1,7 +1,7 @@
-import { resolveTenant } from './tenant/tenant-resolver';
+import { resolveTenant } from '../tenant/tenant-resolver';
 import { authenticateUser } from './auth-service';
-import { LoginResponse, Credentials } from './tenant/tenant.types';
-import { handleError } from './error-handler';
+import { LoginResponse, Credentials } from '../app.types';
+import { handleError } from '../error/error-handler';
 
 export async function login(req: { body: Credentials }): Promise<LoginResponse> {
     try {

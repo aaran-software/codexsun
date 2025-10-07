@@ -1,5 +1,5 @@
 import { getTenantDbConnection } from "../../../cortex/db/db-context-switcher";
-import { Tenant } from "../../../cortex/core/tenant/tenant.types";
+import { Tenant } from "../../../cortex/core/app.types";
 import { query, tenantStorage } from "../../../cortex/db/db";
 import { Connection } from "../../../cortex/db/connection";
 import { getDbConfig } from "../../../cortex/config/db-config";

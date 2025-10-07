@@ -1,4 +1,4 @@
-import { Tenant, TenantUser } from './tenant/tenant.types';
+import { Tenant, TenantUser } from './app.types';
 
 export const mockMasterDb = {
     query: async (query: string, params: any[]): Promise<TenantUser[]> => {

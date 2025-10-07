@@ -1,5 +1,5 @@
-import { Tenant, InventoryItemData, StoredInventoryItem, DbConnection } from './tenant/tenant.types';
-import { getTenantDbConnection } from './db-context-switcher';
+import { Tenant, InventoryItemData, StoredInventoryItem, DbConnection } from '../app.types';
+import { getTenantDbConnection } from '../../db/db-context-switcher';
 
 // Mock DB query for inventory item (replace with actual DB query in production)
 const mockItemQuery = async (connection: DbConnection, id?: string): Promise<any> => {

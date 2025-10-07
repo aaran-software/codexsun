@@ -1,6 +1,6 @@
-import { RequestContext, UserResponse, UserData } from './tenant/tenant.types';
+import { RequestContext, UserResponse, UserData } from '../app.types';
 import { createUser as createUserService } from './user-service';
-import { handleError } from './error-handler';
+import { handleError } from '../error/error-handler';
 
 export async function createUser(req: { body: UserData; context: RequestContext }): Promise<UserResponse> {
     try {
