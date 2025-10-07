@@ -4,7 +4,7 @@ import { getTenantDbConnection } from '../../db/db-context-switcher';
 // Query todo from tenant DB by id
 async function queryTodo(connection: DbConnection, id: string): Promise<any> {
     const result = await connection.query(
-        'SELECT id, slug, title, tenant_id AS tenantId FROM todos WHERE id = ?',
+        'SELECT slug, title, tenant_id AS tenantId FROM todos WHERE id = ?',
         [id]
     );
     return result.rows[0] || null;
@@ -13,17 +13,23 @@ async function queryTodo(connection: DbConnection, id: string): Promise<any> {
 // Create todo in tenant DB
 async function createTodoInDb(connection: DbConnection, itemData: TodoItemData): Promise<TodoInventoryItem> {
     const { slug, title, tenantId } = itemData;
-    const uniqueSlug = `${slug}-${Date.now()}`; // Ensure slug uniqueness
-    const result = await connection.query(
+
+    if (!title || title.trim() === '') {
+        throw new Error('Column \'title\' cannot be null or empty');
+    }
+    if (!slug || slug.trim() === '') {
+        throw new Error('Column \'slug\' cannot be null or empty');
+    }
+
+    await connection.query(
         `INSERT INTO todos (id, slug, title, tenant_id, created_at, updated_at)
          VALUES (UUID(), ?, ?, ?, NOW(), NOW())`,
-        [uniqueSlug, title, tenantId]
+        [slug, title, tenantId]
     );
-    const insertedId = result.insertId || (await queryTodo(connection, result.insertId)).id;
-    return { slug: uniqueSlug, title, tenantId };
+    return { slug, title, tenantId };
 }
 
-export async function createInventoryItem(itemData: TodoItemData, tenant: Tenant): Promise<TodoInventoryItem> {
+export async function createTodoItem(itemData: TodoItemData, tenant: Tenant): Promise<TodoInventoryItem> {
     const { tenantId } = itemData;
 
     if (tenantId !== tenant.id) {
@@ -39,7 +45,7 @@ export async function createInventoryItem(itemData: TodoItemData, tenant: Tenant
     }
 }
 
-export async function getInventoryItem(id: string, tenant: Tenant): Promise<TodoInventoryItem> {
+export async function getTodoItem(id: string, tenant: Tenant): Promise<TodoInventoryItem> {
     const connection = await getTenantDbConnection(tenant);
     try {
         const item = await queryTodo(connection, id);

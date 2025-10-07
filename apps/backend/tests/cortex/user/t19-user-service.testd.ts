@@ -5,7 +5,7 @@ import { tenantStorage, query } from '../../../cortex/db/db';
 
 const TEST_DB = process.env.DB_NAME || 'tenant_db';
 
-describe('[5.] User Service', () => {
+describe('[19.] User Service', () => {
     let connection: Connection;
 
     beforeAll(async () => {

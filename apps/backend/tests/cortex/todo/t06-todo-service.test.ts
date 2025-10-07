@@ -1,4 +1,4 @@
-import { createInventoryItem, getInventoryItem } from '../../../cortex/core/todo/todo-service';
+import { createTodoItem, getTodoItem } from '../../../cortex/core/todo/todo-service';
 import { Tenant, TodoItemData } from '../../../cortex/core/app.types';
 import { Connection } from '../../../cortex/db/connection';
 import { tenantStorage, query } from '../../../cortex/db/db';
@@ -62,9 +62,9 @@ describe('[6.] Todo Service', () => {
         };
         const itemData: TodoItemData = { slug: 'new-todo', title: 'New Todo', tenantId: 'tenant1' };
 
-        const item = await createInventoryItem(itemData, tenant);
+        const item = await createTodoItem(itemData, tenant);
         expect(item).toMatchObject({
-            slug: expect.stringContaining('new-todo-'),
+            slug: 'new-todo',
             title: 'New Todo',
             tenantId: 'tenant1',
         });
@@ -75,7 +75,7 @@ describe('[6.] Todo Service', () => {
             id: 'tenant1',
             dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
         };
-        const item = await getInventoryItem('item1', tenant);
+        const item = await getTodoItem('item1', tenant);
         expect(item).toMatchObject({
             slug: 'widget-123',
             title: 'Widget',
@@ -90,7 +90,7 @@ describe('[6.] Todo Service', () => {
         };
         const itemData: TodoItemData = { slug: 'new-todo', title: 'New Todo', tenantId: 'tenant2' };
 
-        await expect(createInventoryItem(itemData, tenant)).rejects.toThrow('Tenant mismatch');
+        await expect(createTodoItem(itemData, tenant)).rejects.toThrow('Tenant mismatch');
     });
 
     test('[test 4] rejects todo creation with duplicate slug', async () => {
@@ -100,7 +100,7 @@ describe('[6.] Todo Service', () => {
         };
         const itemData: TodoItemData = { slug: 'widget-123', title: 'Widget', tenantId: 'tenant1' };
 
-        await expect(createInventoryItem(itemData, tenant)).rejects.toThrow('Duplicate entry');
+        await expect(createTodoItem(itemData, tenant)).rejects.toThrow('Duplicate entry');
     });
 
     test('[test 5] rejects todo fetch with non-existent ID', async () => {
@@ -109,6 +109,50 @@ describe('[6.] Todo Service', () => {
             dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
         };
 
-        await expect(getInventoryItem('nonexistent', tenant)).rejects.toThrow('Todo item not found');
+        await expect(getTodoItem('nonexistent', tenant)).rejects.toThrow('Todo item not found');
+    });
+
+    test('[test 6] rejects todo creation with empty title', async () => {
+        const tenant: Tenant = {
+            id: 'tenant1',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+        const itemData: TodoItemData = { slug: 'empty-title-todo', title: '', tenantId: 'tenant1' };
+
+        await expect(createTodoItem(itemData, tenant)).rejects.toThrow('Column \'title\' cannot be null or empty');
+    });
+
+    test('[test 7] rejects todo creation with empty slug', async () => {
+        const tenant: Tenant = {
+            id: 'tenant1',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+        const itemData: TodoItemData = { slug: '', title: 'Valid Todo', tenantId: 'tenant1' };
+
+        await expect(createTodoItem(itemData, tenant)).rejects.toThrow('Column \'slug\' cannot be null or empty');
+    });
+
+    test('[test 8] rejects todo fetch with valid ID but wrong tenant', async () => {
+        const tenant: Tenant = {
+            id: 'tenant2',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+
+        await expect(getTodoItem('item1', tenant)).rejects.toThrow('Todo item not found');
+    });
+
+    test('[test 9] creates todo item in different tenant DB', async () => {
+        const tenant: Tenant = {
+            id: 'tenant2',
+            dbConnection: `mariadb://${process.env.DB_USER || 'root'}:${process.env.DB_PASS || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '3306'}/${TEST_DB}`
+        };
+        const itemData: TodoItemData = { slug: 'tenant2-todo', title: 'Tenant2 Todo', tenantId: 'tenant2' };
+
+        const item = await createTodoItem(itemData, tenant);
+        expect(item).toMatchObject({
+            slug: 'tenant2-todo',
+            title: 'Tenant2 Todo',
+            tenantId: 'tenant2',
+        });
     });
 });
