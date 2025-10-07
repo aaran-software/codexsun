@@ -23,7 +23,7 @@ async function createUserInDb(connection: DbConnection, userData: UserData): Pro
     return { id: insertedId, name, email, tenantId };
 }
 
-export async function createUser(userData: UserData, tenant: Tenant): Promise<StoredUser> {
+export async function createUser(userData: UserData, tenant: Tenant, apiVersion: string): Promise<StoredUser> {
     const { tenantId } = userData;
 
     if (tenantId !== tenant.id) {
