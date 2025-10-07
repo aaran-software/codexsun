@@ -1,3 +1,4 @@
+// C:\Users\SUNDAR\AppData\Roaming\npm\node_modules\codexsun\apps\backend\cortex\core\auth\login-controller.ts
 import { resolveTenant } from '../tenant/tenant-resolver';
 import { authenticateUser } from './auth-service';
 import { LoginResponse, Credentials } from '../app.types';
@@ -14,12 +15,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
  * @returns LoginResponse with user and tenant data
  */
 export async function login(req: { body: Credentials }): Promise<LoginResponse> {
+    let tenant = null; // Initialize tenant as null
     try {
         if (!req.body.email || !req.body.password) {
             throw new Error('Email and password are required');
         }
 
-        const tenant = await resolveTenant(req);
+        tenant = await resolveTenant(req);
         const user = await authenticateUser(req.body, tenant);
 
         // Validate JWT token
@@ -33,7 +35,11 @@ export async function login(req: { body: Credentials }): Promise<LoginResponse> 
 
         return { user, tenant };
     } catch (error) {
-        await handleError(error instanceof Error ? error : new Error('Authentication failed'), tenant?.id, 'v1');
+        await handleError(
+            error instanceof Error ? error : new Error('Authentication failed'),
+            tenant?.id ?? 'unknown', // Use 'unknown' if tenant is null
+            'v1'
+        );
         throw error;
     }
 }

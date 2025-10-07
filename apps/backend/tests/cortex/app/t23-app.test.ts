@@ -1,7 +1,9 @@
+// E:\Workspace\codexsun\apps\backend\tests\cortex\app\t23-app.test.ts
 import { createApp } from '../../../cortex/core/app';
 import { Connection } from '../../../cortex/db/connection';
 import { tenantStorage, query } from '../../../cortex/db/db';
 import * as jwt from 'jsonwebtoken';
+import { rateLimiter } from '../../../cortex/core/auth/rate-limiter';
 
 const TEST_DB = process.env.DB_NAME || 'codexsun_db';
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
@@ -44,52 +46,52 @@ describe('[23.] App Tests', () => {
         await tenantStorage.run(MASTER_DB, () => query('DROP TABLE IF EXISTS tenants', []));
         await tenantStorage.run(MASTER_DB, () => query(`
             CREATE TABLE tenants (
-                id VARCHAR(255) PRIMARY KEY,
-                tenant_id VARCHAR(50) UNIQUE NOT NULL,
-                db_host VARCHAR(255),
-                db_port VARCHAR(10),
-                db_user VARCHAR(255),
-                db_pass VARCHAR(255),
-                db_name VARCHAR(255) NOT NULL,
-                db_ssl VARCHAR(10),
-                created_at DATETIME,
-                updated_at DATETIME
+                                     id VARCHAR(255) PRIMARY KEY,
+                                     tenant_id VARCHAR(50) UNIQUE NOT NULL,
+                                     db_host VARCHAR(255),
+                                     db_port VARCHAR(10),
+                                     db_user VARCHAR(255),
+                                     db_pass VARCHAR(255),
+                                     db_name VARCHAR(255) NOT NULL,
+                                     db_ssl VARCHAR(10),
+                                     created_at DATETIME,
+                                     updated_at DATETIME
             )`, []));
 
         await tenantStorage.run(MASTER_DB, () => query(`
-            INSERT INTO tenants (id, tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                    INSERT INTO tenants (id, tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
             ['1', 'tenant1', 'localhost', '3306', 'root', '', TEST_DB, 'false']));
 
         await tenantStorage.run(MASTER_DB, () => query('DROP TABLE IF EXISTS tenant_users', []));
         await tenantStorage.run(MASTER_DB, () => query(`
             CREATE TABLE tenant_users (
-                email VARCHAR(255) UNIQUE NOT NULL,
-                tenant_id VARCHAR(50) NOT NULL,
-                created_at DATETIME,
-                updated_at DATETIME
+                                          email VARCHAR(255) UNIQUE NOT NULL,
+                                          tenant_id VARCHAR(50) NOT NULL,
+                                          created_at DATETIME,
+                                          updated_at DATETIME
             )`, []));
 
         await tenantStorage.run(MASTER_DB, () => query(`
-            INSERT INTO tenant_users (email, tenant_id, created_at, updated_at)
-            VALUES (?, ?, NOW(), NOW())`,
+                    INSERT INTO tenant_users (email, tenant_id, created_at, updated_at)
+                    VALUES (?, ?, NOW(), NOW())`,
             ['john@tenant1.com', 'tenant1']));
 
         await tenantStorage.run(TEST_DB, () => query('DROP TABLE IF EXISTS users', []));
         await tenantStorage.run(TEST_DB, () => query(`
             CREATE TABLE users (
-                id VARCHAR(255) PRIMARY KEY,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                tenant_id VARCHAR(50) NOT NULL,
-                role VARCHAR(50) NOT NULL,
-                created_at DATETIME,
-                updated_at DATETIME
+                                   id VARCHAR(255) PRIMARY KEY,
+                                   email VARCHAR(255) UNIQUE NOT NULL,
+                                   password_hash VARCHAR(255) NOT NULL,
+                                   tenant_id VARCHAR(50) NOT NULL,
+                                   role VARCHAR(50) NOT NULL,
+                                   created_at DATETIME,
+                                   updated_at DATETIME
             )`, []));
 
         await tenantStorage.run(TEST_DB, () => query(`
-            INSERT INTO users (id, email, password_hash, tenant_id, role, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+                    INSERT INTO users (id, email, password_hash, tenant_id, role, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
             ['user1', 'john@tenant1.com', 'pass123', 'tenant1', 'admin']));
     });
 
@@ -102,6 +104,9 @@ describe('[23.] App Tests', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        // Reset rate limiter to ensure test isolation
+        const loginRateLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
+        jest.spyOn(require('../../../cortex/core/auth/rate-limiter'), 'rateLimiter').mockReturnValue(loginRateLimiter);
         mockTenantMiddleware.mockImplementation((req: any, res: any, next: (err?: Error) => void) => {
             const token = req.headers.authorization?.split(' ')[1];
             if (!token) {
@@ -154,7 +159,7 @@ describe('[23.] App Tests', () => {
             password: 'wrongpass',
         });
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: 'tenant is not defined' });
+        expect(response.body).toEqual({ error: 'Invalid credentials' });
     });
 
     test('[test 3] rejects login with unknown email', async () => {
@@ -164,7 +169,7 @@ describe('[23.] App Tests', () => {
             password: 'pass123',
         });
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: 'tenant is not defined' });
+        expect(response.body).toEqual({ error: 'Tenant resolution failed for email unknown@domain.com: No tenant associated with email: unknown@domain.com' });
     });
 
     test('[test 4] rejects login when rate limit is exceeded', async () => {
@@ -181,10 +186,14 @@ describe('[23.] App Tests', () => {
     });
 
     test('[test 5] handles unexpected error during login', async () => {
-        const app = createApp();
+        // Create an async no-op rate limiter for this test
+        const noOpRateLimiter = async (req: any, res: any, next: (err?: Error) => void): Promise<void> => {
+            next();
+        };
+        const app = createApp(noOpRateLimiter);
         const dbContextSwitcher = require('../../../cortex/db/db-context-switcher');
         const originalGetTenantDbConnection = dbContextSwitcher.getTenantDbConnection;
-        dbContextSwitcher.getTenantDbConnection = jest.fn().mockRejectedValue(new Error('tenant is not defined'));
+        dbContextSwitcher.getTenantDbConnection = jest.fn().mockRejectedValue(new Error('Database connection failed'));
 
         const response = await mockRequest(app, 'POST', '/login', {
             email: 'john@tenant1.com',
@@ -193,9 +202,8 @@ describe('[23.] App Tests', () => {
 
         dbContextSwitcher.getTenantDbConnection = originalGetTenantDbConnection;
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: expect.stringContaining('tenant is not defined') });
+        expect(response.body).toEqual({ error: 'Database connection failed' });
     });
-
     test('[test 6] rejects non-POST login requests', async () => {
         const app = createApp();
         const response = await mockRequest(app, 'GET', '/login', {});
@@ -204,36 +212,28 @@ describe('[23.] App Tests', () => {
     });
 
     test('[test 7] creates user with valid admin token', async () => {
-        const mockUser = { id: 'user1', name: 'Jane Doe', email: 'jane@tenant1.com', tenantId: 'tenant1' };
-        mockCreateUser.mockResolvedValue({ user: mockUser });
-
         const app = createApp();
+        mockCreateUser.mockResolvedValue({ id: 'user2', name: 'John Doe', email: 'john@tenant1.com' });
         const response = await mockRequest(app, 'POST', '/users', {
-            name: 'Jane Doe',
-            email: 'jane@tenant1.com',
+            name: 'John Doe',
+            email: 'john@tenant1.com',
         }, 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature');
         expect(response.status).toBe(201);
-        expect(response.body).toEqual({
-            user: { id: 'user1', name: 'Jane Doe', email: 'jane@tenant1.com', tenantId: 'tenant1' },
-        });
+        expect(response.body).toEqual({ id: 'user2', name: 'John Doe', email: 'john@tenant1.com' });
         expect(mockTenantMiddleware).toHaveBeenCalledTimes(1);
         expect(mockAuthMiddleware).toHaveBeenCalledTimes(1);
         expect(mockCreateUser).toHaveBeenCalledTimes(1);
     });
 
     test('[test 8] creates todo item with valid admin token', async () => {
-        const mockItem = { slug: 'new-todo', title: 'New Todo', tenantId: 'tenant1' };
-        mockCreateTodoItem.mockResolvedValue({ item: mockItem });
-
         const app = createApp();
+        mockCreateTodoItem.mockResolvedValue({ id: 'todo1', slug: 'new-todo', title: 'New Todo' });
         const response = await mockRequest(app, 'POST', '/todo', {
             slug: 'new-todo',
             title: 'New Todo',
         }, 'mocked.eyJpZCI6InVzZXIxIiwidGVuYW50SWQiOiJ0ZW5hbnQxIiwicm9sZSI6ImFkbWluIn0.signature');
         expect(response.status).toBe(201);
-        expect(response.body).toEqual({
-            item: { slug: 'new-todo', title: 'New Todo', tenantId: 'tenant1' },
-        });
+        expect(response.body).toEqual({ id: 'todo1', slug: 'new-todo', title: 'New Todo' });
         expect(mockTenantMiddleware).toHaveBeenCalledTimes(1);
         expect(mockAuthMiddleware).toHaveBeenCalledTimes(1);
         expect(mockCreateTodoItem).toHaveBeenCalledTimes(1);

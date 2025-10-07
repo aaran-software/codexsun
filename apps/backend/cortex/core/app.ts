@@ -1,5 +1,5 @@
-// /cortex/core/app.ts
-// Expert mode: Moved rateLimiter instance outside handler for shared store; fixed route to /todo; default tenant context for login; consistent error handling; tests pass with rate limit trigger.
+// E:\Workspace\codexsun\apps\backend\cortex\core\app.ts
+// Expert mode: Typed loginRateLimiter as async middleware for TypeScript compatibility; allows test 5 to inject no-op rate limiter; preserves functionality and test coverage.
 
 import { login } from './auth/login-controller';
 import { createUser } from './user/user-controller';
@@ -8,10 +8,17 @@ import { tenantMiddleware } from './tenant/tenant-middleware';
 import { authMiddleware } from './auth/auth-middleware';
 import { rateLimiter } from './auth/rate-limiter';
 import { handleError } from './error/error-handler';
+import { RequestContext } from './app.types';
 
-const loginRateLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
+const defaultLoginRateLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
 
-export function createApp() {
+export function createApp(
+    loginRateLimiter: (
+        req: { ip: string; context: RequestContext; version?: string },
+        res: any,
+        next: (error?: Error) => void
+    ) => Promise<void> = defaultLoginRateLimiter
+) {
     return async (req: any, res: any) => {
         try {
             req.context = req.context || {};
@@ -19,11 +26,8 @@ export function createApp() {
             req.version = 'v1';
 
             if (req.method === 'POST' && req.url === '/login') {
-                await new Promise<void>((resolve, reject) => {
-                    loginRateLimiter(req, res, (err) => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
+                await loginRateLimiter(req, res, (err) => {
+                    if (err) throw err;
                 });
                 const result = await login(req);
                 return res.status(200).json(result);
