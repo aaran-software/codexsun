@@ -1,5 +1,5 @@
-import { rateLimiter } from '../../cortex/core/rate-limiter';
-import { RateLimitConfig } from '../../cortex/core/tenant.types';
+import { rateLimiter } from '../../../cortex/core/auth/rate-limiter';
+import { RateLimitConfig } from '../../../cortex/core/app.types';
 
 describe('[14.] Rate Limiter', () => {
     test('[test 1] allows request within rate limit', async () => {
