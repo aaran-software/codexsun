@@ -10,7 +10,9 @@ describe("[1.] resolveTenant", () => {
     let mockConfig;
 
     beforeEach(() => {
-        mockConfig = { type: "mariadb" };
+        mockConfig = {
+            master: { driver: "mariadb" }
+        };
         (getDbConfig as jest.Mock).mockReturnValue(mockConfig);
         (query as jest.Mock).mockResolvedValue({ rows: [] });
         jest.clearAllMocks();
