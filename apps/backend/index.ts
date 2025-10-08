@@ -1,10 +1,18 @@
-// E:\Workspace\codexsun\apps\backend\cortex\core\index.ts
-import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express';
+import express, { Express, Response, NextFunction, RequestHandler } from 'express';
 import cors from 'cors';
+import { RequestContext } from './cortex/core/app.types';
 import { getSettings } from './cortex/config/get-settings';
 import { Connection } from './cortex/db/connection';
 import { Logger } from './cortex/logger/logger';
 import { createApp } from './cortex/core/app';
+import { healthCheck } from './cortex/db/mdb';
+
+declare module 'express' {
+    interface Request {
+        context: RequestContext;
+        ip: string;
+    }
+}
 
 // Initialize logger
 const logger = new Logger();
@@ -14,7 +22,7 @@ const app: Express = express();
 const settings = getSettings();
 
 // Middleware to log requests and responses
-const logMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+const logMiddleware: RequestHandler = (req, res, next) => {
     const start = Date.now();
     const { method, url, body } = req;
 
@@ -41,35 +49,33 @@ const logMiddleware: RequestHandler = (req: Request, res: Response, next: NextFu
 };
 
 // Middleware to initialize context and ip
-const contextMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-    req.context = { ip: req.ip || '127.0.0.1' };
-    next();
-};
+// const contextMiddleware: RequestHandler = (req, res, next) => {
+//     req.context = { ip: req.ip || '127.0.0.1' };
+//     next();
+// };
 
 // Middleware setup
 app.use(cors());
 app.use(express.json());
 app.use(logMiddleware);
-app.use(contextMiddleware);
+// app.use(contextMiddleware);
 app.use('/api', createApp() as RequestHandler);
 
 // Welcome route
-app.get('/', (_req: Request, res: Response) => {
+app.get('/', (_req, res: Response) => {
     res.status(200).json({ message: 'Welcome to the API server!' });
 });
 
 // Health check route
-app.get('/hz', async (_req: Request, res: Response) => {
+app.get('/hz', async (_req, res: Response) => {
     try {
-        const connection = Connection.getInstance();
-        const client = await connection.getClient(settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME);
-        try {
-            await client.query('SELECT 1');
+        const dbName = settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME;
+        const isHealthy = await healthCheck(dbName);
+        if (isHealthy) {
             res.status(200).json({ status: 'ok', database: 'connected' });
-            logger.debug('Health check succeeded', { database: settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME });
-        } finally {
-            if (client.release) client.release();
-            else if (client.end) await client.end();
+            logger.debug('Health check succeeded', { database: dbName });
+        } else {
+            throw new Error('Database health check failed');
         }
     } catch (error: any) {
         logger.error(`Health check failed: ${error.message}`, { database: settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME });
@@ -93,8 +99,12 @@ async function shutdown(signal: string): Promise<void> {
             });
         }
         const connection = Connection.getInstance();
-        await connection.close();
-        logger.info('Database pool closed.');
+        try {
+            await connection.close();
+            logger.info('Database pool closed.');
+        } catch (error: any) {
+            logger.error(`Failed to close database pool: ${error.message}`);
+        }
         process.exit(0);
     } catch (error: any) {
         logger.error(`Error during shutdown: ${error.message}`);
@@ -114,10 +124,10 @@ async function startServer(): Promise<void> {
             password: settings.DB_PASS,
             database: settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME,
             ssl: settings.DB_SSL,
-            type: settings.DB_DRIVER,
+            driver: settings.DB_DRIVER,
             connectionLimit: process.env.NODE_ENV === 'production' ? 50 : 10,
             acquireTimeout: 30000,
-            idleTimeout: 60000
+            idleTimeout: 60000,
         };
         await Connection.initialize(dbConfig);
         logger.info('Database connection initialized.');
