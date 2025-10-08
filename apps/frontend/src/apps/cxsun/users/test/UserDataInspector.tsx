@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/global/auth/AuthContext'
+import { useAuth } from "@/global/auth/useAuth"
 import { Button } from '@/components/ui/button'
 import { Copy } from 'lucide-react'
 
 export function UserDataInspector() {
     const { token } = useAuth()
-    const [userData, setUserData] = useState<any>(null)
-    const [todoData, setTodoData] = useState<any>(null)
+    const [userData, setUserData] = useState<never>()
+    const [todoData, setTodoData] = useState<never>()
     const [loading, setLoading] = useState<boolean>(true)
     const [userError, setUserError] = useState<string | null>(null)
     const [todoError, setTodoError] = useState<string | null>(null)

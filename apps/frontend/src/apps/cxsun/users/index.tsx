@@ -5,7 +5,7 @@ import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider, useUsers } from './components/users-provider'
 import { UsersTable } from './components/users-table'
 import { type User } from './data/schema'
-import { useAuth } from '@/global/auth/AuthContext'
+import { useAuth } from "@/global/auth/useAuth"
 
 function UsersContent() {
     const [data, setData] = useState<User[]>([])

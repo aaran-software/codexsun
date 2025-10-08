@@ -1,23 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-
-interface User {
-    id: string;
-    username: string;
-    email: string;
-    tenantId: string;
-    role: string;
-    token: string;
-}
-
-interface AuthContextType {
-    user: User | null;
-    token: string | null;
-    loading: boolean;
-    login: (email: string, password: string) => Promise<boolean>;
-    logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import React, { useState, ReactNode, useEffect } from "react";
+import { AuthContext, User } from "./AuthContextTypes";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -54,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
-                return Promise.reject(new Error(errorData.error || 'Invalid credentials'));
+                throw new Error(errorData.error || 'Invalid credentials');
             }
 
             const data = await res.json();
@@ -105,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('[AuthContext] Frontend state cleared.');
         } catch (error) {
             console.error('[AuthContext] Logout error:', error instanceof Error ? error.message : 'Unknown error');
-            // Clear state even if backend logout fails to ensure consistent frontend state
             setUser(null);
             setToken(null);
             localStorage.removeItem("auth_user");
@@ -121,9 +102,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         </AuthContext.Provider>
     );
 }
-
-export const useAuth = () => {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-    return ctx;
-};

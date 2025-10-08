@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/global/auth/AuthContext';
+import { useAuth } from "@/global/auth/useAuth"
 import { Menu, X, ArrowUp, Sun, Moon } from 'lucide-react';
 import Loader from "@/components/loader/loader";
 

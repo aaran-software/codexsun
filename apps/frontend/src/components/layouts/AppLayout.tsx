@@ -3,7 +3,7 @@ import {Outlet} from 'react-router-dom';
 import {TopMenu} from "@/components/menu/app/top-menu";
 import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
 import {AppSidebar} from "@/components/menu/sidebar/app-sidebar";
-import {useAuth} from '@/global/auth/AuthContext';
+import { useAuth } from "@/global/auth/useAuth"
 import {
     Breadcrumb,
     BreadcrumbItem,

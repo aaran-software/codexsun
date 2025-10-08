@@ -25,7 +25,7 @@ import { PasswordInput } from '@/components/common/password-input'
 import { SelectDropdown } from '@/components/common/select-dropdown'
 import { roles } from '../data/data'
 import { type User, userRoleSchema } from '../data/schema'
-import { useAuth } from '@/global/auth/AuthContext'
+import { useAuth } from "@/global/auth/useAuth"
 
 const formSchema = z
     .object({

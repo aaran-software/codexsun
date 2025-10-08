@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { Bell, LogOut, Search, Sun, Moon } from "lucide-react"
-import { useAuth } from "@/global/auth/AuthContext"
+import { useAuth } from "@/global/auth/useAuth"
 
 import {
     Avatar,

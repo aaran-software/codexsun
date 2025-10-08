@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { useAuth } from "@/global/auth/useAuth"
 import Loader from "@/components/loader/loader";
 
 export const ProtectedRoute: React.FC = () => {

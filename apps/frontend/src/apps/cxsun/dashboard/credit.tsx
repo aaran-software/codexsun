@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../../../global/auth/AuthContext';
+import { useAuth } from "@/global/auth/useAuth"
 import { Navigate } from 'react-router-dom';
 
 interface User {

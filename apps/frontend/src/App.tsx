@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from './global/auth/AuthContext';
+import { useAuth } from "@/global/auth/useAuth"
 
 import WebLayout from '@/components/layouts/WebLayout';
 import GuestLayout from '@/components/layouts/GuestLayout';
@@ -22,7 +22,7 @@ import {Users} from "@/apps/cxsun/users";
 import {UserDataInspector} from "@/apps/cxsun/users/test/UserDataInspector";
 
 const App: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
     // const todoLogic = useTodoLogic();
 
