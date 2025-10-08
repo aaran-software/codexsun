@@ -1,14 +1,14 @@
-import { Tenant } from '../app.types';
-import { query } from '../../db/db';
-import { getDbConfig } from '../../config/db-config';
-import { tenantStorage } from '../../db/db';
+import {Tenant} from '../app.types';
+import {query} from '../../db/db';
+import {getDbConfig} from '../../config/db-config';
+import {tenantStorage} from '../../db/db';
 
 export async function resolveTenant(req: { body: { email: string; password: string } }): Promise<Tenant> {
     const dbConfig = getDbConfig().master;
-    const { email } = req.body;
+    const {email} = req.body;
 
-    if (!email || typeof email !== 'string' || !email.trim()) {
-        throw new Error('Valid email is required for tenant resolution');
+    if (!email || !email.trim()) {
+        return Promise.reject(new Error('Valid email is required for tenant resolution'));
     }
 
     try {
@@ -21,11 +21,11 @@ export async function resolveTenant(req: { body: { email: string; password: stri
         );
 
         if (tenantUsers.rows.length === 0) {
-            throw new Error(`No tenant associated with email: ${email}`);
+            return Promise.reject(new Error(`No tenant associated with email: ${email.trim()}`));
         }
 
         if (tenantUsers.rows.length > 1) {
-            throw new Error(`Multiple tenants found for email: ${email}. Contact support.`);
+            return Promise.reject(new Error(`Multiple tenants found for email: ${email.trim()}. Contact support.`));
         }
 
         const tenantId = tenantUsers.rows[0].tenant_id;
@@ -44,13 +44,13 @@ export async function resolveTenant(req: { body: { email: string; password: stri
         );
 
         if (tenantRes.rows.length === 0) {
-            throw new Error(`Tenant not found for ID: ${tenantId}`);
+            return Promise.reject(new Error(`Tenant not found for ID: ${tenantId}`));
         }
 
-        const { tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl } = tenantRes.rows[0];
+        const {tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl} = tenantRes.rows[0];
 
         if (!db_host || !db_port || !db_user || !db_name) {
-            throw new Error(`Incomplete tenant configuration for ID: ${tenant_id}`);
+            return Promise.reject(new Error(`Incomplete tenant configuration for ID: ${tenant_id}`));
         }
 
         const driver = dbConfig.driver;
@@ -58,7 +58,7 @@ export async function resolveTenant(req: { body: { email: string; password: stri
         const passPart = db_pass ? `:${encodeURIComponent(db_pass)}` : '';
         const dbConnection = `${driver}://${db_user}${passPart}@${db_host}:${db_port}/${db_name}${sslParam}`;
 
-        const tenant: Tenant = { id: tenant_id, dbConnection };
+        const tenant: Tenant = {id: tenant_id, dbConnection};
         tenantStorage.enterWith(db_name);
 
         return tenant;

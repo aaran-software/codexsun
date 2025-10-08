@@ -61,4 +61,13 @@ describe("[1.] resolveTenant", () => {
         (query as jest.Mock).mockRejectedValue(new Error("query fail"));
         await expect(resolveTenant({ body: { email: "test@email.com", password: "pass" } })).rejects.toThrow("Tenant resolution failed for email test@email.com: query fail");
     });
+
+    it("[test 9] resolves tenant with simple password and no ssl", async () => {
+        (query as jest.Mock)
+            .mockResolvedValueOnce({ rows: [{ tenantId: "1" }] })
+            .mockResolvedValueOnce({ rows: [{ tenant_id: "1", db_host: "host", db_port: "3306", db_user: "user", db_pass: "pass", db_name: "db", db_ssl: "false" }] });
+        const tenant = await resolveTenant({ body: { email: "test@email.com", password: "pass" } });
+        expect(tenant).toEqual({ id: "1", dbConnection: "mariadb://user:pass@host:3306/db" });
+        expect(tenantStorage.enterWith).toHaveBeenCalledWith("db");
+    });
 });
