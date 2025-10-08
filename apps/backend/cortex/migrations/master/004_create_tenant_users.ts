@@ -1,4 +1,4 @@
-// cortex/migrations/master/002_create_tenant_users.ts
+// cortex/migrations/master/004_create_tenant_users.ts
 
 import { BaseMigration } from '../../db/migration/base-migration';
 
@@ -6,10 +6,11 @@ export class CreateTenantUsersMigration extends BaseMigration {
     async up(): Promise<void> {
         await this.schema.create('tenant_users', (table) => {
             table.id();
-            table.string('email', 255).unique().notNull();
+            table.string('user_id', 255).unique().notNull();
             table.string('tenant_id', 50).notNull();
+            table.foreignKey('tenant_id').reference('tenant_id').onTable('tenants').onDelete('CASCADE').build();
+            table.foreignKey('user_id').reference('id').onTable('users').onDelete('CASCADE').build();
             table.timestamps();
-            table.foreignKey('tenant_id').reference('tenant_id').onTable('tenants').withType('VARCHAR(50)').onDelete('CASCADE').build();
         });
         console.log('Created tenant_users table');
     }

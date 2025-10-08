@@ -2,22 +2,32 @@ import * as jwt from 'jsonwebtoken';
 import { Tenant, User, RequestContext } from '../app.types';
 import { handleError } from '../error/error-handler';
 import { query, tenantStorage } from '../../db/db';
+import { Request, Response, NextFunction } from 'express';
+
+// Extend Express Request to include context and ip
+interface CustomRequest extends Request {
+    context: RequestContext;
+    ip: string;
+    version?: string;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
 
 /**
  * Middleware to verify JWT token and set tenant and user in request context.
  * Queries the master database for tenant details and stores the tenant DB name in AsyncLocalStorage.
- * @param req Request with authorization header and context
- * @param res Response object (unused)
- * @param next Callback to pass control to the next middleware
  */
 export async function tenantMiddleware(
-    req: { headers: { authorization?: string }; context: RequestContext },
-    res: any,
-    next: (error?: Error) => void
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
 ): Promise<void> {
     try {
+        // Skip tenant check for /app route
+        if (req.url === '/app') {
+            return next();
+        }
+
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return next();
@@ -57,7 +67,8 @@ export async function tenantMiddleware(
         const tenant: Tenant = { id: tenant_id, dbConnection };
         const user: User = { id: payload.id, tenantId: payload.tenantId, role: payload.role, token };
 
-        req.context = { tenant, user };
+        // Preserve existing context.ip
+        req.context = { ...req.context, tenant, user };
         tenantStorage.enterWith(db_name);
         next();
     } catch (error) {

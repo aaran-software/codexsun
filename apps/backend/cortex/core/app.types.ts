@@ -75,6 +75,7 @@ export interface LoginResponse {
 }
 
 export interface RequestContext {
+    ip: string;
     tenant?: Tenant;
     user?: User;
 }

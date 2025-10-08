@@ -1,10 +1,10 @@
-// index.ts
-
-import express, { Express, Request, Response, NextFunction } from 'express';
+// E:\Workspace\codexsun\apps\backend\cortex\core\index.ts
+import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express';
 import cors from 'cors';
 import { getSettings } from './cortex/config/get-settings';
 import { Connection } from './cortex/db/connection';
 import { Logger } from './cortex/logger/logger';
+import { createApp } from './cortex/core/app';
 
 // Initialize logger
 const logger = new Logger();
@@ -14,18 +14,16 @@ const app: Express = express();
 const settings = getSettings();
 
 // Middleware to log requests and responses
-app.use((req: Request, res: Response, next: NextFunction) => {
+const logMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
     const start = Date.now();
     const { method, url, body } = req;
 
-    // Log request with minimal info
     logger.debug('Request', {
         method,
         url,
         body: JSON.stringify(body || {}, null, 2),
     });
 
-    // Capture response details
     const originalSend = res.send;
     res.send = function (body: any) {
         const duration = Date.now() - start;
@@ -40,11 +38,20 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     };
 
     next();
-});
+};
 
-// Middleware
+// Middleware to initialize context and ip
+const contextMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+    req.context = { ip: req.ip || '127.0.0.1' };
+    next();
+};
+
+// Middleware setup
 app.use(cors());
 app.use(express.json());
+app.use(logMiddleware);
+app.use(contextMiddleware);
+app.use('/api', createApp() as RequestHandler);
 
 // Welcome route
 app.get('/', (_req: Request, res: Response) => {
