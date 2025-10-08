@@ -34,6 +34,7 @@ export class CreateUsersMigration extends BaseMigration {
     }
 
     async down(): Promise<void> {
+        await this.schema.dropTable('user_sessions');
         await this.schema.dropTable('users');
         console.log('Dropped users table');
     }

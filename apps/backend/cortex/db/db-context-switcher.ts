@@ -1,6 +1,7 @@
 import { Tenant, DbConnection } from '../core/app.types';
 import { Connection } from './connection';
 import { logConnection } from '../config/logger';
+import { QueryResult } from './db-types';
 
 /**
  * Establishes a connection to a tenant-specific database.
@@ -11,7 +12,7 @@ import { logConnection } from '../config/logger';
  */
 export async function getTenantDbConnection(tenant: Tenant): Promise<DbConnection> {
     const { dbConnection } = tenant;
-    const dbName = dbConnection.split('/').pop() || '';
+    const dbName = dbConnection.split('/').pop()?.split('?')[0] || '';
     const start = Date.now();
 
     let client: any = null;
@@ -22,9 +23,13 @@ export async function getTenantDbConnection(tenant: Tenant): Promise<DbConnectio
 
         return {
             database: dbName,
-            query: async (sql: string, params?: any[]) => {
+            query: async <T = any>(sql: string, params?: any[]): Promise<QueryResult<T>> => {
                 const result = await client.query(sql, params);
-                return { rows: Array.isArray(result) ? result : result.rows || [] };
+                return {
+                    rows: (Array.isArray(result) ? result : result.rows || []) as T[],
+                    rowCount: result.rowCount || (result.affectedRows ?? (Array.isArray(result) ? result.length : 0)),
+                    insertId: result.insertId || undefined,
+                };
             },
             release: async () => {
                 if (client) {

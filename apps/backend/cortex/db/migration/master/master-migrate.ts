@@ -165,7 +165,11 @@ const dropMasterTables = async (): Promise<void> => {
     try {
         await query('BEGIN', [], MASTER_DB);
         // Drop tenant_users first due to FK dependency
+        await query(`DROP TABLE IF EXISTS user_sessions`, [], MASTER_DB);
+        await query(`DROP TABLE IF EXISTS permissions`, [], MASTER_DB);
         await query(`DROP TABLE IF EXISTS tenant_users`, [], MASTER_DB);
+        await query(`DROP TABLE IF EXISTS users`, [], MASTER_DB);
+        await query(`DROP TABLE IF EXISTS roles`, [], MASTER_DB);
         await query(`DROP TABLE IF EXISTS tenants`, [], MASTER_DB);
         await query(`DROP TABLE IF EXISTS migrations`, [], MASTER_DB);
         await query('COMMIT', [], MASTER_DB);

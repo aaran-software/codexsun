@@ -13,6 +13,17 @@ export class PermissionsSeeder {
             ];
 
             for (const perm of permissions) {
+                // Get tenant_id (string) from tenants table
+                const tenantResult = await query<{ tenant_id: string }>(
+                    `SELECT tenant_id FROM tenants WHERE tenant_id = ?`,
+                    [perm.tenant_id],
+                    this.MASTER_DB
+                );
+                if (tenantResult.rows.length === 0) {
+                    throw new Error(`Tenant with tenant_id ${perm.tenant_id} not found`);
+                }
+                const tenant_id = tenantResult.rows[0].tenant_id;
+
                 // Get user_id from users table
                 const userResult = await query<{ id: string }>(
                     `SELECT id FROM users WHERE email = ?`,
@@ -35,12 +46,24 @@ export class PermissionsSeeder {
                 }
                 const role_id = roleResult.rows[0].id;
 
+                // Check if permission already exists to avoid duplicates
+                const existingPermission = await query<{ name: string }>(
+                    `SELECT name FROM permissions WHERE name = ? AND tenant_id = ? AND user_id = ? AND role_id = ?`,
+                    [perm.name, tenant_id, user_id, role_id],
+                    this.MASTER_DB
+                );
+                if (existingPermission.rows.length > 0) {
+                    console.log(`Permission ${perm.name} for user ${perm.email} already exists, skipping insertion`);
+                    continue;
+                }
+
+                // Insert permission with string tenant_id
                 await query(
                     `
-                    INSERT INTO permissions (name, tenant_id, user_id, role_id, active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+                        INSERT INTO permissions (name, tenant_id, user_id, role_id, active, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
                     `,
-                    [perm.name, perm.tenant_id, user_id, role_id, 'active'],
+                    [perm.name, tenant_id, user_id, role_id, 'active'],
                     this.MASTER_DB
                 );
                 console.log(`Seeded permission: ${perm.name} for user ${perm.email}`);

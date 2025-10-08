@@ -13,10 +13,23 @@ export class RolesSeeder {
             ];
 
             for (const role of roles) {
+                // Check if role with name already exists
+                const existingRole = await query<{ name: string }>(
+                    `SELECT name FROM roles WHERE name = ?`,
+                    [role.name],
+                    this.MASTER_DB
+                );
+
+                if (existingRole.rows.length > 0) {
+                    console.log(`Role ${role.name} already exists, skipping insertion`);
+                    continue;
+                }
+
+                // Insert role if it doesn't exist
                 await query(
                     `
-                    INSERT INTO roles (name, active, created_at, updated_at)
-                    VALUES (?, ?, NOW(), NOW())
+                        INSERT INTO roles (name, active, created_at, updated_at)
+                        VALUES (?, ?, NOW(), NOW())
                     `,
                     [role.name, role.active],
                     this.MASTER_DB

@@ -1,5 +1,5 @@
 import { query } from '../../../db/mdb';
-import { hashAndCompare, plainText } from '../../../core/secret/crypt-service';
+import { hashAndCompare } from '../../../core/secret/crypt-service';
 
 export class UsersSeeder {
     private readonly MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
@@ -47,15 +47,18 @@ export class UsersSeeder {
                 }
                 const role_id = roleResult.rows[0].id;
 
-                // Hash password using crypt-service
-                const password_hash = await (process.env.USE_BCRYPT === 'true'
-                    ? hashAndCompare(user.password)
-                    : plainText(user.password)) as string;
+                // Hash password using hashAndCompare
+                let password_hash: string;
+                try {
+                    password_hash = await hashAndCompare(user.password) as string;
+                } catch (hashError) {
+                    throw new Error(`Failed to hash password for user ${user.email}: ${(hashError instanceof Error ? hashError.message : 'Unknown error')}`);
+                }
 
                 await query(
                     `
-                    INSERT INTO users (username, email, password_hash, mobile, role_id, email_verified, active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                        INSERT INTO users (username, email, password_hash, mobile, role_id, email_verified, active, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                     `,
                     [
                         user.username,
