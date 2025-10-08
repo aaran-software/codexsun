@@ -30,7 +30,7 @@ describe("Persistent DB Setup: Create/Keep Master Tables & Data", () => {
         process.env.DB_NAME = "";
         config = getDbConfig();
         console.log('Starting setup for persistent master_db');
-        await Connection.initialize({ ...config, database: '' });
+        await Connection.initialize({...config, database: ''});
         // Ensure master_db exists
         const dbCheck = await query(`SHOW DATABASES LIKE ?`, [MASTER_DB_NAME], '').catch(() => ({ rowCount: 0 }));
         if (dbCheck.rowCount === 0) {
@@ -38,7 +38,7 @@ describe("Persistent DB Setup: Create/Keep Master Tables & Data", () => {
             await query(`CREATE DATABASE \`${MASTER_DB_NAME}\``, [], '');
         }
         // Ensure connection to master_db
-        await Connection.initialize({ ...config, database: MASTER_DB_NAME });
+        await Connection.initialize({...config, database: MASTER_DB_NAME});
         // Clear existing data to force fresh migrations and seeding
         console.log('Clearing existing tables to ensure fresh setup');
         await query(`DROP TABLE IF EXISTS tenant_users`, [], MASTER_DB_NAME).catch(() => {});
@@ -51,7 +51,7 @@ describe("Persistent DB Setup: Create/Keep Master Tables & Data", () => {
         console.log('Running seeder to populate data');
         await masterSeed();
         // Re-init connection for tests
-        await Connection.initialize({ ...config, database: MASTER_DB_NAME });
+        await Connection.initialize({...config, database: MASTER_DB_NAME});
     });
 
     it("verifies master_db setup and health", async () => {

@@ -14,14 +14,10 @@ const MASTER_DB = "test_master_db";
 const TENANT_DB = "test_tenant_db";
 
 const fullSettings = {
-    APP_NAME: "TestApp",
-    APP_VERSION: "1.0.0",
-    APP_DEBUG: "false",
-    APP_KEY: "testkey",
-    VITE_APP_URL: "http://localhost:3006",
-    APP_PORT: "3006",
-    APP_HOST: "0.0.0.0",
-    MASTER_DB,
+    MASTER_DB_DRIVER: "mariadb",
+    MASTER_DB_HOST: "localhost",
+    MASTER_DB_PORT: "3306",
+
     TENANCY: "true",
     DB_DRIVER: "mariadb",
     DB_HOST: "127.0.0.1",
@@ -64,7 +60,7 @@ describe("[1.] Integration: Config & Logger", () => {
 
     it("[test 1] getSettings loads defaults/overrides", () => {
         process.env.APP_NAME = "TestApp";
-        const settings = getSettings();
+        const settings = getSettings().;
         expect(settings.APP_NAME).toBe("TestApp");
         expect(settings.DB_DRIVER).toBe("mariadb");
         expect(settings.TENANCY).toBe(true);
@@ -72,8 +68,8 @@ describe("[1.] Integration: Config & Logger", () => {
 
     it("[test 2] getDbConfig with tenancy", () => {
         const config = getDbConfig();
-        expect(config.database).toBe(MASTER_DB);
-        expect(config.type).toBe("mariadb"); // Default assumption
+        expect(config.master.database).toBe(MASTER_DB);
+        expect(config.driver).toBe("mariadb"); // Default assumption
     });
 
     it("[test 3] logger phases/metrics", () => {

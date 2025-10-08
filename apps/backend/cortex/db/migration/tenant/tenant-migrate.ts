@@ -62,7 +62,7 @@ const ensureTenantDatabase = async (tenantDb: string): Promise<void> => {
 
 const getTenantDbs = async (): Promise<string[]> => {
     try {
-        await Connection.initialize({ ...getDbConfig(), database: MASTER_DB });
+        await Connection.initialize({...getDbConfig(), database: MASTER_DB});
         const tenantsResult = await tenantStorage.run(MASTER_DB, () =>
             query(`SELECT db_name FROM tenants`, [])
         );

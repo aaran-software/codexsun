@@ -30,14 +30,14 @@ describe("Tenant Migration: Schema Assert", () => {
         process.env.MASTER_DB_NAME = MASTER_DB_NAME;
         delete process.env.DB_NAME;
         config = getDbConfig();
-        await Connection.initialize({ ...config, database: '' });
+        await Connection.initialize({...config, database: ''});
 
         // Setup master DB with migrations
         await tenantStorage.run(MASTER_DB_NAME, async () => {
             await query(`DROP TABLE IF EXISTS migrations`, []).catch(() => {});
         });
         await masterMigrate();
-        await Connection.initialize({ ...config, database: MASTER_DB_NAME });
+        await Connection.initialize({...config, database: MASTER_DB_NAME});
 
         // Insert test tenant data if not exists
         await tenantStorage.run(MASTER_DB_NAME, async () => {
@@ -66,7 +66,7 @@ describe("Tenant Migration: Schema Assert", () => {
 
         // Initialize tenant database connection
         process.env.DB_NAME = tenantDbName;
-        await Connection.initialize({ ...config, database: tenantDbName });
+        await Connection.initialize({...config, database: tenantDbName});
 
         // Clear tenant migrations table
         await tenantStorage.run(tenantDbName, async () => {
@@ -75,14 +75,14 @@ describe("Tenant Migration: Schema Assert", () => {
         await tenantMigrate();
 
         // Re-initialize connection after migration (since tenantMigrate closes it)
-        await Connection.initialize({ ...config, database: tenantDbName });
+        await Connection.initialize({...config, database: tenantDbName});
     });
 
     afterAll(async () => {
         if (tenantDbName) {
             try {
                 // Re-initialize connection for cleanup
-                await Connection.initialize({ ...config, database: '' });
+                await Connection.initialize({...config, database: ''});
                 await resetTenantDatabase(tenantDbName);
                 await query(`DROP DATABASE IF EXISTS \`${tenantDbName}\``, []);
             } catch (err: unknown) {

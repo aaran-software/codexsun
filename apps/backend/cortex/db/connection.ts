@@ -4,6 +4,7 @@ import { PostgresAdapter } from './adapters/postgres';
 import { MysqlAdapter } from './adapters/mysql';
 import { SqliteAdapter } from './adapters/sqlite';
 import { logConnection } from '../config/logger';
+import {DbConfigs} from "../config/db-config";
 
 export class Connection {
     private readonly config: DbConfig;
@@ -30,7 +31,7 @@ export class Connection {
         }
     }
 
-    static async initialize(config: DbConfig): Promise<Connection> {
+    static async initialize(config: DbConfigs): Promise<Connection> {
         if (Connection.instance) {
             await Connection.instance.close(); // Ensure previous instance is closed
         }

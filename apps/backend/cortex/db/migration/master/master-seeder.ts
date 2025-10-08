@@ -16,7 +16,7 @@ const SEEDERS_DIR = path.resolve(__dirname, '../../../migrations/seeder/master')
 const initializeConnection = async (): Promise<Connection> => {
     console.log('Initializing database connection');
     const config = getDbConfig();
-    await Connection.initialize({ ...config, database: process.env.MASTER_DB_NAME || 'master_db' });
+    await Connection.initialize({...config, database: process.env.MASTER_DB_NAME || 'master_db'});
     return Connection.getInstance();
 };
 

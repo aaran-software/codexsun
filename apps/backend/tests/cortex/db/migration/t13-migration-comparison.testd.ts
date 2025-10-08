@@ -28,11 +28,11 @@ describe("Migration Comparison: Real DB Schema Assert", () => {
         process.env.MASTER_DB_NAME = MASTER_DB_NAME;
         process.env.DB_NAME = "";
         config = getDbConfig();
-        await Connection.initialize({ ...config, database: '' }); // Fixed TS2322: use empty string
+        await Connection.initialize({...config, database: ''}); // Fixed TS2322: use empty string
         // Clear migrations table to force re-apply
         await query(`DROP TABLE IF EXISTS migrations`, [], MASTER_DB_NAME).catch(() => {}); // Ignore if table doesn't exist
         await masterMigrate();
-        await Connection.initialize({ ...config, database: MASTER_DB_NAME });
+        await Connection.initialize({...config, database: MASTER_DB_NAME});
     });
 
     afterAll(async () => {

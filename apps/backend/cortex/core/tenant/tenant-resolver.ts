@@ -1,10 +1,10 @@
 import {Tenant} from '../app.types';
 import {query} from '../../db/db';
-import {getDbConfig} from '../../config/db-config';
+import {getMasterDbConfig} from '../../config/db-config';
 import {tenantStorage} from '../../db/db';
 
 export async function resolveTenant(req: { body: { email: string; password: string } }): Promise<Tenant> {
-    const dbConfig = getDbConfig().master;
+    const dbConfig = getMasterDbConfig();
     const {email} = req.body;
 
     if (!email || !email.trim()) {
@@ -54,7 +54,7 @@ export async function resolveTenant(req: { body: { email: string; password: stri
         }
 
         const driver = dbConfig.driver;
-        const sslParam = db_ssl === 'true' ? '?ssl=true' : '';
+        const sslParam = db_ssl === 'true' || dbConfig.ssl ? '?ssl=true' : '';
         const passPart = db_pass ? `:${encodeURIComponent(db_pass)}` : '';
         const dbConnection = `${driver}://${db_user}${passPart}@${db_host}:${db_port}/${db_name}${sslParam}`;
 

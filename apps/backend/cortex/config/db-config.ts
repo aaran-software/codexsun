@@ -18,79 +18,81 @@ export interface DbConfig {
 }
 
 /**
- * Combined database configurations for primary, master, sandbox, and blue databases.
+ * Retrieves primary database configuration.
+ * @returns Primary database configuration.
  */
-export interface DbConfigs {
-    driver: string;
-    primary: DbConfig;
-    master: DbConfig;
-    sandbox: DbConfig;
-    blue: DbConfig;
+export function getPrimaryDbConfig(): DbConfig {
+    const settings = getSettings();
+    return {
+        driver: settings.DB_DRIVER,
+        host: settings.DB_HOST,
+        port: settings.DB_PORT,
+        user: settings.DB_USER,
+        password: settings.DB_PASS,
+        database: settings.DB_NAME,
+        ssl: settings.DB_SSL,
+        connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
+        acquireTimeout: 30000,
+        idleTimeout: 60000,
+    };
 }
 
 /**
- * Retrieves database configurations for all databases.
- * @returns Combined database configurations.
+ * Retrieves master database configuration.
+ * @returns Master database configuration.
  */
-export function getDbConfig(): DbConfigs {
+export function getMasterDbConfig(): DbConfig {
     const settings = getSettings();
-
     return {
-        driver: "",
-        // Primary Database Configuration
-        primary: {
-            driver: settings.DB_DRIVER,
-            host: settings.DB_HOST,
-            port: settings.DB_PORT,
-            user: settings.DB_USER,
-            password: settings.DB_PASS,
-            database: settings.DB_NAME,
-            ssl: settings.DB_SSL,
-            connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
-            acquireTimeout: 30000,
-            idleTimeout: 60000,
-        },
+        driver: settings.MASTER_DB_DRIVER,
+        host: settings.MASTER_DB_HOST,
+        port: settings.MASTER_DB_PORT,
+        user: settings.MASTER_DB_USER,
+        password: settings.MASTER_DB_PASS,
+        database: settings.MASTER_DB_NAME,
+        ssl: settings.MASTER_DB_SSL,
+        connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
+        acquireTimeout: 30000,
+        idleTimeout: 60000,
+    };
+}
 
-        // Master Database Configuration
-        master: {
-            driver: settings.MASTER_DB_DRIVER,
-            host: settings.MASTER_DB_HOST,
-            port: settings.MASTER_DB_PORT,
-            user: settings.MASTER_DB_USER,
-            password: settings.MASTER_DB_PASS,
-            database: settings.MASTER_DB_NAME,
-            ssl: settings.MASTER_DB_SSL,
-            connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
-            acquireTimeout: 30000,
-            idleTimeout: 60000,
-        },
+/**
+ * Retrieves sandbox database configuration.
+ * @returns Sandbox database configuration.
+ */
+export function getSandboxDbConfig(): DbConfig {
+    const settings = getSettings();
+    return {
+        driver: settings.SANDBOX_DB_DRIVER,
+        database: settings.SANDBOX_DB_STORAGE,
+        ssl: false, // SQLite does not use SSL
+        connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
+        acquireTimeout: 30000,
+        idleTimeout: 60000,
+        host: "",
+        port: 0,
+        user: "",
+        password: ""
+    };
+}
 
-        // Sandbox Database Configuration
-        sandbox: {
-            driver: settings.SANDBOX_DB_DRIVER,
-            database: settings.SANDBOX_DB_STORAGE,
-            ssl: false, // SQLite does not use SSL
-            connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
-            acquireTimeout: 30000,
-            idleTimeout: 60000,
-            host: "",
-            port: 0,
-            user: "",
-            password: ""
-        },
-
-        // Blue Database Configuration
-        blue: {
-            driver: settings.BLUE_DB_DRIVER,
-            host: settings.BLUE_DB_HOST,
-            port: settings.BLUE_DB_PORT,
-            user: settings.BLUE_DB_USER,
-            password: settings.BLUE_DB_PASS,
-            database: settings.BLUE_DB_NAME,
-            ssl: settings.BLUE_DB_SSL,
-            connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
-            acquireTimeout: 30000,
-            idleTimeout: 60000,
-        }
+/**
+ * Retrieves blue database configuration.
+ * @returns Blue database configuration.
+ */
+export function getBlueDbConfig(): DbConfig {
+    const settings = getSettings();
+    return {
+        driver: settings.BLUE_DB_DRIVER,
+        host: settings.BLUE_DB_HOST,
+        port: settings.BLUE_DB_PORT,
+        user: settings.BLUE_DB_USER,
+        password: settings.BLUE_DB_PASS,
+        database: settings.BLUE_DB_NAME,
+        ssl: settings.BLUE_DB_SSL,
+        connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
+        acquireTimeout: 30000,
+        idleTimeout: 60000,
     };
 }

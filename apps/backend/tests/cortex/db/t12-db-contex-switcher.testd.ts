@@ -10,21 +10,19 @@ jest.setTimeout(30000);
 
 // Environment settings for tests
 const fullSettings = {
-    APP_NAME: "TestApp",
-    APP_VERSION: "1.0.0",
-    APP_DEBUG: "false",
-    APP_KEY: "testkey",
-    VITE_APP_URL: "http://localhost:3006",
-    APP_PORT: "3006",
-    APP_HOST: "0.0.0.0",
     MASTER_DB_NAME: "test_master_db",
-    TENANCY: "true",
+    MASTER_DB_DRIVER: "mariadb",
+    MASTER_DB_HOST: "127.0.0.1",
+    MASTER_DB_PORT: "3306",
+    MASTER_DB_USER: "root",
+    MASTER_DB_PASS: "Computer.1",
+    MASTER_DB_SSL: "false",
     DB_DRIVER: "mariadb",
     DB_HOST: "127.0.0.1",
     DB_PORT: "3306",
     DB_USER: "root",
     DB_PASS: "Computer.1",
-    DB_NAME: "test_master_db",
+    DB_NAME: "tenant1_db",
     DB_SSL: "false",
 };
 
@@ -42,7 +40,7 @@ async function runWithTenant<T = void>(db: string | null, cb: () => Promise<T>):
 
 describe("[1.] DB Context Switching", () => {
     const masterDb = process.env.MASTER_DB_NAME || "test_master_db";
-    const tenantDb = "tenant1_db";
+    const tenantDb = process.env.DB_NAME || "tenant1_db";
 
     async function setupTestDBs(): Promise<void> {
         setTestEnv();
@@ -80,7 +78,7 @@ describe("[1.] DB Context Switching", () => {
 
         // Seed tenant DB with test data
         await runWithTenant(tenantDb, async () =>
-            query(`CREATE TABLE IF NOT EXISTS test_table (id INT PRIMARY KEY)`));
+            query(`CREATE TABLE IF NOT EXISTS test_table (id INT PRIMARY KEY AUTO_INCREMENT)`));
         await runWithTenant(tenantDb, async () =>
             query(`INSERT INTO test_table (id) VALUES (?)`, [1]));
     });
@@ -95,9 +93,9 @@ describe("[1.] DB Context Switching", () => {
     });
 
     test("[test 1] switches to tenant-specific DB connection", async () => {
-        const tenant: Tenant = { id: "tenant1", dbConnection: "mariadb://localhost/tenant1_db" };
+        const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
         const connection = await getTenantDbConnection(tenant);
-        expect(connection.database).toBe("tenant1_db");
+        expect(connection.database).toBe(tenantDb);
 
         // Test query on tenant DB
         const result = await connection.query("SELECT id FROM test_table WHERE id = ?", [1]);
@@ -115,12 +113,12 @@ describe("[1.] DB Context Switching", () => {
     }, 10000);
 
     test("[test 2] throws error for invalid tenant DB connection", async () => {
-        const tenant: Tenant = { id: "invalid", dbConnection: "mariadb://localhost/invalid_db" };
+        const tenant: Tenant = { id: "invalid", dbConnection: "mariadb://root:Computer.1@localhost:3306/invalid_db" };
         await expect(getTenantDbConnection(tenant)).rejects.toThrow(/Failed to connect to tenant DB/);
     }, 10000);
 
     test("[test 3] releases client properly on error", async () => {
-        const tenant: Tenant = { id: "invalid", dbConnection: "mariadb://localhost/invalid_db" };
+        const tenant: Tenant = { id: "invalid", dbConnection: "mariadb://root:Computer.1@localhost:3306/invalid_db" };
         try {
             await getTenantDbConnection(tenant);
         } catch (error) {
@@ -128,7 +126,7 @@ describe("[1.] DB Context Switching", () => {
             // Verify a new connection can still be made
             const connection = await getTenantDbConnection({
                 id: "tenant1",
-                dbConnection: "mariadb://localhost/tenant1_db"
+                dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}`
             });
             const result = await connection.query("SELECT 1 AS test");
             expect(result.rows).toEqual([{ test: 1 }]);
@@ -137,7 +135,7 @@ describe("[1.] DB Context Switching", () => {
     }, 10000);
 
     test("[test 4] uses end method for non-pooled connection", async () => {
-        const tenant: Tenant = { id: "tenant1", dbConnection: "mariadb://localhost/tenant1_db" };
+        const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
         const endStub = sinon.stub();
         const stub = sinon.stub(Connection.getInstance(), "getClient").resolves({
             query: async (sql: string) => ({ rows: [{ test: 1 }], rowCount: 1 }),
@@ -145,7 +143,7 @@ describe("[1.] DB Context Switching", () => {
         });
 
         const connection = await getTenantDbConnection(tenant);
-        expect(connection.database).toBe("tenant1_db");
+        expect(connection.database).toBe(tenantDb);
         const result = await connection.query("SELECT 1 AS test");
         expect(result.rows).toEqual([{ test: 1 }]);
 
@@ -158,7 +156,7 @@ describe("[1.] DB Context Switching", () => {
     }, 10000);
 
     test("[test 5] uses release method for pooled connection", async () => {
-        const tenant: Tenant = { id: "tenant1", dbConnection: "mariadb://localhost/tenant1_db" };
+        const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
         const releaseStub = sinon.stub();
         const stub = sinon.stub(Connection.getInstance(), "getClient").resolves({
             query: async (sql: string) => ({ rows: [{ test: 1 }], rowCount: 1 }),
@@ -166,7 +164,7 @@ describe("[1.] DB Context Switching", () => {
         });
 
         const connection = await getTenantDbConnection(tenant);
-        expect(connection.database).toBe("tenant1_db");
+        expect(connection.database).toBe(tenantDb);
         const result = await connection.query("SELECT 1 AS test");
         expect(result.rows).toEqual([{ test: 1 }]);
 
@@ -176,5 +174,23 @@ describe("[1.] DB Context Switching", () => {
 
         // Restore stub
         stub.restore();
+    }, 10000);
+
+    test("[test 6] handles query with insertId and array result", async () => {
+        const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
+        const stub = sinon.stub(Connection.getInstance(), "getClient").resolves({
+            query: async (sql: string) => ({ rows: [{ id: 2 }], insertId: 2, rowCount: 1 }),
+        });
+
+        const connection = await getTenantDbConnection(tenant);
+        expect(connection.database).toBe(tenantDb);
+        const result = await connection.query("INSERT INTO test_table (id) VALUES (2)");
+        expect(result.rows).toEqual([{ id: 2 }]);
+        expect(result.rowCount).toBe(1);
+        expect(result.insertId).toBe(2);
+
+        // Restore stub
+        stub.restore();
+        await connection.release();
     }, 10000);
 });
