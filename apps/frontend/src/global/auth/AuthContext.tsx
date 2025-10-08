@@ -75,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             setLoading(false);
-            console.error('Login error:', error instanceof Error ? error.message : 'Unknown error', { email, status: res?.status, response: res?.statusText, body: await res?.text().catch(() => '') });
+            console.error('Login error:', error instanceof Error ? error.message : 'Unknown error',
+                { email, status: res?.status, response: res?.statusText, body: await res?.text().catch(() => '') });
             return false;
         }
     };
