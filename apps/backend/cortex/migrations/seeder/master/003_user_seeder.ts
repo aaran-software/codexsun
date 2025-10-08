@@ -1,8 +1,50 @@
 import { query } from '../../../db/mdb';
-import { hashAndCompare } from '../../../core/secret/crypt-service';
+import { generateHash } from '../../../core/secret/crypt-service';
 
 export class UsersSeeder {
     private readonly MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
+
+    // Check if a user exists by email
+    private async userExists(email: string): Promise<boolean> {
+        const result = await query<{ email: string }>(
+            `SELECT email FROM users WHERE email = ?`,
+            [email],
+            this.MASTER_DB
+        );
+        return result.rows.length > 0;
+    }
+
+    // Get role_id by role name
+    private async getRoleId(roleName: string): Promise<string> {
+        const result = await query<{ id: string }>(
+            `SELECT id FROM roles WHERE name = ?`,
+            [roleName],
+            this.MASTER_DB
+        );
+        if (result.rows.length === 0) {
+            throw new Error(`Role ${roleName} not found`);
+        }
+        return result.rows[0].id;
+    }
+
+    // Insert a user
+    private async insertUser(
+        username: string,
+        email: string,
+        password: string,
+        mobile: string,
+        roleId: string,
+        active: string
+    ): Promise<void> {
+        const passwordHash = await generateHash(password);
+        await query(
+            `INSERT INTO users (username, email, password_hash, mobile, role_id, email_verified, active, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            [username, email, passwordHash, mobile, roleId, 'verified', active],
+            this.MASTER_DB
+        );
+        console.log(`Seeded user: ${username}`);
+    }
 
     async up(): Promise<void> {
         console.log('Seeding users table in master DB');
@@ -35,43 +77,19 @@ export class UsersSeeder {
             ];
 
             for (const user of users) {
-                // Get role_id from roles table
-                const roleResult = await query<{ id: string }>(
-                    `SELECT id FROM roles WHERE name = ?`,
-                    [user.role_name],
-                    this.MASTER_DB
-                );
-
-                if (roleResult.rows.length === 0) {
-                    throw new Error(`Role ${user.role_name} not found`);
+                if (await this.userExists(user.email)) {
+                    console.log(`User with email ${user.email} already exists, skipping insertion`);
+                    continue;
                 }
-                const role_id = roleResult.rows[0].id;
-
-                // Hash password using hashAndCompare
-                let password_hash: string;
-                try {
-                    password_hash = await hashAndCompare(user.password) as string;
-                } catch (hashError) {
-                    throw new Error(`Failed to hash password for user ${user.email}: ${(hashError instanceof Error ? hashError.message : 'Unknown error')}`);
-                }
-
-                await query(
-                    `
-                        INSERT INTO users (username, email, password_hash, mobile, role_id, email_verified, active, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                    `,
-                    [
-                        user.username,
-                        user.email,
-                        password_hash,
-                        user.mobile,
-                        role_id,
-                        'verified',
-                        user.active,
-                    ],
-                    this.MASTER_DB
+                const roleId = await this.getRoleId(user.role_name);
+                await this.insertUser(
+                    user.username,
+                    user.email,
+                    user.password,
+                    user.mobile,
+                    roleId,
+                    user.active
                 );
-                console.log(`Seeded user: ${user.username}`);
             }
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown error');

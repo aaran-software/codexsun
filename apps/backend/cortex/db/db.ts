@@ -138,3 +138,16 @@ export async function healthCheck(database?: string): Promise<boolean> {
         }
     }
 }
+
+
+export function parseDbUrl(dbUrl: string) {
+    const url = new URL(dbUrl);
+    return {
+        driver: url.protocol.replace(':', ''),
+        host: url.hostname,
+        port: parseInt(url.port || '3306', 10),
+        user: url.username,
+        password: url.password,
+        database: url.pathname.replace('/', ''),
+    };
+}

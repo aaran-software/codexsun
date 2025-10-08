@@ -3,6 +3,66 @@ import { query } from '../../../db/mdb';
 export class PermissionsSeeder {
     private readonly MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 
+    // Check if a tenant exists by tenant_id
+    private async tenantExists(tenantId: string): Promise<string> {
+        const result = await query<{ tenant_id: string }>(
+            `SELECT tenant_id FROM tenants WHERE tenant_id = ?`,
+            [tenantId],
+            this.MASTER_DB
+        );
+        if (result.rows.length === 0) {
+            throw new Error(`Tenant with tenant_id ${tenantId} not found`);
+        }
+        return result.rows[0].tenant_id;
+    }
+
+    // Get user_id by email
+    private async getUserId(email: string): Promise<string> {
+        const result = await query<{ id: string }>(
+            `SELECT id FROM users WHERE email = ?`,
+            [email],
+            this.MASTER_DB
+        );
+        if (result.rows.length === 0) {
+            throw new Error(`User with email ${email} not found`);
+        }
+        return result.rows[0].id;
+    }
+
+    // Get role_id by role name
+    private async getRoleId(roleName: string): Promise<string> {
+        const result = await query<{ id: string }>(
+            `SELECT id FROM roles WHERE name = ?`,
+            [roleName],
+            this.MASTER_DB
+        );
+        if (result.rows.length === 0) {
+            throw new Error(`Role ${roleName} not found`);
+        }
+        return result.rows[0].id;
+    }
+
+    // Check if a permission exists
+    private async permissionExists(name: string, tenantId: string, userId: string, roleId: string): Promise<boolean> {
+        const result = await query<{ name: string }>(
+            `SELECT name FROM permissions WHERE name = ? AND tenant_id = ? AND user_id = ? AND role_id = ?`,
+            [name, tenantId, userId, roleId],
+            this.MASTER_DB
+        );
+        return result.rows.length > 0;
+    }
+
+    // Insert a permission
+    private async insertPermission(name: string, tenantId: string, userId: string, roleId: string): Promise<void> {
+        await query(
+            `INSERT INTO permissions (name, tenant_id, user_id, role_id, active, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+            [name, tenantId, userId, roleId, 'active'],
+            this.MASTER_DB
+        );
+        console.log(`Seeded permission: ${name} for user ${userId}`);
+    }
+
     async up(): Promise<void> {
         console.log('Seeding permissions table');
         try {
@@ -13,60 +73,16 @@ export class PermissionsSeeder {
             ];
 
             for (const perm of permissions) {
-                // Get tenant_id (string) from tenants table
-                const tenantResult = await query<{ tenant_id: string }>(
-                    `SELECT tenant_id FROM tenants WHERE tenant_id = ?`,
-                    [perm.tenant_id],
-                    this.MASTER_DB
-                );
-                if (tenantResult.rows.length === 0) {
-                    throw new Error(`Tenant with tenant_id ${perm.tenant_id} not found`);
-                }
-                const tenant_id = tenantResult.rows[0].tenant_id;
+                const tenantId = await this.tenantExists(perm.tenant_id);
+                const userId = await this.getUserId(perm.email);
+                const roleId = await this.getRoleId(perm.role_name);
 
-                // Get user_id from users table
-                const userResult = await query<{ id: string }>(
-                    `SELECT id FROM users WHERE email = ?`,
-                    [perm.email],
-                    this.MASTER_DB
-                );
-                if (userResult.rows.length === 0) {
-                    throw new Error(`User with email ${perm.email} not found`);
-                }
-                const user_id = userResult.rows[0].id;
-
-                // Get role_id from roles table
-                const roleResult = await query<{ id: string }>(
-                    `SELECT id FROM roles WHERE name = ?`,
-                    [perm.role_name],
-                    this.MASTER_DB
-                );
-                if (roleResult.rows.length === 0) {
-                    throw new Error(`Role ${perm.role_name} not found`);
-                }
-                const role_id = roleResult.rows[0].id;
-
-                // Check if permission already exists to avoid duplicates
-                const existingPermission = await query<{ name: string }>(
-                    `SELECT name FROM permissions WHERE name = ? AND tenant_id = ? AND user_id = ? AND role_id = ?`,
-                    [perm.name, tenant_id, user_id, role_id],
-                    this.MASTER_DB
-                );
-                if (existingPermission.rows.length > 0) {
+                if (await this.permissionExists(perm.name, tenantId, userId, roleId)) {
                     console.log(`Permission ${perm.name} for user ${perm.email} already exists, skipping insertion`);
                     continue;
                 }
 
-                // Insert permission with string tenant_id
-                await query(
-                    `
-                        INSERT INTO permissions (name, tenant_id, user_id, role_id, active, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
-                    `,
-                    [perm.name, tenant_id, user_id, role_id, 'active'],
-                    this.MASTER_DB
-                );
-                console.log(`Seeded permission: ${perm.name} for user ${perm.email}`);
+                await this.insertPermission(perm.name, tenantId, userId, roleId);
             }
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown error');

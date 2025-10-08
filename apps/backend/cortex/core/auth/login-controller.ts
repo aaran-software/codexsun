@@ -1,13 +1,8 @@
-// C:\Users\SUNDAR\AppData\Roaming\npm\node_modules\codexsun\apps\backend\cortex\core\auth\login-controller.ts
 import { resolveTenant } from '../tenant/tenant-resolver';
 import { authenticateUser } from './auth-service';
 import { LoginResponse, Credentials } from '../app.types';
 import { handleError } from '../error/error-handler';
-import * as jwt from 'jsonwebtoken';
-
-// In-memory token blacklist (use Redis in production)
-const tokenBlacklist = new Set<string>();
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
+import { verifyJwt, blockJwt } from '../secret/jwt-service';
 
 /**
  * Handles user login with tenant resolution and token validation
@@ -15,29 +10,23 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
  * @returns LoginResponse with user and tenant data
  */
 export async function login(req: { body: Credentials }): Promise<LoginResponse> {
-    let tenant = null; // Initialize tenant as null
+    let tenant = null;
     try {
         if (!req.body.email || !req.body.password) {
-            throw new Error('Email and password are required');
+            return Promise.reject(new Error('Email and password are required'));
         }
 
         tenant = await resolveTenant(req);
         const user = await authenticateUser(req.body, tenant);
 
-        // Validate JWT token
-        const decoded = jwt.verify(user.token, JWT_SECRET) as jwt.JwtPayload;
-        if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
-            throw new Error('Token expired');
-        }
-        if (tokenBlacklist.has(user.token)) {
-            throw new Error('Token blacklisted');
-        }
+        // Validate JWT token using jwt-service
+        await verifyJwt(user.token);
 
         return { user, tenant };
     } catch (error) {
         await handleError(
             error instanceof Error ? error : new Error('Authentication failed'),
-            tenant?.id ?? 'unknown', // Use 'unknown' if tenant is null
+            tenant?.id ?? 'unknown',
             'v1'
         );
         throw error;
@@ -45,21 +34,26 @@ export async function login(req: { body: Credentials }): Promise<LoginResponse> 
 }
 
 /**
- * Logs out user by blacklisting their token
- * @param token JWT token to blacklist
+ * Logs out user by blocking their token via jwt-service
+ * @param token JWT token to block
  */
 export async function logout(token: string): Promise<void> {
     if (!token) {
         throw new Error('Token required');
     }
-    tokenBlacklist.add(token);
+    await blockJwt(token);
 }
 
 /**
- * Checks if token is blacklisted
+ * Checks if token is valid using jwt-service
  * @param token JWT token to check
- * @returns Boolean indicating if token is blacklisted
+ * @returns Boolean indicating if token is valid
  */
-export function isTokenBlacklisted(token: string): boolean {
-    return tokenBlacklist.has(token);
+export async function isTokenValid(token: string): Promise<boolean> {
+    try {
+        await verifyJwt(token);
+        return true;
+    } catch {
+        return false;
+    }
 }

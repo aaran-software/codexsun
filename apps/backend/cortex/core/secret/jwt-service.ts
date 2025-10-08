@@ -1,18 +1,21 @@
-// cortex/core/secret/jwt-service.ts
-
 import * as jwt from 'jsonwebtoken';
-import { JwtPayload } from '../app.types';
-import { query } from '../../db/db';
+import {JwtPayload} from '../app.types';
+import {query} from '../../db/mdb';
+import {comparePassword, generateHash} from './crypt-service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
+const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 
 export async function generateJwt(user: { id: string; tenantId: string; role: string }): Promise<string> {
-    const payload: JwtPayload = { id: user.id, tenantId: user.tenantId, role: user.role };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    const payload: JwtPayload = {id: user.id, tenantId: user.tenantId, role: user.role};
+    const token = jwt.sign(payload, JWT_SECRET, {expiresIn: '1h'});
+
+    const hashedToken = await generateHash(token);
 
     await query(
         'INSERT INTO user_sessions (user_id, token, expires_at, created_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR), NOW())',
-        [user.id, token]
+        [user.id, hashedToken],
+        MASTER_DB
     );
 
     return token;
@@ -22,13 +25,19 @@ export async function verifyJwt(token: string): Promise<JwtPayload> {
     try {
         const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-        const result = await query<{ expires_at: string }>(
-            'SELECT expires_at FROM user_sessions WHERE token = ? AND user_id = ?',
-            [token, payload.id]
+        const result = await query<{ expires_at: string; token: string }>(
+            'SELECT expires_at, token FROM user_sessions WHERE user_id = ?',
+            [payload.id],
+            MASTER_DB
         );
 
         if (result.rows.length === 0 || new Date(result.rows[0].expires_at) < new Date()) {
-            throw new Error('Invalid or expired token');
+            return Promise.reject(new Error('Invalid or expired token'));
+        }
+
+        const isValid = await comparePassword(token, result.rows[0].token);
+        if (!isValid) {
+            return Promise.reject(new Error('Invalid token'));
         }
 
         return payload;
@@ -40,27 +49,29 @@ export async function verifyJwt(token: string): Promise<JwtPayload> {
 export async function refreshJwt(token: string): Promise<string> {
     try {
         const payload = await verifyJwt(token);
-        await dropJwt(token); // Remove old token
+        await dropJwt(token);
 
-        const newToken = await generateJwt({
+        return await generateJwt({
             id: payload.id,
             tenantId: payload.tenantId,
             role: payload.role
         });
 
-        return newToken;
     } catch (error) {
         throw error instanceof Error ? error : new Error('Token refresh failed');
     }
 }
 
 export async function dropJwt(token: string): Promise<void> {
-    await query('DELETE FROM user_sessions WHERE token = ?', [token]);
+    const hashedToken = await generateHash(token);
+    await query('DELETE FROM user_sessions WHERE token = ?', [hashedToken], MASTER_DB);
 }
 
 export async function blockJwt(token: string): Promise<void> {
+    const hashedToken = await generateHash(token);
     await query(
         'UPDATE user_sessions SET expires_at = NOW() WHERE token = ?',
-        [token]
+        [hashedToken],
+        MASTER_DB
     );
 }

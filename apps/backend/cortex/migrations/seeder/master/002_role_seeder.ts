@@ -3,6 +3,27 @@ import { query } from '../../../db/mdb';
 export class RolesSeeder {
     private readonly MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 
+    // Check if a role exists by name
+    private async roleExists(roleName: string): Promise<boolean> {
+        const result = await query<{ name: string }>(
+            `SELECT name FROM roles WHERE name = ?`,
+            [roleName],
+            this.MASTER_DB
+        );
+        return result.rows.length > 0;
+    }
+
+    // Insert a role
+    private async insertRole(roleName: string, active: string): Promise<void> {
+        await query(
+            `INSERT INTO roles (name, active, created_at, updated_at)
+             VALUES (?, ?, NOW(), NOW())`,
+            [roleName, active],
+            this.MASTER_DB
+        );
+        console.log(`Seeded role: ${roleName}`);
+    }
+
     async up(): Promise<void> {
         console.log('Seeding roles table');
         try {
@@ -13,28 +34,11 @@ export class RolesSeeder {
             ];
 
             for (const role of roles) {
-                // Check if role with name already exists
-                const existingRole = await query<{ name: string }>(
-                    `SELECT name FROM roles WHERE name = ?`,
-                    [role.name],
-                    this.MASTER_DB
-                );
-
-                if (existingRole.rows.length > 0) {
+                if (await this.roleExists(role.name)) {
                     console.log(`Role ${role.name} already exists, skipping insertion`);
                     continue;
                 }
-
-                // Insert role if it doesn't exist
-                await query(
-                    `
-                        INSERT INTO roles (name, active, created_at, updated_at)
-                        VALUES (?, ?, NOW(), NOW())
-                    `,
-                    [role.name, role.active],
-                    this.MASTER_DB
-                );
-                console.log(`Seeded role: ${role.name}`);
+                await this.insertRole(role.name, role.active);
             }
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown error');

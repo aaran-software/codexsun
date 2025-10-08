@@ -1,7 +1,7 @@
 // E:\Workspace\codexsun\apps\backend\cortex\db\migration\tenant\tenant-migrate.ts
 import { query, tenantStorage, withTransaction } from '../../db';
 import { Connection } from '../../connection';
-import { getDbConfig } from '../../../config/db-config';
+import { getPrimaryDbConfig } from '../../../config/db-config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -14,8 +14,8 @@ const validateEnvVariables = (): void => {
     }
 };
 
-const logConnectionDetails = (config: ReturnType<typeof getDbConfig>): void => {
-    console.log(`Database Driver: ${config.type}`);
+const logConnectionDetails = (config: ReturnType<typeof getPrimaryDbConfig>): void => {
+    console.log(`Database Driver: ${config.driver}`);
     console.log('Connection Credentials:');
     console.log(`  Host: ${config.host}`);
     console.log(`  Port: ${config.port}`);
@@ -24,14 +24,14 @@ const logConnectionDetails = (config: ReturnType<typeof getDbConfig>): void => {
     console.log(`  SSL: ${config.ssl ? 'Enabled' : 'Disabled'}`);
 };
 
-const initializeConnection = async (config: ReturnType<typeof getDbConfig>, noDb: boolean = false): Promise<Connection> => {
+const initializeConnection = async (config: ReturnType<typeof getPrimaryDbConfig>, noDb: boolean = false): Promise<Connection> => {
     console.log('Initializing database connection');
     const initConfig = noDb ? { ...config, database: '' } : config;
     await Connection.initialize(initConfig);
     return Connection.getInstance();
 };
 
-const getDbType = (): string => getDbConfig().type;
+const getDbType = (): string => getPrimaryDbConfig().driver;
 
 const ensureTenantDatabase = async (tenantDb: string): Promise<void> => {
     try {
@@ -62,7 +62,7 @@ const ensureTenantDatabase = async (tenantDb: string): Promise<void> => {
 
 const getTenantDbs = async (): Promise<string[]> => {
     try {
-        await Connection.initialize({...getDbConfig(), database: MASTER_DB});
+        await Connection.initialize({...getPrimaryDbConfig(), database: MASTER_DB});
         const tenantsResult = await tenantStorage.run(MASTER_DB, () =>
             query(`SELECT db_name FROM tenants`, [])
         );
@@ -181,7 +181,7 @@ const dropTenantDatabase = async (tenantDb: string): Promise<void> => {
 
 export async function tenantMigrate(): Promise<void> {
     console.log('Starting tenant migration');
-    const config = getDbConfig();
+    const config = getPrimaryDbConfig();
     validateEnvVariables();
     logConnectionDetails(config);
     const conn = await initializeConnection(config);
@@ -212,7 +212,7 @@ export async function tenantMigrate(): Promise<void> {
 
 export async function resetTenantDatabase(tenantDb: string): Promise<void> {
     console.log('Starting tenant database reset');
-    const config = getDbConfig();
+    const config = getPrimaryDbConfig();
     validateEnvVariables();
     logConnectionDetails(config);
     const conn = await initializeConnection(config, true);

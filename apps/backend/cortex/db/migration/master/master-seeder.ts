@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import { Connection } from '../../connection';
-import { getDbConfig } from '../../../config/db-config';
+import { getMasterDbConfig } from '../../../config/db-config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -15,7 +15,7 @@ const SEEDERS_DIR = path.resolve(__dirname, '../../../migrations/seeder/master')
  */
 const initializeConnection = async (): Promise<Connection> => {
     console.log('Initializing database connection');
-    const config = getDbConfig();
+    const config = getMasterDbConfig();
     await Connection.initialize({...config, database: process.env.MASTER_DB_NAME || 'master_db'});
     return Connection.getInstance();
 };

@@ -4,6 +4,36 @@ import { generateJwt } from '../../../core/secret/jwt-service';
 export class UserSessionsSeeder {
     private readonly MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 
+    private async getUserId(email: string): Promise<string> {
+        const result = await query<{ id: string }>(
+            `SELECT id FROM users WHERE email = ?`,
+            [email],
+            this.MASTER_DB
+        );
+        if (result.rows.length === 0) {
+            throw new Error(`User with email ${email} not found`);
+        }
+        return result.rows[0].id;
+    }
+
+    private async sessionExists(userId: string): Promise<boolean> {
+        const result = await query<{ user_id: string }>(
+            `SELECT user_id FROM user_sessions WHERE user_id = ?`,
+            [userId],
+            this.MASTER_DB
+        );
+        return result.rows.length > 0;
+    }
+
+    private async insertUserSession(userId: string, tenantId: string, role: string): Promise<void> {
+        await generateJwt({
+            id: userId,
+            tenantId: tenantId,
+            role: role,
+        });
+        console.log(`Seeded user_session for user: ${userId}`);
+    }
+
     async up(): Promise<void> {
         console.log('Seeding user_sessions table');
         try {
@@ -13,25 +43,12 @@ export class UserSessionsSeeder {
             ];
 
             for (const user of users) {
-                // Get user_id from users table
-                const userResult = await query<{ id: string }>(
-                    `SELECT id FROM users WHERE email = ?`,
-                    [user.email],
-                    this.MASTER_DB
-                );
-                if (userResult.rows.length === 0) {
-                    throw new Error(`User with email ${user.email} not found`);
+                const userId = await this.getUserId(user.email);
+                if (await this.sessionExists(userId)) {
+                    console.log(`Session for user ${user.email} already exists, skipping insertion`);
+                    continue;
                 }
-                const user_id = userResult.rows[0].id;
-
-                // Generate JWT (stores in user_sessions automatically)
-                const token = await generateJwt({
-                    id: user_id,
-                    tenantId: user.tenant_id,
-                    role: user.role,
-                });
-
-                console.log(`Seeded user_session for user: ${user.email}`);
+                await this.insertUserSession(userId, user.tenant_id, user.role);
             }
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown error');

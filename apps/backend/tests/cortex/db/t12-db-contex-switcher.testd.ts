@@ -3,6 +3,7 @@ import { Tenant } from "../../../cortex/core/app.types";
 import { query, tenantStorage } from "../../../cortex/db/db";
 import { Connection } from "../../../cortex/db/connection";
 import { getMasterDbConfig } from "../../../cortex/config/db-config";
+import { QueryResult } from "../../../cortex/db/db-types";
 import * as sinon from "sinon";
 
 // Increase timeout for async operations
@@ -45,7 +46,7 @@ describe("[1.] DB Context Switching", () => {
     async function setupTestDBs(): Promise<void> {
         setTestEnv();
         const masterlessConfig = { ...getMasterDbConfig(), database: undefined };
-        await Connection.initialize(masterlessConfig.database);
+        await Connection.initialize(masterlessConfig);
         const tempConn = Connection.getInstance();
         const client = await tempConn.getClient();
         await client.query(`DROP DATABASE IF EXISTS \`${masterDb}\``);
@@ -130,6 +131,7 @@ describe("[1.] DB Context Switching", () => {
             });
             const result = await connection.query("SELECT 1 AS test");
             expect(result.rows).toEqual([{ test: 1 }]);
+            expect(result.rowCount).toBe(1);
             await connection.release();
         }
     }, 10000);
@@ -138,7 +140,7 @@ describe("[1.] DB Context Switching", () => {
         const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
         const endStub = sinon.stub();
         const stub = sinon.stub(Connection.getInstance(), "getClient").resolves({
-            query: async (sql: string) => ({ rows: [{ test: 1 }], rowCount: 1 }),
+            query: async (sql: string): Promise<QueryResult<any>> => ({ rows: [{ test: 1 }], rowCount: 1, insertId: undefined }),
             end: endStub,
         });
 
@@ -146,6 +148,7 @@ describe("[1.] DB Context Switching", () => {
         expect(connection.database).toBe(tenantDb);
         const result = await connection.query("SELECT 1 AS test");
         expect(result.rows).toEqual([{ test: 1 }]);
+        expect(result.rowCount).toBe(1);
 
         // Test release method using end
         await connection.release();
@@ -159,7 +162,7 @@ describe("[1.] DB Context Switching", () => {
         const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
         const releaseStub = sinon.stub();
         const stub = sinon.stub(Connection.getInstance(), "getClient").resolves({
-            query: async (sql: string) => ({ rows: [{ test: 1 }], rowCount: 1 }),
+            query: async (sql: string): Promise<QueryResult<any>> => ({ rows: [{ test: 1 }], rowCount: 1, insertId: undefined }),
             release: releaseStub,
         });
 
@@ -167,6 +170,7 @@ describe("[1.] DB Context Switching", () => {
         expect(connection.database).toBe(tenantDb);
         const result = await connection.query("SELECT 1 AS test");
         expect(result.rows).toEqual([{ test: 1 }]);
+        expect(result.rowCount).toBe(1);
 
         // Test release method using release
         await connection.release();
@@ -179,7 +183,7 @@ describe("[1.] DB Context Switching", () => {
     test("[test 6] handles query with insertId and array result", async () => {
         const tenant: Tenant = { id: "tenant1", dbConnection: `mariadb://root:Computer.1@localhost:3306/${tenantDb}` };
         const stub = sinon.stub(Connection.getInstance(), "getClient").resolves({
-            query: async (sql: string) => ({ rows: [{ id: 2 }], insertId: 2, rowCount: 1 }),
+            query: async (sql: string): Promise<QueryResult<any>> => ({ rows: [{ id: 2 }], rowCount: 1, insertId: 2 }),
         });
 
         const connection = await getTenantDbConnection(tenant);

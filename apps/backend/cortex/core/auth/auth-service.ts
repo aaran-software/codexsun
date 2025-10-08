@@ -1,12 +1,12 @@
-import { Credentials, User, Tenant } from '../app.types';
-import { query } from '../../db/db';
-import { generateJwt } from '../secret/jwt-service';
-import { hashAndCompare } from '../secret/crypt-service';
-import { logQuery } from '../../config/logger';
-import { getMasterDbConfig } from '../../config/db-config';
+import {Credentials, User, Tenant} from '../app.types';
+import {query} from '../../db/db';
+import {generateJwt} from '../secret/jwt-service';
+import {comparePassword} from '../secret/crypt-service';
+import {logQuery} from '../../config/logger';
+import {getMasterDbConfig} from '../../config/db-config';
 
 export async function authenticateUser(credentials: Credentials, tenant: Tenant): Promise<User> {
-    const { email, password } = credentials;
+    const {email, password} = credentials;
     const dbConfig = getMasterDbConfig();
 
     try {
@@ -35,18 +35,18 @@ export async function authenticateUser(credentials: Credentials, tenant: Tenant)
 
         const user = result.rows[0];
         if (!user) {
-            throw new Error('Invalid credentials: User not found');
+            return Promise.reject(new Error('Invalid credentials: User not found'));
         }
 
         // Verify role exists
         if (!user.role_name) {
-            throw new Error('Invalid user configuration: Role not found');
+            return Promise.reject(new Error('Invalid user configuration: Role not found'));
         }
 
         // Verify password using hashAndCompare
-        const isValid = await hashAndCompare(password, user.password_hash) as boolean;
+        const isValid = await comparePassword(password, user.password_hash) as boolean;
         if (!isValid) {
-            throw new Error('Invalid credentials: Incorrect password');
+            return Promise.reject(new Error('Invalid credentials: Incorrect password'));
         }
 
         // Generate JWT with tenant.id from resolved tenant

@@ -1,6 +1,6 @@
 import { query } from '../../mdb';
 import { Connection } from '../../connection';
-import { getDbConfig } from '../../../config/db-config';
+import { getMasterDbConfig } from '../../../config/db-config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -28,8 +28,8 @@ const validateEnvVariables = (): void => {
  * Logs database connection details.
  * @param config - Database configuration.
  */
-const logConnectionDetails = (config: ReturnType<typeof getDbConfig>): void => {
-    console.log(`Database Driver: ${config.type}`);
+const logConnectionDetails = (config: ReturnType<typeof getMasterDbConfig>): void => {
+    console.log(`Database Driver: ${config.driver}`);
     console.log('Connection Credentials:');
     console.log(`  Host: ${config.host}`);
     console.log(`  Port: ${config.port}`);
@@ -44,7 +44,7 @@ const logConnectionDetails = (config: ReturnType<typeof getDbConfig>): void => {
  * @param noDb - Whether to initialize without a specific database.
  * @returns Initialized Connection instance.
  */
-const initializeConnection = async (config: ReturnType<typeof getDbConfig>, noDb: boolean = false): Promise<Connection> => {
+const initializeConnection = async (config: ReturnType<typeof getMasterDbConfig>, noDb: boolean = false): Promise<Connection> => {
     console.log('Initializing database connection');
     const initConfig = noDb ? { ...config, database: '' } : config;
     await Connection.initialize(initConfig);
@@ -201,7 +201,7 @@ const dropMasterDatabase = async (): Promise<void> => {
  */
 export async function masterMigrate(): Promise<void> {
     console.log('Starting master migration');
-    const config = getDbConfig();
+    const config = getMasterDbConfig();
     validateEnvVariables();
     logConnectionDetails(config);
     const conn = await initializeConnection(config, true);
@@ -223,7 +223,7 @@ export async function masterMigrate(): Promise<void> {
  */
 export async function resetMasterDatabase(): Promise<void> {
     console.log('Starting master database reset');
-    const config = getDbConfig();
+    const config = getMasterDbConfig();
     validateEnvVariables();
     logConnectionDetails(config);
     const conn = await initializeConnection(config);
