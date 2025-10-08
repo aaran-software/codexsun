@@ -1,5 +1,5 @@
 import {Tenant} from '../app.types';
-import {query} from '../../db/db';
+import {query} from '../../db/mdb';
 import {getMasterDbConfig} from '../../config/db-config';
 import {tenantStorage} from '../../db/db';
 

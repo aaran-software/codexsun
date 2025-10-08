@@ -1,5 +1,7 @@
 import { createApp } from '../../../cortex/core/app';
 import { Connection } from '../../../cortex/db/connection';
+import { query } from '../../../cortex/db/mdb';
+import { RequestContext } from '../../../cortex/core/app.types';
 
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 
@@ -8,7 +10,7 @@ describe('[29. API] Login Endpoint Test', () => {
 
     beforeAll(async () => {
         const testConfig = {
-            type: 'mariadb' as const,
+            driver: 'mariadb' as const,
             database: MASTER_DB,
             host: process.env.DB_HOST || 'localhost',
             port: parseInt(process.env.DB_PORT || '3306', 10),
@@ -21,6 +23,9 @@ describe('[29. API] Login Endpoint Test', () => {
         };
 
         connection = await Connection.initialize(testConfig);
+
+        // Clear user_sessions to avoid stale tokens
+        await query('DELETE FROM user_sessions', [], MASTER_DB);
     });
 
     afterAll(async () => {
@@ -39,12 +44,27 @@ describe('[29. API] Login Endpoint Test', () => {
         expect(typeof response.body.user.token).toBe('string');
         expect(response.body.user).toHaveProperty('role', 'admin');
         expect(response.body).toHaveProperty('tenant');
+        expect(response.body.tenant).toHaveProperty('id', 'default');
     });
 });
 
-async function mockRequest(app: any, method: string, url: string, body: any, ip: string = '127.0.0.1'): Promise<any> {
+async function mockRequest(
+    app: any,
+    method: string,
+    url: string,
+    body: any,
+    ip: string = '127.0.0.1'
+): Promise<any> {
     return new Promise((resolve) => {
-        const req = { method, url, body, headers: {}, context: {}, ip };
+        const req: { method: string; url: string; body: any; headers: any; context: RequestContext; ip: string; version?: string } = {
+            method,
+            url,
+            body,
+            headers: {},
+            context: { ip },
+            ip,
+            version: 'v1',
+        };
         const res = {
             statusCode: 200,
             status: (code: number) => {
@@ -55,6 +75,11 @@ async function mockRequest(app: any, method: string, url: string, body: any, ip:
                 resolve({ status: res.statusCode, body: data });
             },
         };
-        app(req, res);
+        app(req, res, (err: any) => {
+            if (err) {
+                console.error('Mock request error:', err.message, err.stack);
+                resolve({ status: 500, body: { error: err.message } });
+            }
+        });
     });
 }
