@@ -3,11 +3,11 @@ import { query } from '../../db/db';
 import { generateJwt } from '../secret/jwt-service';
 import { hashAndCompare } from '../secret/crypt-service';
 import { logQuery } from '../../config/logger';
-import { getDbConfig } from '../../config/db-config';
+import { getMasterDbConfig } from '../../config/db-config';
 
 export async function authenticateUser(credentials: Credentials, tenant: Tenant): Promise<User> {
     const { email, password } = credentials;
-    const dbConfig = getDbConfig();
+    const dbConfig = getMasterDbConfig();
 
     try {
         // Query users in master_db

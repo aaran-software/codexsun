@@ -1,6 +1,6 @@
 import pg from "pg";
 import { PostgresAdapter } from "../../../../cortex/db/adapters/postgres";
-import { DbConfig } from "../../../../cortex/db/db-types";
+import {DbConfig} from "../../../../cortex/config/db-config";
 
 jest.mock("pg");
 
@@ -12,7 +12,9 @@ describe("[1.] PostgresAdapter", () => {
 
     beforeEach(() => {
         adapter = new PostgresAdapter();
-        mockConfig = { host: "localhost", port: 5432, user: "user", password: "pass", ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
+        mockConfig = {
+            driver: 'mariadb',
+            host: "localhost", port: 5432, user: "user", password: "pass", ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
         mockClient = {
             query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
             release: jest.fn(),
@@ -47,7 +49,7 @@ describe("[1.] PostgresAdapter", () => {
     });
 
     it("[test 4] connects using connect method", async () => {
-        const client = await adapter.connect({ ...mockConfig as DbConfig, database: "db", type: "postgres" });
+        const client = await adapter.connect({ ...mockConfig as DbConfig, database: "db", driver: "postgres" });
         expect(client).toBeDefined();
     });
 

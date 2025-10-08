@@ -4,7 +4,7 @@ import { PostgresAdapter } from './adapters/postgres';
 import { MysqlAdapter } from './adapters/mysql';
 import { SqliteAdapter } from './adapters/sqlite';
 import { logConnection } from '../config/logger';
-import {DbConfig} from "../config/db-config";
+import { DbConfig } from "../config/db-config";
 
 export class Connection {
     private readonly config: DbConfig;
@@ -51,7 +51,7 @@ export class Connection {
         const start = Date.now();
         const connectionString = this.getConnectionString();
         try {
-            logConnection('start', { db: this.config.database, connectionString });
+            logConnection('start', { db: this.config.database || 'default', connectionString });
             if (this.adapter.initPool) {
                 await this.adapter.initPool({
                     host: this.config.host,
@@ -64,10 +64,10 @@ export class Connection {
                     idleTimeout: this.config.idleTimeout,
                 });
             }
-            logConnection('success', { db: this.config.database, connectionString, duration: Date.now() - start });
+            logConnection('success', { db: this.config.database || 'default', connectionString, duration: Date.now() - start });
         } catch (error) {
             const errMsg = (error as Error).message || 'Unknown init error';
-            logConnection('error', { db: this.config.database, connectionString, duration: Date.now() - start, error: errMsg });
+            logConnection('error', { db: this.config.database || 'default', connectionString, duration: Date.now() - start, error: errMsg });
             if (process.env.NODE_ENV === 'production') {
                 await new Promise(resolve => setTimeout(resolve, 5000));
                 return this.init(); // Retry once
@@ -91,7 +91,9 @@ export class Connection {
     }
 
     async getClient(database: string = ''): Promise<AnyDbClient> {
-        return await this.adapter.getConnection(database);
+        // Use the provided database name if specified, otherwise fall back to config.database
+        const effectiveDb = database || this.config.database;
+        return await this.adapter.getConnection(effectiveDb);
     }
 
     getConfig(): DbConfig {
@@ -99,6 +101,7 @@ export class Connection {
     }
 
     private getConnectionString(): string {
-        return `${this.config.driver}://${this.config.user}@${this.config.host}:${this.config.port}/${this.config.database}`;
+        const dbPart = this.config.database ? `/${this.config.database}` : '';
+        return `${this.config.driver}://${this.config.user}@${this.config.host}:${this.config.port}${dbPart}`;
     }
 }

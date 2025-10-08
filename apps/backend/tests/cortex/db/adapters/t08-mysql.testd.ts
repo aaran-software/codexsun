@@ -1,12 +1,12 @@
 import mysql from "mysql2/promise";
 import { MysqlAdapter } from "../../../../cortex/db/adapters/mysql";
-import { DbConfig } from "../../../../cortex/db/db-types";
+import {DbConfig} from "../../../../cortex/config/db-config";
 
 jest.mock("mysql2/promise");
 
 describe("[1.] MysqlAdapter", () => {
     let adapter: MysqlAdapter;
-    let mockConfig: Omit<DbConfig, "database" | "type">;
+    let mockConfig: Omit<DbConfig, "database" | "driver">;
     let mockPool: { getConnection: jest.Mock; end: jest.Mock };
     let mockConnection: { query: jest.Mock; release: jest.Mock; end: jest.Mock };
 
@@ -48,7 +48,7 @@ describe("[1.] MysqlAdapter", () => {
     });
 
     it("[test 4] connects using connect method", async () => {
-        const client = await adapter.connect({ ...mockConfig as DbConfig, database: "db", type: "mysql" });
+        const client = await adapter.connect({ ...mockConfig as DbConfig, database: "db", driver: "mysql" });
         expect(client).toBeDefined();
     });
 

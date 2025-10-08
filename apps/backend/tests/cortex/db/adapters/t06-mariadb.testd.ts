@@ -1,6 +1,6 @@
 import mariadb from "mariadb";
 import { MariaDBAdapter } from "../../../../cortex/db/adapters/mariadb";
-import { DbConfig } from "../../../../cortex/db/db-types";
+import {DbConfig} from "../../../../cortex/config/db-config";
 
 jest.mock("mariadb");
 
@@ -12,7 +12,9 @@ describe("[1.] MariaDBAdapter", () => {
 
     beforeEach(() => {
         adapter = new MariaDBAdapter();
-        mockConfig = { host: "localhost", port: 3306, user: "user", password: "pass", ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
+        mockConfig = {
+            driver: 'mariadb',
+            host: "localhost", port: 3306, user: "user", password: "pass", ssl: false, connectionLimit: 10, acquireTimeout: 30000, idleTimeout: 60000 };
         mockConnection = {
             query: jest.fn().mockResolvedValue([]),
             release: jest.fn(),
@@ -48,7 +50,7 @@ describe("[1.] MariaDBAdapter", () => {
     });
 
     it("[test 4] connects using connect method", async () => {
-        const client = await adapter.connect({ ...mockConfig as DbConfig, database: "db", type: "mariadb" });
+        const client = await adapter.connect({ ...mockConfig as DbConfig, database: "db", driver: "mariadb" });
         expect(client).toBeDefined();
     });
 

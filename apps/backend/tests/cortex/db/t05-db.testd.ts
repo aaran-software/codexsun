@@ -3,7 +3,7 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { query, withTransaction, healthCheck, tenantStorage } from "../../../cortex/db/db";
 import { Connection } from "../../../cortex/db/connection";
-import { getDbConfig } from "../../../cortex/config/db-config";
+import { getPrimaryDbConfig } from "../../../cortex/config/db-config";
 import { logQuery, logTransaction, logHealthCheck } from "../../../cortex/config/logger";
 
 jest.mock("../../../cortex/db/connection");
@@ -16,7 +16,7 @@ describe("[1.] db", () => {
 
     beforeEach(() => {
         mockConfig = { database: "master" };
-        (getDbConfig as jest.Mock).mockReturnValue(mockConfig);
+        (getPrimaryDbConfig as jest.Mock).mockReturnValue(mockConfig);
         mockClient = { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }), release: jest.fn(), end: jest.fn() };
         (Connection.getInstance as jest.Mock).mockReturnValue({ getClient: jest.fn().mockResolvedValue(mockClient) });
         jest.clearAllMocks();

@@ -1,6 +1,6 @@
 import { open } from "sqlite";
 import { SqliteAdapter } from "../../../../cortex/db/adapters/sqlite";
-import { DbConfig } from "../../../../cortex/db/db-types";
+import {DbConfig} from "../../../../cortex/config/db-config";
 
 jest.mock("sqlite");
 
