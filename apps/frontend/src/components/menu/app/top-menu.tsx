@@ -94,9 +94,9 @@ export function TopMenu() {
                             className="rounded-full hover:bg-accent dark:hover:bg-slate-800"
                         >
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                                {/*<AvatarImage src={currentUser.avatar} alt={currentUser.name} />*/}
                                 <AvatarFallback className="bg-muted text-muted-foreground dark:bg-slate-700 dark:text-slate-300">
-                                    {currentUser.name.slice(0, 2).toUpperCase()}
+                                    {/*{currentUser.name.slice(0, 2).toUpperCase()}*/}
                                 </AvatarFallback>
                             </Avatar>
                         </Button>
@@ -108,7 +108,7 @@ export function TopMenu() {
                     >
                         <DropdownMenuLabel className="font-normal dark:text-slate-300">
                             <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{currentUser.name}</p>
+                                {/*<p className="text-sm font-medium leading-none">{currentUser.name}</p>*/}
                                 <p className="text-xs leading-none text-muted-foreground dark:text-slate-400">
                                     {currentUser.email}
                                 </p>

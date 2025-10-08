@@ -2,10 +2,10 @@ import { resolveTenant } from '../tenant/tenant-resolver';
 import { authenticateUser } from './auth-service';
 import { LoginResponse, Credentials } from '../app.types';
 import { handleError } from '../error/error-handler';
-import { verifyJwt, blockJwt } from '../secret/jwt-service';
+import {blockJwt, verifyJwt} from '../secret/jwt-service';
 
 /**
- * Handles user login with tenant resolution and token validation
+ * Handles user login with tenant resolution
  * @param req Request containing user credentials
  * @returns LoginResponse with user and tenant data
  */
@@ -18,9 +18,6 @@ export async function login(req: { body: Credentials }): Promise<LoginResponse> 
 
         tenant = await resolveTenant(req);
         const user = await authenticateUser(req.body, tenant);
-
-        // Validate JWT token using jwt-service
-        await verifyJwt(user.token);
 
         return { user, tenant };
     } catch (error) {

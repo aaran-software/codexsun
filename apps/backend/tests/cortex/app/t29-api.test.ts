@@ -4,6 +4,7 @@ import { query } from '../../../cortex/db/mdb';
 import { RequestContext } from '../../../cortex/core/app.types';
 
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
+const API_URL = 'http://localhost:3006'; // Updated to match live environment
 
 describe('[29. API] Login Endpoint Test', () => {
     let connection: Connection;
@@ -60,7 +61,7 @@ async function mockRequest(
             method,
             url,
             body,
-            headers: {},
+            headers: { 'X-Tenant-Id': 'default' }, // Added tenant header
             context: { ip },
             ip,
             version: 'v1',

@@ -59,6 +59,13 @@ app.use(cors());
 app.use(express.json());
 app.use(logMiddleware);
 // app.use(contextMiddleware);
+
+app.use(cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'X-Tenant-Id', 'Authorization'],
+}));
+
 app.use('/api', createApp() as RequestHandler);
 
 // Welcome route

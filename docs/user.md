@@ -11,7 +11,7 @@ admin@default.com
 
 curl -X POST http://localhost:3006/api/login \
 -H "Content-Type: application/json" \
--d '{"email":"admin@default.com","password":"$2b$10$examplehash1"}'
+-d '{"email":"admin@example.com","password":"admin123"}'
 
 $ curl -X POST http://localhost:3006/api/login \
 -H "Content-Type: application/json" \
@@ -24,3 +24,9 @@ curl -X POST http://localhost:3006/api/users \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidGVuYW50SWQiOiJkZWZhdWx0Iiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU5ODY1NTk1LCJleHAiOjE3NTk4NjkxOTV9.30IQpPSrFv965vQ6SWxJreu3bc-w5e-zSZQ4CgnY7d0" \
 -d '{"name":"John Doe","email":"admin@default.com","tenantId":"default"}'
+
+
+curl -X POST http://localhost:3000/api/login \
+-H "Content-Type: application/json" \
+-H "X-Tenant-Id: default" \
+-d '{"email":"admin@example.com","password":"admin123"}'

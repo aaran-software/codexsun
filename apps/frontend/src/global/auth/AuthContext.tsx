@@ -1,22 +1,12 @@
-// Updated AuthContext.tsx to connect with the backend API as per the test specifications
-// Changes:
-// - Use correct API base URL[](http://localhost:3000) and endpoints (/api/auth/login, /api/auth/logout, /api/users/email/:email)
-// - Include X-Tenant-Id header with 'tenant1' (as per test)
-// - Store and manage JWT token
-// - Fetch user profile after login using the token
-// - Map backend user fields to frontend User interface (username -> name, assume status 'active')
-// - Handle logout with backend call
-// - Persist token and user in localStorage
-// - Remove unnecessary credentials: 'include' since using JWT Bearer
-// - Error handling aligned with test expectations
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
-    id: number;
-    name: string;
+    id: string;
+    username: string;
     email: string;
-    status: string;
+    tenantId: string;
+    role: string;
+    token: string;
 }
 
 interface AuthContextType {
@@ -34,8 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const API_URL = "http://localhost:3000";
-    const TENANT_ID = "tenant1";
+    const API_URL = "http://localhost:3006"; // Matches backend port
 
     useEffect(() => {
         const savedUser = localStorage.getItem("auth_user");
@@ -55,51 +44,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = async (email: string, password: string) => {
         try {
             setLoading(true);
-            const res = await fetch(`${API_URL}/api/auth/login`, {
+            const res = await fetch(`${API_URL}/api/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Tenant-Id": TENANT_ID,
                 },
                 body: JSON.stringify({ email, password }),
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                const newToken = data.token;
-
-                // Fetch user profile with token
-                const profileRes = await fetch(`${API_URL}/api/users/email/${email}`, {
-                    headers: {
-                        "Authorization": `Bearer ${newToken}`,
-                        "X-Tenant-Id": TENANT_ID,
-                    },
-                });
-
-                if (profileRes.ok) {
-                    const userData = await profileRes.json();
-                    const mappedUser: User = {
-                        id: userData.id,
-                        name: userData.username,
-                        email: userData.email,
-                        status: "active", // Assume active as per test; adjust if needed
-                    };
-
-                    setUser(mappedUser);
-                    setToken(newToken);
-                    localStorage.setItem("auth_user", JSON.stringify(mappedUser));
-                    localStorage.setItem("auth_token", newToken);
-                    setLoading(false);
-                    return true;
-                } else {
-                    throw new Error('Failed to fetch user profile');
-                }
-            } else {
-                throw new Error('Invalid credentials');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Invalid credentials');
             }
+
+            const data = await res.json();
+            const mappedUser: User = {
+                id: data.user.id,
+                username: data.user.username || "Unknown",
+                email: data.user.email,
+                tenantId: data.user.tenantId,
+                role: data.user.role,
+                token: data.user.token,
+            };
+
+            setUser(mappedUser);
+            setToken(data.user.token);
+            localStorage.setItem("auth_user", JSON.stringify(mappedUser));
+            localStorage.setItem("auth_token", data.user.token);
+            setLoading(false);
+            return true;
         } catch (error) {
             setLoading(false);
-            console.error('Login error:', error);
+            console.error('Login error:', error instanceof Error ? error.message : 'Unknown error', { email, status: res?.status, response: res?.statusText, body: await res?.text().catch(() => '') });
             return false;
         }
     };
@@ -109,18 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(true);
             console.log('[AuthContext] Starting logout...');
             if (token) {
-                await fetch(`${API_URL}/api/auth/logout`, {
+                await fetch(`${API_URL}/api/logout`, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
-                        "X-Tenant-Id": TENANT_ID,
                     },
                 });
             }
             console.log('[AuthContext] Backend logout request completed.');
         } catch (error) {
             console.error('[AuthContext] Logout backend error (non-fatal):', error);
-            // Continue with frontend cleanup even if backend fails
         } finally {
             setUser(null);
             setToken(null);

@@ -2,9 +2,18 @@ import React from 'react';
 import { useAuth } from '../../../global/auth/AuthContext';
 import { Navigate } from 'react-router-dom';
 
+interface User {
+    id: string;
+    username: string;
+    email: string;
+    tenantId: string;
+    role: string;
+    token: string;
+}
+
 const Credit: React.FC = () => {
     const { user, token, loading } = useAuth();
-    const tenantId = 'tenant1'; // As per live-server.test.ts
+    const tenantId = 'default'; // Matches backend tenant ID
 
     if (loading) {
         return (
@@ -29,15 +38,15 @@ const Credit: React.FC = () => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Username</label>
-                        <p className="w-full p-2 border rounded bg-gray-50">{user.name}</p>
+                        <p className="w-full p-2 border rounded bg-gray-50">{user.username}</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
                         <p className="w-full p-2 border rounded bg-gray-50">{user.email}</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Status</label>
-                        <p className="w-full p-2 border rounded bg-gray-50">{user.status}</p>
+                        <label className="block text-sm font-medium text-gray-700">Role</label>
+                        <p className="w-full p-2 border rounded bg-gray-50">{user.role}</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Tenant ID</label>

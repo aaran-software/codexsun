@@ -11,7 +11,7 @@ export async function generateJwt(user: { id: string; tenantId: string; role: st
 
     await query(
         'INSERT INTO user_sessions (user_id, token, expires_at, created_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR), NOW())',
-        [user.id, token], // Store plain token
+        [user.id, token],
         MASTER_DB
     );
 
@@ -23,17 +23,13 @@ export async function verifyJwt(token: string): Promise<JwtPayload> {
         const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
         const result = await query<{ expires_at: string; token: string }>(
-            'SELECT expires_at, token FROM user_sessions WHERE user_id = ?',
-            [payload.id],
+            'SELECT expires_at, token FROM user_sessions WHERE user_id = ? AND token = ?',
+            [payload.id, token], // Include token in query to avoid stale entries
             MASTER_DB
         );
 
         if (result.rows.length === 0 || new Date(result.rows[0].expires_at) < new Date()) {
             return Promise.reject(new Error('Invalid or expired token'));
-        }
-
-        if (result.rows[0].token !== token) {
-            return Promise.reject(new Error('Invalid token'));
         }
 
         return payload;
