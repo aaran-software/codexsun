@@ -1,12 +1,12 @@
-import {Credentials, User, Tenant} from '../app.types';
-import {query} from '../../db/db';
-import {generateJwt} from '../secret/jwt-service';
-import {comparePassword} from '../secret/crypt-service';
-import {logQuery} from '../../config/logger';
-import {getMasterDbConfig} from '../../config/db-config';
+import { Credentials, User, Tenant } from '../app.types';
+import { query } from '../../db/db';
+import { generateJwt } from '../secret/jwt-service';
+import { comparePassword } from '../secret/crypt-service';
+import { logQuery } from '../../config/logger';
+import { getMasterDbConfig } from '../../config/db-config';
 
 export async function authenticateUser(credentials: Credentials, tenant: Tenant): Promise<User> {
-    const {email, password} = credentials;
+    const { email, password } = credentials;
     const dbConfig = getMasterDbConfig();
 
     try {
@@ -14,12 +14,13 @@ export async function authenticateUser(credentials: Credentials, tenant: Tenant)
         const start = Date.now();
         const result = await query<{
             id: string;
+            username: string;
             email: string;
             role_id: string;
             role_name: string;
             password_hash: string;
         }>(
-            `SELECT u.id, u.email, u.role_id, r.name as role_name, u.password_hash
+            `SELECT u.id, u.username, u.email, u.role_id, r.name as role_name, u.password_hash
              FROM users u
                       INNER JOIN roles r ON u.role_id = r.id
              WHERE u.email = ?`,
@@ -27,7 +28,7 @@ export async function authenticateUser(credentials: Credentials, tenant: Tenant)
             dbConfig.database // Use master_db
         );
         logQuery('end', {
-            sql: 'SELECT u.id, u.email, u.role_id, r.name, u.password_hash FROM users ...',
+            sql: 'SELECT u.id, u.username, u.email, u.role_id, r.name, u.password_hash FROM users ...',
             params: [email],
             db: dbConfig.database,
             duration: Date.now() - start,
@@ -46,6 +47,7 @@ export async function authenticateUser(credentials: Credentials, tenant: Tenant)
         // Verify password using hashAndCompare
         const isValid = await comparePassword(password, user.password_hash) as boolean;
         if (!isValid) {
+            console.error('Password verification failed', { email, password_hash: user.password_hash });
             return Promise.reject(new Error('Invalid credentials: Incorrect password'));
         }
 
@@ -58,6 +60,8 @@ export async function authenticateUser(credentials: Credentials, tenant: Tenant)
 
         return {
             id: user.id,
+            username: user.username || 'Unknown',
+            email: user.email,
             tenantId: tenant.id,
             role: user.role_name,
             token,
@@ -65,7 +69,7 @@ export async function authenticateUser(credentials: Credentials, tenant: Tenant)
     } catch (error) {
         const errMsg = error instanceof Error ? error.message : 'Unknown authentication error';
         logQuery('error', {
-            sql: 'SELECT u.id, u.email, u.role_id, r.name, u.password_hash FROM users ...',
+            sql: 'SELECT u.id, u.username, u.email, u.role_id, r.name, u.password_hash FROM users ...',
             params: [email],
             db: dbConfig.database || 'unknown',
             error: errMsg,

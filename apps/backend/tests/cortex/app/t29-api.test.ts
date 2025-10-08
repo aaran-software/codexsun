@@ -4,7 +4,7 @@ import { query } from '../../../cortex/db/mdb';
 import { RequestContext } from '../../../cortex/core/app.types';
 
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
-const API_URL = 'http://localhost:3006'; // Updated to match live environment
+const API_URL = 'http://localhost:3006'; // Matches live environment
 
 describe('[29. API] Login Endpoint Test', () => {
     let connection: Connection;
@@ -43,9 +43,31 @@ describe('[29. API] Login Endpoint Test', () => {
         expect(response.body).toHaveProperty('user');
         expect(response.body.user).toHaveProperty('token');
         expect(typeof response.body.user.token).toBe('string');
+        expect(response.body.user).toHaveProperty('username');
+        expect(response.body.user).toHaveProperty('email', 'admin@example.com');
         expect(response.body.user).toHaveProperty('role', 'admin');
         expect(response.body).toHaveProperty('tenant');
         expect(response.body.tenant).toHaveProperty('id', 'default');
+    });
+
+    test('[test 2] POST /logout succeeds with valid token', async () => {
+        const app = createApp();
+        // First, perform a login to get a valid token
+        const loginResponse = await mockRequest(app, 'POST', '/login', {
+            email: 'admin@example.com',
+            password: 'admin123'
+        });
+        expect(loginResponse.status).toBe(200);
+        expect(loginResponse.body.user).toHaveProperty('token');
+
+        const token = loginResponse.body.user.token;
+
+        // Perform logout with the token
+        const logoutResponse = await mockRequest(app, 'POST', '/logout', {}, '127.0.0.1', {
+            authorization: `Bearer ${token}`
+        });
+        expect(logoutResponse.status).toBe(200);
+        expect(logoutResponse.body).toHaveProperty('message', 'Logged out successfully');
     });
 });
 
@@ -54,14 +76,15 @@ async function mockRequest(
     method: string,
     url: string,
     body: any,
-    ip: string = '127.0.0.1'
+    ip: string = '127.0.0.1',
+    headers: any = {}
 ): Promise<any> {
     return new Promise((resolve) => {
         const req: { method: string; url: string; body: any; headers: any; context: RequestContext; ip: string; version?: string } = {
             method,
             url,
             body,
-            headers: { 'X-Tenant-Id': 'default' }, // Added tenant header
+            headers,
             context: { ip },
             ip,
             version: 'v1',

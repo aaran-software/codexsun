@@ -1,4 +1,4 @@
-import { login } from './auth/login-controller';
+import {login, logout} from './auth/login-controller';
 import { createUser } from './user/user-controller';
 import { createTodoItem } from './todo/todo-controller';
 import { tenantMiddleware } from './tenant/tenant-middleware';
@@ -41,6 +41,15 @@ export function createApp(
                 });
                 const result = await login(req);
                 return res.status(200).json(result);
+            }
+
+            if (req.method === 'POST' && req.url === '/logout') {
+                const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
+                if (!token) {
+                    return res.status(400).json({ error: 'Token required' });
+                }
+                await logout(token);
+                return res.status(200).json({ message: 'Logged out successfully' });
             }
 
             if (req.method !== 'POST') {

@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Invalid credentials');
+                return Promise.reject(new Error(errorData.error || 'Invalid credentials'));
             }
 
             const data = await res.json();
@@ -75,8 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return true;
         } catch (error) {
             setLoading(false);
-            console.error('Login error:', error instanceof Error ? error.message : 'Unknown error',
-                { email, status: res?.status, response: res?.statusText, body: await res?.text().catch(() => '') });
+            console.error('Login error:', error instanceof Error ? error.message : 'Unknown error', { email });
             return false;
         }
     };
@@ -86,23 +85,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(true);
             console.log('[AuthContext] Starting logout...');
             if (token) {
-                await fetch(`${API_URL}/api/logout`, {
+                const res = await fetch(`${API_URL}/api/logout`, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json",
                     },
                 });
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Logout failed');
+                }
+                console.log('[AuthContext] Backend logout request completed.');
             }
-            console.log('[AuthContext] Backend logout request completed.');
-        } catch (error) {
-            console.error('[AuthContext] Logout backend error (non-fatal):', error);
-        } finally {
             setUser(null);
             setToken(null);
             localStorage.removeItem("auth_user");
             localStorage.removeItem("auth_token");
-            setLoading(false);
             console.log('[AuthContext] Frontend state cleared.');
+        } catch (error) {
+            console.error('[AuthContext] Logout error:', error instanceof Error ? error.message : 'Unknown error');
+            // Clear state even if backend logout fails to ensure consistent frontend state
+            setUser(null);
+            setToken(null);
+            localStorage.removeItem("auth_user");
+            localStorage.removeItem("auth_token");
+        } finally {
+            setLoading(false);
         }
     };
 

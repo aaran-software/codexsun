@@ -28,6 +28,8 @@ export interface DbConnection {
 
 export interface User {
     id: string;
+    username: string;
+    email: string;
     tenantId: string;
     role: string;
     token: string;

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { Bell, LogOut, Search, Sun, Moon } from "lucide-react"
-import { useAuth } from "../../../global/auth/AuthContext"
+import { useAuth } from "@/global/auth/AuthContext"
 
 import {
     Avatar,
@@ -94,9 +94,9 @@ export function TopMenu() {
                             className="rounded-full hover:bg-accent dark:hover:bg-slate-800"
                         >
                             <Avatar className="h-8 w-8">
-                                {/*<AvatarImage src={currentUser.avatar} alt={currentUser.name} />*/}
+                                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
                                 <AvatarFallback className="bg-muted text-muted-foreground dark:bg-slate-700 dark:text-slate-300">
-                                    {/*{currentUser.name.slice(0, 2).toUpperCase()}*/}
+                                    {currentUser.username.slice(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                         </Button>
