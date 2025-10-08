@@ -1,17 +1,6 @@
 // cortex/db/types.ts
 
-export interface DbConfig {
-    host: string;
-    port: number;
-    database: string;
-    user: string;
-    password: string;
-    type: 'mariadb' | 'postgres' | 'mysql' | 'sqlite';
-    ssl?: boolean;
-    connectionLimit?: number;
-    acquireTimeout?: number;
-    idleTimeout?: number;
-}
+import {DbConfig} from "../config/db-config";
 
 export interface AnyDbClient {
     query<T = any>(text: string, params?: any[]): Promise<QueryResult<T> | any>;
@@ -33,7 +22,7 @@ export interface ShowCreateTableResult {
 export type QueryFunction = <T = any>(sql: string, params?: any[], dbName?: string) => Promise<QueryResult<T>>;
 
 export interface DBAdapter {
-    initPool?: (config: Omit<DbConfig, 'database' | 'type'>) => Promise<void>;
+    initPool?: (config: Omit<DbConfig, 'database' | 'driver'>) => Promise<void>;
     closePool?: () => Promise<void>;
     getConnection: (database: string) => Promise<AnyDbClient>;
     connect: (config: DbConfig) => Promise<AnyDbClient>;

@@ -1,10 +1,10 @@
-import { DbConfig, AnyDbClient, DBAdapter } from './db-types';
+import { AnyDbClient, DBAdapter } from './db-types';
 import { MariaDBAdapter } from './adapters/mariadb';
 import { PostgresAdapter } from './adapters/postgres';
 import { MysqlAdapter } from './adapters/mysql';
 import { SqliteAdapter } from './adapters/sqlite';
 import { logConnection } from '../config/logger';
-import {DbConfigs} from "../config/db-config";
+import {DbConfig} from "../config/db-config";
 
 export class Connection {
     private readonly config: DbConfig;
@@ -13,7 +13,7 @@ export class Connection {
 
     private constructor(config: DbConfig) {
         this.config = config;
-        switch (this.config.type) {
+        switch (this.config.driver) {
             case 'mariadb':
                 this.adapter = new MariaDBAdapter();
                 break;
@@ -27,11 +27,11 @@ export class Connection {
                 this.adapter = new SqliteAdapter();
                 break;
             default:
-                throw new Error(`Unsupported database type: ${this.config.type}`);
+                throw new Error(`Unsupported database type: ${this.config.driver}`);
         }
     }
 
-    static async initialize(config: DbConfigs): Promise<Connection> {
+    static async initialize(config: DbConfig): Promise<Connection> {
         if (Connection.instance) {
             await Connection.instance.close(); // Ensure previous instance is closed
         }
@@ -99,6 +99,6 @@ export class Connection {
     }
 
     private getConnectionString(): string {
-        return `${this.config.type}://${this.config.user}@${this.config.host}:${this.config.port}/${this.config.database}`;
+        return `${this.config.driver}://${this.config.user}@${this.config.host}:${this.config.port}/${this.config.database}`;
     }
 }

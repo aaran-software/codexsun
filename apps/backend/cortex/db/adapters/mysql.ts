@@ -1,13 +1,15 @@
 // cortex/db/adapters/mysql.ts
 
 import mysql from 'mysql2/promise';
-import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import { AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import {AppEnv} from "../../config/get-settings";
+import {DbConfig} from "../../config/db-config";
 
 export class MysqlAdapter implements DBAdapter {
     private static pool: mysql.Pool | null = null;
     private static poolsInitialized = false;
 
-    async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
+    async initPool(config: Omit<DbConfig, 'database' | 'driver'>): Promise<void> {
         if (MysqlAdapter.poolsInitialized) return;
         MysqlAdapter.pool = mysql.createPool({
             host: config.host,
@@ -21,7 +23,7 @@ export class MysqlAdapter implements DBAdapter {
             waitForConnections: true,
             enableKeepAlive: true,
             keepAliveInitialDelay: 0,
-            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : undefined,
+            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === AppEnv.Production } : undefined,
         });
         MysqlAdapter.poolsInitialized = true;
     }

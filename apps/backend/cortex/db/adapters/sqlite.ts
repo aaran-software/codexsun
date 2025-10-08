@@ -1,9 +1,11 @@
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import { AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import {AppEnv} from "../../config/get-settings";
+import {DbConfig} from "../../config/db-config";
 
 export class SqliteAdapter implements DBAdapter {
-    async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
+    async initPool(config: Omit<DbConfig, 'database' | 'driver'>): Promise<void> {
         // No pool for SQLite
     }
 
@@ -39,7 +41,7 @@ export class SqliteAdapter implements DBAdapter {
                 end: async () => await db.close(),
             };
         } catch (err) {
-            if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
+            if (process.env.APP_ENV !== AppEnv.Production || process.env.SUPPRESS_DB_LOGS !== 'true') {
                 console.error('SQLite connection error:', err);
             }
             throw err;

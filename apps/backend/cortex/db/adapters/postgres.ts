@@ -1,13 +1,15 @@
 // cortex/db/adapters/postgres.ts
 
 import pg from 'pg';
-import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import {  AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import {AppEnv} from "../../config/get-settings";
+import {DbConfig} from "../../config/db-config";
 
 export class PostgresAdapter implements DBAdapter {
     private static pool: pg.Pool | null = null;
     private static poolsInitialized = false;
 
-    async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
+    async initPool(config: Omit<DbConfig, 'database' | 'driver'>): Promise<void> {
         if (PostgresAdapter.poolsInitialized) return;
         PostgresAdapter.pool = new pg.Pool({
             host: config.host,
@@ -17,7 +19,7 @@ export class PostgresAdapter implements DBAdapter {
             max: config.connectionLimit || 50,
             connectionTimeoutMillis: config.acquireTimeout || 30000,
             idleTimeoutMillis: config.idleTimeout || 60000,
-            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : false,
+            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === AppEnv.Production } : false,
         });
         PostgresAdapter.poolsInitialized = true;
     }

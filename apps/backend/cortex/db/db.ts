@@ -1,8 +1,8 @@
-import { AsyncLocalStorage } from 'async_hooks';
-import { AnyDbClient, QueryResult } from './db-types';
-import { Connection } from './connection';
-import { getDbConfig } from '../config/db-config';
-import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
+import {AsyncLocalStorage} from 'async_hooks';
+import {AnyDbClient, QueryResult} from './db-types';
+import {Connection} from './connection';
+import {getPrimaryDbConfig} from '../config/db-config';
+import {logQuery, logTransaction, logHealthCheck} from '../config/logger';
 
 export const tenantStorage = new AsyncLocalStorage<string>(); // Tenant DB context
 
@@ -16,20 +16,21 @@ export const tenantStorage = new AsyncLocalStorage<string>(); // Tenant DB conte
  * @throws Error with detailed message on failure.
  */
 export async function query<T>(sql: string, params: any[] = []): Promise<QueryResult<T>> {
-    const dbConfig = getDbConfig();
+    const dbConfig = getPrimaryDbConfig();
     const db = tenantStorage.getStore() || dbConfig.database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
-        if (!sql || typeof sql !== 'string') {
-            throw new Error('Invalid SQL query provided');
+        if (!sql) {
+            return Promise.reject(new Error('Invalid SQL query provided'));
         }
 
-        logQuery('start', { sql, params, db });
+
+        logQuery('start', {sql, params, db});
         client = await Connection.getInstance().getClient(db);
         const result = await client.query(sql, params);
-        logQuery('end', { sql, params, db, duration: Date.now() - start });
+        logQuery('end', {sql, params, db, duration: Date.now() - start});
 
         return {
             rows: (Array.isArray(result) ? result : result.rows || []) as T[],
@@ -38,7 +39,7 @@ export async function query<T>(sql: string, params: any[] = []): Promise<QueryRe
         };
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown query error';
-        logQuery('error', { sql, params, db, duration: Date.now() - start, error: errMsg });
+        logQuery('error', {sql, params, db, duration: Date.now() - start, error: errMsg});
         throw new Error(`Query failed on DB ${db}: ${sql.slice(0, 50)}... - ${errMsg}`);
     } finally {
         if (client) {
@@ -61,25 +62,25 @@ export async function query<T>(sql: string, params: any[] = []): Promise<QueryRe
  * @throws Error on transaction failure.
  */
 export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>): Promise<T> {
-    const dbConfig = getDbConfig();
+    const dbConfig = getPrimaryDbConfig();
     const db = tenantStorage.getStore() || dbConfig.database;
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
-        logTransaction('start', { db });
+        logTransaction('start', {db});
         client = await Connection.getInstance().getClient(db);
         await client.query('START TRANSACTION');
 
         const result = await callback(client);
 
         await client.query('COMMIT');
-        logTransaction('end', { db, duration: Date.now() - start });
+        logTransaction('end', {db, duration: Date.now() - start});
 
         return result;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown transaction error';
-        logTransaction('error', { db, duration: Date.now() - start, error: errMsg });
+        logTransaction('error', {db, duration: Date.now() - start, error: errMsg});
 
         if (client) {
             try {
@@ -108,18 +109,18 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
  * @param database - Optional database name (defaults to current context).
  * @returns True if healthy, false otherwise.
  */
-export async function healthCheck(database: string = tenantStorage.getStore() || getDbConfig().database): Promise<boolean> {
+export async function healthCheck(database: string = tenantStorage.getStore() || getPrimaryDbConfig().database): Promise<boolean> {
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
         client = await Connection.getInstance().getClient(database);
         await client.query('SELECT 1');
-        logHealthCheck('success', { database, duration: Date.now() - start });
+        logHealthCheck('success', {database, duration: Date.now() - start});
         return true;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown health check error';
-        logHealthCheck('error', { database, duration: Date.now() - start, error: errMsg });
+        logHealthCheck('error', {database, duration: Date.now() - start, error: errMsg});
         return false;
     } finally {
         if (client) {

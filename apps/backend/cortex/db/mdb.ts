@@ -2,10 +2,10 @@
 
 import { Connection } from './connection';
 import { QueryResult, AnyDbClient } from './db-types';
-import { getDbConfig } from '../config/db-config';
+import { getMasterDbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 
-const dbConfig = getDbConfig();
+const dbConfig = getMasterDbConfig();
 
 export async function query<T>(text: string, params: any[] = [], dbName?: string): Promise<QueryResult<T>> {
     const database = dbName !== undefined ? dbName : dbConfig.database;
@@ -17,8 +17,8 @@ export async function query<T>(text: string, params: any[] = [], dbName?: string
     let client: AnyDbClient | null = null;
 
     try {
-        if (!text || typeof text !== 'string') {
-            throw new Error('Invalid SQL query provided');
+        if (!text) {
+            return Promise.reject(new Error('Invalid SQL query provided'));
         }
 
         logQuery('start', { sql: text, params, db: database });

@@ -2,7 +2,7 @@ import { getTenantDbConnection } from "../../../cortex/db/db-context-switcher";
 import { Tenant } from "../../../cortex/core/app.types";
 import { query, tenantStorage } from "../../../cortex/db/db";
 import { Connection } from "../../../cortex/db/connection";
-import { getDbConfig } from "../../../cortex/config/db-config";
+import { getMasterDbConfig } from "../../../cortex/config/db-config";
 import * as sinon from "sinon";
 
 // Increase timeout for async operations
@@ -44,8 +44,8 @@ describe("[1.] DB Context Switching", () => {
 
     async function setupTestDBs(): Promise<void> {
         setTestEnv();
-        const masterlessConfig: any = { ...getDbConfig(), database: undefined };
-        await Connection.initialize(masterlessConfig);
+        const masterlessConfig = { ...getMasterDbConfig(), database: undefined };
+        await Connection.initialize(masterlessConfig.database);
         const tempConn = Connection.getInstance();
         const client = await tempConn.getClient();
         await client.query(`DROP DATABASE IF EXISTS \`${masterDb}\``);
@@ -59,7 +59,7 @@ describe("[1.] DB Context Switching", () => {
 
     async function cleanupTestDBs(): Promise<void> {
         setTestEnv();
-        const masterlessConfig: any = { ...getDbConfig(), database: undefined };
+        const masterlessConfig = { ...getMasterDbConfig(), database: undefined };
         await Connection.initialize(masterlessConfig);
         const tempConn = Connection.getInstance();
         const client = await tempConn.getClient();
@@ -74,7 +74,7 @@ describe("[1.] DB Context Switching", () => {
         await setupTestDBs();
         (Connection as any).instance = null;
         setTestEnv();
-        await Connection.initialize(getDbConfig());
+        await Connection.initialize(getMasterDbConfig());
 
         // Seed tenant DB with test data
         await runWithTenant(tenantDb, async () =>

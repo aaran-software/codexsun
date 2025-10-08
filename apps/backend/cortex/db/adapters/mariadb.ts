@@ -1,11 +1,13 @@
 import mariadb from 'mariadb';
-import { DbConfig, AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import { AnyDbClient, QueryResult, DBAdapter } from '../db-types';
+import {DbConfig} from "../../config/db-config";
+import {AppEnv} from "../../config/get-settings";
 
 export class MariaDBAdapter implements DBAdapter {
     private static pool: mariadb.Pool | null = null;
     private static poolsInitialized = false;
 
-    async initPool(config: Omit<DbConfig, 'database' | 'type'>): Promise<void> {
+    async initPool(config: Omit<DbConfig, 'database' | 'driver'>): Promise<void> {
         if (MariaDBAdapter.poolsInitialized) return;
         MariaDBAdapter.pool = mariadb.createPool({
             host: config.host,
@@ -15,7 +17,7 @@ export class MariaDBAdapter implements DBAdapter {
             connectionLimit: config.connectionLimit || 50,
             acquireTimeout: config.acquireTimeout || 30000,
             idleTimeout: config.idleTimeout || 60000,
-            ssl: config.ssl ? { rejectUnauthorized: process.env.NODE_ENV === 'production' } : false,
+            ssl: config.ssl ? { rejectUnauthorized: process.env.APP_ENV === AppEnv.Production } : false,
         });
         MariaDBAdapter.poolsInitialized = true;
     }
