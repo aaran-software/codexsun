@@ -10,12 +10,12 @@ export class CreateUsersMigration extends BaseMigration {
             table.string('email').unique();
             table.string('password_hash').notNull();
             table.string('mobile').null();
-            table.string('role_id').null();
+            table.integer('role_id').null();
             table.string('email_verified').null();
             table.string('active').null();
             table.timestamps();
 
-            table.foreignKey('role_id').reference('id').onTable('roles').withType('VARCHAR(50)').onDelete('CASCADE').build();
+            table.foreignKey('role_id').reference('id').onTable('roles').onDelete('CASCADE').build();
         });
         console.log('Created users table');
 

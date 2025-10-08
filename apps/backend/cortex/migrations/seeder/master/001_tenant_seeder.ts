@@ -1,10 +1,5 @@
-// cortex/migrations/seeder/master/001_tenant_seeder.ts
-
 import { query } from '../../../db/mdb';
 
-/**
- * Seeds the tenants table in the master database with initial data.
- */
 export class MasterSeeder {
     private readonly MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 
@@ -13,17 +8,18 @@ export class MasterSeeder {
         try {
             await query(
                 `
-                INSERT INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    INSERT INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl, active, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 `,
                 [
                     'default',
-                    process.env.DB_HOST || 'localhost',
-                    process.env.DB_PORT || '3306',
-                    process.env.DB_USER || 'root',
-                    process.env.DB_PASS || '',
-                    process.env.DEFAULT_TENANT_DB || 'tenant_db',
-                    process.env.DB_SSL || 'false',
+                    process.env.DB_HOST || null,
+                    process.env.DB_PORT || null,
+                    process.env.DB_USER || null,
+                    process.env.DB_PASS || null,
+                    process.env.DEFAULT_TENANT_DB || null,
+                    process.env.DB_SSL || null,
+                    'active',
                 ],
                 this.MASTER_DB
             );

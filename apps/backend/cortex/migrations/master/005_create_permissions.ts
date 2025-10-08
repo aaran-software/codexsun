@@ -7,9 +7,9 @@ export class CreateUsersMigration extends BaseMigration {
         await this.schema.create('permissions', (table) => {
             table.id();
             table.string('name').unique().notNull();
-            table.string('tenant_id').notNull();
-            table.string('user_id').notNull();
-            table.string('role_id').notNull();
+            table.integer('tenant_id').notNull();
+            table.integer('user_id').notNull();
+            table.integer('role_id').notNull();
             table.string('active').null();
             table.timestamps();
         });

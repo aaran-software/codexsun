@@ -1,45 +1,50 @@
-import { Tenant, Credentials, User, DbConnection, JwtPayload } from '../app.types';
-import { getTenantDbConnection } from '../../db/db-context-switcher';
-import * as jwt from 'jsonwebtoken';
+import { Credentials, User } from '../app.types';
+import { query } from '../../db/db';
+import { generateJwt } from '../secret/jwt-service';
+import { decodePassword } from '../secret/crypt-service';
 
-// Retrieve JWT_SECRET from environment (fallback for dev/testing)
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-please-replace';
-
-// Query user from tenant DB
-async function queryUser(connection: DbConnection, email: string): Promise<any> {
-    const result = await connection.query(
-        'SELECT id, email, password_hash, tenant_id, role FROM users WHERE email = ?',
-        [email]
-    );
-    return result.rows[0] || null;
-}
-
-export async function authenticateUser(credentials: Credentials, tenant: Tenant): Promise<User> {
+export async function authenticateUser(credentials: Credentials): Promise<User> {
     const { email, password } = credentials;
 
-    const connection = await getTenantDbConnection(tenant);
     try {
-        const user = await queryUser(connection, email);
+        const result = await query<{
+            id: string;
+            email: string;
+            tenant_id: string;
+            role_id: string;
+            role_name: string;
+        }>(
+            `SELECT u.id, u.email, u.tenant_id, u.role_id, r.name as role_name
+             FROM users u
+                      LEFT JOIN roles r ON u.role_id = r.id
+             WHERE u.email = ?`,
+            [email]
+        );
 
-        if (!user || user.tenant_id !== tenant.id) {
+        const user = result.rows[0];
+        if (!user) {
             throw new Error('Invalid credentials');
         }
 
-        // Temporary plain password comparison (to be replaced with bcrypt)
-        if (password !== user.password_hash) {
+        // Verify password using crypt-service
+        const isValid = await decodePassword(password, email);
+        if (!isValid) {
             throw new Error('Invalid credentials');
         }
 
-        const payload: JwtPayload = { id: user.id, tenantId: user.tenant_id, role: user.role };
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+        const token = await generateJwt({
+            id: user.id,
+            tenantId: user.tenant_id,
+            role: user.role_name || 'viewer'
+        });
 
         return {
             id: user.id,
             tenantId: user.tenant_id,
-            role: user.role,
-            token,
+            role: user.role_name || 'viewer',
+            token
         };
-    } finally {
-        await connection.release();
+    } catch (error) {
+        throw error instanceof Error ? error : new Error('Authentication failed');
     }
 }
