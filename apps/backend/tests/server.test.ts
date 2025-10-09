@@ -1,19 +1,42 @@
 import supertest, { SuperTest, Test } from "supertest";
 import { generateJwt } from "../cortex/core/secret/jwt-service";
-import { generateHash } from "../cortex/core/secret/crypt-service";
+import { Connection } from "../cortex/db/connection";
+import { query } from "../cortex/db/db";
 
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 const API_URL = 'http://localhost:3006'; // Matches live environment
 
 describe('[30. API] CODEXSUN ERP Server', () => {
     let request: SuperTest<Test>;
+    let connection: Connection;
     let testToken: string;
 
     beforeAll(async () => {
-        // Initialize supertest with the API URL (server is started manually)
+        // Initialize database connection
+        const testConfig = {
+            driver: 'mariadb' as const,
+            database: MASTER_DB,
+            host: process.env.DB_HOST || 'localhost',
+            port: parseInt(process.env.DB_PORT || '3306', 10),
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASS || 'Computer.1',
+            ssl: process.env.DB_SSL === 'true',
+            connectionLimit: 10,
+            acquireTimeout: 10000,
+            idleTimeout: 10000,
+        };
+
+        connection = await Connection.initialize(testConfig);
+        await query('DELETE FROM user_sessions', [], MASTER_DB);
+
+        // Initialize supertest with the API URL
         request = supertest(API_URL) as unknown as SuperTest<Test>;
         // Generate a test JWT token with numeric user_id
-        testToken = await generateJwt({ id: 1, tenantId: "tenant-123", role: "admin" });
+        testToken = await generateJwt({ id: "1", tenantId: "default", role: "admin" });
+    });
+
+    afterAll(async () => {
+        await connection.close();
     });
 
     test("[test 1] GET / should return server running status", async () => {
@@ -65,67 +88,66 @@ describe('[30. API] CODEXSUN ERP Server', () => {
         expect(response.text).toBe("404 Not Found");
     });
 
-    test("[test 8] POST /api/auth/login with valid credentials should return token", async () => {
+    test("[test 8] POST /login with valid credentials should return token", async () => {
         const credentials = { email: "admin@example.com", password: "admin123" };
         const response = await request
-            .post("/api/auth/login")
+            .post("/login")
             .set("Content-Type", "application/json")
             .send(credentials);
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
-            message: "Login successful",
-            token: expect.any(String),
             user: {
                 id: 1,
                 username: "admin_user",
                 email: "admin@example.com",
-                tenantId: "tenant-123",
+                tenantId: "default",
                 role: "admin",
+                token: expect.any(String),
             },
             tenant: {
-                id: "tenant-123",
+                id: "default",
                 dbConnection: expect.any(String),
             },
         });
-        testToken = response.body.token; // Update testToken for verify test
+        testToken = response.body.user.token; // Update testToken for verify and logout tests
     });
 
-    test("[test 9] POST /api/auth/login with invalid credentials should return 401", async () => {
+    test("[test 9] POST /login with invalid credentials should return 401", async () => {
         const credentials = { email: "wronguser@example.com", password: "wrongpassword" };
         const response = await request
-            .post("/api/auth/login")
+            .post("/login")
             .set("Content-Type", "application/json")
             .send(credentials);
         expect(response.status).toBe(401);
         expect(response.body).toEqual({ error: "Invalid credentials" });
     });
 
-    test("[test 10] POST /api/auth/login with missing credentials should return 400", async () => {
+    test("[test 10] POST /login with missing credentials should return 400", async () => {
         const credentials = { email: "admin@example.com" }; // Missing password
         const response = await request
-            .post("/api/auth/login")
+            .post("/login")
             .set("Content-Type", "application/json")
             .send(credentials);
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ error: "Email and password are required" });
     });
 
-    test("[test 11] POST /api/auth/login with invalid JSON should return 400", async () => {
+    test("[test 11] POST /login with invalid JSON should return 400", async () => {
         const response = await request
-            .post("/api/auth/login")
+            .post("/login")
             .set("Content-Type", "application/json")
             .send("invalid json");
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ error: "Invalid JSON" });
     });
 
-    test("[test 12] POST /api/auth/logout should return success", async () => {
+    test("[test 12] POST /logout with valid token should return success", async () => {
         const response = await request
-            .post("/api/auth/logout")
+            .post("/logout")
             .set("Content-Type", "application/json")
             .set("Authorization", `Bearer ${testToken}`);
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ message: "Logout successful" });
+        expect(response.body).toEqual({ message: "Logged out successfully" });
     });
 
     test("[test 13] GET /api/auth/verify with valid token should return user data", async () => {
@@ -138,7 +160,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
             user: {
                 id: 1,
                 username: "admin_user",
-                tenantId: "tenant-123",
+                tenantId: "default",
                 role: "admin",
             },
         });

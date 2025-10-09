@@ -2,14 +2,14 @@ import { IncomingMessage, ServerResponse } from "node:http";
 import { createHttpRouter } from "./chttpx";
 import { Logger } from "../logger/logger";
 import { login, logout, isTokenValid } from "../core/auth/login-controller";
-import {verifyJwt} from "../core/secret/jwt-service";
+import { verifyJwt } from "../core/secret/jwt-service";
 
 export function createAuthRouter() {
     const { routeRequest, Route } = createHttpRouter();
     const logger = new Logger();
 
     // Login route
-    Route("POST", "/api/auth/login", async (req: IncomingMessage, res: ServerResponse) => {
+    Route("POST", "/login", async (req: IncomingMessage, res: ServerResponse) => {
         let body = "";
         req.on("data", (chunk) => {
             body += chunk.toString();
@@ -28,14 +28,13 @@ export function createAuthRouter() {
                 res.writeHead(200, { "Content-Type": "application/json" });
                 res.end(
                     JSON.stringify({
-                        message: "Login successful",
-                        token: response.user.token,
                         user: {
                             id: response.user.id,
                             username: response.user.username,
                             email: response.user.email,
                             tenantId: response.user.tenantId,
                             role: response.user.role,
+                            token: response.user.token,
                         },
                         tenant: {
                             id: response.tenant.id,
@@ -51,15 +50,17 @@ export function createAuthRouter() {
                     error: errorMessage,
                 });
 
-                if (errorMessage.includes("Invalid credentials")) {
+                if (
+                    errorMessage.includes("Invalid credentials") ||
+                    errorMessage.includes("No tenant associated") ||
+                    errorMessage.includes("Tenant not found")
+                ) {
                     res.writeHead(401, { "Content-Type": "application/json" });
                     res.end(JSON.stringify({ error: "Invalid credentials" }));
                 } else if (
                     errorMessage.includes("Email and password are required") ||
                     errorMessage.includes("Valid email is required") ||
-                    errorMessage.includes("No tenant associated") ||
                     errorMessage.includes("Multiple tenants found") ||
-                    errorMessage.includes("Tenant not found") ||
                     errorMessage.includes("Incomplete tenant configuration")
                 ) {
                     res.writeHead(400, { "Content-Type": "application/json" });
@@ -73,7 +74,7 @@ export function createAuthRouter() {
     });
 
     // Logout route
-    Route("POST", "/api/auth/logout", async (req: IncomingMessage, res: ServerResponse) => {
+    Route("POST", "/logout", async (req: IncomingMessage, res: ServerResponse) => {
         try {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -94,7 +95,7 @@ export function createAuthRouter() {
                 url: req.url,
             });
             res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ message: "Logout successful" }));
+            res.end(JSON.stringify({ message: "Logged out successfully" }));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             logger.error("Error during logout", {
@@ -138,7 +139,7 @@ export function createAuthRouter() {
                     message: "Token is valid",
                     user: {
                         id: payload.id,
-                        username: "admin_user", // Match assumed database username
+                        username: "admin_user",
                         tenantId: payload.tenantId,
                         role: payload.role,
                     },

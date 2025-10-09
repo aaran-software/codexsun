@@ -1,5 +1,6 @@
 import {Tenant} from '../app.types';
-import {query, tenantStorage} from '../../db/db';
+import {tenantStorage} from '../../db/db';
+import {query} from '../../db/mdb';
 import {getMasterDbConfig} from '../../config/db-config';
 
 export async function resolveTenant(req: { body: { email: string; password: string } }): Promise<Tenant> {
