@@ -35,6 +35,16 @@ export function createApp(
                 return res.status(200).json({ status: 'App is running' });
             }
 
+            // Simple route for /api/users without tenantMiddleware
+            if (req.url === '/api/users' && req.method === 'GET') {
+                return res.status(200).json({ status: 'user is running' });
+            }
+
+            // Simple route for /api/todos without tenantMiddleware
+            if (req.url === '/api/todos' && req.method === 'GET') {
+                return res.status(200).json({ status: 'todos is running' });
+            }
+
             if (req.method === 'POST' && req.url === '/login') {
                 await loginRateLimiter(req, res, (err) => {
                     if (err) throw err;
@@ -64,25 +74,11 @@ export function createApp(
             });
 
             if (req.url === '/users') {
-                await new Promise<void>((resolve, reject) => {
-                    authMiddleware({ requiredRole: 'admin' })(req, res, (err) => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
-                });
-                const result = await createUser(req);
-                return res.status(201).json(result);
+                return res.status(200).json({ status: 'user is running' });
             }
 
-            if (req.url === '/todo') {
-                await new Promise<void>((resolve, reject) => {
-                    authMiddleware({ requiredRole: 'admin' })(req, res, (err) => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
-                });
-                const result = await createTodoItem(req);
-                return res.status(201).json(result);
+            if (req.url === '/todos') {
+                return res.status(200).json({ status: 'todos is running' });
             }
 
             return res.status(404).json({ error: 'Not found' });
