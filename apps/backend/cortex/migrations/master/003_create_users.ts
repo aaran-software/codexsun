@@ -12,7 +12,7 @@ export class CreateUsersMigration extends BaseMigration {
             table.string('mobile').null();
             table.integer('role_id').null();
             table.string('email_verified').null();
-            table.string('active').null();
+            table.string('status').null();
             table.timestamps();
 
             table.foreignKey('role_id').reference('id').onTable('roles').onDelete('CASCADE').build();

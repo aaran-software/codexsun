@@ -1,100 +1,166 @@
-// import { Request, Response } from 'express';
-// import * as userService from './user.service';
-// import { withTenantContext } from '../db/db';
-// import { User } from './user.model';
-//
-// const tenantDatabases = [
-//     { tenantId: 'tenant1', database: 'tenant_1' },
-//     { tenantId: 'tenant2', database: 'tenant_2' },
-// ];
-//
-// export class UserController {
-//     static async create(req: Request, res: Response) {
-//         const tenantId = req.get('X-Tenant-Id');
-//         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
-//
-//         const { username, email, password, mobile, status, role } = req.body;
-//         if (!username || !email || !password) {
-//             return res.status(400).json({ error: 'Username, email, and password are required' });
-//         }
-//
-//         try {
-//             const user = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
-//                 return userService.createUserService({ username, email, password, mobile, status, role, tenant_id: tenantId });
-//             });
-//             res.status(201).json(user);
-//         } catch (error) {
-//             res.status(400).json({ error: (error as Error).message });
-//         }
-//     }
-//
-//     static async getAll(req: Request, res: Response) {
-//         const tenantId = req.get('X-Tenant-Id');
-//         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
-//
-//         try {
-//             const users = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
-//                 return userService.getUsersService(tenantId);
-//             });
-//             res.json(users);
-//         } catch (error) {
-//             res.status(500).json({ error: (error as Error).message });
-//         }
-//     }
-//
-//     static async getById(req: Request, res: Response) {
-//         const tenantId = req.get('X-Tenant-Id');
-//         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
-//
-//         const id = Number(req.params.id);
-//         if (isNaN(id)) return res.status(400).json({ error: 'Invalid user ID' });
-//
-//         try {
-//             const user = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
-//                 return userService.getUserByIdService(id, tenantId);
-//             });
-//             if (!user) return res.status(404).json({ error: 'User not found' });
-//             res.json(user);
-//         } catch (error) {
-//             res.status(400).json({ error: (error as Error).message });
-//         }
-//     }
-//
-//     static async update(req: Request, res: Response) {
-//         const tenantId = req.get('X-Tenant-Id');
-//         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
-//
-//         const id = Number(req.params.id);
-//         if (isNaN(id)) return res.status(400).json({ error: 'Invalid user ID' });
-//
-//         const updates = req.body;
-//
-//         try {
-//             const updated = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
-//                 return userService.updateUserService(id, updates, tenantId);
-//             });
-//             if (!updated) return res.status(404).json({ error: 'User not found' });
-//             res.json(updated);
-//         } catch (error) {
-//             res.status(400).json({ error: (error as Error).message });
-//         }
-//     }
-//
-//     static async delete(req: Request, res: Response) {
-//         const tenantId = req.get('X-Tenant-Id');
-//         if (!tenantId) return res.status(400).json({ error: 'Tenant ID is required' });
-//
-//         const id = Number(req.params.id);
-//         if (isNaN(id)) return res.status(400).json({ error: 'Invalid user ID' });
-//
-//         try {
-//             const success = await withTenantContext(tenantId, tenantDatabases.find(t => t.tenantId === tenantId)?.database || '', async () => {
-//                 return userService.deleteUserService(id, tenantId);
-//             });
-//             if (!success) return res.status(404).json({ error: 'User not found' });
-//             res.status(204).send();
-//         } catch (error) {
-//             res.status(400).json({ error: (error as Error).message });
-//         }
-//     }
-// }
+import { IncomingMessage, ServerResponse } from "node:http";
+import { Logger } from "../logger/logger";
+import * as userService from "./user.service";
+import { User } from "./user.model";
+
+export class UserController {
+    private static logger = new Logger();
+
+    static async create(req: IncomingMessage, res: ServerResponse) {
+        let body = "";
+        req.on("data", (chunk) => {
+            body += chunk.toString();
+        });
+
+        req.on("end", async () => {
+            try {
+                const userData = JSON.parse(body);
+                if (!userData.tenant_id) {
+                    throw new Error("Tenant ID is required");
+                }
+                const response = await userService.createUserService(userData);
+                res.writeHead(201, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({
+                    id: response.id,
+                    username: response.username,
+                    email: response.email,
+                    mobile: response.mobile,
+                    status: response.status,
+                    role_id: response.role_id,
+                    email_verified: response.email_verified,
+                    created_at: response.created_at,
+                    updated_at: response.updated_at
+                }));
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error("Error creating user", { error: errorMessage });
+                res.writeHead(400, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: errorMessage }));
+            }
+        });
+    }
+
+    static async getAll(req: IncomingMessage, res: ServerResponse) {
+        try {
+            const tenantId = req.url?.split("tenant_id=")[1] || "";
+            if (!tenantId) {
+                throw new Error("Tenant ID is required");
+            }
+            const users = await userService.getUsersService(tenantId);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(users.map(user => ({
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                mobile: user.mobile,
+                status: user.status,
+                role_id: user.role_id,
+                email_verified: user.email_verified,
+                created_at: user.created_at,
+                updated_at: user.updated_at
+            }))));
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error("Error fetching users", { error: errorMessage });
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: errorMessage }));
+        }
+    }
+
+    static async getById(req: IncomingMessage, res: ServerResponse) {
+        try {
+            const id = parseInt(req.url?.split("/")[3] || "0", 10);
+            const tenantId = req.url?.split("tenant_id=")[1] || "";
+            if (!id || !tenantId) {
+                throw new Error("User ID and Tenant ID are required");
+            }
+            const user = await userService.getUserByIdService(id, tenantId);
+            if (!user) {
+                res.writeHead(404, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "User not found" }));
+                return;
+            }
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                mobile: user.mobile,
+                status: user.status,
+                role_id: user.role_id,
+                email_verified: user.email_verified,
+                created_at: user.created_at,
+                updated_at: user.updated_at
+            }));
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error("Error fetching user by ID", { error: errorMessage });
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: errorMessage }));
+        }
+    }
+
+    static async update(req: IncomingMessage, res: ServerResponse) {
+        let body = "";
+        req.on("data", (chunk) => {
+            body += chunk.toString();
+        });
+
+        req.on("end", async () => {
+            try {
+                const id = parseInt(req.url?.split("/")[3] || "0", 10);
+                const tenantId = req.url?.split("tenant_id=")[1] || "";
+                const updates = JSON.parse(body);
+                if (!id || !tenantId) {
+                    throw new Error("User ID and Tenant ID are required");
+                }
+                const updatedUser = await userService.updateUserService(id, updates, tenantId);
+                if (!updatedUser) {
+                    res.writeHead(404, { "Content-Type": "application/json" });
+                    res.end(JSON.stringify({ error: "User not found or update failed" }));
+                    return;
+                }
+                res.writeHead(200, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({
+                    id: updatedUser.id,
+                    username: updatedUser.username,
+                    email: updatedUser.email,
+                    mobile: updatedUser.mobile,
+                    status: updatedUser.status,
+                    role_id: updatedUser.role_id,
+                    email_verified: updatedUser.email_verified,
+                    created_at: updatedUser.created_at,
+                    updated_at: updatedUser.updated_at
+                }));
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error("Error updating user", { error: errorMessage });
+                res.writeHead(400, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: errorMessage }));
+            }
+        });
+    }
+
+    static async delete(req: IncomingMessage, res: ServerResponse) {
+        try {
+            const id = parseInt(req.url?.split("/")[3] || "0", 10);
+            const tenantId = req.url?.split("tenant_id=")[1] || "";
+            if (!id || !tenantId) {
+                throw new Error("User ID and Tenant ID are required");
+            }
+            const deleted = await userService.deleteUserService(id, tenantId);
+            if (!deleted) {
+                res.writeHead(404, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "User not found or deletion failed" }));
+                return;
+            }
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ message: "User deleted successfully" }));
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error("Error deleting user", { error: errorMessage });
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: errorMessage }));
+        }
+    }
+}

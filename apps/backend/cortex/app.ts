@@ -1,6 +1,6 @@
 import { getSettings } from "./config/get-settings";
 import { createRouter } from "./routes/router";
-import { createUserRouter } from "./routes/user-routes";
+import { createUserRouter } from "./user/user-routes";
 import {createAuthRouter} from "./routes/auth-routes";
 
 interface Dependencies {

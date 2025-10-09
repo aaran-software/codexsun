@@ -34,13 +34,13 @@ export class UsersSeeder {
         password: string,
         mobile: string,
         roleId: string,
-        active: string
+        status: string
     ): Promise<void> {
         const passwordHash = await generateHash(password);
         await query(
-            `INSERT INTO users (username, email, password_hash, mobile, role_id, email_verified, active, created_at, updated_at)
+            `INSERT INTO users (username, email, password_hash, mobile, role_id, email_verified, status, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-            [username, email, passwordHash, mobile, roleId, 'verified', active],
+            [username, email, passwordHash, mobile, roleId, 'verified', status],
             this.MASTER_DB
         );
         console.log(`Seeded user: ${username}`);
@@ -56,7 +56,7 @@ export class UsersSeeder {
                     password: 'admin123',
                     mobile: '1234567890',
                     role_name: 'admin',
-                    active: 'active',
+                    status: 'active',
                 },
                 {
                     username: 'john_doe',
@@ -64,7 +64,7 @@ export class UsersSeeder {
                     password: 'john123',
                     mobile: '0987654321',
                     role_name: 'user',
-                    active: 'active',
+                    status: 'active',
                 },
                 {
                     username: 'jane_smith',
@@ -72,7 +72,7 @@ export class UsersSeeder {
                     password: 'jane123',
                     mobile: '5555555555',
                     role_name: 'user',
-                    active: 'inactive',
+                    status: 'inactive',
                 },
             ];
 
@@ -88,7 +88,7 @@ export class UsersSeeder {
                     user.password,
                     user.mobile,
                     roleId,
-                    user.active
+                    user.status
                 );
             }
         } catch (err: unknown) {

@@ -1,12 +1,21 @@
 import { getSettings } from '../config/get-settings';
-import chalk from 'chalk';
 
 // Interface for log labels
 interface LogLabels {
     [key: string]: string | number | undefined;
 }
 
-// Simplified console logger with colored output
+// ANSI color codes
+const COLORS = {
+    green: '\x1b[32m', // Bright green
+    blue: '\x1b[34m',  // Bright blue
+    red: '\x1b[31m',   // Bright red
+    yellow: '\x1b[33m', // Bright yellow
+    cyan: '\x1b[36m',  // Bright cyan
+    reset: '\x1b[0m',  // Reset color
+};
+
+// Simplified console logger with native ANSI colored output
 export class Logger {
     private readonly isDebug: boolean;
 
@@ -60,18 +69,23 @@ export class Logger {
             ? `[${timestamp}] ${level.toUpperCase()}: ${message} ${this.formatLabels(data)}`
             : `[${timestamp}] ${level.toUpperCase()}: ${message}`;
 
+        let coloredMessage: string;
         switch (level) {
             case 'info':
-                console.log(chalk.greenBright(formattedMessage));
+                coloredMessage = `${COLORS.green}${formattedMessage}${COLORS.reset}`;
+                console.log(coloredMessage);
                 break;
             case 'debug':
-                console.log(chalk.blueBright(formattedMessage));
+                coloredMessage = `${COLORS.blue}${formattedMessage}${COLORS.reset}`;
+                console.log(coloredMessage);
                 break;
             case 'error':
-                console.error(chalk.redBright(formattedMessage));
+                coloredMessage = `${COLORS.red}${formattedMessage}${COLORS.reset}`;
+                console.error(coloredMessage);
                 break;
             case 'warn':
-                console.log(chalk.yellowBright(formattedMessage));
+                coloredMessage = `${COLORS.yellow}${formattedMessage}${COLORS.reset}`;
+                console.log(coloredMessage);
                 break;
         }
     }
@@ -100,6 +114,7 @@ export class Logger {
     metric(name: string, value: number, labels: LogLabels): void {
         if (!this.isDebug) return;
         const timestamp = this.formatTimestamp();
-        console.log(chalk.cyanBright(`[${timestamp}] METRIC: ${name}=${value} ${this.formatLabels(labels)}`));
+        const formattedMessage = `[${timestamp}] METRIC: ${name}=${value} ${this.formatLabels(labels)}`;
+        console.log(`${COLORS.cyan}${formattedMessage}${COLORS.reset}`);
     }
 }
