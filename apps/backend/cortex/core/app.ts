@@ -1,14 +1,13 @@
-import {login, logout} from './auth/login-controller';
-import { createUser } from './user/user-controller';
-import { createTodoItem } from './todo/todo-controller';
+import { login, logout } from './auth/login-controller';
 import { tenantMiddleware } from './tenant/tenant-middleware';
 import { authMiddleware } from './auth/auth-middleware';
 import { rateLimiter } from './auth/rate-limiter';
 import { handleError } from './error/error-handler';
 import { RequestContext } from './app.types';
-import { Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+// import userRoutes from '../user/user-routes';
 
-// Extend Express Request to include context and ip
+// Extend Express Request to include context, ip, and version
 interface CustomRequest extends Request {
     context: RequestContext;
     ip: string;
@@ -24,68 +23,57 @@ export function createApp(
         next: (error?: Error) => void
     ) => Promise<void> = defaultLoginRateLimiter
 ) {
-    return async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const router = Router();
+
+    // Ensure context and ip are set for all routes
+    router.use((req: CustomRequest, res: Response, next: NextFunction) => {
+        req.context = req.context || { ip: req.ip || '127.0.0.1' };
+        req.version = req.version || 'v1';
+        next();
+    });
+
+    // Handle /app route without tenant/auth middleware
+    router.get('/app', (req: CustomRequest, res: Response) => {
+        res.status(200).json({ status: 'App is running' });
+    });
+
+    // Mount user routes
+    router.use(userRoutes);
+
+    // Handle /login
+    router.post('/login', async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
-            // Ensure context and ip are set
-            req.context = req.context || { ip: req.ip || '127.0.0.1' };
-            req.version = req.version || 'v1';
-
-            // Handle /app route without tenant/auth middleware
-            if (req.url === '/app') {
-                return res.status(200).json({ status: 'App is running' });
-            }
-
-            // Simple route for /api/users without tenantMiddleware
-            if (req.url === '/api/users' && req.method === 'GET') {
-                return res.status(200).json({ status: 'user is running' });
-            }
-
-            // Simple route for /api/todos without tenantMiddleware
-            if (req.url === '/api/todos' && req.method === 'GET') {
-                return res.status(200).json({ status: 'todos is running' });
-            }
-
-            if (req.method === 'POST' && req.url === '/login') {
-                await loginRateLimiter(req, res, (err) => {
-                    if (err) throw err;
-                });
-                const result = await login(req);
-                return res.status(200).json(result);
-            }
-
-            if (req.method === 'POST' && req.url === '/logout') {
-                const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
-                if (!token) {
-                    return res.status(400).json({ error: 'Token required' });
-                }
-                await logout(token);
-                return res.status(200).json({ message: 'Logged out successfully' });
-            }
-
-            if (req.method !== 'POST') {
-                return res.status(404).json({ error: 'Not found' });
-            }
-
-            await new Promise<void>((resolve, reject) => {
-                tenantMiddleware(req, res, (err) => {
-                    if (err) reject(err);
-                    else resolve();
-                });
+            await loginRateLimiter(req, res, (err) => {
+                if (err) throw err;
             });
-
-            if (req.url === '/users') {
-                return res.status(200).json({ status: 'user is running' });
-            }
-
-            if (req.url === '/todos') {
-                return res.status(200).json({ status: 'todos is running' });
-            }
-
-            return res.status(404).json({ error: 'Not found' });
+            const result = await login(req);
+            res.status(200).json(result);
         } catch (error) {
-            const err = error instanceof Error ? error : new Error('Unknown error');
-            await handleError(err, req.context.tenant?.id, req.version);
-            res.status(err.message === 'Too many requests' ? 429 : 401).json({ error: err.message });
+            next(error);
         }
-    };
+    });
+
+    // Handle /logout
+    router.post('/logout', async (req: CustomRequest, res: Response, next: NextFunction) => {
+        try {
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(400).json({ error: 'Token required' });
+            }
+            await logout(token);
+            res.status(200).json({ message: 'Logged out successfully' });
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    // Handle errors
+    router.use((error: Error, req: CustomRequest, res: Response, next: NextFunction) => {
+        const err = error instanceof Error ? error : new Error('Unknown error');
+        handleError(err, req.context.tenant?.id, req.version).then(() => {
+            res.status(err.message === 'Too many requests' ? 429 : 401).json({ error: err.message });
+        });
+    });
+
+    return router;
 }
