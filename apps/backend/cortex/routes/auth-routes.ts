@@ -1,13 +1,13 @@
 import { IncomingMessage, ServerResponse } from "node:http";
 import { createHttpRouter } from "./chttpx";
 import { Logger } from "../logger/logger";
-import * as bcrypt from "bcrypt";
+import { generateHash, comparePassword } from "../core/secret/crypt-service";
 
 // Dummy user for testing purposes
 const DUMMY_USER = {
     username: "admin_user",
     email: "admin@example.com",
-    password: "$2b$10$1qxTMjDVjYolPYqe5Rf0ieQvceiaKgDN978DmYnAKWU/0ya.eWly2", // Hashed password for "admin123"
+    password: "", // Will be set dynamically
     mobile: "1234567890",
     role_name: "admin",
     active: "active",
@@ -17,9 +17,21 @@ const DUMMY_USER = {
 // Simulated token for testing
 const DUMMY_TOKEN = "dummy-jwt-token-1234567890";
 
+// Generate password hash for DUMMY_USER
+async function initializeDummyUser() {
+    DUMMY_USER.password = await generateHash("admin123");
+}
+
 export function createAuthRouter() {
     const { routeRequest, Route } = createHttpRouter();
     const logger = new Logger();
+
+    // Initialize DUMMY_USER password hash
+    initializeDummyUser().catch((err) => {
+        logger.error("Failed to initialize dummy user password", {
+            error: err instanceof Error ? err.message : String(err),
+        });
+    });
 
     // Login route
     Route("POST", "/api/auth/login", async (req: IncomingMessage, res: ServerResponse) => {
@@ -44,7 +56,7 @@ export function createAuthRouter() {
                 }
 
                 // Simulate authentication check
-                if (email === DUMMY_USER.email && await bcrypt.compare(password, DUMMY_USER.password)) {
+                if (email === DUMMY_USER.email && await comparePassword(password, DUMMY_USER.password)) {
                     logger.info("Successful login", {
                         method: req.method,
                         url: req.url,
