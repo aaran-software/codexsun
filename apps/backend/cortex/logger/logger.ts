@@ -12,10 +12,10 @@ export class Logger {
 
     constructor() {
         const settings = getSettings();
-        this.isDebug = settings.APP_DEBUG || process.env.NODE_ENV === 'production';
+        this.isDebug = settings.APP_DEBUG || process.env.NODE_ENV !== 'production';
     }
 
-    // Format timestamp in IST (e.g., 2025-10-07 22:41:23)
+    // Format timestamp in IST (e.g., 2025-10-09 10:44:23)
     private formatTimestamp(): string {
         return new Date().toLocaleString('en-IN', {
             timeZone: 'Asia/Kolkata',
@@ -29,8 +29,23 @@ export class Logger {
         }).replace(/,/, '');
     }
 
-    // Format labels for metrics
+    // Format labels for logs
     private formatLabels(labels: LogLabels): string {
+        // Special handling for request and response logs
+        if (labels.method && labels.url) {
+            const base = [labels.method, `"${labels.url}"`];
+            if (labels.statusCode) {
+                base.push(labels.statusCode.toString());
+            }
+            if (labels.responseTimeMs !== undefined) {
+                base.push(`${labels.responseTimeMs}ms`);
+            }
+            if (labels.content) {
+                base.push(`content="${labels.content}"`);
+            }
+            return `{${base.join(', ')}}`;
+        }
+        // Fallback for other logs
         return Object.entries(labels)
             .filter(([_, value]) => value !== undefined)
             .map(([key, value]) => `${key}="${value}"`)
@@ -38,22 +53,25 @@ export class Logger {
     }
 
     // Generic log method with color
-    private log(level: 'info' | 'debug' | 'error', message: string, data?: LogLabels): void {
+    private log(level: 'info' | 'debug' | 'error' | 'warn', message: string, data?: LogLabels): void {
         if (level === 'debug' && !this.isDebug) return;
         const timestamp = this.formatTimestamp();
         const formattedMessage = data
-            ? `[${timestamp}] ${level.toUpperCase()}: ${message} {${this.formatLabels(data)}}`
+            ? `[${timestamp}] ${level.toUpperCase()}: ${message} ${this.formatLabels(data)}`
             : `[${timestamp}] ${level.toUpperCase()}: ${message}`;
 
         switch (level) {
             case 'info':
-                console.log(chalk.green(formattedMessage));
+                console.log(chalk.greenBright(formattedMessage));
                 break;
             case 'debug':
-                console.log(chalk.blue(formattedMessage));
+                console.log(chalk.blueBright(formattedMessage));
                 break;
             case 'error':
-                console.error(chalk.red(formattedMessage));
+                console.error(chalk.redBright(formattedMessage));
+                break;
+            case 'warn':
+                console.log(chalk.yellowBright(formattedMessage));
                 break;
         }
     }
@@ -73,10 +91,15 @@ export class Logger {
         this.log('error', message, labels);
     }
 
+    // Log warn messages
+    warn(message: string, labels?: LogLabels): void {
+        this.log('warn', message, labels);
+    }
+
     // Log metrics
     metric(name: string, value: number, labels: LogLabels): void {
         if (!this.isDebug) return;
         const timestamp = this.formatTimestamp();
-        console.log(chalk.cyan(`[${timestamp}] METRIC: ${name}=${value} {${this.formatLabels(labels)}}`));
+        console.log(chalk.cyanBright(`[${timestamp}] METRIC: ${name}=${value} ${this.formatLabels(labels)}`));
     }
 }

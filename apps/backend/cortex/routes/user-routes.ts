@@ -1,20 +1,20 @@
 import { createHttpRouter } from "./chttpx";
 
 export function createUserRouter() {
-    const { routeRequest, addRoute } = createHttpRouter();
+    const { routeRequest, Route } = createHttpRouter();
 
     // Example user routes for ERP-like functionality
-    addRoute("GET", "/api/users", (req, res) => {
+    Route("GET", "/api/users", (req, res) => {
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ users: [], message: "List of users" }));
     });
 
-    addRoute("GET", "/api/bob", (req, res) => {
+    Route("GET", "/api/bob", (req, res) => {
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ users: [], message: "List of bob" }));
     });
 
-    addRoute("POST", "/api/users", async (req, res) => {
+    Route("POST", "/api/users", async (req, res) => {
         let body = "";
         req.on("data", (chunk) => {
             body += chunk.toString();
@@ -31,5 +31,5 @@ export function createUserRouter() {
         });
     });
 
-    return { routeRequest, addRoute };
+    return { routeRequest, Route };
 }
