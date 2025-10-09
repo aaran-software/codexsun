@@ -1,4 +1,4 @@
-import { query } from '../db/db';
+import { query } from '../db/mdb';
 import { QueryResult } from '../db/db-types';
 import { User } from './user.model';
 

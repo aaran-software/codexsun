@@ -1,5 +1,5 @@
 import * as userRepo from './user.repos';
-import { query } from '../db/db';
+import { query } from '../db/mdb';
 import { User } from './user.model';
 import { comparePassword, generateHash } from '../core/secret/crypt-service';
 

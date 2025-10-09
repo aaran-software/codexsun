@@ -30,11 +30,10 @@ export function UserDataInspector() {
 
         try {
             setLoading(true)
-            const response = await fetch(`http://localhost:3000${endpoint}`, {
+            const response = await fetch(`http://localhost:3006${endpoint}`, {
                 headers: {
-                    'X-Tenant-Id': 'tenant1',
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
             })
 
@@ -47,7 +46,7 @@ export function UserDataInspector() {
                 setError(`Failed to fetch from ${endpoint}: ${response.status} ${response.statusText} - ${errorText}`)
             }
         } catch (err) {
-            setError(`Network error for ${endpoint}: ${err.message}. Is the server running at http://localhost:3000?`)
+            setError(`Network error for ${endpoint}: ${err.message}. Is the server running at http://localhost:3006?`)
         } finally {
             setLoading(false)
         }
@@ -55,7 +54,7 @@ export function UserDataInspector() {
 
     useEffect(() => {
         fetchData('/api/users', setUserData, setUserError)
-        fetchData('/api/todos', setTodoData, setTodoError)
+        // fetchData('/api/todos', setTodoData, setTodoError)
     }, [token, retryCount])
 
     if (loading) {
@@ -117,7 +116,7 @@ export function UserDataInspector() {
                     </div>
                 ) : (
                     <pre className="bg-gray-50 p-3 rounded overflow-auto max-h-[40vh] text-xs">
-            {JSON.stringify(todoData, null, 2)}
+            {/*{JSON.stringify(todoData, null, 2)}*/}
           </pre>
                 )}
             </div>

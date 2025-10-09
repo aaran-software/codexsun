@@ -32,9 +32,10 @@ export async function server(): Promise<void> {
 
     // CORS middleware configuration
     const corsMiddleware = cors({
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
+        origin: "*",
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id'],
+        credentials: true, // optional if using cookies
         maxAge: 86400, // Cache preflight response for 24 hours
     });
 

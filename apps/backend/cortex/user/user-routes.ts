@@ -1,9 +1,9 @@
-import { IncomingMessage, ServerResponse } from "node:http";
-import { createHttpRouter } from "../routes/chttpx";
-import { UserController } from "./user.controller";
+import {IncomingMessage, ServerResponse} from "node:http";
+import {createHttpRouter} from "../routes/chttpx";
+import {UserController} from "./user.controller";
 
 export function createUserRouter() {
-    const { routeRequest, Route } = createHttpRouter();
+    const {routeRequest, Route} = createHttpRouter();
 
     // Get all users
     Route("GET", "/api/users", async (req: IncomingMessage, res: ServerResponse) => {
@@ -30,5 +30,5 @@ export function createUserRouter() {
         await UserController.delete(req, res);
     });
 
-    return { routeRequest, Route };
+    return {routeRequest, Route};
 }

@@ -15,9 +15,12 @@ export class UserController {
         req.on("end", async () => {
             try {
                 const userData = JSON.parse(body);
+
                 if (!userData.tenant_id) {
                     throw new Error("Tenant ID is required");
                 }
+
+
                 const response = await userService.createUserService(userData);
                 res.writeHead(201, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({
