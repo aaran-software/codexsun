@@ -61,7 +61,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
     });
 
     test("[test 8] POST /api/auth/login with valid credentials should return token", async () => {
-        const credentials = { username: "testuser", password: "testpassword123" };
+        const credentials = { email: "admin@example.com", password: "admin123" };
         const response = await request
             .post("/api/auth/login")
             .set("Content-Type", "application/json")
@@ -71,14 +71,14 @@ describe('[30. API] CODEXSUN ERP Server', () => {
             message: "Login successful",
             token: "dummy-jwt-token-1234567890",
             user: {
-                id: "user-123",
-                username: "testuser",
+                id: "admin",
+                username: "admin_user",
             },
         });
     });
 
     test("[test 9] POST /api/auth/login with invalid credentials should return 401", async () => {
-        const credentials = { username: "wronguser", password: "wrongpassword" };
+        const credentials = { email: "wronguser@example.com", password: "wrongpassword" };
         const response = await request
             .post("/api/auth/login")
             .set("Content-Type", "application/json")
@@ -88,7 +88,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
     });
 
     test("[test 10] POST /api/auth/login with missing credentials should return 400", async () => {
-        const credentials = { username: "testuser" }; // Missing password
+        const credentials = { email: "admin@example.com" }; // Missing password
         const response = await request
             .post("/api/auth/login")
             .set("Content-Type", "application/json")
@@ -122,8 +122,8 @@ describe('[30. API] CODEXSUN ERP Server', () => {
         expect(response.body).toEqual({
             message: "Token is valid",
             user: {
-                id: "user-123",
-                username: "testuser",
+                id: "admin",
+                username: "admin_user",
             },
         });
     });

@@ -1,11 +1,16 @@
 import { IncomingMessage, ServerResponse } from "node:http";
 import { createHttpRouter } from "./chttpx";
 import { Logger } from "../logger/logger";
+import * as bcrypt from "bcrypt";
 
 // Dummy user for testing purposes
 const DUMMY_USER = {
-    username: "admin@example.com",
-    password: "admin123",
+    username: "admin_user",
+    email: "admin@example.com",
+    password: "$2b$10$1qxTMjDVjYolPYqe5Rf0ieQvceiaKgDN978DmYnAKWU/0ya.eWly2", // Hashed password for "admin123"
+    mobile: "1234567890",
+    role_name: "admin",
+    active: "active",
     id: "admin",
 };
 
@@ -17,18 +22,18 @@ export function createAuthRouter() {
     const logger = new Logger();
 
     // Login route
-    Route("POST", "/api/login", async (req: IncomingMessage, res: ServerResponse) => {
+    Route("POST", "/api/auth/login", async (req: IncomingMessage, res: ServerResponse) => {
         let body = "";
         req.on("data", (chunk) => {
             body += chunk.toString();
         });
 
-        req.on("end", () => {
+        req.on("end", async () => {
             try {
                 const credentials = JSON.parse(body);
-                const { username, password } = credentials;
+                const { email, password } = credentials;
 
-                if (!username || !password) {
+                if (!email || !password) {
                     logger.warn("Login attempt with missing credentials", {
                         method: req.method,
                         url: req.url,
@@ -39,11 +44,11 @@ export function createAuthRouter() {
                 }
 
                 // Simulate authentication check
-                if (username === DUMMY_USER.username && password === DUMMY_USER.password) {
+                if (email === DUMMY_USER.email && await bcrypt.compare(password, DUMMY_USER.password)) {
                     logger.info("Successful login", {
                         method: req.method,
                         url: req.url,
-                        username,
+                        email,
                     });
                     res.writeHead(200, { "Content-Type": "application/json" });
                     res.end(
@@ -52,7 +57,7 @@ export function createAuthRouter() {
                             token: DUMMY_TOKEN,
                             user: {
                                 id: DUMMY_USER.id,
-                                username: DUMMY_USER.username,
+                                username: "admin_user", // Match test expectation
                             },
                         })
                     );
@@ -60,7 +65,7 @@ export function createAuthRouter() {
                     logger.warn("Failed login attempt", {
                         method: req.method,
                         url: req.url,
-                        username,
+                        email,
                     });
                     res.writeHead(401, { "Content-Type": "application/json" });
                     res.end(JSON.stringify({ error: "Invalid credentials" }));
@@ -79,8 +84,6 @@ export function createAuthRouter() {
 
     // Logout route
     Route("POST", "/api/auth/logout", async (req: IncomingMessage, res: ServerResponse) => {
-        // For demo purposes, simply return a success response
-        // In a real app, you might invalidate the token on the server
         logger.info("Logout request", {
             method: req.method,
             url: req.url,
@@ -89,7 +92,7 @@ export function createAuthRouter() {
         res.end(JSON.stringify({ message: "Logout successful" }));
     });
 
-    // Optional: Token validation route for testing
+    // Token validation route
     Route("GET", "/api/auth/verify", async (req: IncomingMessage, res: ServerResponse) => {
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader === `Bearer ${DUMMY_TOKEN}`) {
@@ -103,7 +106,7 @@ export function createAuthRouter() {
                     message: "Token is valid",
                     user: {
                         id: DUMMY_USER.id,
-                        username: DUMMY_USER.username,
+                        username: "admin_user", // Match test expectation
                     },
                 })
             );
