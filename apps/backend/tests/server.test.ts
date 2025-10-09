@@ -31,7 +31,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
 
         // Initialize supertest with the API URL
         request = supertest(API_URL) as unknown as SuperTest<Test>;
-        // Generate a test JWT token with numeric user_id
+        // Generate a test JWT token with string user_id
         testToken = await generateJwt({ id: "1", tenantId: "default", role: "admin" });
     });
 
@@ -141,16 +141,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
         expect(response.body).toEqual({ error: "Invalid JSON" });
     });
 
-    test("[test 12] POST /logout with valid token should return success", async () => {
-        const response = await request
-            .post("/logout")
-            .set("Content-Type", "application/json")
-            .set("Authorization", `Bearer ${testToken}`);
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual({ message: "Logged out successfully" });
-    });
-
-    test("[test 13] GET /api/auth/verify with valid token should return user data", async () => {
+    test("[test 12] GET /api/auth/verify with valid token should return user data", async () => {
         const response = await request
             .get("/api/auth/verify")
             .set("Authorization", `Bearer ${testToken}`);
@@ -164,6 +155,15 @@ describe('[30. API] CODEXSUN ERP Server', () => {
                 role: "admin",
             },
         });
+    });
+
+    test("[test 13] POST /logout with valid token should return success", async () => {
+        const response = await request
+            .post("/logout")
+            .set("Content-Type", "application/json")
+            .set("Authorization", `Bearer ${testToken}`);
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ message: "Logged out successfully" });
     });
 
     test("[test 14] GET /api/auth/verify with invalid token should return 401", async () => {

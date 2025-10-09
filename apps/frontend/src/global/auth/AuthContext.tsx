@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = async (email: string, password: string) => {
         try {
             setLoading(true);
-            const res = await fetch(`${API_URL}/api/login`, {
+            const res = await fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(true);
             console.log('[AuthContext] Starting logout...');
             if (token) {
-                const res = await fetch(`${API_URL}/api/logout`, {
+                const res = await fetch(`${API_URL}/logout`, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
