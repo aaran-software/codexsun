@@ -59,4 +59,80 @@ describe('[30. API] CODEXSUN ERP Server', () => {
         expect(response.status).toBe(404);
         expect(response.text).toBe("404 Not Found");
     });
+
+    test("[test 8] POST /api/auth/login with valid credentials should return token", async () => {
+        const credentials = { username: "testuser", password: "testpassword123" };
+        const response = await request
+            .post("/api/auth/login")
+            .set("Content-Type", "application/json")
+            .send(credentials);
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+            message: "Login successful",
+            token: "dummy-jwt-token-1234567890",
+            user: {
+                id: "user-123",
+                username: "testuser",
+            },
+        });
+    });
+
+    test("[test 9] POST /api/auth/login with invalid credentials should return 401", async () => {
+        const credentials = { username: "wronguser", password: "wrongpassword" };
+        const response = await request
+            .post("/api/auth/login")
+            .set("Content-Type", "application/json")
+            .send(credentials);
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({ error: "Invalid credentials" });
+    });
+
+    test("[test 10] POST /api/auth/login with missing credentials should return 400", async () => {
+        const credentials = { username: "testuser" }; // Missing password
+        const response = await request
+            .post("/api/auth/login")
+            .set("Content-Type", "application/json")
+            .send(credentials);
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: "Username and password are required" });
+    });
+
+    test("[test 11] POST /api/auth/login with invalid JSON should return 400", async () => {
+        const response = await request
+            .post("/api/auth/login")
+            .set("Content-Type", "application/json")
+            .send("invalid json");
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: "Invalid JSON" });
+    });
+
+    test("[test 12] POST /api/auth/logout should return success", async () => {
+        const response = await request
+            .post("/api/auth/logout")
+            .set("Content-Type", "application/json");
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ message: "Logout successful" });
+    });
+
+    test("[test 13] GET /api/auth/verify with valid token should return user data", async () => {
+        const response = await request
+            .get("/api/auth/verify")
+            .set("Authorization", "Bearer dummy-jwt-token-1234567890");
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+            message: "Token is valid",
+            user: {
+                id: "user-123",
+                username: "testuser",
+            },
+        });
+    });
+
+    test("[test 14] GET /api/auth/verify with invalid token should return 401", async () => {
+        const response = await request
+            .get("/api/auth/verify")
+            .set("Authorization", "Bearer wrong-token");
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({ error: "Invalid or missing token" });
+    });
 });
