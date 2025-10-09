@@ -31,7 +31,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
 
         // Initialize supertest with the API URL
         request = supertest(API_URL) as unknown as SuperTest<Test>;
-        // Generate a test JWT token with string user_id
+        // Generate a test JWT token with string user_id (to match jwt-service.ts)
         testToken = await generateJwt({ id: "1", tenantId: "default", role: "admin" });
     });
 
@@ -170,6 +170,14 @@ describe('[30. API] CODEXSUN ERP Server', () => {
         const response = await request
             .get("/api/auth/verify")
             .set("Authorization", "Bearer wrong-token");
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({ error: "Invalid or expired token" });
+    });
+
+    test("[test 15] GET /api/auth/verify after logout should return 401", async () => {
+        const response = await request
+            .get("/api/auth/verify")
+            .set("Authorization", `Bearer ${testToken}`);
         expect(response.status).toBe(401);
         expect(response.body).toEqual({ error: "Invalid or expired token" });
     });

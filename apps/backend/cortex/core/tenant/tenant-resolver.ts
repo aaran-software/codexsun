@@ -1,11 +1,11 @@
-import {Tenant} from '../app.types';
-import {tenantStorage} from '../../db/db';
-import {query} from '../../db/mdb';
-import {getMasterDbConfig} from '../../config/db-config';
+import { Tenant } from '../app.types';
+import { query } from '../../db/mdb';
+import { getMasterDbConfig } from '../../config/db-config';
+import { tenantStorage } from '../../db/db';
 
 export async function resolveTenant(req: { body: { email: string; password: string } }): Promise<Tenant> {
     const dbConfig = getMasterDbConfig();
-    const {email} = req.body;
+    const { email } = req.body;
 
     if (!email || !email.trim()) {
         return Promise.reject(new Error('Valid email is required for tenant resolution'));
@@ -17,7 +17,8 @@ export async function resolveTenant(req: { body: { email: string; password: stri
             tenant_id: string;
         }>(
             'SELECT tu.tenant_id FROM tenant_users tu INNER JOIN users u ON tu.user_id = u.id WHERE u.email = ?',
-            [email.trim()]
+            [email.trim()],
+            dbConfig.database
         );
 
         if (tenantUsers.rows.length === 0) {
@@ -40,14 +41,15 @@ export async function resolveTenant(req: { body: { email: string; password: stri
             db_ssl: string | null;
         }>(
             'SELECT tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl FROM tenants WHERE tenant_id = ?',
-            [tenantId]
+            [tenantId],
+            dbConfig.database
         );
 
         if (tenantRes.rows.length === 0) {
             return Promise.reject(new Error(`Tenant not found for ID: ${tenantId}`));
         }
 
-        const {tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl} = tenantRes.rows[0];
+        const { tenant_id, db_host, db_port, db_user, db_name, db_ssl } = tenantRes.rows[0];
 
         if (!db_host || !db_port || !db_user || !db_name) {
             return Promise.reject(new Error(`Incomplete tenant configuration for ID: ${tenant_id}`));
@@ -55,14 +57,12 @@ export async function resolveTenant(req: { body: { email: string; password: stri
 
         const driver = dbConfig.driver;
         const sslParam = db_ssl === 'true' || dbConfig.ssl ? '?ssl=true' : '';
-        const passPart = db_pass ? `:${encodeURIComponent(db_pass)}` : '';
-        const dbConnection = `${driver}://${db_user}${passPart}@${db_host}:${db_port}/${db_name}${sslParam}`;
+        const dbConnection = `${driver}://${db_user}@${db_host}:${db_port}/${db_name}${sslParam}`; // Exclude db_pass
 
-        const tenant: Tenant = {id: tenant_id, dbConnection};
+        const tenant: Tenant = { id: tenant_id, dbConnection };
         tenantStorage.enterWith(db_name);
 
         return tenant;
-
     } catch (error) {
         const err = error instanceof Error ? error : new Error('Unknown error during tenant resolution');
         throw new Error(`Tenant resolution failed for email ${email}: ${err.message}`);
