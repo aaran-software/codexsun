@@ -2,12 +2,33 @@ import { createServer, Server, IncomingMessage, ServerResponse } from "node:http
 import cors from "cors";
 import { App } from "./cortex/app";
 import { Logger } from "./cortex/logger/logger";
+import {Connection} from "./cortex/db/connection";
 
 export async function server(): Promise<void> {
+
     // Initialize DI container
     const app = new App();
     const { settings, router } = app.getDependencies();
+
+
     const logger = new Logger();
+
+    // Initialize database connection
+    logger.info('Initializing database connection...');
+    const dbConfig = {
+        host: settings.DB_HOST,
+        port: settings.DB_PORT,
+        user: settings.DB_USER,
+        password: settings.DB_PASS,
+        database: settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME,
+        ssl: settings.DB_SSL,
+        driver: settings.DB_DRIVER,
+        connectionLimit: process.env.NODE_ENV === 'production' ? 50 : 10,
+        acquireTimeout: 30000,
+        idleTimeout: 60000,
+    };
+    await Connection.initialize(dbConfig);
+    logger.info('Database connection initialized.');
 
     // CORS middleware configuration
     const corsMiddleware = cors({

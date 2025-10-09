@@ -1,14 +1,19 @@
 import supertest, { SuperTest, Test } from "supertest";
+import { generateJwt } from "../cortex/core/secret/jwt-service";
+import { generateHash } from "../cortex/core/secret/crypt-service";
 
 const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
 const API_URL = 'http://localhost:3006'; // Matches live environment
 
 describe('[30. API] CODEXSUN ERP Server', () => {
     let request: SuperTest<Test>;
+    let testToken: string;
 
-    beforeAll(() => {
+    beforeAll(async () => {
         // Initialize supertest with the API URL (server is started manually)
         request = supertest(API_URL) as unknown as SuperTest<Test>;
+        // Generate a test JWT token with numeric user_id
+        testToken = await generateJwt({ id: 1, tenantId: "tenant-123", role: "admin" });
     });
 
     test("[test 1] GET / should return server running status", async () => {
@@ -69,12 +74,20 @@ describe('[30. API] CODEXSUN ERP Server', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
             message: "Login successful",
-            token: "dummy-jwt-token-1234567890",
+            token: expect.any(String),
             user: {
-                id: "admin",
+                id: 1,
                 username: "admin_user",
+                email: "admin@example.com",
+                tenantId: "tenant-123",
+                role: "admin",
+            },
+            tenant: {
+                id: "tenant-123",
+                dbConnection: expect.any(String),
             },
         });
+        testToken = response.body.token; // Update testToken for verify test
     });
 
     test("[test 9] POST /api/auth/login with invalid credentials should return 401", async () => {
@@ -94,7 +107,7 @@ describe('[30. API] CODEXSUN ERP Server', () => {
             .set("Content-Type", "application/json")
             .send(credentials);
         expect(response.status).toBe(400);
-        expect(response.body).toEqual({ error: "Username and password are required" });
+        expect(response.body).toEqual({ error: "Email and password are required" });
     });
 
     test("[test 11] POST /api/auth/login with invalid JSON should return 400", async () => {
@@ -109,7 +122,8 @@ describe('[30. API] CODEXSUN ERP Server', () => {
     test("[test 12] POST /api/auth/logout should return success", async () => {
         const response = await request
             .post("/api/auth/logout")
-            .set("Content-Type", "application/json");
+            .set("Content-Type", "application/json")
+            .set("Authorization", `Bearer ${testToken}`);
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ message: "Logout successful" });
     });
@@ -117,13 +131,15 @@ describe('[30. API] CODEXSUN ERP Server', () => {
     test("[test 13] GET /api/auth/verify with valid token should return user data", async () => {
         const response = await request
             .get("/api/auth/verify")
-            .set("Authorization", "Bearer dummy-jwt-token-1234567890");
+            .set("Authorization", `Bearer ${testToken}`);
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
             message: "Token is valid",
             user: {
-                id: "admin",
+                id: 1,
                 username: "admin_user",
+                tenantId: "tenant-123",
+                role: "admin",
             },
         });
     });
@@ -133,6 +149,6 @@ describe('[30. API] CODEXSUN ERP Server', () => {
             .get("/api/auth/verify")
             .set("Authorization", "Bearer wrong-token");
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: "Invalid or missing token" });
+        expect(response.body).toEqual({ error: "Invalid or expired token" });
     });
 });
