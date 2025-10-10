@@ -67,7 +67,22 @@ export function createHttpRouter() {
         const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
         const pathname = parsedUrl.pathname; // Extract path without query params
 
-        const route = routes.find((r) => r.method === method && r.path === pathname);
+        const route = routes.find((r) => {
+            const routeSegments = r.path.split('/');
+            const pathSegments = pathname.split('/');
+            if (r.method !== method || routeSegments.length !== pathSegments.length) {
+                return false;
+            }
+            for (let i = 0; i < routeSegments.length; i++) {
+                if (routeSegments[i].startsWith(':')) {
+                    continue; // Dynamic param, match any
+                }
+                if (routeSegments[i] !== pathSegments[i]) {
+                    return false;
+                }
+            }
+            return true;
+        });
 
         if (route) {
             await route.handler(req, res);

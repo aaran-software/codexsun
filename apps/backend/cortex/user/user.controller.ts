@@ -73,8 +73,9 @@ export class UserController {
 
     static async getById(req: IncomingMessage, res: ServerResponse) {
         try {
-            const id = parseInt(req.url?.split("/")[3] || "0", 10);
-            const tenantId = req.url?.split("tenant_id=")[1] || "";
+            const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
+            const id = parseInt(parsedUrl.pathname.split('/')[3] || '0', 10);
+            const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
             if (!id || !tenantId) {
                 throw new Error("User ID and Tenant ID are required");
             }
@@ -112,8 +113,9 @@ export class UserController {
 
         req.on("end", async () => {
             try {
-                const id = parseInt(req.url?.split("/")[3] || "0", 10);
-                const tenantId = req.url?.split("tenant_id=")[1] || "";
+                const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
+                const id = parseInt(parsedUrl.pathname.split('/')[3] || '0', 10);
+                const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
                 const updates = JSON.parse(body);
                 if (!id || !tenantId) {
                     throw new Error("User ID and Tenant ID are required");
@@ -147,8 +149,9 @@ export class UserController {
 
     static async delete(req: IncomingMessage, res: ServerResponse) {
         try {
-            const id = parseInt(req.url?.split("/")[3] || "0", 10);
-            const tenantId = req.url?.split("tenant_id=")[1] || "";
+            const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
+            const id = parseInt(parsedUrl.pathname.split('/')[3] || '0', 10);
+            const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
             if (!id || !tenantId) {
                 throw new Error("User ID and Tenant ID are required");
             }
