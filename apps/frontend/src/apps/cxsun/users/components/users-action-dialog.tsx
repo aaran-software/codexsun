@@ -23,9 +23,17 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/common/password-input'
 import { SelectDropdown } from '@/components/common/select-dropdown'
+import { roles } from '../data/data'
 import { type User, userRoleSchema } from '../data/schema'
 import { useAuth } from "@/global/auth/useAuth"
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+
+const roleToId: Record<z.infer<typeof userRoleSchema>, number> = {
+    superadmin: 1,
+    admin: 2,
+    cashier: 3,
+    manager: 4,
+}
 
 const getAddUserUrl = (tenantId: string) => `/api/users?tenant_id=${tenantId}`
 
@@ -69,19 +77,11 @@ type UserActionDialogProps = {
     onOpenChange: (open: boolean) => void
 }
 
-type Role = {
-    label: string;
-    value: string;
-}
-
 export function UsersActionDialog({ currentRow, open, onOpenChange }: UserActionDialogProps) {
     const isEdit = !!currentRow
     const { token, user, API_URL } = useAuth()
     const tenantId = user?.tenantId || user?.tenant_id
     const [isPasswordTouched, setIsPasswordTouched] = useState(false)
-    const [rolesList, setRolesList] = useState<Role[]>([])
-    const [roleToIdMap, setRoleToIdMap] = useState<Record<string, number>>({})
-
     const form = useForm<UserForm>({
         resolver: zodResolver(formSchema),
         defaultValues: isEdit
@@ -103,40 +103,6 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
             },
     })
 
-    useEffect(() => {
-        if (!open || !token || !tenantId) return;
-
-        const fetchRoles = async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/roles?tenant_id=${tenantId}`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const mappedRoles = data.map((r: { id: number; name: string }) => ({
-                        label: r.name.charAt(0).toUpperCase() + r.name.slice(1),
-                        value: r.name,
-                    }));
-                    const map = data.reduce((acc: Record<string, number>, r: { id: number; name: string }) => {
-                        acc[r.name] = r.id;
-                        return acc;
-                    }, {});
-                    setRolesList(mappedRoles);
-                    setRoleToIdMap(map);
-                } else {
-                    console.error('Failed to fetch roles');
-                }
-            } catch (err) {
-                console.error('Error fetching roles', err);
-            }
-        };
-
-        fetchRoles();
-    }, [open, token, tenantId, API_URL]);
-
     const onSubmit = async (values: UserForm) => {
         if (!token || !tenantId) {
             form.setError('root', { message: 'Authentication required or tenant ID missing' })
@@ -146,17 +112,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
             form.setError('root', { message: 'User ID is missing for editing' })
             return
         }
-        if (!roleToIdMap[values.role]) {
-            form.setError('role', { message: 'Invalid role selected' })
-            return
-        }
         try {
             const endpoint = isEdit ? getEditUserUrl(currentRow!.id, tenantId) : getAddUserUrl(tenantId)
             const method = isEdit ? 'PUT' : 'POST'
             const payload = {
                 username: values.username,
                 email: values.email,
-                role_id: roleToIdMap[values.role],
+                role_id: roleToId[values.role],
                 ...(values.password && { password: values.password }),
             }
 
@@ -246,7 +208,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
                                             onValueChange={field.onChange}
                                             placeholder='Select a role'
                                             className='col-span-4'
-                                            items={rolesList}
+                                            items={roles.map(({ label, value }) => ({ label, value }))}
                                         />
                                         <FormMessage className='col-span-4 col-start-3' />
                                     </FormItem>

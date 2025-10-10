@@ -11,7 +11,7 @@ const userSchema = z.object({
     id: z.number(),
     username: z.string(),
     email: z.string(),
-    mobile: z.literal(null),
+    mobile: z.string(),
     status: z.literal('active'),
     role: userRoleSchema,
     createdAt: z.coerce.date(),
