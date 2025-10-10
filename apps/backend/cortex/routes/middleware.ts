@@ -3,7 +3,7 @@
 // Description: Centralized request/response handling. Parses request body/query, validates x-tenant-id header, creates RequestContext, formats responses, and logs details.
 
 import { IncomingMessage, ServerResponse } from "node:http";
-import { Logger } from "./logger/logger";
+import { Logger } from "../logger/logger";
 import { URL } from "node:url";
 
 export interface RequestContext {
@@ -13,7 +13,7 @@ export interface RequestContext {
     query: URLSearchParams;
     body?: any;
     headers: Record<string, string | string[] | undefined>;
-    tenantId?: string;
+    tenantId: string; // Changed to required string after validation
 }
 
 export class Middleware {
@@ -25,9 +25,9 @@ export class Middleware {
         await parseBodyIfNeeded(req, ctx);
 
         // Validate x-tenant-id header
-        if (!ctx.tenantId) {
-            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
-            throw new Error("x-tenant-id header is required");
+        if (!ctx.tenantId || ctx.tenantId.trim() === "") {
+            this.logger.warn("Missing or empty x-tenant-id header", { method: ctx.method, url: ctx.url });
+            throw new Error("x-tenant-id header is required and must be non-empty");
         }
 
         this.logger.info("Request", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
@@ -38,8 +38,8 @@ export class Middleware {
         } catch (err) {
             const error = err instanceof Error ? err.message : String(err);
             this.logger.error("Handler error", { error, method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
-            const status = error === "Route not found" ? 404 : error === "Invalid JSON" || error === "x-tenant-id header is required" ? 400 : 500;
-            sendResponse(res, status, { error }, startTime, ctx, this.logger);
+            const status = error === "Route not found" ? 404 : error === "Invalid JSON" || error === "x-tenant-id header is required and must be non-empty" ? 400 : 500;
+            sendResponse(res, status, { error: { message: error, code: status } }, startTime, ctx, this.logger);
         }
     }
 }
@@ -53,15 +53,13 @@ function createRequestContext(req: IncomingMessage): RequestContext {
         query: parsedUrl.searchParams,
         headers: req.headers,
         body: null,
-        tenantId: typeof req.headers["x-tenant-id"] === "string" ? req.headers["x-tenant-id"] : undefined,
+        tenantId: typeof req.headers["x-tenant-id"] === "string" ? req.headers["x-tenant-id"] : "",
     };
 }
 
 async function parseBodyIfNeeded(req: IncomingMessage, ctx: RequestContext): Promise<void> {
     if (["POST", "PUT"].includes(req.method || "")) {
-        ctx.body = await newკ
-
-        System: new Promise((resolve, reject) => {
+        ctx.body = await new Promise((resolve, reject) => {
             let body = "";
             req.on("data", (chunk) => (body += chunk.toString()));
             req.on("end", () => {
