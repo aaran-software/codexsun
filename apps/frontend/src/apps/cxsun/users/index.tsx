@@ -4,8 +4,16 @@ import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider, useUsers } from './components/users-provider'
 import { UsersTable } from './components/users-table'
-import { type User } from './data/schema'
+import { type User, userRoleSchema } from './data/schema'
 import { useAuth } from "@/global/auth/useAuth"
+import {z} from "zod";
+
+const idToRole: Record<number, z.infer<typeof userRoleSchema>> = {
+    1: 'superadmin',
+    2: 'admin',
+    3: 'cashier',
+    4: 'manager',
+}
 
 function UsersContent() {
     const [data, setData] = useState<User[]>([])
@@ -29,13 +37,12 @@ function UsersContent() {
             })
             if (response.ok) {
                 const users = await response.json()
-                // Map API response to User schema
                 const mappedUsers = users.map((user: any) => ({
                     id: user.id,
                     username: user.username,
                     email: user.email,
-                    role: user.role_id === 1 ? 'admin' : 'user', // Map role_id to role string
-                    tenant_id: user.tenantId || user.tenant_id || user.tenant_id, // Fallback for tenant_id
+                    role: idToRole[user.role_id] || 'admin',
+                    tenant_id: user.tenant_id,
                     status: user.status || 'active',
                     mobile: user.mobile || null,
                     createdAt: new Date(user.created_at),
@@ -43,8 +50,8 @@ function UsersContent() {
                 setData(mappedUsers)
                 setError(null)
             } else {
-                const errorText = await response.text()
-                setError(`Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`)
+                const errorData = await response.json().catch(() => ({}))
+                setError(`Failed to fetch users: ${errorData.error || response.statusText}`)
             }
         } catch (error) {
             setError(`Error fetching users: ${error instanceof Error ? error.message : 'Unknown error'}`)

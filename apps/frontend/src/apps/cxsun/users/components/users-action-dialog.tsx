@@ -26,6 +26,18 @@ import { SelectDropdown } from '@/components/common/select-dropdown'
 import { roles } from '../data/data'
 import { type User, userRoleSchema } from '../data/schema'
 import { useAuth } from "@/global/auth/useAuth"
+import { useState } from 'react'
+
+const roleToId: Record<z.infer<typeof userRoleSchema>, number> = {
+    superadmin: 1,
+    admin: 2,
+    cashier: 3,
+    manager: 4,
+}
+
+const getAddUserUrl = (tenantId: string) => `/api/users?tenant_id=${tenantId}`
+
+const getEditUserUrl = (id: number, tenantId: string) => `/api/users/${id}?tenant_id=${tenantId}`
 
 const formSchema = z
     .object({
@@ -67,14 +79,16 @@ type UserActionDialogProps = {
 
 export function UsersActionDialog({ currentRow, open, onOpenChange }: UserActionDialogProps) {
     const isEdit = !!currentRow
-    const { token } = useAuth()
+    const { token, user, API_URL } = useAuth()
+    const tenantId = user?.tenantId || user?.tenant_id
+    const [isPasswordTouched, setIsPasswordTouched] = useState(false)
     const form = useForm<UserForm>({
         resolver: zodResolver(formSchema),
         defaultValues: isEdit
             ? {
-                username: currentRow.username,
-                email: currentRow.email,
-                role: currentRow.role,
+                username: currentRow?.username || '',
+                email: currentRow?.email || '',
+                role: currentRow?.role || '' as any,
                 password: '',
                 confirmPassword: '',
                 isEdit,
@@ -90,68 +104,73 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
     })
 
     const onSubmit = async (values: UserForm) => {
-        if (!token) {
-            form.setError('root', { message: 'Authentication required' })
+        if (!token || !tenantId) {
+            form.setError('root', { message: 'Authentication required or tenant ID missing' })
+            return
+        }
+        if (isEdit && !currentRow?.id) {
+            form.setError('root', { message: 'User ID is missing for editing' })
             return
         }
         try {
-            const endpoint = isEdit ? `/api/users/${currentRow?.id}` : '/api/users'
+            const endpoint = isEdit ? getEditUserUrl(currentRow!.id, tenantId) : getAddUserUrl(tenantId)
             const method = isEdit ? 'PUT' : 'POST'
             const payload = {
                 username: values.username,
                 email: values.email,
-                role: values.role,
+                role_id: roleToId[values.role],
                 ...(values.password && { password: values.password }),
             }
 
-            const response = await fetch(`http://localhost:3000${endpoint}`, {
+            console.log('Sending request:', {
+                url: `${API_URL}${endpoint}`,
+                method,
+                payload,
+                headers: { 'Authorization': `Bearer ${token}` },
+            })
+
+            const response = await fetch(`${API_URL}${endpoint}`, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Tenant-Id': 'tenant1',
                     'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify(payload),
             })
 
             if (response.ok) {
-                form.reset()
                 onOpenChange(false)
+                form.reset()
             } else {
-                const error = await response.json()
-                form.setError('root', { message: error.error || 'Failed to save user' })
+                const errorData = await response.json().catch(() => ({}))
+                console.error('API error:', response.status, errorData)
+                form.setError('root', { 
+                    message: `Failed to ${isEdit ? 'update' : 'create'} user: ${errorData.error || response.statusText}`
+                })
             }
         } catch (error) {
-            console.error('Error saving user:', error)
-            form.setError('root', { message: 'Network error' })
+            console.error('Fetch error:', error)
+            form.setError('root', { 
+                message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+            })
         }
     }
 
-    const isPasswordTouched = !!form.formState.dirtyFields.password
-
     return (
-        <Dialog
-            open={open}
-            onOpenChange={(state) => {
-                form.reset()
-                onOpenChange(state)
-            }}
-        >
-            <DialogContent className='sm:max-w-lg'>
-                <DialogHeader className='text-start'>
-                    <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
+        <Dialog open={open} onOpenChange={(isOpen) => {
+            onOpenChange(isOpen)
+            if (!isOpen) form.reset()
+        }}>
+            <DialogContent className='sm:max-w-[425px]'>
+                <DialogHeader>
+                    <DialogTitle>{isEdit ? 'Edit User' : 'Add User'}</DialogTitle>
                     <DialogDescription>
-                        {isEdit ? 'Update the user here. ' : 'Create new user here. '}
-                        Click save when you&apos;re done.
+                        {isEdit ? 'Make changes to the user here.' : 'Add a new user here.'} Click save when you're done.
                     </DialogDescription>
                 </DialogHeader>
-                <div className='h-[26.25rem] w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
+                <div className='grid gap-4 py-4'>
                     <Form {...form}>
-                        <form
-                            id='user-form'
-                            onSubmit={form.handleSubmit(onSubmit)}
-                            className='space-y-4 px-0.5'
-                        >
+                        <form id='user-form' onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 grid grid-cols-1'>
                             <FormField
                                 control={form.control}
                                 name='username'
@@ -159,11 +178,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
                                     <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                                         <FormLabel className='col-span-2 text-end'>Username</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                placeholder='john_doe'
-                                                className='col-span-4'
-                                                {...field}
-                                            />
+                                            <Input placeholder='e.g., john_doe' className='col-span-4' {...field} />
                                         </FormControl>
                                         <FormMessage className='col-span-4 col-start-3' />
                                     </FormItem>
@@ -176,11 +191,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
                                     <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                                         <FormLabel className='col-span-2 text-end'>Email</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                placeholder='john.doe@gmail.com'
-                                                className='col-span-4'
-                                                {...field}
-                                            />
+                                            <Input placeholder='e.g., john@example.com' className='col-span-4' {...field} />
                                         </FormControl>
                                         <FormMessage className='col-span-4 col-start-3' />
                                     </FormItem>
@@ -213,7 +224,11 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
                                             <PasswordInput
                                                 placeholder='e.g., S3cur3P@ssw0rd'
                                                 className='col-span-4'
-                                                {...field}
+                                                onChange={(e) => {
+                                                    field.onChange(e)
+                                                    setIsPasswordTouched(!!e.target.value)
+                                                }}
+                                                value={field.value}
                                             />
                                         </FormControl>
                                         <FormMessage className='col-span-4 col-start-3' />
@@ -228,7 +243,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
                                         <FormLabel className='col-span-2 text-end'>Confirm Password</FormLabel>
                                         <FormControl>
                                             <PasswordInput
-                                                disabled={!isPasswordTouched}
+                                                disabled={!isPasswordTouched && isEdit}
                                                 placeholder='e.g., S3cur3P@ssw0rd'
                                                 className='col-span-4'
                                                 {...field}
@@ -238,6 +253,9 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
                                     </FormItem>
                                 )}
                             />
+                            {form.formState.errors.root && (
+                                <p className='text-red-600 text-sm col-span-6'>{form.formState.errors.root.message}</p>
+                            )}
                         </form>
                     </Form>
                 </div>

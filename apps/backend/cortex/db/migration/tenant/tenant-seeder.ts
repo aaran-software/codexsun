@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import { Connection } from '../../connection';
-import { getDbConfig } from '../../../config/db-config';
+import { getMasterDbConfig } from '../../../config/db-config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { query, tenantStorage } from '../../db';
@@ -21,7 +21,7 @@ const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
  */
 const initializeConnection = async (): Promise<Connection> => {
     console.log('Initializing database connection');
-    const config = getDbConfig();
+    const config = getMasterDbConfig();
     await Connection.initialize(config);
     return Connection.getInstance();
 };
