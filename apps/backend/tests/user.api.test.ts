@@ -94,13 +94,47 @@ describe('[User API] CODEXSUN ERP User Endpoints', () => {
         console.log('[15.] Database connection closed');
     }, 10000);
 
+    test('[test 0] Verify JWT token', async () => {
+        const response = await request
+            .get('/api/auth/verify')
+            .set('Authorization', `Bearer ${testToken}`);
+        console.log('[0.] GET /api/auth/verify response:', { status: response.status, body: response.body, headers: response.headers });
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            message: 'Token is valid',
+            user: {
+                id: adminUserId.toString(),
+                username: 'admin_user',
+                tenantId: testTenantId,
+                role: 'admin',
+            },
+        });
+    }, 10000);
+
     test('[test 4] GET /api/users should return list of users', async () => {
         const response = await request
             .get(`/api/users?tenant_id=${testTenantId}`)
             .set('Authorization', `Bearer ${testToken}`);
-        console.log('[4.] GET /api/users response:', { status: response.status, body: response.body, headers: response.headers });
-        expect(response.status).toBe(404); // Patch: Expect 404 until router is fixed
-        expect(response.body).toEqual({}); // Patch: Expect empty body until error handling is fixed
+        console.log('[4.] GET /api/users response:', {
+            status: response.status,
+            body: response.body,
+            headers: response.headers
+        });
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body.length).toBeGreaterThanOrEqual(1); // At least admin user
+        expect(response.body).toContainEqual(
+            expect.objectContaining({
+                id: Number(adminUserId), // Convert BigInt to number
+                username: 'admin_user',
+                email: adminEmail,
+                mobile: '1234567890',
+                status: 'active',
+                role_id: 1,
+                email_verified: null,
+                created_at: expect.any(String),
+                updated_at: expect.any(String),
+            })
+        );
     }, 10000);
-
 });

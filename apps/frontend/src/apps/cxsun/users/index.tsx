@@ -9,44 +9,51 @@ import { useAuth } from "@/global/auth/useAuth"
 
 function UsersContent() {
     const [data, setData] = useState<User[]>([])
+    const [error, setError] = useState<string | null>(null)
     const { open } = useUsers()
-    const { token } = useAuth()
+    const { token, user } = useAuth()
     const prevOpen = useRef(open)
 
     const fetchUsers = async () => {
-        if (!token) return
+        if (!token || !user?.tenantId) {
+            setError('No authentication token or tenant ID available. Please log in.')
+            return
+        }
+
         try {
-            const response = await fetch('http://localhost:3000/api/users', {
+            const response = await fetch(`http://localhost:3006/api/users?tenant_id=${user.tenantId}`, {
                 headers: {
-                    'X-Tenant-Id': 'tenant1',
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
             })
             if (response.ok) {
                 const users = await response.json()
-                // Map API response to User schema with dummy fields
+                // Map API response to User schema
                 const mappedUsers = users.map((user: any) => ({
                     id: user.id,
                     username: user.username,
                     email: user.email,
-                    role: user.role,
-                    tenant_id: user.tenant_id,
-                    status: 'active' as const,
-                    mobile: null,
+                    role: user.role_id === 1 ? 'admin' : 'user', // Map role_id to role string
+                    tenant_id: user.tenantId || user.tenant_id || user.tenant_id, // Fallback for tenant_id
+                    status: user.status || 'active',
+                    mobile: user.mobile || null,
                     createdAt: new Date(user.created_at),
                 }))
                 setData(mappedUsers)
+                setError(null)
             } else {
-                console.error('Failed to fetch users:', response.status)
+                const errorText = await response.text()
+                setError(`Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`)
             }
         } catch (error) {
-            console.error('Error fetching users:', error)
+            setError(`Error fetching users: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
 
     useEffect(() => {
         fetchUsers()
-    }, [token])
+    }, [token, user?.tenantId])
 
     useEffect(() => {
         if (prevOpen.current !== null && open === null) {
@@ -63,6 +70,9 @@ function UsersContent() {
                     <p className='text-muted-foreground'>
                         Manage your users and their roles here.
                     </p>
+                    {error && (
+                        <p className='text-red-600 text-sm mt-2'>{error}</p>
+                    )}
                 </div>
                 <UsersPrimaryButtons />
             </div>

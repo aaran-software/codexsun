@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from "node:http";
 import { Logger } from "../logger/logger";
 import * as userService from "./user.service";
 import { User } from "./user.model";
+import { URL } from "node:url";
 
 export class UserController {
     private static logger = new Logger();
@@ -19,7 +20,6 @@ export class UserController {
                 if (!userData.tenant_id) {
                     throw new Error("Tenant ID is required");
                 }
-
 
                 const response = await userService.createUserService(userData);
                 res.writeHead(201, { "Content-Type": "application/json" });
@@ -45,7 +45,8 @@ export class UserController {
 
     static async getAll(req: IncomingMessage, res: ServerResponse) {
         try {
-            const tenantId = req.url?.split("tenant_id=")[1] || "";
+            const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
+            const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
             if (!tenantId) {
                 throw new Error("Tenant ID is required");
             }
@@ -97,7 +98,7 @@ export class UserController {
             }));
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error("Error fetching user by ID", { error: errorMessage });
+            this.logger.error("Error fetching user by id", { error: errorMessage });
             res.writeHead(400, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ error: errorMessage }));
         }

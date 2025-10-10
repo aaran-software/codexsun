@@ -1,5 +1,6 @@
 import { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from "node:http";
 import { Logger } from "../logger/logger";
+import { URL } from "node:url";
 
 interface Route {
     method: string;
@@ -62,8 +63,11 @@ export function createHttpRouter() {
     }
 
     async function routeRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-        const { method, url } = req;
-        const route = routes.find((r) => r.method === method && r.path === url);
+        const { method } = req;
+        const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
+        const pathname = parsedUrl.pathname; // Extract path without query params
+
+        const route = routes.find((r) => r.method === method && r.path === pathname);
 
         if (route) {
             await route.handler(req, res);
