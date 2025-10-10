@@ -1,52 +1,35 @@
-import { IncomingMessage, ServerResponse } from "node:http";
-import { createHttpRouter } from "./chttpx";
-import { Logger } from "../logger/logger";
+// File: router.ts
+// Location: src/router.ts
+// Description: Main router. Aggregates sub-routers and delegates requests to them, falling back to 404 if no route matches.
 
-export function createRouter(routers: { routeRequest: (req: IncomingMessage, res: ServerResponse) => Promise<void>; Route: (method: string, path: string, handler: (req: IncomingMessage, res: ServerResponse) => Promise<void> | void) => void; }[]) {
-    const { routeRequest: localRouteRequest, Route } = createHttpRouter();
+import { Logger } from "../logger/logger";
+import { RequestContext } from "./middleware";
+
+interface SubRouter {
+    routeRequest: (ctx: RequestContext) => Promise<any>;
+    Route: (method: string, path: string, handler: (ctx: RequestContext) => Promise<any>) => void;
+}
+
+export function createRouter(routers: SubRouter[]) {
     const logger = new Logger();
 
-    async function routeRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-        let handled = false;
-
-        // Try local routes first
-        try {
-            await localRouteRequest(req, res);
-            handled = true;
-            return;
-        } catch (err) {
-            // Continue to delegated routers if local route not found
-        }
-
-        // Try delegated routers
+    async function routeRequest(ctx: RequestContext): Promise<any> {
         for (const router of routers) {
             try {
-                await router.routeRequest(req, res);
-                handled = true;
-                return;
+                return await router.routeRequest(ctx);
             } catch (err) {
-                // Continue to next router if this one doesn't handle the route
+                if (err instanceof Error && err.message !== "Route not found") {
+                    throw err;
+                }
             }
         }
-
-        // No route found in any router
-        if (!handled) {
-            logger.warn("No matching route found in any router", { method: req.method, url: req.url });
-            res.writeHead(404, { "Content-Type": "text/plain" });
-            res.end("404 Not Found");
-        }
+        logger.warn("No matching route found in any router", { method: ctx.method, url: ctx.url });
+        throw new Error("Route not found");
     }
 
-    // Example routes for ERP-like functionality
-    Route("GET", "/", (req, res) => {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ status: "Server is running" }));
-    });
-
-    Route("GET", "/hz", (req, res) => {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ status: "healthy is running" }));
-    });
+    function Route(method: string, path: string, handler: (ctx: RequestContext) => Promise<any>) {
+        // Local routes can be added here if needed
+    }
 
     return { routeRequest, Route };
 }

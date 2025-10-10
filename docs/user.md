@@ -30,3 +30,7 @@ curl -X POST http://localhost:3000/api/login \
 -H "Content-Type: application/json" \
 -H "X-Tenant-Id: default" \
 -d '{"email":"admin@example.com","password":"admin123"}'
+
+curl -X GET http://localhost:3006/api/users \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidGVuYW50SWQiOiJkZWZhdWx0Iiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwMTExMjAzLCJleHAiOjE3NjAxMTQ4MDN9.YEXU1KDrntDqEBIWqq4S2cVZs6UvINk1ijNPNBlUw_E" \

@@ -1,71 +1,28 @@
+// File: index.ts
+// Location: src/index.ts
+// Description: Entry point. Sets up the HTTP server and uses Middleware to process requests before passing to the main router.
+
 import { createServer, Server, IncomingMessage, ServerResponse } from "node:http";
-import cors from "cors";
+import { applyCorsMiddleware } from "./cortex/routes/chttpx";
 import { App } from "./cortex/app";
 import { Logger } from "./cortex/logger/logger";
-import {Connection} from "./cortex/db/connection";
+import { Middleware } from "./cortex/routes/middleware";
 
-export async function server(): Promise<void> {
-
-    // Initialize DI container
+export async function startServer(): Promise<void> {
     const app = new App();
+    await app.initializeDatabase();
     const { settings, router } = app.getDependencies();
-
-
     const logger = new Logger();
+    const middleware = new Middleware();
 
-    // Initialize database connection
-    logger.info('Initializing database connection...');
-    const dbConfig = {
-        host: settings.DB_HOST,
-        port: settings.DB_PORT,
-        user: settings.DB_USER,
-        password: settings.DB_PASS,
-        database: settings.TENANCY ? settings.MASTER_DB : settings.DB_NAME,
-        ssl: settings.DB_SSL,
-        driver: settings.DB_DRIVER,
-        connectionLimit: process.env.NODE_ENV === 'production' ? 50 : 10,
-        acquireTimeout: 30000,
-        idleTimeout: 60000,
-    };
-    await Connection.initialize(dbConfig);
-    logger.info('Database connection initialized.');
-
-    // CORS middleware configuration
-    const corsMiddleware = cors({
-        origin: "*",
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id'],
-        credentials: true, // optional if using cookies
-        maxAge: 86400, // Cache preflight response for 24 hours
-    });
-
-    // Create server instance
     const server: Server = createServer((req: IncomingMessage, res: ServerResponse) => {
-        // Apply CORS middleware
-        corsMiddleware(req, res, () => {
-            try {
-                router.routeRequest(req, res).catch((err: Error) => {
-                    logger.error("Error handling request", {
-                        error: err.message,
-                        url: req.url,
-                        method: req.method,
-                    });
-                    res.writeHead(500, { "Content-Type": "text/plain" });
-                    res.end("Internal Server Error");
-                });
-            } catch (err) {
-                logger.error("Unexpected error in request handler", {
-                    error: err instanceof Error ? err.message : String(err),
-                    url: req.url,
-                    method: req.method,
-                });
-                res.writeHead(500, { "Content-Type": "text/plain" });
-                res.end("Internal Server Error");
-            }
+        applyCorsMiddleware(req, res, () => {
+            middleware.processRequest(req, res, async (ctx) => {
+                return await router.routeRequest(ctx);
+            });
         });
     });
 
-    // Start server
     try {
         server.listen(settings.APP_PORT, settings.APP_HOST, () => {
             logger.info(`Server running at http://${settings.APP_HOST}:${settings.APP_PORT}`, {
@@ -80,7 +37,10 @@ export async function server(): Promise<void> {
         process.exit(1);
     }
 
-    // Graceful shutdown handling
+    setupShutdownHandlers(server, logger);
+}
+
+function setupShutdownHandlers(server: Server, logger: Logger): void {
     const shutdown = async () => {
         try {
             logger.info("Received shutdown signal. Closing server...");
@@ -104,35 +64,11 @@ export async function server(): Promise<void> {
         }
     };
 
-    // Listen for termination signals with error handling
-    process.on("SIGINT", async () => {
-        try {
-            await shutdown();
-        } catch (err) {
-            logger.error("Error handling SIGINT", {
-                error: err instanceof Error ? err.message : String(err),
-            });
-            process.exit(1);
-        }
-    });
-
-    process.on("SIGTERM", async () => {
-        try {
-            await shutdown();
-        } catch (err) {
-            logger.error("Error handling SIGTERM", {
-                error: err instanceof Error ? err.message : String(err),
-            });
-            process.exit(1);
-        }
-    });
-
-    // Handle uncaught exceptions to prevent server crash
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
     process.on("uncaughtException", (err) => {
         logger.error("Uncaught exception", { error: err.message, stack: err.stack });
     });
-
-    // Handle unhandled promise rejections to prevent server crash
     process.on("unhandledRejection", (reason, promise) => {
         logger.error("Unhandled promise rejection", {
             error: String(reason),
@@ -141,8 +77,7 @@ export async function server(): Promise<void> {
     });
 }
 
-// Run the bootstrap function
-server().catch((err: Error) => {
+startServer().catch((err: Error) => {
     const logger = new Logger();
     logger.error("Bootstrap failed", { error: err.message });
     process.exit(1);
