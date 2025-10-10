@@ -12,7 +12,7 @@ export async function createUser(user: User): Promise<QueryResult<User>> {
 
 export async function getUsers(tenantId: string): Promise<User[]> {
     const result = await query<any>(
-        'SELECT u.id, u.username, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at ' +
+        'SELECT u.id, u.username, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at, u.updated_at ' +
         'FROM users u ' +
         'JOIN tenant_users tu ON u.id = tu.user_id ' +
         'WHERE tu.tenant_id = ? ORDER BY u.created_at DESC',
@@ -27,12 +27,13 @@ export async function getUsers(tenantId: string): Promise<User[]> {
         role_id: r.role_id,
         email_verified: r.email_verified || null,
         created_at: r.created_at,
+        updated_at: r.updated_at
     }));
 }
 
 export async function getUserById(id: number, tenantId: string): Promise<User | null> {
     const result = await query<any>(
-        'SELECT u.id, u.username, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at ' +
+        'SELECT u.id, u.username, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at, u.updated_at ' +
         'FROM users u ' +
         'JOIN tenant_users tu ON u.id = tu.user_id ' +
         'WHERE u.id = ? AND tu.tenant_id = ?',
@@ -47,13 +48,14 @@ export async function getUserById(id: number, tenantId: string): Promise<User | 
         status: r.status,
         role_id: r.role_id,
         email_verified: r.email_verified || null,
-        created_at: r.created_at
+        created_at: r.created_at,
+        updated_at: r.updated_at
     } : null;
 }
 
 export async function getUserByEmail(email: string, tenantId: string): Promise<User | null> {
     const result = await query<any>(
-        'SELECT u.id, u.username, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at ' +
+        'SELECT u.id, u.username, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at, u.updated_at ' +
         'FROM users u ' +
         'JOIN tenant_users tu ON u.id = tu.user_id ' +
         'WHERE u.email = ? AND tu.tenant_id = ?',
@@ -68,7 +70,8 @@ export async function getUserByEmail(email: string, tenantId: string): Promise<U
         status: r.status,
         role_id: r.role_id,
         email_verified: r.email_verified || null,
-        created_at: r.created_at
+        created_at: r.created_at,
+        updated_at: r.updated_at
     } : null;
 }
 
