@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Copy } from 'lucide-react'
 
 export function UserDataInspector() {
-    const { token, user } = useAuth()
+    const { token, user, API_URL } = useAuth()
     const [userData, setUserData] = useState<never>()
     const [loading, setLoading] = useState<boolean>(true)
     const [userError, setUserError] = useState<string | null>(null)
@@ -28,7 +28,7 @@ export function UserDataInspector() {
 
         try {
             setLoading(true)
-            const response = await fetch(`http://localhost:3006${endpoint}`, {
+            const response = await fetch(`${API_URL}${endpoint}`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -44,7 +44,7 @@ export function UserDataInspector() {
                 setError(`Failed to fetch from ${endpoint}: ${response.status} ${response.statusText} - ${errorText}`)
             }
         } catch (err) {
-            setError(`Network error for ${endpoint}: ${err.message}. Is the server running at http://localhost:3006?`)
+            setError(`Network error for ${endpoint}: ${err.message}. Is the server running at ${API_URL}?`)
         } finally {
             setLoading(false)
         }
@@ -80,9 +80,9 @@ export function UserDataInspector() {
                         </div>
                         <div className="mt-4 text-sm text-gray-600 pl-5">
                             <ul className="list-disc space-y-2 pl-5">
-                                <li>Ensure the backend server is running at http://localhost:3006 with user routes registered.</li>
+                                <li>Ensure the backend server is running at {API_URL} with user routes registered.</li>
                                 <li>Add user routes to Express: app.use('/api/users', createUserRouter(dbAdapter)).</li>
-                                <li>Test with curl: curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:3006/api/users?tenant_id={tenantId}</li>
+                                <li>Test with curl: curl -H "Authorization: Bearer &lt;token&gt;" {API_URL}/api/users?tenant_id={tenantId}</li>
                                 <li>Check backend logs for missing route errors.</li>
                             </ul>
                         </div>

@@ -1,12 +1,11 @@
 import React, { useState, ReactNode, useEffect } from "react";
 import { AuthContext, User } from "./AuthContextTypes";
+import { API_URL } from "@/config";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-
-    const API_URL = "http://localhost:3006"; // Matches backend port
 
     useEffect(() => {
         const savedUser = localStorage.getItem("auth_user");

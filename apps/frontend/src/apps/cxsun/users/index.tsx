@@ -11,7 +11,7 @@ function UsersContent() {
     const [data, setData] = useState<User[]>([])
     const [error, setError] = useState<string | null>(null)
     const { open } = useUsers()
-    const { token, user } = useAuth()
+    const { token, user, API_URL } = useAuth()
     const prevOpen = useRef(open)
 
     const fetchUsers = async () => {
@@ -21,7 +21,7 @@ function UsersContent() {
         }
 
         try {
-            const response = await fetch(`http://localhost:3006/api/users?tenant_id=${user.tenantId}`, {
+            const response = await fetch(`${API_URL}/api/users?tenant_id=${user.tenantId}`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
