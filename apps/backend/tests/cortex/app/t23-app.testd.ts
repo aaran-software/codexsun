@@ -24,7 +24,7 @@ const mockAuthMiddleware = authMiddleware as jest.Mock;
 const mockCreateUser = createUser as jest.Mock;
 const mockCreateTodoItem = createTodoItem as jest.Mock;
 
-describe('[23.] App Tests', () => {
+describe('[23.] Main Tests', () => {
     let connection: Connection;
 
     beforeAll(async () => {

@@ -16,7 +16,7 @@ const mockAuthMiddleware = authMiddleware as jest.Mock;
 const mockCreateUser = createUser as jest.Mock;
 const mockLogin = login as jest.Mock;
 
-describe('[28.] Express App Protected Endpoints', () => {
+describe('[28.] Express Main Protected Endpoints', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockTenantMiddleware.mockImplementation((req: any, res: any, next: (err?: Error) => void) => {

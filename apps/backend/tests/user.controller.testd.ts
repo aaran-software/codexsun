@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
-import { UserController } from '../cortex/user/user.controller';
+import { UserController } from '../cortex/user/user-controller';
 import * as userService from '../cortex/user/user.service';
-import { User } from '../cortex/user/user.model';
+import { User } from '../cortex/user/user-model';
 import { Logger } from '../cortex/logger/logger';
 
 // Mock dependencies

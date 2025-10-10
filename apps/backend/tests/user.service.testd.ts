@@ -1,5 +1,5 @@
 import { createUserService, updateUserService, getUsersService, deleteUserService, getUserByIdService } from '../cortex/user/user.service';
-import { User } from '../cortex/user/user.model';
+import { User } from '../cortex/user/user-model';
 import { comparePassword, generateHash } from '../cortex/core/secret/crypt-service';
 import { Connection } from '../cortex/db/connection';
 import { query } from '../cortex/db/mdb';

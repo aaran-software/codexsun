@@ -1,6 +1,6 @@
 import {IncomingMessage, ServerResponse} from "node:http";
 import {createHttpRouter} from "../routes/chttpx";
-import {UserController} from "./user-controller";
+import {UserController} from "./user.controller";
 
 export function createUserRouter() {
     const {routeRequest, Route} = createHttpRouter();

@@ -1,6 +1,6 @@
 import { query } from '../db/mdb';
 import { QueryResult } from '../db/db-types';
-import { User } from './user.model';
+import { User } from './user-model';
 
 export async function createUser(user: User): Promise<QueryResult<User>> {
     const { username, email, password_hash, mobile, status, role_id, email_verified } = user;

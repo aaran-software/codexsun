@@ -34,7 +34,7 @@ export function createApp(
 
     // Handle /app route without tenant/auth middleware
     router.get('/app', (req: CustomRequest, res: Response) => {
-        res.status(200).json({ status: 'App is running' });
+        res.status(200).json({ status: 'Main is running' });
     });
 
     // Mount user routes
