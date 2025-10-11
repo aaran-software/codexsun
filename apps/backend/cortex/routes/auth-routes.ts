@@ -84,7 +84,6 @@ async function handleTokenVerify(ctx: RequestContext, logger: Logger): Promise<a
         message: "Token is valid",
         user: {
             id: payload.id,
-            username: "admin_user",
             tenantId: payload.tenantId,
             role: payload.role,
         },

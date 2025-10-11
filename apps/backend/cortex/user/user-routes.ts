@@ -28,12 +28,21 @@ export function createUserRouter() {
 }
 
 function handleGetUsers(ctx: RequestContext, logger: Logger): any {
+    if (!ctx.tenantId) {
+        logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+        throw new Error("x-tenant-id header is required");
+    }
     logger.info("Fetching all users", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
     const filteredUsers = users.filter(user => user.tenantId === ctx.tenantId);
     return { users: filteredUsers };
 }
 
 function handleCreateUser(ctx: RequestContext, logger: Logger): any {
+    if (!ctx.tenantId) {
+        logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+        throw new Error("x-tenant-id header is required");
+    }
+
     const newUser = ctx.body;
     if (!newUser?.username || !newUser?.email || !newUser?.role) {
         logger.warn("Invalid user data", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
@@ -46,6 +55,10 @@ function handleCreateUser(ctx: RequestContext, logger: Logger): any {
 }
 
 function handleGetUserById(ctx: RequestContext, logger: Logger): any {
+    if (!ctx.tenantId) {
+        logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+        throw new Error("x-tenant-id header is required");
+    }
     const id = extractIdFromPath(ctx.pathname);
     const user = users.find(u => u.id === parseInt(id) && u.tenantId === ctx.tenantId);
     if (!user) {
@@ -57,6 +70,10 @@ function handleGetUserById(ctx: RequestContext, logger: Logger): any {
 }
 
 function handleUpdateUser(ctx: RequestContext, logger: Logger): any {
+    if (!ctx.tenantId) {
+        logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+        throw new Error("x-tenant-id header is required");
+    }
     const id = extractIdFromPath(ctx.pathname);
     const userIndex = users.findIndex(u => u.id === parseInt(id) && u.tenantId === ctx.tenantId);
     if (userIndex === -1) {
@@ -74,6 +91,10 @@ function handleUpdateUser(ctx: RequestContext, logger: Logger): any {
 }
 
 function handleDeleteUser(ctx: RequestContext, logger: Logger): any {
+    if (!ctx.tenantId) {
+        logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+        throw new Error("x-tenant-id header is required");
+    }
     const id = extractIdFromPath(ctx.pathname);
     const userIndex = users.findIndex(u => u.id === parseInt(id) && u.tenantId === ctx.tenantId);
     if (userIndex === -1) {
