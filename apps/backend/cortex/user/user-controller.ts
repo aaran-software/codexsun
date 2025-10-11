@@ -1,6 +1,5 @@
 import { Logger } from "../logger/logger";
 import * as userService from "./user-service";
-import { User } from "./user-model";
 import { RequestContext } from "../routes/middleware";
 
 export class UserController {
