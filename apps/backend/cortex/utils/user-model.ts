@@ -2,7 +2,7 @@ export interface User {
     id?: number; // Optional for creation, set by database
     username: string;
     email: string;
-    password_hash?: string; // Optional, set during creation
+    password_hash?: string;
     mobile: string | null;
     status: 'active' | 'inactive' | 'invited' | 'suspended';
     role_id: number;

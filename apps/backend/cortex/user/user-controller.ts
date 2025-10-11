@@ -1,173 +1,89 @@
-import { IncomingMessage, ServerResponse } from "node:http";
 import { Logger } from "../logger/logger";
 import * as userService from "./user-service";
 import { User } from "./user-model";
-import { URL } from "node:url";
+import { RequestContext } from "../routes/middleware";
 
 export class UserController {
     private static logger = new Logger();
 
-    static async create(req: IncomingMessage, res: ServerResponse) {
-        let body = "";
-        req.on("data", (chunk) => {
-            body += chunk.toString();
-        });
-
-        req.on("end", async () => {
-            try {
-                const userData = JSON.parse(body);
-
-                if (!userData.tenant_id) {
-                    throw new Error("Tenant ID is required");
-                }
-
-                const response = await userService.createUserService(userData);
-                res.writeHead(201, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({
-                    id: response.id,
-                    username: response.username,
-                    email: response.email,
-                    mobile: response.mobile,
-                    status: response.status,
-                    role_id: response.role_id,
-                    email_verified: response.email_verified,
-                    created_at: response.created_at,
-                    updated_at: response.updated_at
-                }));
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.logger.error("Error creating user", { error: errorMessage });
-                res.writeHead(400, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ error: errorMessage }));
-            }
-        });
-    }
-
-    static async getAll(req: IncomingMessage, res: ServerResponse) {
-        try {
-            const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
-            const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
-            if (!tenantId) {
-                throw new Error("Tenant ID is required");
-            }
-            const users = await userService.getUsersService(tenantId);
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify(users.map(user => ({
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                mobile: user.mobile,
-                status: user.status,
-                role_id: user.role_id,
-                email_verified: user.email_verified,
-                created_at: user.created_at,
-                updated_at: user.updated_at
-            }))));
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error("Error fetching users", { error: errorMessage });
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ error: errorMessage }));
+    static async GetUsers(ctx: RequestContext): Promise<any> {
+        if (!ctx.tenantId) {
+            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+            throw new Error("x-tenant-id header is required");
         }
+        this.logger.info("Fetching all users", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
+        const users = await userService.getUsersService(ctx.tenantId);
+        return { users };
     }
 
-    static async getById(req: IncomingMessage, res: ServerResponse) {
-        try {
-            const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
-            const id = parseInt(parsedUrl.pathname.split('/')[3] || '0', 10);
-            const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
-            if (!id || !tenantId) {
-                throw new Error("User ID and Tenant ID are required");
-            }
-            const user = await userService.getUserByIdService(id, tenantId);
-            if (!user) {
-                res.writeHead(404, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ error: "User not found" }));
-                return;
-            }
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                mobile: user.mobile,
-                status: user.status,
-                role_id: user.role_id,
-                email_verified: user.email_verified,
-                created_at: user.created_at,
-                updated_at: user.updated_at
-            }));
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error("Error fetching user by id", { error: errorMessage });
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ error: errorMessage }));
+    static async CreateUser(ctx: RequestContext): Promise<any> {
+        if (!ctx.tenantId) {
+            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+            throw new Error("x-tenant-id header is required");
         }
-    }
 
-    static async update(req: IncomingMessage, res: ServerResponse) {
-        let body = "";
-        req.on("data", (chunk) => {
-            body += chunk.toString();
-        });
-
-        req.on("end", async () => {
-            try {
-                const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
-                const id = parseInt(parsedUrl.pathname.split('/')[3] || '0', 10);
-                const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
-                const updates = JSON.parse(body);
-                if (!id || !tenantId) {
-                    throw new Error("User ID and Tenant ID are required");
-                }
-                const updatedUser = await userService.updateUserService(id, updates, tenantId);
-                if (!updatedUser) {
-                    res.writeHead(404, { "Content-Type": "application/json" });
-                    res.end(JSON.stringify({ error: "User not found or update failed" }));
-                    return;
-                }
-                res.writeHead(200, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({
-                    id: updatedUser.id,
-                    username: updatedUser.username,
-                    email: updatedUser.email,
-                    mobile: updatedUser.mobile,
-                    status: updatedUser.status,
-                    role_id: updatedUser.role_id,
-                    email_verified: updatedUser.email_verified,
-                    created_at: updatedUser.created_at,
-                    updated_at: updatedUser.updated_at
-                }));
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.logger.error("Error updating user", { error: errorMessage });
-                res.writeHead(400, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ error: errorMessage }));
-            }
-        });
-    }
-
-    static async delete(req: IncomingMessage, res: ServerResponse) {
-        try {
-            const parsedUrl = new URL(req.url || '', `http://${req.headers.host}`);
-            const id = parseInt(parsedUrl.pathname.split('/')[3] || '0', 10);
-            const tenantId = parsedUrl.searchParams.get('tenant_id') || '';
-            if (!id || !tenantId) {
-                throw new Error("User ID and Tenant ID are required");
-            }
-            const deleted = await userService.deleteUserService(id, tenantId);
-            if (!deleted) {
-                res.writeHead(404, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ error: "User not found or deletion failed" }));
-                return;
-            }
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ message: "User deleted successfully" }));
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error("Error deleting user", { error: errorMessage });
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ error: errorMessage }));
+        const newUser = ctx.body;
+        if (!newUser?.username || !newUser?.email || !newUser?.password) {
+            this.logger.warn("Invalid user data", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
+            throw new Error("Username, email, and password are required");
         }
+        const user = await userService.createUserService({ ...newUser, tenant_id: ctx.tenantId });
+        this.logger.info("User created", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId, userId: user.id });
+        return { message: "User created", user };
+    }
+
+    static async GetUserById(ctx: RequestContext): Promise<any> {
+        if (!ctx.tenantId) {
+            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+            throw new Error("x-tenant-id header is required");
+        }
+        const id = this.extractIdFromPath(ctx.pathname);
+        const user = await userService.getUserByIdService(parseInt(id), ctx.tenantId);
+        if (!user) {
+            this.logger.warn("User not found", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId });
+            throw new Error("User not found");
+        }
+        this.logger.info("Fetching user by ID", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId });
+        return { user };
+    }
+
+    static async UpdateUser(ctx: RequestContext): Promise<any> {
+        if (!ctx.tenantId) {
+            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+            throw new Error("x-tenant-id header is required");
+        }
+        const id = this.extractIdFromPath(ctx.pathname);
+        const updates = ctx.body;
+        if (!updates?.username && !updates?.email && !updates?.password && !updates?.mobile && !updates?.status && !updates?.role_id && !updates?.email_verified) {
+            this.logger.warn("No valid fields provided for update", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId });
+            throw new Error("At least one field (username, email, password, mobile, status, role_id, email_verified) must be provided");
+        }
+        const user = await userService.updateUserService(parseInt(id), updates, ctx.tenantId);
+        if (!user) {
+            this.logger.warn("User not found for update", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId });
+            throw new Error("User not found");
+        }
+        this.logger.info("User updated", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId, userId: user.id });
+        return { message: "User updated", user };
+    }
+
+    static async DeleteUser(ctx: RequestContext): Promise<any> {
+        if (!ctx.tenantId) {
+            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
+            throw new Error("x-tenant-id header is required");
+        }
+        const id = this.extractIdFromPath(ctx.pathname);
+        const success = await userService.deleteUserService(parseInt(id), ctx.tenantId);
+        if (!success) {
+            this.logger.warn("User not found for deletion", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId });
+            throw new Error("User not found");
+        }
+        this.logger.info("User deleted", { method: ctx.method, url: ctx.url, id, tenantId: ctx.tenantId });
+        return { message: "User deleted" };
+    }
+
+    static extractIdFromPath(pathname: string): string {
+        const segments = pathname.split("/");
+        return segments[segments.length - 1];
     }
 }

@@ -6,7 +6,7 @@ import { getSettings } from "./config/get-settings";
 import { createRouter } from "./routes/router";
 import { createWebRouter } from "./routes/sys-router";
 import { createUserRouter } from "./user/user-routes";
-import { createAuthRouter } from "./routes/auth-routes";
+import { createAuthRouter } from "./core/auth/auth-routes";
 import { createTodosRouter } from "./todos/todos-routes";
 import { Logger } from "./logger/logger";
 import { Connection } from "./db/connection";

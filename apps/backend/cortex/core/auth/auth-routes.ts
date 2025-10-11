@@ -2,11 +2,10 @@
 // Location: src/auth-routes.ts
 // Description: Authentication routes (POST /login, POST /logout, GET /api/auth/verify). Uses RequestContext and focuses on business logic.
 
-import {createHttpRouter} from "./chttpx";
-import {Logger} from "../logger/logger";
-import {verifyJwt} from "../core/secret/jwt-service";
-import {RequestContext} from "./middleware";
-import {authenticateUser, logoutUser, verifyUserToken} from "../core/auth/auth-service";
+import {createHttpRouter} from "../../routes/chttpx";
+import {Logger} from "../../logger/logger";
+import {RequestContext} from "../../routes/middleware";
+import {authenticateUser, logoutUser, verifyUserToken} from "./auth-service";
 
 export function createAuthRouter() {
     const {routeRequest, Route} = createHttpRouter();
