@@ -14,6 +14,7 @@ export interface RequestContext {
     body?: any;
     headers: Record<string, string | string[] | undefined>;
     tenantId: string;
+    userId: string;
 }
 
 export class Middleware {
@@ -23,6 +24,7 @@ export class Middleware {
         const startTime = Date.now();
         const ctx = createRequestContext(req);
         await parseBodyIfNeeded(req, ctx);
+        normalizeUrl(ctx);
 
         this.logger.info("Request", {method: ctx.method, url: ctx.url, tenantId: ctx.tenantId});
 
@@ -48,6 +50,7 @@ function createRequestContext(req: IncomingMessage): RequestContext {
         headers: req.headers,
         body: null,
         tenantId: typeof req.headers["x-tenant-id"] === "string" ? req.headers["x-tenant-id"] : "",
+        userId: typeof req.headers["x-user-id"] === "string" ? req.headers["x-user-id"] : "",
     };
 }
 
@@ -79,4 +82,9 @@ function sendResponse(res: ServerResponse, status: number, data: any, startTime:
         tenantId: ctx.tenantId,
         content,
     });
+}
+
+// /routes/middleware.ts
+export function normalizeUrl(ctx: RequestContext): void {
+    ctx.url = ctx.url.replace(/\/+$/, ''); // Remove trailing slashes
 }

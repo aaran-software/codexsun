@@ -1,6 +1,6 @@
-import {Credentials, User, Tenant, JwtPayload} from '../app.types';
+import {Credentials, JwtPayload, Tenant, User} from '../app.types';
 import {query} from '../../db/db';
-import {generateJwt, verifyJwt, blockJwt} from '../secret/jwt-service';
+import {blockJwt, generateJwt, verifyJwt} from '../secret/jwt-service';
 import {comparePassword} from '../secret/crypt-service';
 import {logQuery} from '../../config/logger';
 import {getMasterDbConfig} from '../../config/db-config';
@@ -103,8 +103,7 @@ export async function logoutUser(token: string): Promise<void> {
 
 export async function verifyUserToken(token: string): Promise<JwtPayload> {
     try {
-        const payload = await verifyJwt(token);
-        return payload;
+        return await verifyJwt(token);
     } catch (error) {
         const errMsg = error instanceof Error ? error.message : 'Unknown token verification error';
         logQuery('error', {

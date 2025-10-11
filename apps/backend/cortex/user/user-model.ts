@@ -1,4 +1,7 @@
+import {Role} from "../core/app.types";
+
 export interface User {
+    role_name: Role;
     id?: number; // Optional for creation, set by database
     username: string;
     email: string;

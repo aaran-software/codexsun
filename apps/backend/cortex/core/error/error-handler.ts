@@ -11,3 +11,10 @@ export async function handleError(error: Error, tenantId?: string, version?: str
     };
     logError('error', logEntry);
 }
+
+export class HttpError extends Error {
+    constructor(message: string, public statusCode: number, tenantId: string, version: string) {
+        super(message);
+        this.name = 'HttpError';
+    }
+}

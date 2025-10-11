@@ -10,6 +10,7 @@ export class UserController {
             this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
             throw new Error("x-tenant-id header is required");
         }
+
         this.logger.info("Fetching all users", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
         const users = await userService.getUsersService(ctx.tenantId);
         return { users };

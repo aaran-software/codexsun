@@ -1,88 +1,59 @@
 // /cortex/core/auth/auth-middleware.ts
-// Expert mode: Added version parameter for consistent error logging with controllers, maintained role-based access control, full test coverage.
+import { RequestContext } from '../../routes/middleware';
+import { HttpError, handleError } from '../error/error-handler';
+import { PermissionCheck, User } from '../app.types';
+import { getUserById } from '../../user/user-repos';
 
-import { RequestContext, PermissionCheck, JwtPayload } from '../app.types';
-import { handleError } from '../error/error-handler';
-import { verifyUserToken } from '../core/auth/auth-service';
-import { query } from '../../db/mdb';
-import { getMasterDbConfig } from '../../config/db-config';
+export async function authMiddleware(ctx: RequestContext): Promise<void> {
+    if (!ctx.userId) {
+        throw new HttpError('User not authenticated', 401, 'auth-middleware', 'authMiddleware');
+    }
+    if (!ctx.tenantId) {
+        throw new HttpError('Tenant context required', 400, 'auth-middleware', 'authMiddleware');
+    }
+}
 
-export function authMiddleware(permission: PermissionCheck) {
-    return async (
-        req: { context: RequestContext; version?: string },
-        res: any,
-        next: (error?: Error) => void
-    ): Promise<void> => {
+export function permissionMiddleware(permission: PermissionCheck) {
+    return async (ctx: RequestContext): Promise<void> => {
+        if (!permission?.requiredRole) {
+            throw new HttpError('Permission configuration error', 400, 'auth-middleware', 'permissionMiddleware');
+        }
+        if (!ctx.userId) {
+            throw new HttpError('User not authenticated', 401, 'auth-middleware', 'permissionMiddleware');
+        }
+
         try {
-            const { user, tenant } = req.context;
-            const apiVersion = req.version || 'v1'; // Default to v1 for consistency
-
+            const userId = parseInt(ctx.userId, 10);
+            if (isNaN(userId)) {
+                throw new HttpError('Invalid user ID', 400, 'auth-middleware', 'permissionMiddleware');
+            }
+            const user = await getUserById(userId, ctx.tenantId);
             if (!user) {
-                throw new Error('User context required');
+                throw new HttpError('User not found', 404, 'auth-middleware', 'permissionMiddleware');
             }
-
-            const roleHierarchy: Record<string, number> = {
-                admin: 3,
-                user: 2,
-                viewer: 1,
-            };
-
-            if (roleHierarchy[user.role] < roleHierarchy[permission.requiredRole]) {
-                throw new Error('Insufficient permissions');
+            if (permission.requiredRole && user.role_name !== permission.requiredRole) {
+                throw new HttpError('Insufficient permissions', 403, 'auth-middleware', 'permissionMiddleware');
             }
-
-            next();
-        } catch (error) {
-            const errorToLog = error instanceof Error ? error : new Error('Unknown error');
-            await handleError(errorToLog, req.context.tenant?.id, req.version);
-            next(errorToLog);
+        } catch (err) {
+            // Ensure err is an HttpError
+            throw err instanceof HttpError ? err : handleError(new Error('Unexpected error'), 'auth-middleware', 'permissionMiddleware');
         }
     };
 }
 
-export function verifyTokenMiddleware() {
-    return async (
-        req: { context: RequestContext; version?: string },
-        res: any,
-        next: (error?: Error) => void
-    ): Promise<void> => {
-        try {
-            const authHeader = req.context.headers.authorization;
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                throw new Error('Invalid or missing token');
-            }
-            const token = authHeader.replace('Bearer ', '');
-            const payload: JwtPayload = await verifyUserToken(token);
 
-            // Fetch tenant details (assuming tenant data is needed)
-            const dbConfig = getMasterDbConfig();
-            const tenantResult = await query<{ id: string; dbConnection: string }>(
-                'SELECT id, db_connection AS dbConnection FROM tenants WHERE id = ?',
-                [payload.tenantId],
-                dbConfig.database
-            );
+export async function tokenMiddleware(ctx: RequestContext): Promise<void> {
+    const authHeader = ctx.headers?.['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        throw new HttpError('Authorization header missing or invalid', 401, 'auth-middleware', 'tokenMiddleware');
+    }
 
-            if (!tenantResult.rows[0]) {
-                throw new Error('Tenant not found');
-            }
-
-            // Set context
-            req.context.user = {
-                id: payload.id,
-                tenantId: payload.tenantId,
-                role: payload.role,
-            };
-            req.context.tenantId = payload.tenantId;
-            req.context.tenant = {
-                id: tenantResult.rows[0].id,
-                dbConnection: tenantResult.rows[0].dbConnection,
-            };
-
-            next();
-        } catch (error) {
-            const errorToLog = error instanceof Error ? error : new Error('Unknown error');
-            await handleError(errorToLog, req.context.tenantId, req.version);
-            next(errorToLog);
-        }
-    };
+    const token = authHeader.split(' ')[1];
+    try {
+        const payload = await verifyToken(token); // Assume { userId: number, tenantId: string }
+        ctx.userId = payload.userId.toString(); // Ensure string for consistency
+        ctx.tenantId = payload.tenantId;
+    } catch (err) {
+        throw new HttpError('Invalid token', 401, 'auth-middleware', 'tokenMiddleware');
+    }
 }
