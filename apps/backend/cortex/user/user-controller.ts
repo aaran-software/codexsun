@@ -1,15 +1,14 @@
 import { Logger } from "../logger/logger";
 import * as userService from "./user-service";
 import { RequestContext } from "../routes/middleware";
+import {authMiddleware, tokenMiddleware} from "../core/auth/auth-middleware";
 
 export class UserController {
     private static logger = new Logger();
 
     static async GetUsers(ctx: RequestContext): Promise<any> {
-        if (!ctx.tenantId) {
-            this.logger.warn("Missing x-tenant-id header", { method: ctx.method, url: ctx.url });
-            throw new Error("x-tenant-id header is required");
-        }
+        await tokenMiddleware(ctx)
+        await authMiddleware(ctx)
 
         this.logger.info("Fetching all users", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
         const users = await userService.getUsersService(ctx.tenantId);

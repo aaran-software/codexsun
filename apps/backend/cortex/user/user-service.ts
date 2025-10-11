@@ -1,7 +1,7 @@
 import * as userRepo from './user-repos';
 import { query } from '../db/mdb';
 import { User } from './user-model';
-import { comparePassword, generateHash } from '../core/secret/crypt-service';
+import { generateHash } from '../core/secret/crypt-service';
 
 export async function getUsersService(tenantId: string): Promise<User[]> {
     return userRepo.getUsers(tenantId);

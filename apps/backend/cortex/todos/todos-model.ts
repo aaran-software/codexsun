@@ -1,4 +1,4 @@
-// cortex/todos/todo-model.ts
+// cortex/todos/todos-model.ts
 
 export interface Todo {
     id?: number;
@@ -10,4 +10,8 @@ export interface Todo {
     tenant_id: string;
     created_at?: string;
     position: number;
+}
+
+export interface TenantId{
+    tenant_id: string;
 }

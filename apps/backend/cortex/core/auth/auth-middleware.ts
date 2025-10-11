@@ -6,7 +6,7 @@ import { getUserById } from '../../user/user-repos';
 
 export async function authMiddleware(ctx: RequestContext): Promise<void> {
     if (!ctx.userId) {
-        throw new HttpError('User not authenticated', 401, 'auth-middleware', 'authMiddleware');
+        throw new HttpError('User id not authenticated', 401, 'auth-middleware', 'authMiddleware');
     }
     if (!ctx.tenantId) {
         throw new HttpError('Tenant context required', 400, 'auth-middleware', 'authMiddleware');
@@ -19,7 +19,7 @@ export function permissionMiddleware(permission: PermissionCheck) {
             throw new HttpError('Permission configuration error', 400, 'auth-middleware', 'permissionMiddleware');
         }
         if (!ctx.userId) {
-            throw new HttpError('User not authenticated', 401, 'auth-middleware', 'permissionMiddleware');
+            throw new HttpError('User id not authenticated', 401, 'auth-middleware', 'permissionMiddleware');
         }
 
         try {
@@ -46,14 +46,5 @@ export async function tokenMiddleware(ctx: RequestContext): Promise<void> {
     const authHeader = ctx.headers?.['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new HttpError('Authorization header missing or invalid', 401, 'auth-middleware', 'tokenMiddleware');
-    }
-
-    const token = authHeader.split(' ')[1];
-    try {
-        const payload = await verifyToken(token); // Assume { userId: number, tenantId: string }
-        ctx.userId = payload.userId.toString(); // Ensure string for consistency
-        ctx.tenantId = payload.tenantId;
-    } catch (err) {
-        throw new HttpError('Invalid token', 401, 'auth-middleware', 'tokenMiddleware');
     }
 }
