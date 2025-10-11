@@ -1,6 +1,6 @@
-import {Credentials, User, Tenant} from '../app.types';
+import {Credentials, User, Tenant, JwtPayload} from '../app.types';
 import {query} from '../../db/db';
-import {generateJwt} from '../secret/jwt-service';
+import {generateJwt, verifyJwt, blockJwt} from '../secret/jwt-service';
 import {comparePassword} from '../secret/crypt-service';
 import {logQuery} from '../../config/logger';
 import {getMasterDbConfig} from '../../config/db-config';
@@ -82,5 +82,37 @@ export async function authenticateUser(credentials: Credentials): Promise<{ user
             error: errMsg,
         });
         throw new Error(`Authentication failed for ${email}: ${errMsg}`);
+    }
+}
+
+export async function logoutUser(token: string): Promise<void> {
+    try {
+        // Block the token by setting expires_at to NOW()
+        await blockJwt(token);
+    } catch (error) {
+        const errMsg = error instanceof Error ? error.message : 'Unknown logout error';
+        logQuery('error', {
+            sql: 'UPDATE user_sessions SET expires_at = NOW() WHERE token = ?',
+            params: ['[REDACTED]'],
+            db: 'master_db',
+            error: errMsg,
+        });
+        throw new Error(`Logout failed: ${errMsg}`);
+    }
+}
+
+export async function verifyUserToken(token: string): Promise<JwtPayload> {
+    try {
+        const payload = await verifyJwt(token);
+        return payload;
+    } catch (error) {
+        const errMsg = error instanceof Error ? error.message : 'Unknown token verification error';
+        logQuery('error', {
+            sql: 'SELECT expires_at, token FROM user_sessions WHERE user_id = ? AND token = ?',
+            params: ['[REDACTED]'],
+            db: 'master_db',
+            error: errMsg,
+        });
+        throw new Error(`Token verification failed: ${errMsg}`);
     }
 }

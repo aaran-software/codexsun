@@ -4,10 +4,9 @@
 
 import {createHttpRouter} from "./chttpx";
 import {Logger} from "../logger/logger";
-import {login, logout, isTokenValid} from "../core/auth/login-controller";
 import {verifyJwt} from "../core/secret/jwt-service";
 import {RequestContext} from "./middleware";
-import {authenticateUser} from "../core/auth/auth-service";
+import {authenticateUser, logoutUser, verifyUserToken} from "../core/auth/auth-service";
 
 export function createAuthRouter() {
     const {routeRequest, Route} = createHttpRouter();
@@ -64,7 +63,7 @@ async function handleLogout(ctx: RequestContext, logger: Logger): Promise<any> {
         throw new Error("Token required");
     }
     const token = authHeader.replace("Bearer ", "");
-    await logout(token);
+    await logoutUser(token); // Use logoutUser to block the token
     logger.info("Logout request", {method: ctx.method, url: ctx.url});
     return {message: "Logged out successfully"};
 }
@@ -76,13 +75,8 @@ async function handleTokenVerify(ctx: RequestContext, logger: Logger): Promise<a
         throw new Error("Invalid or missing token");
     }
     const token = authHeader.replace("Bearer ", "");
-    const isValid = await isTokenValid(token);
-    if (!isValid) {
-        throw new Error("Invalid or expired token");
-    }
-    const payload = await verifyJwt(token);
+    const payload = await verifyUserToken(token); // Use verifyUserToken
     logger.info("Token verification successful", {method: ctx.method, url: ctx.url});
-
     return {
         message: "Token is valid",
         user: {
