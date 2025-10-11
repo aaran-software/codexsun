@@ -93,7 +93,7 @@ export interface TodoResponse {
 export type Role = 'admin' | 'user' | 'viewer';
 
 export interface PermissionCheck {
-    requiredRole: Role;
+    requiredRole: string;
 }
 
 export interface RateLimitConfig {
