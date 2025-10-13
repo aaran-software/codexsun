@@ -7,6 +7,7 @@ export class CreateTenantsMigration extends BaseMigration {
         await this.schema.create('tenants', (table) => {
             table.id();
             table.string('tenant_id').unique().notNull();
+            table.string('db_driver').null();
             table.string('db_host').null();
             table.string('db_port').null();
             table.string('db_user').null();

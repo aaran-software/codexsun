@@ -17,10 +17,11 @@ export class MasterSeeder {
     private async insertTenant(): Promise<void> {
         const defaultTenantDb = process.env.DEFAULT_TENANT_DB || 'tenant_db';
         await query(
-            `INSERT INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl, active, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            `INSERT INTO tenants (tenant_id, db_driver, db_host, db_port, db_user, db_pass, db_name, db_ssl, active, created_at, updated_at)
+             VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
             [
                 'default',
+                process.env.DB_DRIVER || 'mariadb',
                 process.env.DB_HOST || '127.0.0.1',
                 process.env.DB_PORT || '3306',
                 process.env.DB_USER || 'root',
