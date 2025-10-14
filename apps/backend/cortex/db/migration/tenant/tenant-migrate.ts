@@ -1,83 +1,118 @@
-// cortex/db/tenant-migrate.ts
-
-import { query, withTransaction } from '../../db';
+import { query } from '../../mdb';
+import { Connection } from '../../connection';
+import { getMasterDbConfig } from '../../../config/db-config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-// Path to the migration folder for tenant migrations
-const MIGRATIONS_DIR = path.resolve(__dirname, '../../../migrations/tenant');
+/**
+ * Name of the master database.
+ */
+const MASTER_DB = process.env.MASTER_DB_NAME || 'master_db';
+
+/**
+ * Path to the master migration folder.
+ */
+const MIGRATIONS_DIR = path.resolve(__dirname, '../../../migrations/master');
 
 /**
  * Validates required environment variables.
- * @throws Error if DB_NAME is missing.
+ * @throws Error if required environment variables are missing.
  */
-function validateEnvVariables(): void {
-    if (!process.env.DB_NAME) {
-        throw new Error('Missing required environment variable: DB_NAME');
+const validateEnvVariables = (): void => {
+    if (!MASTER_DB) {
+        throw new Error('Missing required environment variable: MASTER_DB_NAME');
     }
-}
+};
 
 /**
- * Ensures the tenant database exists, creating it if necessary.
- * @param tenantId - Tenant ID for database operations.
+ * Logs database connection details.
+ * @param config - Database configuration.
  */
-async function ensureTenantDatabase(tenantId: string): Promise<void> {
+const logConnectionDetails = (config: ReturnType<typeof getMasterDbConfig>): void => {
+    console.log(`Database Driver: ${config.driver}`);
+    console.log('Connection Credentials:');
+    console.log(`  Host: ${config.host}`);
+    console.log(`  Port: ${config.port}`);
+    console.log(`  User: ${config.user}`);
+    console.log(`  Password: ${config.password ? '[hidden]' : 'none'}`);
+    console.log(`  SSL: ${config.ssl ? 'Enabled' : 'Disabled'}`);
+};
+
+/**
+ * Initializes database connection.
+ * @param config - Database configuration.
+ * @param noDb - Whether to initialize without a specific database.
+ * @returns Initialized Connection instance.
+ */
+const initializeConnection = async (config: ReturnType<typeof getMasterDbConfig>, noDb: boolean = false): Promise<Connection> => {
+    console.log('Initializing database connection');
+    const initConfig = noDb ? { ...config, database: '' } : config;
+    await Connection.initialize(initConfig);
+    return Connection.getInstance();
+};
+
+/**
+ * Ensures the master database exists, creating it if necessary.
+ */
+const ensureMasterDatabase = async (): Promise<void> => {
     try {
-        const dbCheck = await query(`SHOW DATABASES LIKE ?`, [process.env.DB_NAME], tenantId);
+        const dbCheck = await query(`SHOW DATABASES LIKE ?`, [MASTER_DB]);
         if (dbCheck.rowCount === 0) {
-            console.warn(`Tenant database '${process.env.DB_NAME}' does not exist. Creating it now.`);
-            await query(`CREATE DATABASE \`${process.env.DB_NAME}\``, [], tenantId);
-            console.log(`Created tenant database: ${process.env.DB_NAME}`);
+            console.warn(`Master database '${MASTER_DB}' does not exist. Creating it now.`);
+            await query(`CREATE DATABASE \`${MASTER_DB}\``, []);
+            console.log(`Created master database: ${MASTER_DB}`);
         } else {
-            console.log(`Tenant database '${process.env.DB_NAME}' already exists.`);
+            console.log(`Master database '${MASTER_DB}' already exists.`);
         }
-    } catch (err) {
+    } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
-        console.error(`Error checking/creating tenant database: ${error.message}`);
+        console.error(`Error checking/creating master database: ${error.message}`);
         throw error;
     }
-}
+};
 
 /**
- * Creates the migrations tracking table in the tenant database.
- * @param tenantId - Tenant ID for database operations.
+ * Creates the migrations tracking table in the master database.
  */
-async function createMigrationsTable(tenantId: string): Promise<void> {
+const createMigrationsTable = async (): Promise<void> => {
     try {
         await query(
             `
                 CREATE TABLE IF NOT EXISTS migrations (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL UNIQUE,
+                                                          id INT AUTO_INCREMENT PRIMARY KEY,
+                                                          name VARCHAR(255) NOT NULL UNIQUE,
                     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
+                    );
             `,
-            [],
-            tenantId
+            []
         );
-        console.log(`Created migrations table for tenant '${tenantId}'`);
-    } catch (err) {
+        console.log('Created migrations table in master_db');
+    } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
-        console.error(`Error creating migrations table for tenant '${tenantId}': ${error.message}`);
+        console.error('Error creating migrations table in master_db:', error.message);
         throw error;
     }
-}
+};
 
 /**
  * Retrieves and sorts migration files from the migrations folder.
  * @returns Sorted array of migration file names.
  */
-async function getMigrationFiles(): Promise<string[]> {
+const getMigrationFiles = async (): Promise<string[]> => {
     try {
         console.log(`Checking migration directory: ${MIGRATIONS_DIR}`);
         await fs.access(MIGRATIONS_DIR);
         const files = await fs.readdir(MIGRATIONS_DIR);
         const migrationFiles = files
             .filter((file) => file.match(/^\d+_.+\.ts$/))
-            .sort((a, b) => parseInt(a.split('_')[0], 10) - parseInt(b.split('_')[0], 10));
+            .sort((a, b) => {
+                const aTimestamp = parseInt(a.split('_')[0], 10);
+                const bTimestamp = parseInt(b.split('_')[0], 10);
+                return aTimestamp - bTimestamp;
+            });
         console.log(`Found migration files: ${migrationFiles.join(', ') || 'none'}`);
         return migrationFiles;
-    } catch (err) {
+    } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
             console.log(`Migration directory ${MIGRATIONS_DIR} does not exist, returning empty list`);
@@ -86,113 +121,142 @@ async function getMigrationFiles(): Promise<string[]> {
         console.error(`Error reading migration files: ${error.message}`);
         throw error;
     }
-}
+};
 
 /**
- * Applies a single migration for the specified tenant.
+ * Applies a single migration.
  * @param fileName - Name of the migration file.
- * @param tenantId - Tenant ID for database operations.
  */
-async function applyMigration(fileName: string, tenantId: string): Promise<void> {
+const applyMigration = async (fileName: string): Promise<void> => {
     const migrationName = fileName.replace(/\.ts$/, '');
-    console.log(`Checking migration: ${migrationName} for tenant '${tenantId}'`);
-    const migrationCheck = await query(`SELECT * FROM migrations WHERE name = ?`, [migrationName], tenantId);
+    console.log(`Checking migration: ${migrationName}`);
+    const migrationCheck = await query(`SELECT * FROM migrations WHERE name = ?`, [migrationName]);
     if (migrationCheck.rowCount === 0) {
-        console.log(`Applying migration: ${migrationName} for tenant '${tenantId}'`);
+        console.log(`Applying migration: ${migrationName}`);
         const migrationPath = path.join(MIGRATIONS_DIR, fileName);
         console.log(`Loading migration from: ${migrationPath}`);
         const migrationModule = require(migrationPath);
         const MigrationClass = Object.values(migrationModule)[0] as new (dbName: string) => { up: () => Promise<void> };
-        const migration = new MigrationClass(process.env.DB_NAME!);
-
-        await withTransaction(async (client) => {
+        const migration = new MigrationClass(MASTER_DB);
+        await query('BEGIN', []);
+        try {
             await migration.up();
-            await client.query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
-        }, tenantId);
-
-        console.log(`Applied migration: ${migrationName} for tenant '${tenantId}'`);
+            await query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
+            await query('COMMIT', []);
+            console.log(`Applied migration: ${migrationName}`);
+        } catch (err: unknown) {
+            await query('ROLLBACK', []);
+            const error = err instanceof Error ? err : new Error('Unknown error');
+            console.error(`Error running migration ${migrationName}: ${error.message}`, {
+                sql: (err as any).sql || 'unknown',
+            });
+            throw error;
+        }
     } else {
-        console.log(`Migration ${migrationName} already applied for tenant '${tenantId}'`);
+        console.log(`Migration ${migrationName} already applied`);
     }
-}
+};
 
 /**
- * Drops all tables in the tenant database.
- * @param tenantId - Tenant ID for database operations.
+ * Drops all tables in the master database.
  */
-async function dropTenantTables(tenantId: string): Promise<void> {
+const dropMasterTables = async (): Promise<void> => {
     try {
-        await withTransaction(async (client) => {
-            await client.query(`DROP TABLE IF EXISTS todos`);
-            await client.query(`DROP TABLE IF EXISTS migrations`);
-        }, tenantId);
-        console.log(`Dropped all tables for tenant '${tenantId}'`);
-    } catch (err) {
+        await query('BEGIN', []);
+        // Drop tenant_users first due to FK dependency
+        await query(`DROP TABLE IF EXISTS user_sessions`, []);
+        await query(`DROP TABLE IF EXISTS permissions`, []);
+        await query(`DROP TABLE IF EXISTS tenant_users`, []);
+        await query(`DROP TABLE IF EXISTS users`, []);
+        await query(`DROP TABLE IF EXISTS roles`, []);
+        await query(`DROP TABLE IF EXISTS tenants`, []);
+        await query(`DROP TABLE IF EXISTS migrations`, []);
+        await query('COMMIT', []);
+        console.log('Dropped tenant_users, tenants, and migrations tables in master_db');
+    } catch (err: unknown) {
+        await query('ROLLBACK', []);
         const error = err instanceof Error ? err : new Error('Unknown error');
-        console.error(`Error dropping tables for tenant '${tenantId}': ${error.message}`);
+        console.error(`Error dropping tables in master_db: ${error.message}`);
         throw error;
     }
-}
+};
 
 /**
- * Drops the tenant database.
- * @param tenantId - Tenant ID for database operations.
+ * Drops the master database.
  */
-async function dropTenantDatabase(tenantId: string): Promise<void> {
+const dropMasterDatabase = async (): Promise<void> => {
     try {
-        console.log(`Dropping tenant database: ${process.env.DB_NAME}`);
-        await query(`DROP DATABASE IF EXISTS \`${process.env.DB_NAME}\``, [], tenantId);
-    } catch (err) {
+        console.log(`Dropping master database: ${MASTER_DB}`);
+        await query(`DROP DATABASE IF EXISTS \`${MASTER_DB}\``, []);
+    } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
-        console.error(`Error dropping tenant database ${process.env.DB_NAME}: ${error.message}`);
+        console.error(`Error dropping master database ${MASTER_DB}: ${error.message}`);
         throw error;
     }
-}
+};
 
 /**
- * Runs the tenant database migration, setting up the database and running migrations.
- * @param tenantId - Tenant ID for database operations (default: "default").
+ * Runs the master database migration, setting up the master database and running all migrations.
  */
-export async function tenantMigrate(tenantId: string = 'default'): Promise<void> {
-    console.log(`Starting tenant migration for tenant '${tenantId}'`);
+export async function masterMigrate(): Promise<void> {
+    console.log('Starting master migration');
+    const config = getMasterDbConfig();
     validateEnvVariables();
-    await ensureTenantDatabase(tenantId);
-    await createMigrationsTable(tenantId);
-    const migrationFiles = await getMigrationFiles();
-    for (const fileName of migrationFiles) {
-        await applyMigration(fileName, tenantId);
+    logConnectionDetails(config);
+    const conn = await initializeConnection(config, true);
+    try {
+        await ensureMasterDatabase();
+        await createMigrationsTable();
+        const migrationFiles = await getMigrationFiles();
+        for (const fileName of migrationFiles) {
+            await applyMigration(fileName);
+        }
+    } finally {
+        await conn.close();
+        console.log('Database connection closed');
     }
-    console.log(`Migration completed for tenant '${tenantId}'`);
 }
 
 /**
- * Resets the tenant database by dropping all tables and the database itself.
- * @param tenantId - Tenant ID for database operations (default: "default").
+ * Resets the master database by dropping all tables and the database itself.
  */
-export async function resetTenantDatabase(tenantId: string = 'default'): Promise<void> {
-    console.log(`Starting tenant database reset for tenant '${tenantId}'`);
+export async function resetMasterDatabase(): Promise<void> {
+    console.log('Starting master database reset');
+    const config = getMasterDbConfig();
     validateEnvVariables();
-    await dropTenantTables(tenantId);
-    await dropTenantDatabase(tenantId);
-    console.log(`Tenant database reset completed for tenant '${tenantId}'`);
+    logConnectionDetails(config);
+    const conn = await initializeConnection(config);
+    try {
+        await dropMasterTables();
+        await dropMasterDatabase();
+        console.log('Master database reset completed');
+    } finally {
+        await conn.close();
+        console.log('Database connection closed');
+    }
 }
 
 /**
- * Executes the specified tenant database operation (migrate or reset).
+ * Executes the specified master database operation (migrate or reset).
  * @param operation - The operation to perform ('migrate' or 'reset').
- * @param tenantId - Tenant ID for database operations (default: "default").
  */
-export async function executeTenantOperation(operation: 'migrate' | 'reset', tenantId: string = 'default'): Promise<void> {
+export async function executeMasterOperation(operation: 'migrate' | 'reset'): Promise<void> {
     try {
         if (operation === 'migrate') {
-            await tenantMigrate(tenantId);
+            await masterMigrate();
         } else if (operation === 'reset') {
-            await resetTenantDatabase(tenantId);
+            await resetMasterDatabase();
         } else {
-            throw new Error(`Invalid operation: ${operation}. Use 'migrate' or 'reset'.`);
+            new Error(`Invalid operation: ${operation}. Use 'migrate' or 'reset'.`);
         }
     } catch (error) {
-        console.error(`Tenant ${operation} failed for tenant '${tenantId}':`, (error as Error).message);
+        console.error(`${operation === 'migrate' ? 'Master migration' : 'Master database reset'} failed:`, (error as Error).message);
+        try {
+            await Connection.getInstance().close();
+            console.log('Database connection closed due to error');
+        } catch (closeError) {
+            console.error('Error closing connection:', (closeError as Error).message);
+        }
         throw error;
     }
 }
@@ -200,5 +264,5 @@ export async function executeTenantOperation(operation: 'migrate' | 'reset', ten
 // Execute based on command-line argument
 if (require.main === module) {
     const operation = process.argv[2] as 'migrate' | 'reset';
-    executeTenantOperation(operation).then(() => process.exit(0)).catch(() => process.exit(1));
+    executeMasterOperation(operation).then(() => process.exit(0)).catch(() => process.exit(1));
 }

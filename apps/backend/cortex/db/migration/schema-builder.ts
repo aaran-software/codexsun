@@ -290,11 +290,11 @@ export class SchemaBuilder {
             const tableOptions = this.tableOptions.length ? ' ' + this.tableOptions.join(' ') : '';
             const sql = `CREATE TABLE IF NOT EXISTS \`${this.tableName}\` (${columnDefinitions})${tableOptions};`;
             console.log(`Executing SQL: ${sql}`);
-            const result = await query<unknown>(sql, [], this.dbName);
+            const result = await query<unknown>(sql, []);
 
             for (const indexSql of this.indexes) {
                 console.log(`Executing index SQL: ${indexSql}`);
-                await query<unknown>(indexSql, [], this.dbName);
+                await query<unknown>(indexSql, []);
             }
 
             return result;
@@ -309,7 +309,7 @@ export class SchemaBuilder {
         try {
             const sql = `DROP TABLE IF EXISTS \`${this.tableName}\`;`;
             console.log(`Executing drop SQL: ${sql}`);
-            return await query<unknown>(sql, [], this.dbName);
+            return await query<unknown>(sql, []);
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown database error');
             console.error(`Error dropping table ${this.tableName}: ${error.message}`, { sql: (err as any).sql || 'unknown' });

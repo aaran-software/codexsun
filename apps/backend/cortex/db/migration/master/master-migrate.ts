@@ -56,10 +56,10 @@ const initializeConnection = async (config: ReturnType<typeof getMasterDbConfig>
  */
 const ensureMasterDatabase = async (): Promise<void> => {
     try {
-        const dbCheck = await query(`SHOW DATABASES LIKE ?`, [MASTER_DB], '');
+        const dbCheck = await query(`SHOW DATABASES LIKE ?`, [MASTER_DB]);
         if (dbCheck.rowCount === 0) {
             console.warn(`Master database '${MASTER_DB}' does not exist. Creating it now.`);
-            await query(`CREATE DATABASE \`${MASTER_DB}\``, [], '');
+            await query(`CREATE DATABASE \`${MASTER_DB}\``, []);
             console.log(`Created master database: ${MASTER_DB}`);
         } else {
             console.log(`Master database '${MASTER_DB}' already exists.`);
@@ -84,8 +84,7 @@ const createMigrationsTable = async (): Promise<void> => {
                     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     );
             `,
-            [],
-            MASTER_DB
+            []
         );
         console.log('Created migrations table in master_db');
     } catch (err: unknown) {
@@ -131,7 +130,7 @@ const getMigrationFiles = async (): Promise<string[]> => {
 const applyMigration = async (fileName: string): Promise<void> => {
     const migrationName = fileName.replace(/\.ts$/, '');
     console.log(`Checking migration: ${migrationName}`);
-    const migrationCheck = await query(`SELECT * FROM migrations WHERE name = ?`, [migrationName], MASTER_DB);
+    const migrationCheck = await query(`SELECT * FROM migrations WHERE name = ?`, [migrationName]);
     if (migrationCheck.rowCount === 0) {
         console.log(`Applying migration: ${migrationName}`);
         const migrationPath = path.join(MIGRATIONS_DIR, fileName);
@@ -139,14 +138,14 @@ const applyMigration = async (fileName: string): Promise<void> => {
         const migrationModule = require(migrationPath);
         const MigrationClass = Object.values(migrationModule)[0] as new (dbName: string) => { up: () => Promise<void> };
         const migration = new MigrationClass(MASTER_DB);
-        await query('BEGIN', [], MASTER_DB);
+        await query('BEGIN', []);
         try {
             await migration.up();
-            await query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName], MASTER_DB);
-            await query('COMMIT', [], MASTER_DB);
+            await query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
+            await query('COMMIT', []);
             console.log(`Applied migration: ${migrationName}`);
         } catch (err: unknown) {
-            await query('ROLLBACK', [], MASTER_DB);
+            await query('ROLLBACK', []);
             const error = err instanceof Error ? err : new Error('Unknown error');
             console.error(`Error running migration ${migrationName}: ${error.message}`, {
                 sql: (err as any).sql || 'unknown',
@@ -163,19 +162,19 @@ const applyMigration = async (fileName: string): Promise<void> => {
  */
 const dropMasterTables = async (): Promise<void> => {
     try {
-        await query('BEGIN', [], MASTER_DB);
+        await query('BEGIN', []);
         // Drop tenant_users first due to FK dependency
-        await query(`DROP TABLE IF EXISTS user_sessions`, [], MASTER_DB);
-        await query(`DROP TABLE IF EXISTS permissions`, [], MASTER_DB);
-        await query(`DROP TABLE IF EXISTS tenant_users`, [], MASTER_DB);
-        await query(`DROP TABLE IF EXISTS users`, [], MASTER_DB);
-        await query(`DROP TABLE IF EXISTS roles`, [], MASTER_DB);
-        await query(`DROP TABLE IF EXISTS tenants`, [], MASTER_DB);
-        await query(`DROP TABLE IF EXISTS migrations`, [], MASTER_DB);
-        await query('COMMIT', [], MASTER_DB);
+        await query(`DROP TABLE IF EXISTS user_sessions`, []);
+        await query(`DROP TABLE IF EXISTS permissions`, []);
+        await query(`DROP TABLE IF EXISTS tenant_users`, []);
+        await query(`DROP TABLE IF EXISTS users`, []);
+        await query(`DROP TABLE IF EXISTS roles`, []);
+        await query(`DROP TABLE IF EXISTS tenants`, []);
+        await query(`DROP TABLE IF EXISTS migrations`, []);
+        await query('COMMIT', []);
         console.log('Dropped tenant_users, tenants, and migrations tables in master_db');
     } catch (err: unknown) {
-        await query('ROLLBACK', [], MASTER_DB);
+        await query('ROLLBACK', []);
         const error = err instanceof Error ? err : new Error('Unknown error');
         console.error(`Error dropping tables in master_db: ${error.message}`);
         throw error;
@@ -188,7 +187,7 @@ const dropMasterTables = async (): Promise<void> => {
 const dropMasterDatabase = async (): Promise<void> => {
     try {
         console.log(`Dropping master database: ${MASTER_DB}`);
-        await query(`DROP DATABASE IF EXISTS \`${MASTER_DB}\``, [], '');
+        await query(`DROP DATABASE IF EXISTS \`${MASTER_DB}\``, []);
     } catch (err: unknown) {
         const error = err instanceof Error ? err : new Error('Unknown error');
         console.error(`Error dropping master database ${MASTER_DB}: ${error.message}`);
@@ -248,7 +247,7 @@ export async function executeMasterOperation(operation: 'migrate' | 'reset'): Pr
         } else if (operation === 'reset') {
             await resetMasterDatabase();
         } else {
-            throw new Error(`Invalid operation: ${operation}. Use 'migrate' or 'reset'.`);
+             new Error(`Invalid operation: ${operation}. Use 'migrate' or 'reset'.`);
         }
     } catch (error) {
         console.error(`${operation === 'migrate' ? 'Master migration' : 'Master database reset'} failed:`, (error as Error).message);
