@@ -2,13 +2,13 @@
 
 import { Connection } from './connection';
 import { QueryResult, AnyDbClient } from './db-types';
-import { getPrimaryDbConfig, DbConfig } from '../config/db-config';
+import { getPrimaryDbConfig, getMasterDbConfig, DbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 import * as mdb from './mdb';
 
 async function resolveTenant(tenantId: string): Promise<DbConfig> {
-    if (process.env.TENANCY === 'false') {
-        return getPrimaryDbConfig();
+    if (tenantId === 'master_db' || process.env.TENANCY === 'false') {
+        return getMasterDbConfig();
     }
 
     const res = await mdb.query<{
@@ -64,7 +64,8 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
         }
         logQuery('start', { sql: text, params, tenantId });
 
-        client = await Connection.getInstance().getClient(config.database);
+        const connection = await Connection.initialize(config);
+        client = await connection.getClient(config.database);
         const result = await client.query(text, params);
         logQuery('end', { sql: text, params, tenantId, duration: Date.now() - start });
 
@@ -99,10 +100,12 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
 
     const start = Date.now();
     let client: AnyDbClient | null = null;
+    let connection: Connection | null = null;
 
     try {
         logTransaction('start', { tenantId });
-        client = await Connection.getInstance().getClient(config.database);
+        connection = await Connection.initialize(config);
+        client = await connection.getClient(config.database);
         await client.query('BEGIN');
 
         const result = await callback(client);
@@ -133,6 +136,13 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
                 console.error(`Failed to release client for DB ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
         }
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (closeErr) {
+                console.error(`Failed to close connection for DB ${config.database || 'default'}: ${(closeErr as Error).message}`);
+            }
+        }
     }
 }
 
@@ -148,7 +158,8 @@ export async function healthCheck(tenantId: string): Promise<boolean> {
     let client: AnyDbClient | null = null;
 
     try {
-        client = await Connection.getInstance().getClient(config.database);
+        const connection = await Connection.initialize(config);
+        client = await connection.getClient(config.database);
         await client.query('SELECT 1');
         logHealthCheck('success', { database: config.database || 'default', duration: Date.now() - start });
         return true;
