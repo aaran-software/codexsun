@@ -6,6 +6,17 @@ import { getMasterDbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 
 const dbConfig = getMasterDbConfig();
+let connectionInitialized = false;
+
+/**
+ * Ensures the connection is initialized before any query.
+ */
+async function ensureConnection(): Promise<void> {
+    if (!connectionInitialized) {
+        await Connection.initialize(dbConfig);
+        connectionInitialized = true;
+    }
+}
 
 /**
  * Executes a SQL query on the master database or a specified database.
@@ -18,6 +29,7 @@ const dbConfig = getMasterDbConfig();
  * @throws Error with detailed message on failure.
  */
 export async function query<T>(text: string, params: any[] = [], dbName?: string): Promise<QueryResult<T>> {
+    await ensureConnection();
     const database = dbName !== undefined ? dbName : dbConfig.database;
     const effectiveDb = database === '' ? undefined : database;
     const start = Date.now();
@@ -64,6 +76,7 @@ export async function query<T>(text: string, params: any[] = [], dbName?: string
  * @throws Error on transaction failure.
  */
 export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>, dbName?: string): Promise<T> {
+    await ensureConnection();
     const database = dbName !== undefined ? dbName : dbConfig.database;
     const effectiveDb = database === '' ? undefined : database;
     const start = Date.now();
@@ -112,6 +125,7 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
  * @returns True if healthy, false otherwise.
  */
 export async function healthCheck(dbName?: string): Promise<boolean> {
+    await ensureConnection();
     const database = dbName !== undefined ? dbName : dbConfig.database;
     const effectiveDb = database === '' ? undefined : database;
     const start = Date.now();

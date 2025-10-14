@@ -2,15 +2,59 @@
 
 import { Connection } from './connection';
 import { QueryResult, AnyDbClient } from './db-types';
-import { getPrimaryDbConfig} from '../config/db-config';
+import { getPrimaryDbConfig, DbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
+import * as mdb from './mdb';
 
-const dbConfig = getPrimaryDbConfig();
+async function resolveTenant(tenantId: string): Promise<DbConfig> {
+    if (process.env.TENANCY === 'false') {
+        return getPrimaryDbConfig();
+    }
 
+    const res = await mdb.query<{
+        driver: 'postgres' | 'mysql' | 'mariadb' | 'sqlite';
+        host: string;
+        port: number;
+        user: string;
+        password: string;
+        database: string;
+        ssl?: any;
+        connectionLimit?: number;
+        acquireTimeout?: number;
+        idleTimeout?: number;
+    }>(
+        'SELECT * FROM tenants WHERE id = ?',
+        [tenantId]
+    );
 
-export async function query<T>(text: string, params: any[] = [], dbName?: string): Promise<QueryResult<T>> {
-    const database = dbName !== undefined ? dbName : dbConfig.database;
-    const effectiveDb = database === '' ? undefined : database;
+    if (res.rows.length === 0) {
+        throw new Error('Tenant not found');
+    }
+
+    const tenant = res.rows[0];
+
+    return {
+        driver: tenant.driver,
+        host: tenant.host,
+        port: tenant.port,
+        user: tenant.user,
+        password: tenant.password,
+        database: tenant.database,
+        ssl: tenant.ssl,
+        connectionLimit: tenant.connectionLimit || 10,
+        acquireTimeout: tenant.acquireTimeout || 10000,
+        idleTimeout: tenant.idleTimeout || 10000,
+    };
+}
+
+export async function query<T>(text: string, params: any[] = [], tenantId: string): Promise<QueryResult<T>> {
+    let config: DbConfig;
+    try {
+        config = await resolveTenant(tenantId);
+    } catch (e) {
+        config = getPrimaryDbConfig();
+    }
+
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
@@ -18,89 +62,99 @@ export async function query<T>(text: string, params: any[] = [], dbName?: string
         if (!text) {
             return Promise.reject(new Error('Invalid SQL query provided'));
         }
-        logQuery('start', { sql: text, params, db: effectiveDb || 'default' });
+        logQuery('start', { sql: text, params, tenantId });
 
-        client = await Connection.getInstance().getClient(effectiveDb);
+        client = await Connection.getInstance().getClient(config.database);
         const result = await client.query(text, params);
-        logQuery('end', { sql: text, params, db: effectiveDb || 'default', duration: Date.now() - start });
+        logQuery('end', { sql: text, params, tenantId, duration: Date.now() - start });
 
         return {
             rows: (Array.isArray(result) ? result : result.rows || []) as T[],
-            rowCount: result.rowCount || (result.affectedRows ?? (Array.isArray(result) ? result.length : 0)),
-            insertId: result.insertId || undefined,
+            rowCount: result.rowCount || (result.affectedRows ?? (Array.isArray(result) ? result.length : 0)) || result.changes || 0,
+            insertId: result.insertId || result.lastID || undefined,
         };
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown query error';
-        logQuery('error', { sql: text, params, db: effectiveDb || 'default', duration: Date.now() - start, error: errMsg });
-        throw new Error(`Query failed on DB ${effectiveDb || 'default'}: ${text.slice(0, 50)}... - ${errMsg}`);
+        logQuery('error', { sql: text, params, tenantId, duration: Date.now() - start, error: errMsg });
+        throw new Error(`Query failed on DB ${config.database || 'default'}: ${text.slice(0, 50)}... - ${errMsg}`);
     } finally {
         if (client) {
             try {
                 if (client.release) client.release();
                 else if (client.end) await client.end();
             } catch (releaseErr) {
-                console.error(`Failed to release client for DB ${effectiveDb || 'default'}: ${(releaseErr as Error).message}`);
+                console.error(`Failed to release client for DB ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
         }
     }
 }
 
-export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>, dbName?: string): Promise<T> {
-    const database = dbName !== undefined ? dbName : dbConfig.database;
-    const effectiveDb = database === '' ? undefined : database;
+export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>, tenantId: string): Promise<T> {
+    let config: DbConfig;
+    try {
+        config = await resolveTenant(tenantId);
+    } catch (e) {
+        config = getPrimaryDbConfig();
+    }
+
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
-        logTransaction('start', { db: effectiveDb || 'default' });
-        client = await Connection.getInstance().getClient(effectiveDb);
-        await client.query('START TRANSACTION');
+        logTransaction('start', { tenantId });
+        client = await Connection.getInstance().getClient(config.database);
+        await client.query('BEGIN');
 
         const result = await callback(client);
 
         await client.query('COMMIT');
-        logTransaction('end', { db: effectiveDb || 'default', duration: Date.now() - start });
+        logTransaction('end', { tenantId, duration: Date.now() - start });
 
         return result;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown transaction error';
-        logTransaction('error', { db: effectiveDb || 'default', duration: Date.now() - start, error: errMsg });
+        logTransaction('error', { tenantId, duration: Date.now() - start, error: errMsg });
 
         if (client) {
             try {
                 await client.query('ROLLBACK');
             } catch (rollbackErr) {
-                console.error(`Rollback failed on DB ${effectiveDb || 'default'}: ${(rollbackErr as Error).message}`);
+                console.error(`Rollback failed on DB ${config.database || 'default'}: ${(rollbackErr as Error).message}`);
             }
         }
 
-        throw new Error(`Transaction failed on DB ${effectiveDb || 'default'}: ${errMsg}`);
+        throw new Error(`Transaction failed on DB ${config.database || 'default'}: ${errMsg}`);
     } finally {
         if (client) {
             try {
                 if (client.release) client.release();
                 else if (client.end) await client.end();
             } catch (releaseErr) {
-                console.error(`Failed to release client for DB ${effectiveDb || 'default'}: ${(releaseErr as Error).message}`);
+                console.error(`Failed to release client for DB ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
         }
     }
 }
 
-export async function healthCheck(dbName?: string): Promise<boolean> {
-    const database = dbName !== undefined ? dbName : dbConfig.database;
-    const effectiveDb = database === '' ? undefined : database;
+export async function healthCheck(tenantId: string): Promise<boolean> {
+    let config: DbConfig;
+    try {
+        config = await resolveTenant(tenantId);
+    } catch (e) {
+        config = getPrimaryDbConfig();
+    }
+
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
     try {
-        client = await Connection.getInstance().getClient(effectiveDb);
+        client = await Connection.getInstance().getClient(config.database);
         await client.query('SELECT 1');
-        logHealthCheck('success', { database: effectiveDb || 'default', duration: Date.now() - start });
+        logHealthCheck('success', { database: config.database || 'default', duration: Date.now() - start });
         return true;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown health check error';
-        logHealthCheck('error', { database: effectiveDb || 'default', duration: Date.now() - start, error: errMsg });
+        logHealthCheck('error', { database: config.database || 'default', duration: Date.now() - start, error: errMsg });
         return false;
     } finally {
         if (client) {
@@ -108,7 +162,7 @@ export async function healthCheck(dbName?: string): Promise<boolean> {
                 if (client.release) client.release();
                 else if (client.end) await client.end();
             } catch (releaseErr) {
-                console.error(`Failed to release client for health check on ${effectiveDb || 'default'}: ${(releaseErr as Error).message}`);
+                console.error(`Failed to release client for health check on ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
         }
     }
