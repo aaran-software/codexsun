@@ -1,17 +1,19 @@
 import { SchemaBuilder } from './schema-builder';
-import { QueryResult } from '../db-types';
+import { QueryResult, AnyDbClient } from '../db-types';
 
 // Utility to validate database and table names (basic SQL injection prevention)
 const isValidName = (name: string): boolean => /^[a-zA-Z0-9_]+$/.test(name);
 
 export abstract class BaseMigration {
     protected dbName: string;
+    protected client?: AnyDbClient;
 
-    constructor(dbName: string) {
+    constructor(dbName: string, client?: AnyDbClient) {
         if (!dbName || !isValidName(dbName)) {
             throw new Error('Invalid or missing database name');
         }
         this.dbName = dbName;
+        this.client = client;
     }
 
     protected schema = {
@@ -19,7 +21,7 @@ export abstract class BaseMigration {
             if (!tableName || !isValidName(tableName)) {
                 throw new Error('Invalid table name');
             }
-            const table = new SchemaBuilder(tableName, this.dbName);
+            const table = new SchemaBuilder(tableName, this.dbName, this.client);
             callback(table);
             return table.execute();
         },
@@ -27,7 +29,7 @@ export abstract class BaseMigration {
             if (!tableName || !isValidName(tableName)) {
                 throw new Error('Invalid table name');
             }
-            const table = new SchemaBuilder(tableName, this.dbName);
+            const table = new SchemaBuilder(tableName, this.dbName, this.client);
             return table.drop();
         }
     };

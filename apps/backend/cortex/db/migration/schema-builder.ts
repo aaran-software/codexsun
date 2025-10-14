@@ -1,4 +1,4 @@
-import { QueryResult } from '../db-types';
+import { QueryResult, AnyDbClient } from '../db-types';
 import { query } from '../mdb';
 
 // Enhanced validation to prevent SQL injection and reserved keywords
@@ -69,8 +69,9 @@ export class SchemaBuilder {
     private tableOptions: string[] = [];
     public readonly tableName: string;
     private readonly dbName: string;
+    private readonly client?: AnyDbClient;
 
-    constructor(tableName: string, dbName: string) {
+    constructor(tableName: string, dbName: string, client?: AnyDbClient) {
         if (!tableName || !isValidName(tableName)) {
             throw new Error('Invalid or reserved table name');
         }
@@ -79,6 +80,7 @@ export class SchemaBuilder {
         }
         this.tableName = tableName;
         this.dbName = dbName;
+        this.client = client;
     }
 
     id(): this {
@@ -290,11 +292,12 @@ export class SchemaBuilder {
             const tableOptions = this.tableOptions.length ? ' ' + this.tableOptions.join(' ') : '';
             const sql = `CREATE TABLE IF NOT EXISTS \`${this.tableName}\` (${columnDefinitions})${tableOptions};`;
             console.log(`Executing SQL: ${sql}`);
-            const result = await query<unknown>(sql, []);
+            const executeQuery = this.client ? this.client.query.bind(this.client) : query;
+            const result = await executeQuery(sql, []);
 
             for (const indexSql of this.indexes) {
                 console.log(`Executing index SQL: ${indexSql}`);
-                await query<unknown>(indexSql, []);
+                await executeQuery(indexSql, []);
             }
 
             return result;
@@ -309,7 +312,8 @@ export class SchemaBuilder {
         try {
             const sql = `DROP TABLE IF EXISTS \`${this.tableName}\`;`;
             console.log(`Executing drop SQL: ${sql}`);
-            return await query<unknown>(sql, []);
+            const executeQuery = this.client ? this.client.query.bind(this.client) : query;
+            return await executeQuery(sql, []);
         } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error('Unknown database error');
             console.error(`Error dropping table ${this.tableName}: ${error.message}`, { sql: (err as any).sql || 'unknown' });

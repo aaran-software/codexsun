@@ -135,10 +135,10 @@ async function applyMigration(fileName: string, tenantId: string): Promise<void>
         const migrationPath = path.join(MIGRATIONS_DIR, fileName);
         console.log(`Loading migration from: ${migrationPath}`);
         const migrationModule = require(migrationPath);
-        const MigrationClass = migrationModule.default || Object.values(migrationModule)[0] as new (dbName: string) => { up: (client: AnyDbClient) => Promise<void> };
-        const migration = new MigrationClass(process.env.DB_NAME!);
+        const MigrationClass = migrationModule.default || Object.values(migrationModule)[0] as new (dbName: string, client: AnyDbClient) => { up: (client: AnyDbClient) => Promise<void> };
 
         await withTransaction(async (client) => {
+            const migration = new MigrationClass(process.env.DB_NAME!, client);
             await migration.up(client);
             await client.query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
         }, tenantId);
