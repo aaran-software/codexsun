@@ -6,17 +6,6 @@ import { getMasterDbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 
 const dbConfig = getMasterDbConfig();
-let connectionInitialized = false;
-
-/**
- * Ensures the connection is initialized before any query.
- */
-async function ensureConnection(): Promise<void> {
-    if (!connectionInitialized) {
-        await Connection.initialize(dbConfig);
-        connectionInitialized = true;
-    }
-}
 
 /**
  * Executes a SQL query on the master database.
@@ -28,7 +17,6 @@ async function ensureConnection(): Promise<void> {
  * @throws Error with detailed message on failure.
  */
 export async function query<T>(text: string, params: any[] = []): Promise<QueryResult<T>> {
-    await ensureConnection();
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
@@ -72,7 +60,6 @@ export async function query<T>(text: string, params: any[] = []): Promise<QueryR
  * @throws Error on transaction failure.
  */
 export async function withTransaction<T>(callback: (client: AnyDbClient) => Promise<T>): Promise<T> {
-    await ensureConnection();
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
@@ -118,7 +105,6 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
  * @returns True if healthy, false otherwise.
  */
 export async function healthCheck(): Promise<boolean> {
-    await ensureConnection();
     const start = Date.now();
     let client: AnyDbClient | null = null;
 

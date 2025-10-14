@@ -7,7 +7,7 @@ import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 import * as mdb from './mdb';
 
 async function resolveTenant(tenantId: string): Promise<DbConfig> {
-    if (tenantId === 'master_db' || process.env.TENANCY === 'false') {
+    if (process.env.TENANCY === 'false') {
         return getMasterDbConfig();
     }
 
@@ -28,7 +28,10 @@ async function resolveTenant(tenantId: string): Promise<DbConfig> {
     );
 
     if (res.rows.length === 0) {
-        throw new Error('Tenant not found');
+        if (process.env.STRICT_TENANCY === 'true') {
+            throw new Error('Tenant not found and strict tenancy is enabled');
+        }
+        return getPrimaryDbConfig();
     }
 
     const tenant = res.rows[0];
@@ -52,6 +55,9 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
     try {
         config = await resolveTenant(tenantId);
     } catch (e) {
+        if (process.env.STRICT_TENANCY === 'true') {
+            throw e;
+        }
         config = getPrimaryDbConfig();
     }
 
@@ -94,6 +100,9 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
     try {
         config = await resolveTenant(tenantId);
     } catch (e) {
+        if (process.env.STRICT_TENANCY === 'true') {
+            throw e;
+        }
         config = getPrimaryDbConfig();
     }
 
@@ -103,7 +112,7 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
     try {
         logTransaction('start', { tenantId });
         client = await Connection.getInstance().getClient(config.database);
-        await client.query('BEGIN');
+        await client.query('START TRANSACTION');
 
         const result = await callback(client);
 
@@ -141,6 +150,9 @@ export async function healthCheck(tenantId: string): Promise<boolean> {
     try {
         config = await resolveTenant(tenantId);
     } catch (e) {
+        if (process.env.TENANCY === 'true') {
+            return false;
+        }
         config = getPrimaryDbConfig();
     }
 

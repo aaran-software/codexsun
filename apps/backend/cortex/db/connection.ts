@@ -51,7 +51,7 @@ export class Connection {
         const start = Date.now();
         const connectionString = this.getConnectionString();
         try {
-            logConnection('start', { db: this.config.database || 'default', connectionString });
+            // logConnection('start', { db: this.config.database || 'default', connectionString });
             if (this.adapter.initPool) {
                 await this.adapter.initPool({
                     host: this.config.host,
@@ -64,7 +64,7 @@ export class Connection {
                     idleTimeout: this.config.idleTimeout,
                 });
             }
-            logConnection('success', { db: this.config.database || 'default', connectionString, duration: Date.now() - start });
+            // logConnection('success', { db: this.config.database || 'default', connectionString, duration: Date.now() - start });
         } catch (error) {
             const errMsg = (error as Error).message || 'Unknown init error';
             logConnection('error', { db: this.config.database || 'default', connectionString, duration: Date.now() - start, error: errMsg });
