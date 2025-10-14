@@ -5,9 +5,10 @@ import { QueryResult, AnyDbClient } from './db-types';
 import { getPrimaryDbConfig, getMasterDbConfig, DbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 import * as mdb from './mdb';
+import {getSettings} from "../config/get-settings";
 
 async function resolveTenant(tenantId: string): Promise<DbConfig> {
-    if (process.env.TENANCY === 'false') {
+    if (!getSettings().TENANCY) {
         return getMasterDbConfig();
     }
 
@@ -55,7 +56,7 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
     try {
         config = await resolveTenant(tenantId);
     } catch (e) {
-        if (process.env.STRICT_TENANCY === 'true') {
+        if (!getSettings().TENANCY) {
             throw e;
         }
         config = getPrimaryDbConfig();
@@ -100,7 +101,7 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
     try {
         config = await resolveTenant(tenantId);
     } catch (e) {
-        if (process.env.STRICT_TENANCY === 'true') {
+        if (getSettings().TENANCY) {
             throw e;
         }
         config = getPrimaryDbConfig();
@@ -150,7 +151,7 @@ export async function healthCheck(tenantId: string): Promise<boolean> {
     try {
         config = await resolveTenant(tenantId);
     } catch (e) {
-        if (process.env.TENANCY === 'true') {
+        if (getSettings().TENANCY) {
             return false;
         }
         config = getPrimaryDbConfig();
