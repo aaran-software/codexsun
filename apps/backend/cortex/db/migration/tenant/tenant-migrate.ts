@@ -3,6 +3,9 @@
 import { query, withTransaction } from '../../db';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { Connection } from '../../connection';
+import { getMasterDbConfig } from '../../../config/db-config';
+import { AnyDbClient } from '../../db-types';
 
 // Path to the migration folder for tenant migrations
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../../migrations/tenant');
@@ -14,6 +17,36 @@ const MIGRATIONS_DIR = path.resolve(__dirname, '../../../migrations/tenant');
 function validateEnvVariables(): void {
     if (!process.env.DB_NAME) {
         throw new Error('Missing required environment variable: DB_NAME');
+    }
+}
+
+/**
+ * Initializes the master database connection.
+ * @throws Error if initialization fails.
+ */
+async function initializeMasterConnection(): Promise<void> {
+    try {
+        const masterConfig = getMasterDbConfig();
+        await Connection.initialize(masterConfig);
+        console.log(`Initialized master database connection: ${masterConfig.database || 'default'}`);
+    } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        console.error(`Error initializing master database connection: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * Closes the master database connection.
+ */
+async function closeMasterConnection(): Promise<void> {
+    try {
+        const connection = Connection.getInstance();
+        await connection.close();
+        console.log('Master database connection closed');
+    } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        console.error(`Error closing master database connection: ${error.message}`);
     }
 }
 
@@ -33,7 +66,7 @@ async function ensureTenantDatabase(tenantId: string): Promise<void> {
         }
     } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error');
-        console.error(`Error checking/creating tenant database: ${error.message}`);
+        console.error(`Error checking/creating tenant database for tenant '${tenantId}': ${error.message}`);
         throw error;
     }
 }
@@ -65,7 +98,7 @@ async function createMigrationsTable(tenantId: string): Promise<void> {
 
 /**
  * Retrieves and sorts migration files from the migrations folder.
- * @returns Sorted array of migration file names.
+ * @returns Sorted array of migration files.
  */
 async function getMigrationFiles(): Promise<string[]> {
     try {
@@ -102,11 +135,11 @@ async function applyMigration(fileName: string, tenantId: string): Promise<void>
         const migrationPath = path.join(MIGRATIONS_DIR, fileName);
         console.log(`Loading migration from: ${migrationPath}`);
         const migrationModule = require(migrationPath);
-        const MigrationClass = Object.values(migrationModule)[0] as new (dbName: string) => { up: () => Promise<void> };
+        const MigrationClass = migrationModule.default || Object.values(migrationModule)[0] as new (dbName: string) => { up: (client: AnyDbClient) => Promise<void> };
         const migration = new MigrationClass(process.env.DB_NAME!);
 
         await withTransaction(async (client) => {
-            await migration.up();
+            await migration.up(client);
             await client.query(`INSERT INTO migrations (name) VALUES (?)`, [migrationName]);
         }, tenantId);
 
@@ -156,13 +189,18 @@ async function dropTenantDatabase(tenantId: string): Promise<void> {
 export async function tenantMigrate(tenantId: string = 'default'): Promise<void> {
     console.log(`Starting tenant migration for tenant '${tenantId}'`);
     validateEnvVariables();
-    await ensureTenantDatabase(tenantId);
-    await createMigrationsTable(tenantId);
-    const migrationFiles = await getMigrationFiles();
-    for (const fileName of migrationFiles) {
-        await applyMigration(fileName, tenantId);
+    await initializeMasterConnection();
+    try {
+        await ensureTenantDatabase(tenantId);
+        await createMigrationsTable(tenantId);
+        const migrationFiles = await getMigrationFiles();
+        for (const fileName of migrationFiles) {
+            await applyMigration(fileName, tenantId);
+        }
+        console.log(`Migration completed for tenant '${tenantId}'`);
+    } finally {
+        await closeMasterConnection();
     }
-    console.log(`Migration completed for tenant '${tenantId}'`);
 }
 
 /**
@@ -172,9 +210,14 @@ export async function tenantMigrate(tenantId: string = 'default'): Promise<void>
 export async function resetTenantDatabase(tenantId: string = 'default'): Promise<void> {
     console.log(`Starting tenant database reset for tenant '${tenantId}'`);
     validateEnvVariables();
-    await dropTenantTables(tenantId);
-    await dropTenantDatabase(tenantId);
-    console.log(`Tenant database reset completed for tenant '${tenantId}'`);
+    await initializeMasterConnection();
+    try {
+        await dropTenantTables(tenantId);
+        await dropTenantDatabase(tenantId);
+        console.log(`Tenant database reset completed for tenant '${tenantId}'`);
+    } finally {
+        await closeMasterConnection();
+    }
 }
 
 /**
