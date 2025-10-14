@@ -39,3 +39,4 @@ yarn-error.log*
 
 .idea/
 .vscode/
+/apps/test-server/logs/app-2025-10-14.log
