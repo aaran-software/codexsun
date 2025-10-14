@@ -14,13 +14,6 @@ export interface QueryResult<T> {
     insertId?: number;
 }
 
-export interface ShowCreateTableResult {
-    'Table': string;
-    'Create Table': string;
-}
-
-export type QueryFunction = <T = any>(sql: string, params?: any[], dbName?: string) => Promise<QueryResult<T>>;
-
 export interface DBAdapter {
     initPool?: (config: Omit<DbConfig, 'database' | 'driver'>) => Promise<void>;
     closePool?: () => Promise<void>;
@@ -31,14 +24,4 @@ export interface DBAdapter {
     beginTransaction: (client: AnyDbClient) => Promise<void>;
     commitTransaction: (client: AnyDbClient) => Promise<void>;
     rollbackTransaction: (client: AnyDbClient) => Promise<void>;
-}
-
-export interface User {
-    id?: number;
-    username: string;
-    email: string;
-    password?: string; // Input for create/update
-    password_hash?: string; // Stored in database
-    tenantId: string;
-    created_at?: string;
 }

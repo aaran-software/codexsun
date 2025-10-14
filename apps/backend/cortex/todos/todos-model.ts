@@ -1,5 +1,4 @@
 // cortex/todos/todos-model.ts
-
 export interface Todo {
     id?: number;
     text: string;
@@ -7,11 +6,8 @@ export interface Todo {
     category: string;
     due_date: string | null;
     priority: 'low' | 'medium' | 'high';
-    tenant_id: string;
+    user_id: string; // Changed from tenant_id to user_id
     created_at?: string;
-    position: number;
-}
-
-export interface TenantId{
-    tenant_id: string;
+    updated_at?: string;
+    position?: number;
 }

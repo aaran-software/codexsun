@@ -4,7 +4,7 @@ import { HttpError, handleError } from '../error/error-handler';
 import { PermissionCheck, User } from '../app.types';
 import { getUserById } from '../../user/user-repos';
 
-export async function authMiddleware(ctx: RequestContext): Promise<void> {
+export function authMiddleware(ctx: RequestContext) {
     if (!ctx.userId) {
         throw new HttpError('User id not authenticated', 401, 'auth-middleware', 'authMiddleware');
     }

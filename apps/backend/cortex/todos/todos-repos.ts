@@ -1,142 +1,142 @@
+// cortex/todos/todos-repos.ts
 import {query} from '../db/db';
 import {QueryResult} from '../db/db-types';
-import {TenantId, Todo} from './todos-model';
-import {getTenantDbConnection} from "../db/db-context-switcher";
-import {User} from "../user/user-model";
+import {Todo, TodoInput} from './todos-model';
 
-export async function createUser(TenantId: TenantId, todo: Todo): Promise<QueryResult<Todo>> {
-    const tenantId = TenantId.tenant_id || 'default_tenant';
-    // Get tenant-specific DB connection
-    const tenantDb = await getTenantDbConnection({
-        id: tenantId,
-        dbConnection: `mysql://user:password@localhost/${tenantId}`
-    });
-        // Start transaction
-        await tenantDb.query('START TRANSACTION');
+export async function createTodo(
+    input: TodoInput,
+    tenantId: string  // Use tenantId consistently
+): Promise<Todo> {
+    const defaultInput: Required<TodoInput> = {
+        completed: false,
+        priority: 'medium',
+        ...input
+    };
 
-        return query<Todo>(
-            'INSERT INTO todos (todoname, email, password_hash, mobile, status, role_id, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [todo.todoname, todo.email, todo.password_hash, todo.mobile, todo.status, todo.role_id, todo.email_verified]
-        );
+    const result = await query<Todo>(
+        `INSERT INTO todos (text, completed, category, due_date, priority, position, user_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [
+            defaultInput.text,
+            defaultInput.completed,
+            defaultInput.category,
+            defaultInput.due_date,
+            defaultInput.priority,
+            defaultInput.position,
+            tenantId  // Store tenantId as user_id in database
+        ],
+        tenantId  // Use tenantId for database connection resolution
+    );
+
+    return {
+        id: result.insertId as number,
+        ...defaultInput,
+        user_id: tenantId,  // Return as user_id to match Todo interface
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    };
+}
+
+export async function getTodos(tenantId: string, userId: string): Promise<Todo[]> {  // Changed from getTodosByUser
+
+    const queryString = `SELECT * FROM todos WHERE user_id = ?
+                         ORDER BY created_at DESC`
+
+    // console.log(queryString)
+
+
+    const result = await query<Todo>(
+        queryString,
+        [userId],
+        tenantId
+    );
+
+    return result.rows;
+}
+
+export async function getTodoById(id: number, tenantId: string): Promise<Todo | null> {
+    const result = await query<Todo>(
+        `SELECT id,
+                text,
+                completed,
+                category,
+                due_date,
+                priority,
+                position,
+                created_at,
+                updated_at,
+                user_id
+         FROM todos
+         WHERE id = ?
+           AND user_id = ?`,
+        [id, tenantId],
+        tenantId
+    );
+
+    return result.rows[0] || null;
+}
+
+export async function updateTodo(
+    id: number,
+    updates: Partial<TodoInput>,
+    tenantId: string
+): Promise<Todo | null> {
+    const updateFields: string[] = [];
+    const params: any[] = [];
+
+    if (updates.text !== undefined) {
+        updateFields.push('text = ?');
+        params.push(updates.text);
+    }
+    if (updates.completed !== undefined) {
+        updateFields.push('completed = ?');
+        params.push(updates.completed);
+    }
+    if (updates.category !== undefined) {
+        updateFields.push('category = ?');
+        params.push(updates.category);
+    }
+    if (updates.due_date !== undefined) {
+        updateFields.push('due_date = ?');
+        params.push(updates.due_date);
+    }
+    if (updates.priority !== undefined) {
+        updateFields.push('priority = ?');
+        params.push(updates.priority);
+    }
+    if (updates.position !== undefined) {
+        updateFields.push('position = ?');
+        params.push(updates.position);
     }
 
-    export async function getUsers(tenantId: string): Promise<Todo[]> {
-        const result = await query<any>(
-            'SELECT u.id, u.todoname, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at, u.updated_at ' +
-            'FROM todos u ' +
-            'JOIN tenant_todos tu ON u.id = tu.todo_id ' +
-            'WHERE tu.tenant_id = ? ORDER BY u.created_at DESC',
-            [tenantId]
-        );
-        return result.rows.map((r: any) => ({
-            id: r.id,
-            todoname: r.todoname,
-            email: r.email,
-            mobile: r.mobile || null,
-            status: r.status,
-            role_id: r.role_id,
-            email_verified: r.email_verified || null,
-            created_at: r.created_at,
-            updated_at: r.updated_at
-        }));
+    if (updateFields.length === 0) {
+        throw new Error('No fields provided for update');
     }
 
-    export async function getUserById(id: number, tenantId: string): Promise<Todo | null> {
-        const result = await query<any>(
-            'SELECT u.id, u.todoname, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at, u.updated_at ' +
-            'FROM todos u ' +
-            'JOIN tenant_todos tu ON u.id = tu.todo_id ' +
-            'WHERE u.id = ? AND tu.tenant_id = ?',
-            [id, tenantId]
-        );
-        const r = result.rows[0];
-        return r ? {
-            id: r.id,
-            todoname: r.todoname,
-            email: r.email,
-            mobile: r.mobile || null,
-            status: r.status,
-            role_id: r.role_id,
-            email_verified: r.email_verified || null,
-            created_at: r.created_at,
-            updated_at: r.updated_at
-        } : null;
+    params.push(id, tenantId);
+
+    const updateQuery = `
+        UPDATE todos
+        SET ${updateFields.join(', ')},
+            updated_at = NOW()
+        WHERE id = ?
+          AND user_id = ?
+    `;
+
+    const updateResult = await query<Todo>(updateQuery, params, tenantId);
+
+    if (updateResult.rowCount === 0) {
+        return null;
     }
 
-    export async function getUserByEmail(email: string, tenantId: string): Promise<Todo | null> {
-        const result = await query<any>(
-            'SELECT u.id, u.todoname, u.email, u.mobile, u.status, u.role_id, u.email_verified, u.created_at, u.updated_at ' +
-            'FROM todos u ' +
-            'JOIN tenant_todos tu ON u.id = tu.todo_id ' +
-            'WHERE u.email = ? AND tu.tenant_id = ?',
-            [email, tenantId]
-        );
-        const r = result.rows[0];
-        return r ? {
-            id: r.id,
-            todoname: r.todoname,
-            email: r.email,
-            mobile: r.mobile || null,
-            status: r.status,
-            role_id: r.role_id,
-            email_verified: r.email_verified || null,
-            created_at: r.created_at,
-            updated_at: r.updated_at
-        } : null;
-    }
+    return getTodoById(id, tenantId);
+}
 
-    export async function updateUser(id: number, updates: Partial<Todo>, tenantId: string): Promise<QueryResult<Todo>> {
-        const {todoname, email, password_hash, mobile, status, role_id, email_verified} = updates;
-        const updatesStr: string[] = [];
-        const params: any[] = [];
-
-        if (todoname !== undefined) {
-            updatesStr.push('todoname = ?');
-            params.push(todoname);
-        }
-        if (email !== undefined) {
-            updatesStr.push('email = ?');
-            params.push(email);
-        }
-        if (password_hash !== undefined) {
-            updatesStr.push('password_hash = ?');
-            params.push(password_hash);
-        }
-        if (mobile !== undefined) {
-            updatesStr.push('mobile = ?');
-            params.push(mobile);
-        }
-        if (status !== undefined) {
-            updatesStr.push('status = ?');
-            params.push(status);
-        }
-        if (role_id !== undefined) {
-            updatesStr.push('role_id = ?');
-            params.push(role_id);
-        }
-        if (email_verified !== undefined) {
-            updatesStr.push('email_verified = ?');
-            params.push(email_verified);
-        }
-
-        if (updatesStr.length === 0) {
-            throw new Error('No fields provided for update');
-        }
-
-        params.push(id);
-        const sql = `UPDATE todos u ` +
-            `JOIN tenant_todos tu ON u.id = tu.todo_id ` +
-            `SET ${updatesStr.join(', ')} ` +
-            `WHERE u.id = ? AND tu.tenant_id = ?`;
-        params.push(tenantId);
-        return query<Todo>(sql, params);
-    }
-
-    export async function deleteUser(id: number, tenantId: string): Promise<QueryResult<Todo>> {
-        return query<Todo>(
-            'DELETE u FROM todos u ' +
-            'JOIN tenant_todos tu ON u.id = tu.todo_id ' +
-            'WHERE u.id = ? AND tu.tenant_id = ?',
-            [id, tenantId]
-        );
-    }
+export async function deleteTodo(id: number, tenantId: string): Promise<boolean> {
+    const result = await query<Todo>(
+        'DELETE FROM todos WHERE id = ? AND user_id = ?',
+        [id, tenantId],
+        tenantId
+    );
+    return result.rowCount > 0;
+}
