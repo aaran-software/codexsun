@@ -1,5 +1,5 @@
 import {Credentials, JwtPayload, Tenant, User} from '../app.types';
-import {query} from '../../db/db';
+import {query} from '../../db/mdb';
 import {blockJwt, generateJwt, verifyJwt} from '../secret/jwt-service';
 import {comparePassword} from '../secret/crypt-service';
 import {logQuery} from '../../config/logger';
