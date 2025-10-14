@@ -23,19 +23,11 @@ export async function query<T>(text: string, params: any[] = [], dbName?: string
     const start = Date.now();
     let client: AnyDbClient | null = null;
 
-
-
-
     try {
         if (!text) {
             return Promise.reject(new Error('Invalid SQL query provided'));
         }
-
         logQuery('start', { sql: text, params, db: effectiveDb || 'default' });
-
-
-
-
 
         client = await Connection.getInstance().getClient(effectiveDb);
         const result = await client.query(text, params);
