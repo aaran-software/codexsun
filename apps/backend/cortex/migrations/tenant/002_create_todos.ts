@@ -9,9 +9,9 @@ export class CreateTodosMigration extends BaseMigration {
             table.string('text').notNull();
             table.boolean('completed').default(false);
             table.string('category').notNull();
-            table.string('due_date').null(); // ISO date string
+            table.string('due_date').null();
             table.string('priority').default('low');
-            table.string('tenant_id').notNull(); // tenant scoping
+            table.string('user_id').notNull();
             table.integer('position').null();
             table.timestamps();
         });

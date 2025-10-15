@@ -7,10 +7,10 @@ import { query, withTransaction } from '../../../db/db';
  */
 export class TodosSeeder {
     // Check if a todo exists by text
-    private async todoExists(text: string, tenantId: string): Promise<boolean> {
+    private async todoExists(text: string, tenantId: string, userId: string): Promise<boolean> {
         const result = await query<{ text: string }>(
-            `SELECT text FROM todos WHERE text = ? AND tenant_id = ?`,
-            [text, tenantId],
+            `SELECT text FROM todos WHERE text = ? AND user_id = ?`,
+            [text, userId],
             tenantId
         );
         return result.rows.length > 0;
@@ -23,19 +23,19 @@ export class TodosSeeder {
         category: string,
         due_date: string | null,
         priority: string,
-        tenant_id: string,
+        user_id: string,
         position: number | null,
         tenantId: string
     ): Promise<void> {
         await query(
             `
-                INSERT INTO todos (text, completed, category, due_date, priority, tenant_id, position, created_at, updated_at)
+                INSERT INTO todos (text, completed, category, due_date, priority, user_id, position, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             `,
-            [text, completed, category, due_date, priority, tenant_id, position],
+            [text, completed, category, due_date, priority, user_id, position],
             tenantId
         );
-        console.log(`Seeded todo: ${text} for tenant '${tenantId}'`);
+        console.log(`Seeded todo: ${text} for user '${user_id}' in tenant '${tenantId}'`);
     }
 
     async up(tenantId: string = 'default'): Promise<void> {
@@ -48,7 +48,7 @@ export class TodosSeeder {
                     category: 'Work',
                     due_date: '2025-10-15',
                     priority: 'high',
-                    tenant_id: tenantId,
+                    user_id: '1',
                     position: 1,
                 },
                 {
@@ -57,7 +57,7 @@ export class TodosSeeder {
                     category: 'Personal',
                     due_date: '2025-10-11',
                     priority: 'medium',
-                    tenant_id: tenantId,
+                    user_id: '1',
                     position: 2,
                 },
                 {
@@ -66,15 +66,15 @@ export class TodosSeeder {
                     category: 'Health',
                     due_date: '2025-09-30',
                     priority: 'low',
-                    tenant_id: tenantId,
+                    user_id: '1',
                     position: 3,
                 },
             ];
 
             await withTransaction(async (client) => {
                 for (const todo of todos) {
-                    if (await this.todoExists(todo.text, tenantId)) {
-                        console.log(`Todo '${todo.text}' already exists for tenant '${tenantId}', skipping insertion`);
+                    if (await this.todoExists(todo.text, tenantId, todo.user_id)) {
+                        console.log(`Todo '${todo.text}' already exists for user '${todo.user_id}' in tenant '${tenantId}', skipping insertion`);
                         continue;
                     }
                     await this.insertTodo(
@@ -83,7 +83,7 @@ export class TodosSeeder {
                         todo.category,
                         todo.due_date,
                         todo.priority,
-                        todo.tenant_id,
+                        todo.user_id,
                         todo.position,
                         tenantId
                     );
@@ -99,15 +99,16 @@ export class TodosSeeder {
     async down(tenantId: string = 'default'): Promise<void> {
         console.log(`Rolling back todos table seed for tenant '${tenantId}'`);
         try {
+            const userId = '1'; // Using the same user_id as in the todos array
             await withTransaction(async (client) => {
                 await client.query(
-                    `DELETE FROM todos WHERE text IN (?, ?, ?) AND tenant_id = ?`,
+                    `DELETE FROM todos WHERE text IN (?, ?, ?) AND user_id = ?`,
                     [
                         'Finish project documentation',
                         'Buy groceries',
                         'Schedule dentist appointment',
-                        tenantId,
-                    ]
+                        userId,
+                    ],
                 );
             }, tenantId);
             console.log(`Rolled back todos seed for tenant '${tenantId}'`);
