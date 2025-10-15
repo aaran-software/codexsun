@@ -1,0 +1,132 @@
+// /cortex/config/logger.ts
+import { getSettings } from './get-settings';
+
+interface QueryLog {
+    sql?: string;
+    params?: any[] | string;
+    db?: string;
+    tenantId?: string;
+    duration?: number;
+    error?: string;
+    rowCount?: number;
+}
+interface TransactionLog {
+    db?: string;
+    tenantId?: string;
+    duration?: number;
+    error?: string;
+}
+interface HealthCheckLog {
+    database: string;
+    duration?: number;
+    error?: string;
+    tenantId?: string;
+}
+interface ConnectionLog {
+    db: string;
+    connectionString: string;
+    duration?: number;
+    error?: string;
+}
+interface ErrorLog {
+    tenantId: string;
+    version: string;
+    error: string;
+}
+
+export function logQuery(phase: 'start' | 'end' | 'error', data: QueryLog): void {
+    const settings = getSettings();
+
+    // Prepare log data with sensitive masking
+    const logData = {
+        ...data,
+        params: typeof data.params === 'string' ? data.params : (data.params?.length ? '[HIDDEN]' : '[]')
+    };
+
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
+        console.debug(`Query ${phase}:`, logData);
+    }
+
+    // Prepare metrics tags with tenant context
+    const metricTags = {
+        db: data.db || 'default',
+        tenantId: data.tenantId || 'master'
+    };
+
+    if (phase === 'end') {
+        logMetrics('query_duration_ms', data.duration || 0, metricTags);
+        if (data.rowCount !== undefined) {
+            logMetrics('query_rows_affected', data.rowCount, metricTags);
+        }
+    } else if (phase === 'error') {
+        logMetrics('query_error', 1, metricTags);
+        if (data.error) {
+            logMetrics('query_error_length', data.error.length, metricTags);
+        }
+    }
+}
+
+export function logTransaction(phase: 'start' | 'end' | 'error', data: TransactionLog): void {
+    const settings = getSettings();
+
+    const metricTags = {
+        db: data.db || 'default',
+        tenantId: data.tenantId || 'master'
+    };
+
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
+        console.debug(`Transaction ${phase}:`, data);
+    }
+
+    if (phase === 'end') {
+        logMetrics('transaction_duration_ms', data.duration || 0, metricTags);
+    } else if (phase === 'error') {
+        logMetrics('transaction_error', 1, metricTags);
+    }
+}
+
+export function logHealthCheck(phase: 'success' | 'error', data: HealthCheckLog): void {
+    const settings = getSettings();
+
+    const metricTags = {
+        database: data.database,
+        tenantId: data.tenantId || 'master'
+    };
+
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
+        console.debug(`Health check ${phase}:`, data);
+    }
+
+    if (phase === 'success') {
+        logMetrics('health_check_duration_ms', data.duration || 0, metricTags);
+        logMetrics('health_check_success', 1, metricTags);
+    } else if (phase === 'error') {
+        logMetrics('health_check_error', 1, metricTags);
+    }
+}
+
+export function logConnection(phase: 'start' | 'success' | 'error', data: ConnectionLog): void {
+    const settings = getSettings();
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
+        // Mask connection string for security
+        const safeConnectionString = data.connectionString.replace(/:(?=.*@)/, ':[HIDDEN]@');
+        console.debug(`Connection ${phase}:`, { ...data, connectionString: safeConnectionString });
+    }
+    if (phase === 'success') {
+        logMetrics('connection_duration_ms', data.duration || 0, { db: data.db });
+    } else if (phase === 'error') {
+        logMetrics('connection_error', 1, { db: data.db });
+    }
+}
+
+export function logError(phase: 'error', data: ErrorLog): void {
+    const settings = getSettings();
+    if (settings.APP_DEBUG || process.env.NODE_ENV === 'production') {
+        console.error(`Error ${phase}:`, data);
+    }
+    logMetrics('error_count', 1, { tenantId: data.tenantId, version: data.version });
+}
+
+function logMetrics(metric: string, value: number, labels: Record<string, string>): void {
+    console.info(`METRIC: ${metric} ${value} ${JSON.stringify(labels)}`);
+}

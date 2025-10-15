@@ -7,10 +7,10 @@ import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
 import { getSettings, AppEnv } from '../config/get-settings';
 
 // Define allowed driver types
-type DatabaseDriver = 'postgres' | 'mysql' | 'mariadb' | 'sqlite';
+export type DatabaseDriver = 'postgres' | 'mysql' | 'mariadb' | 'sqlite';
 
 // Interface for tenant table row
-interface TenantRow {
+export interface TenantRow {
   id: number;
   tenant_id: string;
   db_driver: string;
@@ -26,7 +26,7 @@ interface TenantRow {
 }
 
 // Connection pool manager for master and tenant databases
-class ConnectionManager {
+export class ConnectionManager {
   private static tenantConnections: Map<string, Connection> = new Map();
   private static masterConnection: Connection | null = null;
 
@@ -91,7 +91,7 @@ async function resolveTenant(tenantId: string): Promise<DbConfig> {
     }
 
     // Handle db_ssl for PostgreSQL (object or boolean)
-    let ssl: boolean | object;
+    let ssl: boolean | false;
     if (driver === 'postgres' && row.db_ssl) {
       try {
         ssl = typeof row.db_ssl === 'string' ? JSON.parse(row.db_ssl) : !!row.db_ssl;
@@ -123,6 +123,13 @@ async function resolveTenant(tenantId: string): Promise<DbConfig> {
   }
 }
 
+// Replace ? with $1, $2, etc. for PostgreSQL queries
+function convertQueryForPostgres(query: string, params: any[]): string {
+  if (params.length === 0) return query;
+  let paramIndex = 1;
+  return query.replace(/\?/g, () => `$${paramIndex++}`);
+}
+
 export async function query<T>(text: string, params: any[] = [], tenantId: string): Promise<QueryResult<T>> {
   let config: DbConfig;
   try {
@@ -147,7 +154,7 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
     client = await connection.getClient(config.database);
 
     // Use PostgreSQL-compatible query syntax if driver is postgres
-    const queryText = config.driver === 'postgres' ? text.replace(/\?/g, '$1') : text;
+    const queryText = config.driver === 'postgres' ? convertQueryForPostgres(text, params) : text;
     const result = await client.query(queryText, params);
     logQuery('end', { sql: text, params, tenantId, duration: Date.now() - start });
 

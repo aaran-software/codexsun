@@ -4,51 +4,130 @@ import { Connection } from './connection';
 import { QueryResult, AnyDbClient } from './db-types';
 import { getPrimaryDbConfig, getMasterDbConfig, DbConfig } from '../config/db-config';
 import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
-import * as mdb from './mdb';
-import {getSettings} from "../config/get-settings";
+import { getSettings, AppEnv } from '../config/get-settings';
+
+// Define allowed driver types
+export type DatabaseDriver = 'postgres' | 'mysql' | 'mariadb' | 'sqlite';
+
+// Interface for tenant table row
+export interface TenantRow {
+    id: number;
+    tenant_id: string;
+    db_driver: string;
+    db_host: string;
+    db_port: string | number;
+    db_user: string;
+    db_pass: string;
+    db_name: string;
+    db_ssl: string | boolean | null;
+    active: string;
+    created_at: string;
+    updated_at: string;
+}
+
+// Connection pool manager for master and tenant databases
+export class ConnectionManager {
+    private static tenantConnections: Map<string, Connection> = new Map();
+    private static masterConnection: Connection | null = null;
+
+    static async getMasterConnection(): Promise<Connection> {
+        if (!this.masterConnection) {
+            this.masterConnection = await Connection.initialize(getMasterDbConfig());
+        }
+        return this.masterConnection;
+    }
+
+    static async getTenantConnection(tenantId: string, tenantConfig: DbConfig): Promise<Connection> {
+        const key = `${tenantId}:${tenantConfig.driver}:${tenantConfig.database}:${tenantConfig.host}:${tenantConfig.port}`;
+        if (!this.tenantConnections.has(key)) {
+            const connection = await Connection.initialize(tenantConfig);
+            this.tenantConnections.set(key, connection);
+        }
+        return this.tenantConnections.get(key)!;
+    }
+
+    static async closeAll(): Promise<void> {
+        if (this.masterConnection) {
+            await this.masterConnection.close();
+            this.masterConnection = null;
+        }
+        for (const [key, connection] of this.tenantConnections) {
+            await connection.close();
+            this.tenantConnections.delete(key);
+        }
+    }
+}
 
 async function resolveTenant(tenantId: string): Promise<DbConfig> {
     if (!getSettings().TENANCY) {
         return getMasterDbConfig();
     }
 
-    const res = await mdb.query<{
-        driver: 'postgres' | 'mysql' | 'mariadb' | 'sqlite';
-        host: string;
-        port: number;
-        user: string;
-        password: string;
-        database: string;
-        ssl?: any;
-        connectionLimit?: number;
-        acquireTimeout?: number;
-        idleTimeout?: number;
-    }>(
-        'SELECT * FROM tenants WHERE id = ?',
-        [tenantId]
-    );
+    const start = Date.now();
+    let client: AnyDbClient | null = null;
 
-    if (res.rows.length === 0) {
-        if (process.env.STRICT_TENANCY === 'true') {
-            throw new Error('Tenant not found and strict tenancy is enabled');
+    try {
+        const masterConnection = await ConnectionManager.getMasterConnection();
+        client = await masterConnection.getClient(getMasterDbConfig().database);
+        const result = await client.query('SELECT * FROM tenants WHERE tenant_id = ?', [tenantId]);
+        logQuery('end', {
+            sql: 'SELECT * FROM tenants WHERE tenant_id = ?',
+            params: [tenantId],
+            tenantId,
+            duration: Date.now() - start,
+        });
+
+        if (result.rowCount === 0) {
+            if (process.env.STRICT_TENANCY === 'true') {
+                throw new Error(`Tenant not found for tenant_id: ${tenantId} and strict tenancy is enabled`);
+            }
+            return getPrimaryDbConfig();
         }
-        return getPrimaryDbConfig();
+
+        const row: TenantRow = result.rows[0];
+        const driver = row.db_driver;
+        if (!['postgres', 'mysql', 'mariadb', 'sqlite'].includes(driver)) {
+            throw new Error(`Invalid database driver: ${driver}`);
+        }
+
+        // Handle db_ssl for PostgreSQL (object or boolean)
+        let ssl: boolean | false;
+        if (driver === 'postgres' && row.db_ssl) {
+            try {
+                ssl = typeof row.db_ssl === 'string' ? JSON.parse(row.db_ssl) : !!row.db_ssl;
+            } catch {
+                ssl = row.db_ssl === 'true' || row.db_ssl === '1';
+            }
+        } else {
+            ssl = row.db_ssl === 'true' || row.db_ssl === '1' || !!row.db_ssl;
+        }
+
+        return {
+            driver: driver as DatabaseDriver,
+            host: row.db_host,
+            port: Number(row.db_port),
+            user: row.db_user,
+            password: row.db_pass,
+            database: row.db_name,
+            ssl,
+            connectionLimit: process.env.APP_ENV === AppEnv.Production ? 50 : 10,
+            acquireTimeout: 10000,
+            idleTimeout: 10000,
+        };
+    } finally {
+        if (client && client.release) {
+            client.release();
+        } else if (client && client.end) {
+            await client.end();
+        }
     }
+}
 
-    const tenant = res.rows[0];
-
-    return {
-        driver: tenant.driver,
-        host: tenant.host,
-        port: tenant.port,
-        user: tenant.user,
-        password: tenant.password,
-        database: tenant.database,
-        ssl: tenant.ssl,
-        connectionLimit: tenant.connectionLimit || 10,
-        acquireTimeout: tenant.acquireTimeout || 10000,
-        idleTimeout: tenant.idleTimeout || 10000,
-    };
+// Replace ? with $1, $2, etc. for PostgreSQL queries
+function convertQueryForPostgres(query: string, params: any[]): string {
+    if (params.length === 0) return query;
+    let paramIndex = 1;
+    return query.replace(/\?/g, () => `$${paramIndex++}`);
 }
 
 export async function query<T>(text: string, params: any[] = [], tenantId: string): Promise<QueryResult<T>> {
@@ -71,8 +150,12 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
         }
         logQuery('start', { sql: text, params, tenantId });
 
-        client = await Connection.getInstance().getClient(config.database);
-        const result = await client.query(text, params);
+        const connection = await ConnectionManager.getTenantConnection(tenantId, config);
+        client = await connection.getClient(config.database);
+
+        // Use PostgreSQL-compatible query syntax if driver is postgres
+        const queryText = config.driver === 'postgres' ? convertQueryForPostgres(text, params) : text;
+        const result = await client.query(queryText, params);
         logQuery('end', { sql: text, params, tenantId, duration: Date.now() - start });
 
         return {
@@ -112,8 +195,12 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
 
     try {
         logTransaction('start', { tenantId });
-        client = await Connection.getInstance().getClient(config.database);
-        await client.query('START TRANSACTION');
+        const connection = await ConnectionManager.getTenantConnection(tenantId, config);
+        client = await connection.getClient(config.database);
+
+        // Use appropriate transaction commands based on driver
+        const beginTransaction = config.driver === 'postgres' ? 'BEGIN' : 'START TRANSACTION';
+        await client.query(beginTransaction);
 
         const result = await callback(client);
 
@@ -161,7 +248,8 @@ export async function healthCheck(tenantId: string): Promise<boolean> {
     let client: AnyDbClient | null = null;
 
     try {
-        client = await Connection.getInstance().getClient(config.database);
+        const connection = await ConnectionManager.getTenantConnection(tenantId, config);
+        client = await connection.getClient(config.database);
         await client.query('SELECT 1');
         logHealthCheck('success', { database: config.database || 'default', duration: Date.now() - start });
         return true;

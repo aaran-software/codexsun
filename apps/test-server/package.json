@@ -4,8 +4,8 @@
   "type": "commonjs",
   "private": true,
   "scripts": {
-    "dev": "tsx database/index.ts",
-    "test-server": "tsx database/index.ts",
+    "dev": "tsx index.ts",
+    "test-server": "tsx ../backups/database/index.ts",
     "check-types": "tsc --noEmit",
     "todo-test": "jest",
     "jtest": "jest --detectOpenHandles",
