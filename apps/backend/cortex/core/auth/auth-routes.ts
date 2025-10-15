@@ -22,7 +22,7 @@ async function handleLogin(ctx: RequestContext, logger: Logger): Promise<any> {
     try {
         const credentials = ctx.body;
         if (!credentials?.email || !credentials?.password) {
-            throw new Error("Email and password are required");
+            new Error("Email and password are required");
         }
         const {user, tenant} = await authenticateUser(credentials);
 
@@ -38,7 +38,6 @@ async function handleLogin(ctx: RequestContext, logger: Logger): Promise<any> {
             },
             tenant: {
                 id: tenant.id,
-                dbConnection: tenant.dbConnection,
             },
         };
     } catch (err) {
