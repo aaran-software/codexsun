@@ -32,6 +32,8 @@ export function UserDataInspector() {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
+                    'x-tenant-id': `${user.tenantId}`,
+                    'x-user-id': `${user.id}`,
                 },
             })
 

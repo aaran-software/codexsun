@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
-import { Main } from '@/components/layout/main'
-import { UsersDialogs } from './components/users-dialogs'
-import { UsersPrimaryButtons } from './components/users-primary-buttons'
-import { UsersProvider, useUsers } from './components/users-provider'
-import { UsersTable } from './components/users-table'
-import { type User, userRoleSchema } from './data/schema'
-import { useAuth } from "@/global/auth/useAuth"
+import {useState, useEffect, useRef} from 'react'
+import {Main} from '@/components/layout/main'
+import {UsersDialogs} from './components/users-dialogs'
+import {UsersPrimaryButtons} from './components/users-primary-buttons'
+import {UsersProvider, useUsers} from './components/users-provider'
+import {UsersTable} from './components/users-table'
+import {type User, userRoleSchema} from './data/schema'
+import {useAuth} from "@/global/auth/useAuth"
 import {z} from "zod";
 
 const idToRole: Record<number, z.infer<typeof userRoleSchema>> = {
@@ -18,9 +18,10 @@ const idToRole: Record<number, z.infer<typeof userRoleSchema>> = {
 function UsersContent() {
     const [data, setData] = useState<User[]>([])
     const [error, setError] = useState<string | null>(null)
-    const { open } = useUsers()
-    const { token, user, API_URL } = useAuth()
+    const {open} = useUsers()
+    const {token, user, API_URL} = useAuth()
     const prevOpen = useRef(open)
+
 
     const fetchUsers = async () => {
         if (!token || !user?.tenantId) {
@@ -29,20 +30,30 @@ function UsersContent() {
         }
 
         try {
-            const response = await fetch(`${API_URL}/api/users?tenant_id=${user.tenantId}`, {
+            const response = await fetch(`${API_URL}/api/users`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
+                    'x-tenant-id': `${user.tenantId}`,
+                    'x-user-id': `${user.id}`,
                 },
             })
             if (response.ok) {
-                const users = await response.json()
+                const responseData = await response.json()
+                const users = responseData.users
+
+                if (!Array.isArray(users)) {
+                    setError('Invalid response format: Expected an array of users.')
+                    return
+                }
+
+                console.log(users)
+
                 const mappedUsers = users.map((user: any) => ({
                     id: user.id,
                     username: user.username,
                     email: user.email,
                     role: idToRole[user.role_id] || 'admin',
-                    tenant_id: user.tenant_id,
                     status: user.status || 'active',
                     mobile: user.mobile || null,
                     createdAt: new Date(user.created_at),
@@ -81,12 +92,12 @@ function UsersContent() {
                         <p className='text-red-600 text-sm mt-2'>{error}</p>
                     )}
                 </div>
-                <UsersPrimaryButtons />
+                <UsersPrimaryButtons/>
             </div>
             <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-                <UsersTable data={data} />
+                <UsersTable data={data}/>
             </div>
-            <UsersDialogs />
+            <UsersDialogs/>
         </Main>
     )
 }
@@ -94,7 +105,7 @@ function UsersContent() {
 export function Users() {
     return (
         <UsersProvider>
-            <UsersContent />
+            <UsersContent/>
         </UsersProvider>
     )
 }

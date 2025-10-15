@@ -62,7 +62,7 @@ export const usersColumns: ColumnDef<User>[] = [
         ),
     },
     {
-        accessorKey: 'phoneNumber',
+        accessorKey: 'mobile',
         header: ({column}) => (
             <DataTableColumnHeader column={column} title='Mobile'/>
         ),

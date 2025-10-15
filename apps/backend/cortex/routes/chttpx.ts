@@ -51,7 +51,7 @@ export function applyCorsMiddleware(req: IncomingMessage, res: ServerResponse, n
     const corsMiddleware = cors({
         origin: "*",
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization", "x-tenant-id"],
+        allowedHeaders: ["Content-Type", "Authorization", "x-tenant-id", "x-user-id"],
         credentials: true,
         maxAge: 86400,
     });
