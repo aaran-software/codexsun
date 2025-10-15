@@ -4,7 +4,7 @@ import { getDbConfig } from "../../../cortex/config/db-config";
 import { logQuery, logTransaction, logHealthCheck, logConnection } from "../../../cortex/config/logger";
 import { Connection } from "../../../cortex/db/connection";
 import { query, withTransaction, healthCheck, tenantStorage } from "../../../cortex/db/db";
-import { resolveTenant } from "../../../cortex/core/tenant/tenant-resolver";
+import { resolveByEmail } from "../../../cortex/core/tenant/tenant-resolver";
 import { DbConfig } from "../../../cortex/db/db-types";
 
 jest.setTimeout(30000); // Global timeout increase for integration tests
@@ -238,7 +238,7 @@ describe("[3.] Integration: Tenant Resolver & Multi-Tenant", () => {
 
     it("[test 1] resolveTenant & switch context", async () => {
         await runWithTenant(null, async () => {
-            const tenant = await resolveTenant({ body: { email: "test@email.com", password: "pass" } });
+            const tenant = await resolveByEmail({ body: { email: "test@email.com", password: "pass" } });
             expect(tenant.id).toBe("tenant-1");
             expect(tenant.dbConnection).toContain(TENANT_DB);
         });
@@ -246,8 +246,8 @@ describe("[3.] Integration: Tenant Resolver & Multi-Tenant", () => {
 
     it("[test 2] tenant errors/validation", async () => {
         await runWithTenant(null, async () => {
-            await expect(resolveTenant({ body: { email: "", password: "pass" } })).rejects.toThrow("Valid email is required for tenant resolution");
-            await expect(resolveTenant({ body: { email: "invalid@email.com", password: "pass" } })).rejects.toThrow("No tenant associated with email: invalid@email.com");
+            await expect(resolveByEmail({ body: { email: "", password: "pass" } })).rejects.toThrow("Valid email is required for tenant resolution");
+            await expect(resolveByEmail({ body: { email: "invalid@email.com", password: "pass" } })).rejects.toThrow("No tenant associated with email: invalid@email.com");
         });
         await runWithTenant(MASTER_DB, async () => {
             await query(`INSERT INTO tenants (tenant_id, db_host, db_port, db_user, db_pass, db_name, db_ssl) VALUES ('tenant-2', 'localhost', '3306', 'user', 'pass', 'tenant2_db', 'false')`);
@@ -255,13 +255,13 @@ describe("[3.] Integration: Tenant Resolver & Multi-Tenant", () => {
             await query(`INSERT INTO tenant_users (email, tenant_id) VALUES ('multi@email.com', 'tenant-2')`);
         });
         await runWithTenant(null, async () => {
-            await expect(resolveTenant({ body: { email: "multi@email.com", password: "pass" } })).rejects.toThrow("Multiple tenants found for email: multi@email.com. Contact support.");
+            await expect(resolveByEmail({ body: { email: "multi@email.com", password: "pass" } })).rejects.toThrow("Multiple tenants found for email: multi@email.com. Contact support.");
         });
         await runWithTenant(MASTER_DB, async () => {
             await query(`UPDATE tenants SET db_host = NULL WHERE tenant_id = 'tenant-1'`);
         });
         await runWithTenant(null, async () => {
-            await expect(resolveTenant({ body: { email: "test@email.com", password: "pass" } })).rejects.toThrow("Incomplete tenant configuration for ID: tenant-1");
+            await expect(resolveByEmail({ body: { email: "test@email.com", password: "pass" } })).rejects.toThrow("Incomplete tenant configuration for ID: tenant-1");
         });
     });
 });

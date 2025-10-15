@@ -4,7 +4,7 @@ import {blockJwt, generateJwt, verifyJwt} from '../secret/jwt-service';
 import {comparePassword} from '../secret/crypt-service';
 import {logQuery} from '../../config/logger';
 import {getMasterDbConfig} from '../../config/db-config';
-import {resolveTenant} from "../tenant/tenant-resolver";
+import {resolveByEmail} from "../tenant/tenant-resolver";
 
 export async function authenticateUser(credentials: Credentials): Promise<{ user: User, tenant: Tenant }> {
     const {email, password} = credentials;
@@ -26,7 +26,6 @@ export async function authenticateUser(credentials: Credentials): Promise<{ user
                       INNER JOIN roles r ON u.role_id = r.id
              WHERE u.email = ?`,
             [email],
-            dbConfig.database // Use master_db
         );
 
         logQuery('end', {
@@ -38,22 +37,22 @@ export async function authenticateUser(credentials: Credentials): Promise<{ user
 
         const user = result.rows[0];
         if (!user) {
-            throw new Error('Invalid credentials: User not found');
+            new Error('Invalid credentials: User not found');
         }
 
         // Verify role exists
         if (!user.role_name) {
-            throw new Error('Invalid user configuration: Role not found');
+            new Error('Invalid user configuration: Role not found');
         }
 
         // Verify password using hashAndCompare
         const isValid = await comparePassword(password, user.password_hash) as boolean;
         if (!isValid) {
-            throw new Error('Invalid credentials: Incorrect password');
+            new Error('Invalid credentials: Incorrect password');
         }
 
         // Resolve tenant
-        const tenant = await resolveTenant({body: {email, password}});
+        const tenant = await resolveByEmail({body: {email, password}});
 
         // Generate JWT
         const token = await generateJwt({

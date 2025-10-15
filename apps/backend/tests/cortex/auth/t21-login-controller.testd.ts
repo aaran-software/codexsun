@@ -102,7 +102,7 @@ describe('[21.] Login Controller Tests', () => {
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
         const now = Math.floor(Date.now() / 1000);
         const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: now, exp: now + 3600 }, JWT_SECRET);
-        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockResolvedValue(tenant);
         jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
@@ -121,14 +121,14 @@ describe('[21.] Login Controller Tests', () => {
     test('[test 2] rejects invalid password', async () => {
         const req = { body: { email: 'admin@example.com', password: 'wrongpass' } };
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
-        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockResolvedValue(tenant);
         jest.spyOn(AuthService, 'authenticateUser').mockRejectedValue(new Error('Invalid credentials'));
         await expect(loginController.login(req)).rejects.toThrow('Invalid credentials');
     });
 
     test('[test 3] rejects unknown email', async () => {
         const req = { body: { email: 'unknown@domain.com', password: 'pass123' } };
-        jest.spyOn(TenantResolver, 'resolveTenant').mockRejectedValue(
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockRejectedValue(
             new Error('Tenant resolution failed for email unknown@domain.com: No tenant associated with email: unknown@domain.com')
         );
         await expect(loginController.login(req)).rejects.toThrow('Tenant resolution failed');
@@ -139,7 +139,7 @@ describe('[21.] Login Controller Tests', () => {
         const tenant = { id: 'default', dbConnection: `mariadb://root:@localhost:3306/${TEST_DB}` };
         const now = Math.floor(Date.now() / 1000);
         const token = jwt.sign({ id: '1', tenantId: 'default', role: 'admin', iat: now, exp: now + 3600 }, JWT_SECRET);
-        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockResolvedValue(tenant);
         jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
@@ -163,7 +163,7 @@ describe('[21.] Login Controller Tests', () => {
         // Blacklist the token first
         await loginController.logout(token);
         // Attempt login with the blacklisted token
-        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockResolvedValue(tenant);
         jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',
@@ -175,7 +175,7 @@ describe('[21.] Login Controller Tests', () => {
 
     test('[test 7] rejects invalid email format', async () => {
         const req = { body: { email: 'invalid-email', password: 'pass123' } };
-        jest.spyOn(TenantResolver, 'resolveTenant').mockRejectedValue(
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockRejectedValue(
             new Error('Tenant resolution failed for email invalid-email: No tenant associated with email: invalid-email')
         );
         await expect(loginController.login(req)).rejects.toThrow('Tenant resolution failed');
@@ -194,7 +194,7 @@ describe('[21.] Login Controller Tests', () => {
             { id: '1', tenantId: 'default', role: 'admin', iat: now - 7200, exp: now - 3600 },
             JWT_SECRET
         );
-        jest.spyOn(TenantResolver, 'resolveTenant').mockResolvedValue(tenant);
+        jest.spyOn(TenantResolver, 'resolveByEmail').mockResolvedValue(tenant);
         jest.spyOn(AuthService, 'authenticateUser').mockResolvedValue({
             id: '1',
             tenantId: 'default',

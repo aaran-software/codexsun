@@ -2,7 +2,7 @@ import { getDbConfig } from "../../../../cortex/config/db-config";
 import { Connection } from "../../../../cortex/db/connection";
 import { query,tenantStorage } from "../../../../cortex/db/db";
 import { tenantMigrate, resetTenantDatabase } from "../../../../cortex/db/migration/tenant/tenant-migrate";
-import { resolveTenant } from "../../../../cortex/core/tenant/tenant-resolver";
+import { resolveByEmail } from "../../../../cortex/core/tenant/tenant-resolver";
 import { masterMigrate } from "../../../../cortex/db/migration/master/master-migrate";
 
 jest.setTimeout(30000);
@@ -61,7 +61,7 @@ describe("Tenant Migration: Schema Assert", () => {
         });
 
         // Resolve tenant to get DB name
-        const tenant = await resolveTenant({ body: { email: TENANT_EMAIL, password: "test" } });
+        const tenant = await resolveByEmail({ body: { email: TENANT_EMAIL, password: "test" } });
         tenantDbName = tenant.dbConnection.split('/').pop() || TENANT_DB_NAME;
 
         // Initialize tenant database connection

@@ -3,7 +3,6 @@
  */
 export interface Tenant {
     id: string;
-    dbConnection: string;
 }
 
 /**
