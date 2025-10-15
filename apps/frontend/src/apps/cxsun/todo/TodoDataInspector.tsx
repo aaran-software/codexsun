@@ -3,7 +3,7 @@ import { useAuth } from "@/global/auth/useAuth"
 import { Button } from '@/components/ui/button'
 import { Copy } from 'lucide-react'
 
-export function UserDataInspector() {
+export function TodoDataInspector() {
     const { token, user, API_URL } = useAuth()
     const [userData, setUserData] = useState<never>()
     const [loading, setLoading] = useState<boolean>(true)
@@ -54,7 +54,7 @@ export function UserDataInspector() {
 
     useEffect(() => {
         if (user?.tenantId) {
-            fetchData(`/api/users`, setUserData, setUserError)
+            fetchData(`/api/todos`, setUserData, setUserError)
         } else {
             setUserError('No tenant ID available. Please log in with a valid user.')
             setLoading(false)
@@ -84,7 +84,7 @@ export function UserDataInspector() {
                             <ul className="list-disc space-y-2 pl-5">
                                 <li>Ensure the backend server is running at {API_URL} with user routes registered.</li>
                                 <li>Add user routes to Express: app.use('/api/users', createUserRouter(dbAdapter)).</li>
-                                <li>Test with curl: curl -H "Authorization: Bearer &lt;token&gt;" {API_URL}/api/users?tenant_id={tenantId}</li>
+                                <li>Test with curl: curl -H "Authorization: Bearer &lt;token&gt;" {API_URL}/api/todos</li>
                                 <li>Check backend logs for missing route errors.</li>
                             </ul>
                         </div>

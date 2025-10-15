@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { Todo, InteractionState, AddState } from './TodoData';
-import { useAuth } from '../../../global/auth/AuthContext';
+import { useAuth } from '@/global/auth/useAuth';
+import { Loader } from '@/components/loader/loader';
 
-const API_BASE_URL = 'http://localhost:3000';
-const TENANT_ID = 'tenant1';
+
 
 // Utility to update todo positions for drag-and-drop ordering.
 const updatePositions = (todos: Todo[]): Todo[] => {
@@ -16,7 +16,7 @@ const updatePositions = (todos: Todo[]): Todo[] => {
 };
 
 export const useTodoLogic = () => {
-    const { token, loading } = useAuth(); // Use token from AuthContext
+    const {token, user, API_URL} = useAuth()
     const [todos, setTodos] = useState<Todo[]>([]);
     const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -44,18 +44,21 @@ export const useTodoLogic = () => {
     // Headers for API requests, conditionally including Authorization if token exists.
     const headers = () => ({
         'Content-Type': 'application/json',
-        'X-Tenant-Id': TENANT_ID,
-        ...(token && { Authorization: `Bearer ${token}` }),
+        'Authorization': `Bearer ${token}`,
+        'x-tenant-id': `${user.tenantId}`,
+        'x-user-id': `${user.id}`
     });
 
     // Function to refresh token, assuming AuthContext handles refresh or login.
     const refreshToken = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+            const res = await fetch(`${API_URL}/api/auth/refresh`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Tenant-Id': TENANT_ID,
+                    'Authorization': `Bearer ${token}`,
+                    'x-tenant-id': `${user.tenantId}`,
+                    'x-user-id': `${user.id}`
                 },
             });
             if (res.ok) {
@@ -76,10 +79,10 @@ export const useTodoLogic = () => {
     // Fetch todos when token is available and not loading.
     useEffect(() => {
         const fetchTodos = async () => {
-            if (loading || !token) return;
+            if (Loader || !token) return;
 
             try {
-                let res = await fetch(`${API_BASE_URL}/api/todos`, {
+                let res = await fetch(`${API_URL}/api/todos`, {
                     headers: headers(),
                 });
                 if (res.status === 401) {
@@ -88,7 +91,7 @@ export const useTodoLogic = () => {
                         setError('Authentication failed');
                         return;
                     }
-                    res = await fetch(`${API_BASE_URL}/api/todos`, {
+                    res = await fetch(`${API_URL}/api/todos`, {
                         headers: headers(),
                     });
                 }
@@ -107,7 +110,7 @@ export const useTodoLogic = () => {
         };
 
         fetchTodos();
-    }, [token, loading]);
+    }, [token, Loader]);
 
     // Filter todos based on status and category.
     const filteredTodos = todos
@@ -143,7 +146,7 @@ export const useTodoLogic = () => {
         };
 
         try {
-            let res = await fetch(`${API_BASE_URL}/api/todos`, {
+            let res = await fetch(`${API_URL}/api/todos`, {
                 method: 'POST',
                 headers: headers(),
                 body: JSON.stringify(newTodo),
@@ -154,7 +157,7 @@ export const useTodoLogic = () => {
                     setError('Authentication failed');
                     return;
                 }
-                res = await fetch(`${API_BASE_URL}/api/todos`, {
+                res = await fetch(`${API_URL}/api/todos`, {
                     method: 'POST',
                     headers: headers(),
                     body: JSON.stringify(newTodo),
@@ -189,7 +192,7 @@ export const useTodoLogic = () => {
         }
 
         try {
-            let res = await fetch(`${API_BASE_URL}/api/todos/${id}/toggle`, {
+            let res = await fetch(`${API_URL}/api/todos/${id}/toggle`, {
                 method: 'PATCH',
                 headers: headers(),
             });
@@ -199,7 +202,7 @@ export const useTodoLogic = () => {
                     setError('Authentication failed');
                     return;
                 }
-                res = await fetch(`${API_BASE_URL}/api/todos/${id}/toggle`, {
+                res = await fetch(`${API_URL}/api/todos/${id}/toggle`, {
                     method: 'PATCH',
                     headers: headers(),
                 });
@@ -229,7 +232,7 @@ export const useTodoLogic = () => {
         }
 
         try {
-            let res = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+            let res = await fetch(`${API_URL}/api/todos/${id}`, {
                 method: 'DELETE',
                 headers: headers(),
             });
@@ -239,7 +242,7 @@ export const useTodoLogic = () => {
                     setError('Authentication failed');
                     return;
                 }
-                res = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+                res = await fetch(`${API_URL}/api/todos/${id}`, {
                     method: 'DELETE',
                     headers: headers(),
                 });
@@ -295,7 +298,7 @@ export const useTodoLogic = () => {
         };
 
         try {
-            let res = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+            let res = await fetch(`${API_URL}/api/todos/${id}`, {
                 method: 'PUT',
                 headers: headers(),
                 body: JSON.stringify(updates),
@@ -306,7 +309,7 @@ export const useTodoLogic = () => {
                     setError('Authentication failed');
                     return;
                 }
-                res = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+                res = await fetch(`${API_URL}/api/todos/${id}`, {
                     method: 'PUT',
                     headers: headers(),
                     body: JSON.stringify(updates),
@@ -370,7 +373,7 @@ export const useTodoLogic = () => {
             const orderedIds = reorderedTodos.map((t) => t.id!);
 
             try {
-                let res = await fetch(`${API_BASE_URL}/api/todos/order`, {
+                let res = await fetch(`${API_URL}/api/todos/order`, {
                     method: 'POST',
                     headers: headers(),
                     body: JSON.stringify({ orderedIds }),
@@ -381,7 +384,7 @@ export const useTodoLogic = () => {
                         setError('Authentication failed');
                         return;
                     }
-                    res = await fetch(`${API_BASE_URL}/api/todos/order`, {
+                    res = await fetch(`${API_URL}/api/todos/order`, {
                         method: 'POST',
                         headers: headers(),
                         body: JSON.stringify({ orderedIds }),
@@ -403,6 +406,7 @@ export const useTodoLogic = () => {
         setActiveTodo(null);
         setOverId(null);
     };
+
 
     return {
         todos,
@@ -434,6 +438,6 @@ export const useTodoLogic = () => {
         handleDragOver,
         handleDragEnd,
         error,
-        loading,
+        Loader,
     };
 };

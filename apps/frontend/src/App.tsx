@@ -16,15 +16,17 @@ import { ProtectedRoute } from './global/auth/protected-route';
 
 import Credit from "./apps/cxsun/dashboard/credit";
 
-// import { TodoList } from './apps/cxsun/todo/TodoUi';
-// import { useTodoLogic } from './apps/cxsun/todo/TodoLogic';
+import { TodoList } from './apps/cxsun/todo/TodoUi';
+import { useTodoLogic } from './apps/cxsun/todo/TodoLogic';
+
 import {Users} from "@/apps/cxsun/users";
 import {UserDataInspector} from "@/apps/cxsun/users/test/UserDataInspector";
+import {TodoDataInspector} from "@/apps/cxsun/todo/TodoDataInspector";
 
 const App: React.FC = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
-    // const todoLogic = useTodoLogic();
+    const todoLogic = useTodoLogic();
 
   const handleLoginClick = () => {
     console.log('[App] Login Clicked');
@@ -64,13 +66,14 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             {/*<Route path="/user" element={<UserPage />} />*/}
 
-              {/*<Route path="/todos" element={<TodoList {...todoLogic} />} />*/}
+              <Route path="/todos" element={<TodoList loading={false} {...todoLogic} />} />
 
             <Route path="/credit" element={<Credit />} />
 
             <Route path="/users" element={<Users />} />
 
             <Route path="/iuser" element={<UserDataInspector />} />
+            <Route path="/itodos" element={<TodoDataInspector />} />
 
 
 
