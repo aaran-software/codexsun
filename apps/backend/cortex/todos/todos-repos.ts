@@ -1,45 +1,42 @@
 // cortex/todos/todos-repos.ts
+
 import {query} from '../db/db';
-import {QueryResult} from '../db/db-types';
-import {Todo, TodoInput} from './todos-model';
+import {Todo} from './todos-model';
 
-export async function createTodo(
-    input: TodoInput,
-    tenantId: string  // Use tenantId consistently
-): Promise<Todo> {
-    const defaultInput: Required<TodoInput> = {
-        completed: false,
-        priority: 'medium',
-        ...input
-    };
-
-    const result = await query<Todo>(
-        `INSERT INTO todos (text, completed, category, due_date, priority, position, user_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-        [
-            defaultInput.text,
-            defaultInput.completed,
-            defaultInput.category,
-            defaultInput.due_date,
-            defaultInput.priority,
-            defaultInput.position,
-            tenantId  // Store tenantId as user_id in database
-        ],
-        tenantId  // Use tenantId for database connection resolution
-    );
-
-    return {
-        id: result.insertId as number,
-        ...defaultInput,
-        user_id: tenantId,  // Return as user_id to match Todo interface
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    };
+export async function createTodo(input: Todo, tenantId: string, userId: string): Promise<Todo> {
+    try {
+        const result = await query<Todo>(
+            `INSERT INTO todos (text, completed, category, due_date, priority, position, user_id, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            [
+                input.text,
+                input.completed,
+                input.category,
+                input.due_date,
+                input.priority,
+                input.position,
+                userId
+            ],
+            tenantId
+        );
+        console.log("Insert result:", result);
+        return {
+            id: result.insertId as number,
+            ...input,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+    } catch (error) {
+        console.error("Error in createTodo:", error);
+        throw error;
+    }
 }
 
 export async function getTodos(tenantId: string, userId: string): Promise<Todo[]> {  // Changed from getTodosByUser
 
-    const queryString = `SELECT * FROM todos WHERE user_id = ?
+    const queryString = `SELECT *
+                         FROM todos
+                         WHERE user_id = ?
                          ORDER BY created_at DESC`
 
     // console.log(queryString)
@@ -78,7 +75,7 @@ export async function getTodoById(id: number, tenantId: string): Promise<Todo | 
 
 export async function updateTodo(
     id: number,
-    updates: Partial<TodoInput>,
+    updates: Partial<Todo>,
     tenantId: string
 ): Promise<Todo | null> {
     const updateFields: string[] = [];

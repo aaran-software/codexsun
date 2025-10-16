@@ -14,20 +14,11 @@ abstract class BaseController {
 
         const tenantId = ctx.tenantId;
         if (!tenantId) {
-            this.logger.warn("Missing x-tenant-id header", {
-                method: ctx.method,
-                url: ctx.url
-            });
             throw new Error("x-tenant-id header is required");
         }
 
         const userId = ctx.userId;
         if (!userId) {
-            this.logger.warn("Missing user authentication", {
-                method: ctx.method,
-                url: ctx.url,
-                tenantId
-            });
             throw new Error("User authentication required");
         }
 

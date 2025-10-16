@@ -1,10 +1,10 @@
 // cortex/db/db.ts
 
-import { Connection } from './connection';
-import { QueryResult, AnyDbClient } from './db-types';
-import { getPrimaryDbConfig, getMasterDbConfig, DbConfig } from '../config/db-config';
-import { logQuery, logTransaction, logHealthCheck } from '../config/logger';
-import { getSettings, AppEnv } from '../config/get-settings';
+import {Connection} from './connection';
+import {QueryResult, AnyDbClient} from './db-types';
+import {getPrimaryDbConfig, getMasterDbConfig, DbConfig} from '../config/db-config';
+import {logQuery, logTransaction, logHealthCheck} from '../config/logger';
+import {getSettings, AppEnv} from '../config/get-settings';
 
 // Define allowed driver types
 export type DatabaseDriver = 'postgres' | 'mysql' | 'mariadb' | 'sqlite';
@@ -148,7 +148,7 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
         if (!text) {
             return Promise.reject(new Error('Invalid SQL query provided'));
         }
-        logQuery('start', { sql: text, params, tenantId });
+        logQuery('start', {sql: text, params, tenantId});
 
         const connection = await ConnectionManager.getTenantConnection(tenantId, config);
         client = await connection.getClient(config.database);
@@ -156,7 +156,7 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
         // Use PostgreSQL-compatible query syntax if driver is postgres
         const queryText = config.driver === 'postgres' ? convertQueryForPostgres(text, params) : text;
         const result = await client.query(queryText, params);
-        logQuery('end', { sql: text, params, tenantId, duration: Date.now() - start });
+        logQuery('end', {sql: text, params, tenantId, duration: Date.now() - start});
 
         return {
             rows: (Array.isArray(result) ? result : result.rows || []) as T[],
@@ -165,13 +165,16 @@ export async function query<T>(text: string, params: any[] = [], tenantId: strin
         };
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown query error';
-        logQuery('error', { sql: text, params, tenantId, duration: Date.now() - start, error: errMsg });
+        logQuery('error', {sql: text, params, tenantId, duration: Date.now() - start, error: errMsg});
         throw new Error(`Query failed on DB ${config.database || 'default'}: ${text.slice(0, 50)}... - ${errMsg}`);
     } finally {
         if (client) {
             try {
-                if (client.release) client.release();
-                else if (client.end) await client.end();
+                if (client.release) {
+                    client.release(); // Release the client back to the pool
+                } else if (client.end) {
+                    await client.end(); // Only end the client for non-pooled connections
+                }
             } catch (releaseErr) {
                 console.error(`Failed to release client for DB ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
@@ -194,7 +197,7 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
     let client: AnyDbClient | null = null;
 
     try {
-        logTransaction('start', { tenantId });
+        logTransaction('start', {tenantId});
         const connection = await ConnectionManager.getTenantConnection(tenantId, config);
         client = await connection.getClient(config.database);
 
@@ -205,12 +208,12 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
         const result = await callback(client);
 
         await client.query('COMMIT');
-        logTransaction('end', { tenantId, duration: Date.now() - start });
+        logTransaction('end', {tenantId, duration: Date.now() - start});
 
         return result;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown transaction error';
-        logTransaction('error', { tenantId, duration: Date.now() - start, error: errMsg });
+        logTransaction('error', {tenantId, duration: Date.now() - start, error: errMsg});
 
         if (client) {
             try {
@@ -224,8 +227,11 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
     } finally {
         if (client) {
             try {
-                if (client.release) client.release();
-                else if (client.end) await client.end();
+                if (client.release) {
+                    client.release(); // Release the client back to the pool
+                } else if (client.end) {
+                    await client.end(); // Only end the client for non-pooled connections
+                }
             } catch (releaseErr) {
                 console.error(`Failed to release client for DB ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
@@ -251,19 +257,22 @@ export async function healthCheck(tenantId: string): Promise<boolean> {
         const connection = await ConnectionManager.getTenantConnection(tenantId, config);
         client = await connection.getClient(config.database);
         await client.query('SELECT 1');
-        logHealthCheck('success', { database: config.database || 'default', duration: Date.now() - start });
+        logHealthCheck('success', {database: config.database || 'default', duration: Date.now() - start});
         return true;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown health check error';
-        logHealthCheck('error', { database: config.database || 'default', duration: Date.now() - start, error: errMsg });
+        logHealthCheck('error', {database: config.database || 'default', duration: Date.now() - start, error: errMsg});
         return false;
     } finally {
         if (client) {
             try {
-                if (client.release) client.release();
-                else if (client.end) await client.end();
+                if (client.release) {
+                    client.release(); // Release the client back to the pool
+                } else if (client.end) {
+                    await client.end(); // Only end the client for non-pooled connections
+                }
             } catch (releaseErr) {
-                console.error(`Failed to release client for health check on ${config.database || 'default'}: ${(releaseErr as Error).message}`);
+                console.error(`Failed to release client for DB ${config.database || 'default'}: ${(releaseErr as Error).message}`);
             }
         }
     }

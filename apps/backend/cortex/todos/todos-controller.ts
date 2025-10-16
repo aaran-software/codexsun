@@ -22,21 +22,36 @@ export class TodosController extends BaseController {
     }
 
     static async Create(ctx: RequestContext): Promise<any> {
-        const {tenantId, userId} = await this.validateAuthContext(ctx);
-        const input = ctx.body;
+        try {
+            const {tenantId, userId} = await this.validateAuthContext(ctx);
+            const input = ctx.body;
 
+            // Add basic input validation
+            if (!input?.text || input.completed === undefined || !input.category || !input.priority) {
+                this.logger.warn("Invalid todo data", { method: ctx.method, url: ctx.url, tenantId, userId });
+                throw new Error("Text, completed, category, and priority are required");
+            }
 
-        this.logger.info("Creating todo", {
-            method: ctx.method,
-            url: ctx.url,
-            tenantId,
-            userId
-        });
+            this.logger.info("Creating todo", {
+                method: ctx.method,
+                url: ctx.url,
+                tenantId,
+                userId
+            });
 
-        const todo = await todosService.createTodoService(input, tenantId);
+            const todo = await todosService.createTodoService(input, tenantId, userId);
 
-        this.logSuccess(ctx, "Todo created", todo.id);
-        return {message: "Todo created", todo};
+            this.logSuccess(ctx, "Todo created", todo.id);
+            return {message: "Todo created", todo};
+        } catch (error) {
+            this.logger.error("Failed to create todo", {
+                method: ctx.method,
+                url: ctx.url,
+                tenantId: ctx.tenantId,
+                error: (error as Error).message
+            });
+            throw error; // Let global error handler manage response
+        }
     }
 
     static async GetById(ctx: RequestContext): Promise<any> {
