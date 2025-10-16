@@ -36,5 +36,9 @@ WORKDIR /home/devops/cloud
 EXPOSE 3006
 EXPOSE 5006
 
-# Default command
-CMD ["bash"]
+# Use environment variables for flexibility
+ENV HOST=0.0.0.0
+ENV PORT=3006
+
+# Start the app
+CMD ["pnpm", "start", "bash"]
