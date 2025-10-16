@@ -1,126 +1,134 @@
-// cortex/todos/todos-controller.ts
+// File: cortex/todos/todos-controller.ts
+// Description: Controller for handling todo HTTP requests
+import { RequestContext } from '../routes/middleware';
+import { TodoService } from './todos-service';
+import { Todo } from './todos-model';
 
-import {RequestContext} from "../routes/middleware";
-import * as todosService from "./todos-service";
-import {BaseController} from "./controller";
-
-
-export class TodosController extends BaseController {
-
-
-    static async GetAll(ctx: RequestContext): Promise<any> {
-        const {tenantId, userId} = await this.validateAuthContext(ctx);
-
-        this.logger.info("Fetching all todos", {
-            method: ctx.method,
-            url: ctx.url,
-            tenantId,
-            userId
-        });
-        const todos = await todosService.getService(tenantId , userId);
-        return {todos, count: todos.length};
+export class TodoController {
+    static async GetTodos(ctx: RequestContext) {
+        const tenantId = ctx.tenantId;
+        const userId = ctx.userId;
+        const todos = await TodoService.getTodos(tenantId, userId);
+        return {
+            status: 200,
+            body: todos
+        };
     }
 
-    static async Create(ctx: RequestContext): Promise<any> {
+    static async GetTodoById(ctx: RequestContext) {
+        const tenantId = ctx.tenantId;
+        const userId = ctx.userId;
+
+        if (!ctx.params || !ctx.params.id) {
+            return {
+                status: 400,
+                body: { error: 'Missing or invalid todo ID' }
+            };
+        }
+
+        const id = parseInt(ctx.params.id);
+        if (isNaN(id)) {
+            return {
+                status: 400,
+                body: { error: 'Invalid todo ID' }
+            };
+        }
         try {
-            const {tenantId, userId} = await this.validateAuthContext(ctx);
-            const input = ctx.body;
-
-            // Add basic input validation
-            if (!input?.text || input.completed === undefined || !input.category || !input.priority) {
-                this.logger.warn("Invalid todo data", { method: ctx.method, url: ctx.url, tenantId, userId });
-                throw new Error("Text, completed, category, and priority are required");
-            }
-
-            this.logger.info("Creating todo", {
-                method: ctx.method,
-                url: ctx.url,
-                tenantId,
-                userId
-            });
-
-            const todo = await todosService.createTodoService(input, tenantId, userId);
-
-            this.logSuccess(ctx, "Todo created", todo.id);
-            return {message: "Todo created", todo};
+            const todo = await TodoService.getTodoById(tenantId, id, userId);
+            return {
+                status: 200,
+                body: todo
+            };
         } catch (error) {
-            this.logger.error("Failed to create todo", {
-                method: ctx.method,
-                url: ctx.url,
-                tenantId: ctx.tenantId,
-                error: (error as Error).message
+            return {
+                status: 404,
+                body: { error: (error as Error).message }
+            };
+        }
+    }
+
+    static async CreateTodo(ctx: RequestContext) {
+        const tenantId = ctx.tenantId;
+        const userId = ctx.userId;
+        try {
+            const todo = await TodoService.createTodo(tenantId, {
+                ...ctx.body,
+                user_id: userId
             });
-            throw error; // Let global error handler manage response
+            return {
+                status: 201,
+                body: todo
+            };
+        } catch (error) {
+            return {
+                status: 400,
+                body: { error: (error as Error).message }
+            };
         }
     }
 
-    static async GetById(ctx: RequestContext): Promise<any> {
-        const {tenantId, userId} = await this.validateAuthContext(ctx);
-        const id = this.extractAndValidateId(ctx.pathname);
+    static async UpdateTodo(ctx: RequestContext) {
+        const tenantId = ctx.tenantId;
+        const userId = ctx.userId;
 
-        this.logger.info("Fetching todo by ID", {
-            method: ctx.method,
-            url: ctx.url,
-            id,
-            tenantId,
-            userId
-        });
-
-        const todo = await todosService.getTodoByIdService(id, tenantId);
-
-        if (!todo) {
-            this.handleNotFound(ctx, id, "Get todo by ID", "Todo");
+        if (!ctx.params || !ctx.params.id) {
+            return {
+                status: 400,
+                body: { error: 'Missing or invalid todo ID' }
+            };
         }
 
-        this.logSuccess(ctx, "Todo fetched", id);
-        return {todo};
+        const id = parseInt(ctx.params.id);
+        if (isNaN(id)) {
+            return {
+                status: 400,
+                body: { error: 'Invalid todo ID' }
+            };
+        }
+        try {
+            const todo = await TodoService.updateTodo(tenantId, id, ctx.body, userId);
+            return {
+                status: 200,
+                body: todo
+            };
+        } catch (error) {
+            const message = (error as Error).message;
+            return {
+                status: message === 'No updates provided' ? 400 : 404,
+                body: { error: message }
+            };
+        }
     }
 
-    static async Update(ctx: RequestContext): Promise<any> {
-        const {tenantId, userId} = await this.validateAuthContext(ctx);
-        const id = this.extractAndValidateId(ctx.pathname);
-        const updates = ctx.body;
+    static async DeleteTodo(ctx: RequestContext) {
+        const tenantId = ctx.tenantId;
+        const userId = ctx.userId;
 
-        this.validateUpdateInput(updates);
-
-        this.logger.info("Updating todo", {
-            method: ctx.method,
-            url: ctx.url,
-            id,
-            tenantId,
-            userId
-        });
-
-        const todo = await todosService.updateTodoService(id, updates, tenantId);
-
-        if (!todo) {
-            this.handleNotFound(ctx, id, "Update todo", "Todo");
+        if (!ctx.params || !ctx.params.id) {
+            return {
+                status: 400,
+                body: { error: 'Missing or invalid todo ID' }
+            };
         }
 
-        this.logSuccess(ctx, "Todo updated", id);
-        return {message: "Todo updated", todo};
-    }
-
-    static async DeleteById(ctx: RequestContext): Promise<any> {
-        const {tenantId, userId} = await this.validateAuthContext(ctx);
-        const id = this.extractAndValidateId(ctx.pathname);
-
-        this.logger.info("Deleting todo", {
-            method: ctx.method,
-            url: ctx.url,
-            id,
-            tenantId,
-            userId
-        });
-
-        const success = await todosService.deleteTodoService(id, tenantId);
-
-        if (!success) {
-            this.handleNotFound(ctx, id, "Delete todo", "Todo");
+        const id = parseInt(ctx.params.id);
+        if (isNaN(id)) {
+            return {
+                status: 400,
+                body: { error: 'Invalid todo ID' }
+            };
         }
-
-        this.logSuccess(ctx, "Todo deleted", id);
-        return {message: "Todo deleted"};
+        try {
+            await TodoService.deleteTodo(tenantId, id, userId);
+            return {
+                status: 200,  // Changed from 204 to include message
+                body: { message: `Todo with ID ${id} deleted successfully` }
+            };
+        } catch (error) {
+            return {
+                status: 404,
+                body: { error: (error as Error).message }
+            };
+        }
     }
-
 }

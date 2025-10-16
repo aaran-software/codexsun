@@ -32,6 +32,21 @@ export function createHttpRouter() {
     return { routeRequest, Route: addRoute };
 }
 
+// function findMatchingRoute(routes: Route[], ctx: RequestContext): Route | undefined {
+//     return routes.find((r) => {
+//         const routeSegments = r.path.split("/");
+//         const pathSegments = ctx.pathname.split("/");
+//         if (r.method !== ctx.method || routeSegments.length !== pathSegments.length) {
+//             return false;
+//         }
+//         for (let i = 0; i < routeSegments.length; i++) {
+//             if (routeSegments[i].startsWith(":")) continue;
+//             if (routeSegments[i] !== pathSegments[i]) return false;
+//         }
+//         return true;
+//     });
+// }
+
 function findMatchingRoute(routes: Route[], ctx: RequestContext): Route | undefined {
     return routes.find((r) => {
         const routeSegments = r.path.split("/");
@@ -39,8 +54,13 @@ function findMatchingRoute(routes: Route[], ctx: RequestContext): Route | undefi
         if (r.method !== ctx.method || routeSegments.length !== pathSegments.length) {
             return false;
         }
+        ctx.params = {};  // Initialize
         for (let i = 0; i < routeSegments.length; i++) {
-            if (routeSegments[i].startsWith(":")) continue;
+            if (routeSegments[i].startsWith(":")) {
+                const paramName = routeSegments[i].slice(1);
+                ctx.params[paramName] = pathSegments[i];
+                continue;
+            }
             if (routeSegments[i] !== pathSegments[i]) return false;
         }
         return true;

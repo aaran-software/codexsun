@@ -15,6 +15,7 @@ export interface RequestContext {
     headers: Record<string, string | string[] | undefined>;
     tenantId: string;
     userId: string;
+    params?: Record<string, string>;
 }
 
 export class Middleware {

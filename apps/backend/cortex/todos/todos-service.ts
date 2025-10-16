@@ -1,38 +1,51 @@
-// cortex/todos/todos-service.ts
-import * as todosRepo from './todos-repos';
-import {Todo} from './todos-model';
+// File: cortex/todos/todos-service.ts
+// Description: Service layer for todo business logic
+import { TodoRepository } from './todos-repos';
+import { Todo } from './todos-model';
 
-export async function createTodoService(input: Todo, tenantId: string, userId: string): Promise<Todo> {
-    if (!input.text || input.completed === undefined || !input.category || !input.priority || !userId) {
-        throw new Error("Missing required fields");
+export class TodoService {
+    static async getTodos(tenantId: string, userId: string): Promise<Todo[]> {
+        return await TodoRepository.getTodos(tenantId, userId);
     }
-    return await todosRepo.createTodo(input, tenantId, userId);
-}
 
-export async function getService(tenantId: string, userId: string): Promise<Todo[]> {
-    return await todosRepo.getTodos(tenantId, userId);
-}
+    static async getTodoById(tenantId: string, id: number, userId: string): Promise<Todo> {
+        const todo = await TodoRepository.getTodoById(tenantId, id, userId);
+        if (!todo) {
+            throw new Error(`Todo with ID ${id} not found`);
+        }
+        return todo;
+    }
 
-export async function getTodoByIdService(id: number, tenantId: string): Promise<Todo | null> {
-    if (!tenantId) {
-        throw new Error('Tenant ID is required');
+    static async createTodo(tenantId: string, todo: Todo): Promise<Todo> {
+        if (!todo.text || !todo.user_id) {
+            throw new Error('Todo text and user_id are required');
+        }
+        return await TodoRepository.createTodo(tenantId, {
+            ...todo,
+            completed: todo.completed ?? false,
+            priority: todo.priority ?? 'medium',
+            position: todo.position ?? 0
+        });
     }
-    return await todosRepo.getTodoById(id, tenantId);
-}
 
-export async function updateTodoService(id: number, updates: Partial<Todo>, tenantId: string): Promise<Todo | null> {
-    if (!tenantId) {
-        throw new Error('Tenant ID is required');
+    static async updateTodo(tenantId: string, id: number, todo: Partial<Todo>, userId: string): Promise<Todo> {
+        if (!Object.keys(todo).length) {
+            throw new Error('No updates provided');
+        }
+        if (todo.priority && !['low', 'medium', 'high'].includes(todo.priority)) {
+            throw new Error('Invalid priority value');
+        }
+        const updatedTodo = await TodoRepository.updateTodo(tenantId, id, todo, userId);
+        if (!updatedTodo) {
+            throw new Error(`Todo with ID ${id} not found`);
+        }
+        return updatedTodo;
     }
-    if (Object.keys(updates).length === 0) {
-        throw new Error('At least one field must be provided for update');
-    }
-    return await todosRepo.updateTodo(id, updates, tenantId);
-}
 
-export async function deleteTodoService(id: number, tenantId: string): Promise<boolean> {
-    if (!tenantId) {
-        throw new Error('Tenant ID is required');
+    static async deleteTodo(tenantId: string, id: number, userId: string): Promise<void> {
+        const deleted = await TodoRepository.deleteTodo(tenantId, id, userId);
+        if (!deleted) {
+            throw new Error(`Todo with ID ${id} not found`);
+        }
     }
-    return await todosRepo.deleteTodo(id, tenantId);
 }
