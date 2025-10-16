@@ -135,7 +135,7 @@ export function getSettings(): AppSettings {
     if (_settings) return _settings;
 
     // Production validation: Ensure sensitive variables
-    if (process.env.NODE_ENV === AppEnv.Production) {
+    if (process.env.APP_ENV === AppEnv.Production) {
         const appKey = process.env.APP_KEY ?? "";
         if (appKey.trim() === "" || appKey === "SomeKey") {
             throw new Error("Production requires secure APP_KEY and DB_PASS");
@@ -162,7 +162,7 @@ export function getSettings(): AppSettings {
         DB_USER: requireStr("DB_USER"),
         DB_PASS: requireStr("DB_PASS"),
         DB_NAME: requireStr("DB_NAME", "test_db"),
-        DB_SSL: parseBool(process.env.DB_SSL, process.env.NODE_ENV === AppEnv.Production),
+        DB_SSL: parseBool(process.env.DB_SSL, process.env.APP_ENV === AppEnv.Production),
 
         // Multi-Tenant Database Settings
         MASTER_DB: requireStr("MASTER_DB", "master_db"),
@@ -172,7 +172,7 @@ export function getSettings(): AppSettings {
         MASTER_DB_USER: requireStr("MASTER_DB_USER"),
         MASTER_DB_PASS: requireStr("MASTER_DB_PASS"),
         MASTER_DB_NAME: requireStr("MASTER_DB_NAME", "master_db"),
-        MASTER_DB_SSL: parseBool(process.env.MASTER_DB_SSL, process.env.NODE_ENV === AppEnv.Production),
+        MASTER_DB_SSL: parseBool(process.env.MASTER_DB_SSL, process.env.APP_ENV === AppEnv.Production),
 
         SANDBOX: parseBool(process.env.SANDBOX, false),
         SANDBOX_DB_DRIVER: requireDriver("SANDBOX_DB_DRIVER", "sqlite"),
@@ -185,7 +185,7 @@ export function getSettings(): AppSettings {
         BLUE_DB_USER: requireStr("BLUE_DB_USER"),
         BLUE_DB_PASS: requireStr("BLUE_DB_PASS"),
         BLUE_DB_NAME: requireStr("BLUE_DB_NAME", "blue_db"),
-        BLUE_DB_SSL: parseBool(process.env.BLUE_DB_SSL, process.env.NODE_ENV === AppEnv.Production),
+        BLUE_DB_SSL: parseBool(process.env.BLUE_DB_SSL, process.env.APP_ENV === AppEnv.Production),
 
         // Security Settings
         APP_KEY: requireStr("APP_KEY"),

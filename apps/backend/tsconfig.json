@@ -1,21 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "ES2020",
+    "module": "commonjs",
     "moduleResolution": "Node",
-    "jsx": "react-jsx",
-    "types": [
-      "jest",
-      "node"
-    ],
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "noEmit": true,
-    "isolatedModules": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
@@ -23,14 +16,15 @@
     "baseUrl": ".",
     "rootDir": "./",
     "outDir": "./dist",
+    "noEmit": false
   },
+  "include": [
+    "cortex/**/*",
+    "index.ts"
+  ],
   "exclude": [
     "node_modules",
-    "dist"
-  ],
-  "include": [
-    "tests",
-    "./**/*",
-    "index.ts", "cortex/**/*"
+    "dist",
+    "tests"
   ]
 }

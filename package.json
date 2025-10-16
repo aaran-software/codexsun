@@ -3,19 +3,21 @@
   "private": true,
   "scripts": {
     "clean": "pnpm store prune && pnpm -r exec -- cmd /C \"del /S /Q node_modules dist build out 2>nul\" && del /Q pnpm-lock.yaml && pnpm install --force",
-    "dev:all": "concurrently \"pnpm --filter frontend web\" \"pnpm --filter backend api\""
+    "dev:all": "concurrently \"pnpm --filter frontend web\" \"pnpm --filter backend api\"",
+    "build:docker": "docker build -t erp-backend ."
   },
-  "packageManager": "pnpm@10.18.1",
+  "packageManager": "pnpm@10.18.3",
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "typescript": "5.9.2"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "typescript": "5.9.2"
+    "tsx": "^4.7.0"
   }
 }
