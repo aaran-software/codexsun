@@ -5,7 +5,6 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { Todo, InteractionState, AddState, categories } from './TodoData';
 import { useAuth } from '@/global/auth/useAuth';
-import { Loader } from '@/components/loader/loader';
 
 // Utility to update todo positions for drag-and-drop ordering.
 const updatePositions = (todos: Todo[]): Todo[] => {
@@ -32,6 +31,7 @@ const normalizeTodo = (todo: any): Todo => ({
 export const useTodoLogic = () => {
     const { token, user, API_URL, loading: authLoading, headers } = useAuth();
     const baseUrl = `${API_URL}/api/todos`;
+    const refreshUrl = `${API_URL}/api/auth/refresh`;
     const [todos, setTodos] = useState<Todo[]>([]);
     const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -72,7 +72,7 @@ export const useTodoLogic = () => {
     // Refresh token if needed
     const refreshToken = async () => {
         try {
-            const res = await fetch(`${API_URL}/api/auth/refresh`, {
+            const res = await fetch(refreshUrl, {
                 method: 'POST',
                 headers: headers(),
             });
@@ -130,7 +130,7 @@ export const useTodoLogic = () => {
         };
 
         fetchTodos();
-    }, [authLoading, token, user?.tenantId, user?.id]);
+    }, [authLoading, token, user?.tenantId, user?.id, baseUrl]);
 
     // Add a new todo
     const addTodo = async () => {
@@ -453,6 +453,6 @@ export const useTodoLogic = () => {
         handleDragOver,
         handleDragEnd,
         error,
-        loading: authLoading || Loader,
+        loading: authLoading,
     };
 };

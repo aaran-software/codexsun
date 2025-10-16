@@ -3,7 +3,8 @@
 import {DbConfig} from "../config/db-config";
 
 export interface AnyDbClient {
-    query<T = any>(text: string, params?: any[]): Promise<QueryResult<T> | any>;
+    query<T = any>(text: string, params?: any[], tenantId?: string): Promise<QueryResult<T> | any>;
+
     end?: () => Promise<void>;
     release?: () => void;
 }

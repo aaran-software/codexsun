@@ -48,4 +48,11 @@ export class TodoService {
             throw new Error(`Todo with ID ${id} not found`);
         }
     }
+
+    static async updateTodoOrder(tenantId: string, orderedIds: number[], userId: string): Promise<void> {
+        if (!orderedIds.length) {
+            throw new Error('No todo IDs provided for reordering');
+        }
+        await TodoRepository.updateTodoOrder(tenantId, orderedIds, userId);
+    }
 }

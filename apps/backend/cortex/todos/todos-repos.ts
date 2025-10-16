@@ -29,7 +29,7 @@ export class TodoRepository {
                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
                 [
                     todo.text,
-                    todo.completed,
+                    todo.completed ? 1 : 0,
                     todo.category,
                     todo.due_date,
                     todo.priority,
@@ -53,7 +53,10 @@ export class TodoRepository {
             if (!newTodo) {
                 throw new Error('Inserted todo not found');
             }
-            return newTodo;
+            return {
+                ...newTodo,
+                completed: !!newTodo.completed
+            };
         }, tenantId);
     }
 
@@ -67,7 +70,7 @@ export class TodoRepository {
         }
         if (todo.completed !== undefined) {
             updates.push('completed = ?');
-            values.push(todo.completed);
+            values.push(todo.completed ? 1 : 0);
         }
         if (todo.category !== undefined) {
             updates.push('category = ?');
@@ -101,10 +104,13 @@ export class TodoRepository {
 
             const selectResult = await client.query<Todo>(
                 `SELECT * FROM todos WHERE id = ? AND user_id = ?`,
-                [id, userId],
-                tenantId
+                [id, userId]
             );
-            return selectResult.rows[0] || null;
+            const updatedTodo = selectResult.rows[0] || null;
+            if (updatedTodo) {
+                updatedTodo.completed = !!updatedTodo.completed;
+            }
+            return updatedTodo;
         }, tenantId);
     }
 
@@ -115,6 +121,18 @@ export class TodoRepository {
                 [id, userId]
             );
             return result.rowCount > 0;
+        }, tenantId);
+    }
+
+    static async updateTodoOrder(tenantId: string, orderedIds: number[], userId: string): Promise<void> {
+        return await withTransaction(async (client) => {
+            for (let position = 1; position <= orderedIds.length; position++) {
+                const id = orderedIds[position - 1];
+                await client.query(
+                    'UPDATE todos SET position = ? WHERE id = ? AND user_id = ?',
+                    [position, id, userId]
+                );
+            }
         }, tenantId);
     }
 }

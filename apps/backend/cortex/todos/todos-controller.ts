@@ -121,12 +121,38 @@ export class TodoController {
         try {
             await TodoService.deleteTodo(tenantId, id, userId);
             return {
-                status: 200,  // Changed from 204 to include message
+                status: 200,
                 body: { message: `Todo with ID ${id} deleted successfully` }
             };
         } catch (error) {
             return {
                 status: 404,
+                body: { error: (error as Error).message }
+            };
+        }
+    }
+
+    static async UpdateTodoOrder(ctx: RequestContext) {
+        const tenantId = ctx.tenantId;
+        const userId = ctx.userId;
+        const { orderedIds } = ctx.body;
+
+        if (!Array.isArray(orderedIds) || orderedIds.some(id => !Number.isInteger(id))) {
+            return {
+                status: 400,
+                body: { error: 'Invalid or missing orderedIds' }
+            };
+        }
+
+        try {
+            await TodoService.updateTodoOrder(tenantId, orderedIds, userId);
+            return {
+                status: 200,
+                body: { message: 'Todo order updated successfully' }
+            };
+        } catch (error) {
+            return {
+                status: 400,
                 body: { error: (error as Error).message }
             };
         }
