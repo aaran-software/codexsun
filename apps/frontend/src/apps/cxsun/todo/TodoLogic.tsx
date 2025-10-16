@@ -1,4 +1,5 @@
-// TodoLogic.tsx - Use headers from useAuth, define baseUrl for CRUD
+// File: TodoLogic.tsx
+// Description: Logic for managing todos in the React frontend, aligned with backend CRUD operations
 import { useState, useEffect } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
@@ -14,16 +15,23 @@ const updatePositions = (todos: Todo[]): Todo[] => {
     }));
 };
 
-// Normalize todo data from API (completed 0/1 to boolean, category fallback)
+// Normalize todo data from API response to match frontend Todo interface
 const normalizeTodo = (todo: any): Todo => ({
-    ...todo,
-    completed: !!todo.completed,
+    id: todo.id,
+    text: todo.text,
+    completed: !!todo.completed, // Convert 0/1 to boolean
     category: categories.includes(todo.category) ? todo.category : 'Other',
+    due_date: todo.due_date || null,
+    priority: todo.priority,
+    user_id: todo.user_id,
+    position: todo.position || 0,
+    created_at: todo.created_at,
+    updated_at: todo.updated_at,
 });
 
 export const useTodoLogic = () => {
-    const { token, user, API_URL, loading: authLoading, headers } = useAuth(); // Use headers from useAuth
-    const baseUrl = `${API_URL}/api/todos`; // Base URL for all todo CRUD operations
+    const { token, user, API_URL, loading: authLoading, headers } = useAuth();
+    const baseUrl = `${API_URL}/api/todos`;
     const [todos, setTodos] = useState<Todo[]>([]);
     const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -48,7 +56,20 @@ export const useTodoLogic = () => {
     const [pageIndex, setPageIndex] = useState(0);
     const [pageSize, setPageSize] = useState(10);
 
-    // Function to refresh token, assuming AuthContext handles refresh or login.
+    // Derived state for filtered and paginated todos
+    const filteredTodos = todos.filter((todo) => {
+        const matchesFilter =
+            filter === 'all' ||
+            (filter === 'completed' && todo.completed) ||
+            (filter === 'active' && !todo.completed);
+        const matchesCategory = categoryFilter === 'all' || todo.category === categoryFilter;
+        return matchesFilter && matchesCategory;
+    });
+
+    const pageCount = Math.ceil(filteredTodos.length / pageSize);
+    const paginatedTodos = filteredTodos.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+
+    // Refresh token if needed
     const refreshToken = async () => {
         try {
             const res = await fetch(`${API_URL}/api/auth/refresh`, {
@@ -70,10 +91,10 @@ export const useTodoLogic = () => {
         }
     };
 
-    // Fetch todos when token is available and not loading.
+    // Fetch todos
     useEffect(() => {
         const fetchTodos = async () => {
-            if (authLoading || !token || !user?.tenantId) return;
+            if (authLoading || !token || !user?.tenantId || !user?.id) return;
 
             try {
                 let res = await fetch(baseUrl, {
@@ -91,11 +112,15 @@ export const useTodoLogic = () => {
                 }
                 if (res.ok) {
                     const data = await res.json();
-                    const normalizedTodos = data.todos.map(normalizeTodo);
+                    if (data.status !== 200) {
+                        setError(`Failed to fetch todos: ${data.body?.error || 'Unknown error'}`);
+                        return;
+                    }
+                    const normalizedTodos = data.body.map(normalizeTodo);
                     setTodos(normalizedTodos.sort((a: Todo, b: Todo) => (a.position ?? Infinity) - (b.position ?? Infinity)));
                     setError(null);
                 } else {
-                    setError('Failed to fetch todos');
+                    setError(`Failed to fetch todos: ${res.statusText}`);
                     console.error('Fetch todos failed:', res.statusText);
                 }
             } catch (error) {
@@ -105,46 +130,28 @@ export const useTodoLogic = () => {
         };
 
         fetchTodos();
-    }, [token, authLoading, user?.tenantId]);
+    }, [authLoading, token, user?.tenantId, user?.id]);
 
-    // Filter todos based on status and category.
-    const filteredTodos = todos
-        .filter((todo) => {
-            if (filter === 'completed') return todo.completed;
-            if (filter === 'active') return !todo.completed;
-            return true;
-        })
-        .filter((todo) => categoryFilter === 'all' || todo.category === categoryFilter);
-
-    // Pagination calculations
-    const pageCount = Math.ceil(filteredTodos.length / pageSize);
-    const paginatedTodos = filteredTodos.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
-
-    // Add a new todo using addState
+    // Add a new todo
     const addTodo = async () => {
-        if (!addState.addText.trim()) {
-            setError('Todo text cannot be empty');
+        if (!addState.addText || authLoading || !token || !user?.tenantId || !user?.id) {
+            setError('Text is required or user not authenticated');
             return;
         }
-        if (!token || !user?.tenantId) {
-            setError('Authentication required');
-            return;
-        }
-
-        const newTodo = {
-            text: addState.addText,
-            category: addState.addCategory,
-            due_date: addState.addDueDate || null,
-            priority: addState.addPriority,
-            tenant_id: user.tenantId,
-            completed: false,
-        };
 
         try {
+            const todoData = {
+                text: addState.addText,
+                completed: false,
+                category: addState.addCategory,
+                due_date: addState.addDueDate || null,
+                priority: addState.addPriority,
+                position: todos.length + 1,
+            };
             let res = await fetch(baseUrl, {
                 method: 'POST',
                 headers: headers(),
-                body: JSON.stringify(newTodo),
+                body: JSON.stringify(todoData),
             });
             if (res.status === 401) {
                 const newToken = await refreshToken();
@@ -155,42 +162,47 @@ export const useTodoLogic = () => {
                 res = await fetch(baseUrl, {
                     method: 'POST',
                     headers: headers(),
-                    body: JSON.stringify(newTodo),
+                    body: JSON.stringify(todoData),
                 });
             }
             if (res.ok) {
                 const data = await res.json();
-                const normalizedData = normalizeTodo(data);
-                setTodos((prev) => updatePositions([...prev, normalizedData]));
-                setTodoListKey((prev) => prev + 1);
-                setError(null);
-                setAddState({ // Reset add form
+                if (data.status !== 201) {
+                    setError(`Failed to create todo: ${data.body?.error || 'Unknown error'}`);
+                    return;
+                }
+                const newTodo = normalizeTodo(data.body);
+                setTodos((prev) => [...prev, newTodo].sort((a, b) => (a.position ?? Infinity) - (b.position ?? Infinity)));
+                setAddState({
                     addText: '',
                     addCategory: 'Work',
                     addDueDate: '',
                     addPriority: 'low',
                 });
+                setError(null);
             } else {
-                setError('Failed to add todo');
-                console.error('Add todo failed:', res.statusText);
+                setError(`Failed to create todo: ${res.statusText}`);
+                console.error('Create todo failed:', res.statusText);
             }
         } catch (error) {
-            setError('Network error while adding todo');
-            console.error('Error adding todo:', error);
+            setError('Network error while creating todo');
+            console.error('Error creating todo:', error);
         }
     };
 
     // Toggle todo completion status
     const toggleTodo = async (id: number) => {
-        if (!token) {
-            setError('Authentication required');
+        const todo = todos.find((t) => t.id === id);
+        if (!todo || authLoading || !token || !user?.tenantId || !user?.id) {
+            setError('Todo not found or user not authenticated');
             return;
         }
 
         try {
-            let res = await fetch(`${baseUrl}/${id}/toggle`, {
-                method: 'PATCH',
+            let res = await fetch(`${baseUrl}/${id}`, {
+                method: 'PUT',
                 headers: headers(),
+                body: JSON.stringify({ completed: !todo.completed }),
             });
             if (res.status === 401) {
                 const newToken = await refreshToken();
@@ -198,34 +210,37 @@ export const useTodoLogic = () => {
                     setError('Authentication failed');
                     return;
                 }
-                res = await fetch(`${baseUrl}/${id}/toggle`, {
-                    method: 'PATCH',
+                res = await fetch(`${baseUrl}/${id}`, {
+                    method: 'PUT',
                     headers: headers(),
+                    body: JSON.stringify({ completed: !todo.completed }),
                 });
             }
             if (res.ok) {
-                const data = await res.json(); // Assuming toggle returns the updated todo
-                const normalizedData = normalizeTodo(data);
+                const data = await res.json();
+                if (data.status !== 200) {
+                    setError(`Failed to update todo: ${data.body?.error || 'Unknown error'}`);
+                    return;
+                }
+                const normalizedData = normalizeTodo(data.body);
                 setTodos((prev) =>
-                    prev.map((todo) =>
-                        todo.id === id ? normalizedData : todo
-                    )
+                    prev.map((t) => (t.id === id ? normalizedData : t))
                 );
                 setError(null);
             } else {
-                setError('Failed to toggle todo');
-                console.error('Toggle todo failed:', res.statusText);
+                setError(`Failed to update todo: ${res.statusText}`);
+                console.error('Update todo failed:', res.statusText);
             }
         } catch (error) {
-            setError('Network error while toggling todo');
-            console.error('Error toggling todo:', error);
+            setError('Network error while updating todo');
+            console.error('Error updating todo:', error);
         }
     };
 
     // Delete a todo
     const deleteTodo = async (id: number) => {
-        if (!token) {
-            setError('Authentication required');
+        if (authLoading || !token || !user?.tenantId || !user?.id) {
+            setError('User not authenticated');
             return;
         }
 
@@ -246,11 +261,15 @@ export const useTodoLogic = () => {
                 });
             }
             if (res.ok) {
-                setTodos((prev) => updatePositions(prev.filter((todo) => todo.id !== id)));
-                setTodoListKey((prev) => prev + 1);
+                const data = await res.json();
+                if (data.status !== 200) {
+                    setError(`Failed to delete todo: ${data.body?.error || 'Unknown error'}`);
+                    return;
+                }
+                setTodos((prev) => prev.filter((todo) => todo.id !== id));
                 setError(null);
             } else {
-                setError('Failed to delete todo');
+                setError(`Failed to delete todo: ${res.statusText}`);
                 console.error('Delete todo failed:', res.statusText);
             }
         } catch (error) {
@@ -260,46 +279,35 @@ export const useTodoLogic = () => {
     };
 
     // Start editing a todo
-    const startEditing = (
-        id: number,
-        text: string,
-        category: string,
-        due_date: string | null,
-        priority: 'low' | 'medium' | 'high'
-    ) => {
+    const startEditing = (id: number, text: string, category: string, due_date: string | null, priority: 'low' | 'medium' | 'high') => {
         setInteractionState({
             mode: 'edit',
             id,
             editText: text,
             editCategory: category,
-            editDueDate: due_date ? new Date(due_date).toISOString().split('T')[0] : '',
+            editDueDate: due_date || '',
             editPriority: priority,
         });
     };
 
     // Save edited todo
     const saveEdit = async (id: number) => {
-        if (!interactionState.editText.trim()) {
-            setError('Todo text cannot be empty');
+        if (authLoading || !token || !user?.tenantId || !user?.id || !interactionState.editText) {
+            setError('Text is required or user not authenticated');
             return;
         }
-        if (!token) {
-            setError('Authentication required');
-            return;
-        }
-
-        const updates = {
-            text: interactionState.editText,
-            category: interactionState.editCategory,
-            due_date: interactionState.editDueDate || null,
-            priority: interactionState.editPriority,
-        };
 
         try {
+            const todoData = {
+                text: interactionState.editText,
+                category: interactionState.editCategory,
+                due_date: interactionState.editDueDate || null,
+                priority: interactionState.editPriority,
+            };
             let res = await fetch(`${baseUrl}/${id}`, {
                 method: 'PUT',
                 headers: headers(),
-                body: JSON.stringify(updates),
+                body: JSON.stringify(todoData),
             });
             if (res.status === 401) {
                 const newToken = await refreshToken();
@@ -310,18 +318,22 @@ export const useTodoLogic = () => {
                 res = await fetch(`${baseUrl}/${id}`, {
                     method: 'PUT',
                     headers: headers(),
-                    body: JSON.stringify(updates),
+                    body: JSON.stringify(todoData),
                 });
             }
             if (res.ok) {
                 const data = await res.json();
-                const normalizedData = normalizeTodo(data);
+                if (data.status !== 200) {
+                    setError(`Failed to update todo: ${data.body?.error || 'Unknown error'}`);
+                    return;
+                }
+                const normalizedData = normalizeTodo(data.body);
                 setTodos((prev) =>
                     prev.map((todo) => (todo.id === id ? normalizedData : todo))
                 );
                 setError(null);
             } else {
-                setError('Failed to update todo');
+                setError(`Failed to update todo: ${res.statusText}`);
                 console.error('Update todo failed:', res.statusText);
             }
         } catch (error) {
@@ -365,7 +377,7 @@ export const useTodoLogic = () => {
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
-        if (over && active.id !== over.id && token) {
+        if (over && active.id !== over.id && token && user?.tenantId && user?.id) {
             const oldIndex = todos.findIndex((todo) => todo.id === active.id);
             const newIndex = todos.findIndex((todo) => todo.id === over.id);
             const reorderedTodos = arrayMove(todos, oldIndex, newIndex);
@@ -390,11 +402,16 @@ export const useTodoLogic = () => {
                     });
                 }
                 if (res.ok) {
+                    const data = await res.json();
+                    if (data.status !== 200) {
+                        setError(`Failed to update todo order: ${data.body?.error || 'Unknown error'}`);
+                        return;
+                    }
                     setTodos(updatePositions(reorderedTodos));
                     setTodoListKey((prev) => prev + 1);
                     setError(null);
                 } else {
-                    setError('Failed to update todo order');
+                    setError(`Failed to update todo order: ${res.statusText}`);
                     console.error('Update order failed:', res.statusText);
                 }
             } catch (error) {
@@ -405,7 +422,6 @@ export const useTodoLogic = () => {
         setActiveTodo(null);
         setOverId(null);
     };
-
 
     return {
         todos,
@@ -437,6 +453,6 @@ export const useTodoLogic = () => {
         handleDragOver,
         handleDragEnd,
         error,
-        loading: authLoading || Loader, // If Loader is global loading
+        loading: authLoading || Loader,
     };
 };
