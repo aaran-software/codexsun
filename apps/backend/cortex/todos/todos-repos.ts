@@ -1,6 +1,6 @@
 // File: cortex/todos/todos-repository.ts
 // Description: Repository for todo database operations
-import { query } from '../db/db';
+import { query, withTransaction } from '../db/db';
 import { Todo } from './todos-model';
 
 export class TodoRepository {
@@ -23,28 +23,38 @@ export class TodoRepository {
     }
 
     static async createTodo(tenantId: string, todo: Todo): Promise<Todo> {
-        const insertResult = await query<Todo>(
-            `INSERT INTO todos (text, completed, category, due_date, priority, user_id, created_at, updated_at, position)
-             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
-            [
-                todo.text,
-                todo.completed,
-                todo.category,
-                todo.due_date,
-                todo.priority,
-                todo.user_id,
-                todo.position || 0
-            ],
-            tenantId
-        );
+        return await withTransaction(async (client) => {
+            const insertResult = await client.query(
+                `INSERT INTO todos (text, completed, category, due_date, priority, user_id, created_at, updated_at, position)
+                 VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`,
+                [
+                    todo.text,
+                    todo.completed,
+                    todo.category,
+                    todo.due_date,
+                    todo.priority,
+                    todo.user_id,
+                    todo.position || 0
+                ]
+            );
 
-        // Retrieve the inserted todo using LAST_INSERT_ID()
-        const selectResult = await query<Todo>(
-            `SELECT * FROM todos WHERE id = LAST_INSERT_ID() AND user_id = ?`,
-            [todo.user_id],
-            tenantId
-        );
-        return selectResult.rows[0];
+            const insertId = insertResult.insertId;
+            if (!insertId) {
+                throw new Error('Failed to retrieve inserted todo ID');
+            }
+
+            const selectResult = await client.query<Todo>(
+                `SELECT * FROM todos WHERE id = ? AND user_id = ?`,
+                [insertId, todo.user_id],
+                tenantId
+            );
+
+            const newTodo = selectResult.rows[0];
+            if (!newTodo) {
+                throw new Error('Inserted todo not found');
+            }
+            return newTodo;
+        }, tenantId);
     }
 
     static async updateTodo(tenantId: string, id: number, todo: Partial<Todo>, userId: string): Promise<Todo | null> {
@@ -83,28 +93,28 @@ export class TodoRepository {
         updates.push('updated_at = CURRENT_TIMESTAMP');
         values.push(id, userId);
 
-        // Execute UPDATE
-        await query(
-            `UPDATE todos SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
-            values,
-            tenantId
-        );
+        return await withTransaction(async (client) => {
+            await client.query(
+                `UPDATE todos SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+                values
+            );
 
-        // Retrieve the updated todo
-        const selectResult = await query<Todo>(
-            `SELECT * FROM todos WHERE id = ? AND user_id = ?`,
-            [id, userId],
-            tenantId
-        );
-        return selectResult.rows[0] || null;
+            const selectResult = await client.query<Todo>(
+                `SELECT * FROM todos WHERE id = ? AND user_id = ?`,
+                [id, userId],
+                tenantId
+            );
+            return selectResult.rows[0] || null;
+        }, tenantId);
     }
 
     static async deleteTodo(tenantId: string, id: number, userId: string): Promise<boolean> {
-        const result = await query(
-            'DELETE FROM todos WHERE id = ? AND user_id = ?',
-            [id, userId],
-            tenantId
-        );
-        return result.rowCount > 0;
+        return await withTransaction(async (client) => {
+            const result = await client.query(
+                'DELETE FROM todos WHERE id = ? AND user_id = ?',
+                [id, userId]
+            );
+            return result.rowCount > 0;
+        }, tenantId);
     }
 }
