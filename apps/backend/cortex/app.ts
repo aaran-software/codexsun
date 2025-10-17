@@ -11,6 +11,7 @@ import { createTodosRouter } from "./todos/todos-routes";
 import { Logger } from "./logger/logger";
 import { Connection } from "./db/connection";
 import { RequestContext } from "./routes/middleware";
+import {createContactsRouter} from "../apps/cxsun/contacts/contact-routes";
 
 interface Dependencies {
     settings: ReturnType<typeof getSettings>;
@@ -19,6 +20,7 @@ interface Dependencies {
     userRouter: ReturnType<typeof createUserRouter>;
     authRouter: ReturnType<typeof createAuthRouter>;
     todosRouter: ReturnType<typeof createTodosRouter>;
+    contactRouter: ReturnType<typeof createContactsRouter>;
 }
 
 export class App {
@@ -34,8 +36,9 @@ export class App {
         const authRouter = createAuthRouter();
         const userRouter = createUserRouter();
         const todosRouter = createTodosRouter();
-        const router = createRouter([WebRouter,authRouter, userRouter, todosRouter]);
-        return { settings, router,WebRouter, userRouter, authRouter, todosRouter };
+        const contactRouter = createContactsRouter();
+        const router = createRouter([WebRouter,authRouter, userRouter, todosRouter,contactRouter]);
+        return { settings, router,WebRouter, userRouter, authRouter, todosRouter,contactRouter };
     }
 
     async initializeDatabase(): Promise<void> {
