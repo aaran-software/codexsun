@@ -11,4 +11,9 @@ export default defineConfig({
             '@': path.resolve(__dirname, './src'),
         },
     },
+    server: {
+        host: '0.0.0.0', // ← required for Docker container to be accessible externally
+        port: 3006,      // ← choose your desired port
+        strictPort: true // ← fails if port is already in use
+    },
 })
