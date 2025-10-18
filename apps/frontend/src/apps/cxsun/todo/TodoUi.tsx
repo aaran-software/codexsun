@@ -83,7 +83,7 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className={cn(
-                    'flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm mb-2',
+                    'flex items-center p-4 bg-background border border-gray-200 rounded-lg shadow-sm mb-2',
                     'hover:shadow-md transition-shadow duration-200'
                 )}
             >
@@ -157,7 +157,7 @@ const SortableTodoItem: React.FC<SortableTodoItemProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={cn(
-                'flex items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm mb-2',
+                'flex items-center p-4 bg-background border border-gray-200 rounded-lg shadow-sm mb-2',
                 'hover:shadow-md transition-shadow duration-200',
                 isDragging && 'opacity-50',
                 isOver && 'border-blue-500 shadow-lg',
