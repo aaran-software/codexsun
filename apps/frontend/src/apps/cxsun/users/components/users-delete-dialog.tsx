@@ -21,7 +21,7 @@ export function UsersDeleteDialog({
                                       currentRow,
                                   }: UserDeleteDialogProps) {
     const [value, setValue] = useState('')
-    const { token, user, API_URL } = useAuth()
+    const { token, user, API_URL,headers } = useAuth()
     const tenantId = user?.tenantId
     const [error, setError] = useState<string | null>(null)
 
@@ -33,11 +33,9 @@ export function UsersDeleteDialog({
         }
 
         try {
-            const response = await fetch(`${API_URL}/api/users/${currentRow.id}?tenant_id=${tenantId}`, {
+            const response = await fetch(`${API_URL}/api/users/${currentRow.id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
+                headers: headers(),
             })
 
             if (response.ok) {

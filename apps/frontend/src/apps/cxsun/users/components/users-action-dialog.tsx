@@ -35,9 +35,9 @@ const roleToId: Record<z.infer<typeof userRoleSchema>, number> = {
     manager: 4,
 }
 
-const getAddUserUrl = (tenantId: string) => `/api/users?tenant_id=${tenantId}`
+const getAddUserUrl = () => `/api/users`
 
-const getEditUserUrl = (id: number, tenantId: string) => `/api/users/${id}?tenant_id=${tenantId}`
+const getEditUserUrl = (id: number) => `/api/users/${id}`
 
 const formSchema = z
     .object({
@@ -79,8 +79,8 @@ type UserActionDialogProps = {
 
 export function UsersActionDialog({ currentRow, open, onOpenChange }: UserActionDialogProps) {
     const isEdit = !!currentRow
-    const { token, user, API_URL } = useAuth()
-    const tenantId = user?.tenantId || user?.tenant_id
+    const { token, user, API_URL,headers } = useAuth()
+    const tenantId = user?.tenantId
     const [isPasswordTouched, setIsPasswordTouched] = useState(false)
     const form = useForm<UserForm>({
         resolver: zodResolver(formSchema),
@@ -88,7 +88,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
             ? {
                 username: currentRow?.username || '',
                 email: currentRow?.email || '',
-                role: currentRow?.role || '' as any,
+                role: currentRow?.role || '' as never,
                 password: '',
                 confirmPassword: '',
                 isEdit,
@@ -96,7 +96,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
             : {
                 username: '',
                 email: '',
-                role: '' as any, // Type assertion for zod union
+                role: '' as never, // Type assertion for zod union
                 password: '',
                 confirmPassword: '',
                 isEdit,
@@ -113,7 +113,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
             return
         }
         try {
-            const endpoint = isEdit ? getEditUserUrl(currentRow!.id, tenantId) : getAddUserUrl(tenantId)
+            const endpoint = isEdit ? getEditUserUrl(currentRow!.id) : getAddUserUrl()
             const method = isEdit ? 'PUT' : 'POST'
             const payload = {
                 username: values.username,
@@ -125,16 +125,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: UserAction
             console.log('Sending request:', {
                 url: `${API_URL}${endpoint}`,
                 method,
-                payload,
-                headers: { 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload),
+                headers:headers()
             })
 
             const response = await fetch(`${API_URL}${endpoint}`, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
+                headers: headers(),
                 body: JSON.stringify(payload),
             })
 
