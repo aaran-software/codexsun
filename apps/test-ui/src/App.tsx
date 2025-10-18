@@ -1,14 +1,15 @@
 import './assets/css/index.css'
+import {DataTableDemo} from "./index";
+
 
 function App() {
 
-  return (
-    <>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    return (
+        <>
+            <DataTableDemo/>
+
+        </>
+    )
 }
 
 export default App

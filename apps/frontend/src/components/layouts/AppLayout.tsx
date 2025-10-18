@@ -49,7 +49,7 @@ const AppLayout: React.FC = () => {
                         </Breadcrumb>
 
                     </header>
-                    <main className="flex-1 p-3 overflow-auto">
+                    <main className="flex-1 px-3 overflow-auto">
                         <Outlet/>
                     </main>
                 </SidebarInset>

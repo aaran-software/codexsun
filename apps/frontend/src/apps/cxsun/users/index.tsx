@@ -19,7 +19,7 @@ function UsersContent() {
     const [data, setData] = useState<User[]>([])
     const [error, setError] = useState<string | null>(null)
     const {open} = useUsers()
-    const {token, user, API_URL} = useAuth()
+    const {token, user, API_URL,headers} = useAuth()
     const prevOpen = useRef(open)
 
 
@@ -31,12 +31,7 @@ function UsersContent() {
 
         try {
             const response = await fetch(`${API_URL}/api/users`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'x-tenant-id': `${user.tenantId}`,
-                    'x-user-id': `${user.id}`,
-                },
+                headers: headers(),
             })
             if (response.ok) {
                 const responseData = await response.json()

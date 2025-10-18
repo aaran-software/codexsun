@@ -66,7 +66,7 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             {/*<Route path="/user" element={<UserPage />} />*/}
 
-              <Route path="/todos" element={<TodoList loading={false} {...todoLogic} />} />
+              <Route path="/todos" element={<TodoList {...todoLogic} />} />
 
             <Route path="/credit" element={<Credit />} />
 
