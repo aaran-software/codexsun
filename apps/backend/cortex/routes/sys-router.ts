@@ -57,12 +57,24 @@ export function createWebRouter() {
 
         try {
             const isHealthy = await healthCheck();
-            return {
-                message: `Database Healthy ${new Date().toISOString()}`,
-                status: isHealthy ? 'OK' : 'ERROR',
-                database: dbConfig.database || 'master_db',
-                timestamp: new Date().toISOString()
-            };
+
+            if (isHealthy) {
+                return {
+                    status: 'OK',
+                    message: 'Database connection successful',
+                    database: dbConfig.database || 'master_db',
+                    timestamp: new Date().toISOString(),
+                    healthy: true
+                };
+            } else {
+                return {
+                    status: 'ERROR',
+                    message: 'Database connection failed',
+                    database: dbConfig.database || 'master_db',
+                    timestamp: new Date().toISOString(),
+                    healthy: false
+                };
+            }
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : 'Unknown error';
             logger.error("Database health check failed", { error: errorMsg, tenantId: ctx.tenantId });
