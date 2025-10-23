@@ -49,32 +49,11 @@ export function createWebRouter() {
         }
     });
 
-    // // Basic task management routes
-    // Route("GET", "/todos", async (ctx: RequestContext) => {
-    //     logger.info("Fetched todos", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
-    //     return { todos };
-    // });
-    //
-    // Route("POST", "/todos", async (ctx: RequestContext) => {
-    //     try {
-    //         const todo = ctx.body;
-    //         if (!todo || typeof todo !== "object") {
-    //             throw new Error("Invalid todo data");
-    //         }
-    //         const newTodo = { id: todos.length + 1, ...todo, createdAt: new Date().toISOString() };
-    //         todos.push(newTodo);
-    //         logger.info("Created todo", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
-    //         return { message: "Todo created", todo: newTodo };
-    //     } catch (err) {
-    //         logger.error("Error creating todo", {
-    //             method: ctx.method,
-    //             url: ctx.url,
-    //             tenantId: ctx.tenantId,
-    //             error: err instanceof Error ? err.message : String(err),
-    //         });
-    //         throw err;
-    //     }
-    // });
+    // Health check route
+    Route("GET", "/hz/db", async (ctx: RequestContext) => {
+        logger.info("Served Database health check", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
+        return { message: `Database Healthy ${new Date().toISOString()}` };
+    });
 
     return { routeRequest, Route };
 }
