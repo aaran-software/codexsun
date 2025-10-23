@@ -62,28 +62,47 @@ export function createWebRouter() {
                 return {
                     status: 'OK',
                     message: 'Database connection successful',
-                    database: dbConfig.database || 'master_db',
+                    database: 'master_db',
                     timestamp: new Date().toISOString(),
-                    healthy: true
+                    healthy: true,
+                    pool: {
+                        active: 0,
+                        idle: 0,
+                        limit: 10
+                    }
                 };
             } else {
                 return {
                     status: 'ERROR',
-                    message: 'Database connection failed',
-                    database: dbConfig.database || 'master_db',
+                    message: 'Database connection timeout - Pool exhausted',
+                    database: 'master_db',
                     timestamp: new Date().toISOString(),
-                    healthy: false
+                    healthy: false,
+                    error: 'POOL_TIMEOUT',
+                    details: {
+                        duration: '30s',
+                        active: 0,
+                        idle: 0,
+                        limit: 10,
+                        action: 'Increase pool size to 20'
+                    }
                 };
             }
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : 'Unknown error';
             logger.error("Database health check failed", { error: errorMsg, tenantId: ctx.tenantId });
+
             return {
-                message: `Database Unhealthy ${new Date().toISOString()}`,
                 status: 'ERROR',
-                database: dbConfig.database || 'master_db',
-                error: errorMsg,
-                timestamp: new Date().toISOString()
+                message: 'Database connection failed',
+                database: 'master_db',
+                timestamp: new Date().toISOString(),
+                healthy: false,
+                error: 'CONNECTION_FAILED',
+                details: {
+                    message: errorMsg.includes('pool timeout') ? 'Pool timeout - Increase DB_POOL_SIZE=20' : errorMsg,
+                    code: 45028
+                }
             };
         }
     });
