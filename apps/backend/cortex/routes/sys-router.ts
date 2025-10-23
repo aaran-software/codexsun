@@ -32,7 +32,7 @@ export function createWebRouter() {
     // Serve favicon.ico from public folder
     Route("GET", "/favicon.ico", async (ctx: RequestContext) => {
         try {
-            const faviconPath = join(__dirname, "..", "public", "favicon.ico");
+            const faviconPath = join(__dirname, "../../", "public", "favicon.ico");
 
             logger.info(faviconPath);
 
