@@ -104,18 +104,54 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
  *
  * @returns True if healthy, false otherwise.
  */
+/**
+ * Checks health of the master database.
+ *
+ * @returns True if healthy, false otherwise.
+ */
 export async function healthCheck(): Promise<boolean> {
     const start = Date.now();
     let client: AnyDbClient | null = null;
+    const dbConfig = getMasterDbConfig();
+
+    // === DEVELOPMENT DEBUG LOGS ===
+    console.info("=== DATABASE CONNECTION DEBUG ===", {
+        DRIVER: dbConfig.driver,
+        HOST: dbConfig.host || 'localhost',
+        PORT: dbConfig.port || 3306,
+        DATABASE: dbConfig.database || 'master_db',
+        USER: dbConfig.user || 'root',
+        PASSWORD: dbConfig.password ? '[MASKED]' : 'NOT_SET',
+        POOL_LIMIT: dbConfig.connectionLimit || 10,
+        ACQUIRE_TIMEOUT: `${(dbConfig.acquireTimeout || 30000) / 1000}s`,
+        IDLE_TIMEOUT: `${(dbConfig.idleTimeout || 60000) / 1000}s`,
+        MYSQL_VERSION: '11.7.2-MariaDB',
+        APP_ENV: process.env.APP_ENV || 'development'
+    });
 
     try {
         client = await Connection.getInstance().getClient(dbConfig.database);
         await client.query('SELECT 1');
-        logHealthCheck('success', { database: dbConfig.database || 'default', duration: Date.now() - start });
+
+        const duration = Date.now() - start;
+        logHealthCheck('success', {
+            database: dbConfig.database || 'default',
+            duration,
+            connected: true,
+            client_type: client.constructor.name
+        });
+
         return true;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown health check error';
-        logHealthCheck('error', { database: dbConfig.database || 'default', duration: Date.now() - start, error: errMsg });
+        const duration = Date.now() - start;
+
+        logHealthCheck('error', {
+            database: dbConfig.database || 'default',
+            duration,
+            error: errMsg
+        });
+
         return false;
     } finally {
         if (client) {

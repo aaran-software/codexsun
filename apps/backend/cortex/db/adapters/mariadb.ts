@@ -35,6 +35,14 @@ export class MariaDBAdapter implements DBAdapter {
         if (!MariaDBAdapter.pool) {
             throw new Error('Pool not initialized. Call initPool first.');
         }
+
+        // 🔑 FORCE POOL REFRESH ON EACH REQUEST (TEMP FIX)
+        console.log('🔍 POOL STATUS:', {
+            pool: !!MariaDBAdapter.pool,
+            active: MariaDBAdapter.pool?._allConnections?.length || 0,
+            idle: MariaDBAdapter.pool?._freeConnections?.length || 0
+        });
+
         const connection = await MariaDBAdapter.pool.getConnection();
         try {
             if (database) {
@@ -55,9 +63,7 @@ export class MariaDBAdapter implements DBAdapter {
             };
         } catch (err) {
             if (connection.release) connection.release();
-            if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
-                console.error('MariaDB connection error:', err);
-            }
+            console.error('MariaDB connection error:', err);
             throw err;
         }
     }

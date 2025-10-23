@@ -34,7 +34,7 @@ export function createWebRouter() {
         try {
             const faviconPath = join(__dirname, "../../", "public", "favicon.ico");
             const favicon = await readFile(faviconPath);
-            logger.info("Served favicon.ico", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
+            // logger.info("Served favicon.ico", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
             return {
                 status: 200,
                 headers: { "Content-Type": "image/x-icon" },
@@ -55,56 +55,14 @@ export function createWebRouter() {
     Route("GET", "/hz/mdb", async (ctx: RequestContext) => {
         logger.info("Served Database health check", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
 
-        try {
-            const isHealthy = await healthCheck();
+        const isHealthy = await healthCheck();
 
-            if (isHealthy) {
-                return {
-                    status: 'OK',
-                    message: 'Database connection successful',
-                    database: 'master_db',
-                    timestamp: new Date().toISOString(),
-                    healthy: true,
-                    pool: {
-                        active: 0,
-                        idle: 0,
-                        limit: 10
-                    }
-                };
-            } else {
-                return {
-                    status: 'ERROR',
-                    message: 'Database connection timeout - Pool exhausted',
-                    database: 'master_db',
-                    timestamp: new Date().toISOString(),
-                    healthy: false,
-                    error: 'POOL_TIMEOUT',
-                    details: {
-                        duration: '30s',
-                        active: 0,
-                        idle: 0,
-                        limit: 10,
-                        action: 'Increase pool size to 20'
-                    }
-                };
-            }
-        } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-            logger.error("Database health check failed", { error: errorMsg, tenantId: ctx.tenantId });
-
-            return {
-                status: 'ERROR',
-                message: 'Database connection failed',
-                database: 'master_db',
-                timestamp: new Date().toISOString(),
-                healthy: false,
-                error: 'CONNECTION_FAILED',
-                details: {
-                    message: errorMsg.includes('pool timeout') ? 'Pool timeout - Increase DB_POOL_SIZE=20' : errorMsg,
-                    code: 45028
-                }
-            };
-        }
+        return {
+            status: isHealthy ? 'OK' : 'ERROR',
+            healthy: isHealthy,
+            database: 'master_db',
+            timestamp: new Date().toISOString()
+        };
     });
 
     return { routeRequest, Route };
