@@ -33,15 +33,12 @@ export function createWebRouter() {
     Route("GET", "/favicon.ico", async (ctx: RequestContext) => {
         try {
             const faviconPath = join(__dirname, "../../", "public", "favicon.ico");
-
-            logger.info(faviconPath);
-
             const favicon = await readFile(faviconPath);
             logger.info("Served favicon.ico", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
             return {
                 status: 200,
                 headers: { "Content-Type": "image/x-icon" },
-                body: favicon,
+                // body: favicon,
             };
         } catch (err) {
             logger.error("Error serving favicon.ico", {
