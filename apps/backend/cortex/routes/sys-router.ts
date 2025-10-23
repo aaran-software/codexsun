@@ -7,9 +7,11 @@ import { Logger } from "../logger/logger";
 import { RequestContext } from "./middleware";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import {healthCheck} from "../db/mdb";
+import {getMasterDbConfig} from "../config/db-config";
 
-// Mock todos data for simulation
-let todos: any[] = [];
+const dbConfig = getMasterDbConfig();
+
 
 export function createWebRouter() {
     const { routeRequest, Route } = createHttpRouter();
@@ -49,10 +51,29 @@ export function createWebRouter() {
         }
     });
 
-    // Health check route
-    Route("GET", "/hz/db", async (ctx: RequestContext) => {
+// Database Connectivity Health check route
+    Route("GET", "/hz/mdb", async (ctx: RequestContext) => {
         logger.info("Served Database health check", { method: ctx.method, url: ctx.url, tenantId: ctx.tenantId });
-        return { message: `Database Healthy ${new Date().toISOString()}` };
+
+        try {
+            const isHealthy = await healthCheck();
+            return {
+                message: `Database Healthy ${new Date().toISOString()}`,
+                status: isHealthy ? 'OK' : 'ERROR',
+                database: dbConfig.database || 'master_db',
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+            logger.error("Database health check failed", { error: errorMsg, tenantId: ctx.tenantId });
+            return {
+                message: `Database Unhealthy ${new Date().toISOString()}`,
+                status: 'ERROR',
+                database: dbConfig.database || 'master_db',
+                error: errorMsg,
+                timestamp: new Date().toISOString()
+            };
+        }
     });
 
     return { routeRequest, Route };
