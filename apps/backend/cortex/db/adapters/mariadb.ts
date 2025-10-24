@@ -36,31 +36,12 @@ export class MariaDBAdapter implements DBAdapter {
         if (!MariaDBAdapter.pool) {
             throw new Error('Pool not initialized. Call initPool first.');
         }
-
-        // 🔑 FORCE POOL REFRESH ON EACH REQUEST (TEMP FIX)
-        console.log('🔍 POOL STATUS:', {
-            pool: !!MariaDBAdapter.pool,
-            active: MariaDBAdapter.pool?._allConnections?.length || 0,
-            idle: MariaDBAdapter.pool?._freeConnections?.length || 0
-        });
-
         const connection = await MariaDBAdapter.pool.getConnection();
-
-        // After pool creation
         try {
-            const conn = await MariaDBAdapter.pool.getConnection();
-            await conn.query('SELECT 1');
-            conn.release();
-            console.log('MariaDB pool warmed up');
-        } catch (err) {
-            console.warn('Pool warm-up failed:', err);
-        }
-
-        try {
-            // if (database) {
-            //     await connection.query(`USE \`${database}\``);
-            // }
-            // await connection.query('SELECT 1'); // Health ping
+            if (database) {
+                await connection.query(`USE \`${database}\``);
+            }
+            await connection.query('SELECT 1'); // Health ping
             return {
                 query: async (text: string, params?: any[]) => {
                     const result = await connection.query(text, params);
@@ -75,7 +56,9 @@ export class MariaDBAdapter implements DBAdapter {
             };
         } catch (err) {
             if (connection.release) connection.release();
-            console.error('MariaDB connection error:', err);
+            if (process.env.NODE_ENV !== 'production' || process.env.SUPPRESS_DB_LOGS !== 'true') {
+                console.error('MariaDB connection error:', err);
+            }
             throw err;
         }
     }
