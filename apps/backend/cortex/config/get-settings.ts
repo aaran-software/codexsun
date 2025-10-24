@@ -38,7 +38,6 @@ export interface AppSettings {
     DB_SSL: boolean;
 
     // Multi-Tenant Database Settings
-    MASTER_DB: string;
     MASTER_DB_DRIVER: Driver;
     MASTER_DB_HOST: string;
     MASTER_DB_PORT: number;
@@ -165,9 +164,8 @@ export function getSettings(): AppSettings {
         DB_SSL: parseBool(process.env.DB_SSL, process.env.APP_ENV === AppEnv.Production),
 
         // Multi-Tenant Database Settings
-        MASTER_DB: requireStr("MASTER_DB", "master_db"),
         MASTER_DB_DRIVER: requireDriver("MASTER_DB_DRIVER", "mariadb"),
-        MASTER_DB_HOST: requireStr("MASTER_DB_HOST", "127.0.0.1"),
+        MASTER_DB_HOST: requireStr("MASTER_DB_HOST", "mariadb"),
         MASTER_DB_PORT: parseIntSafe(process.env.MASTER_DB_PORT, 3306),
         MASTER_DB_USER: requireStr("MASTER_DB_USER"),
         MASTER_DB_PASS: requireStr("MASTER_DB_PASS"),

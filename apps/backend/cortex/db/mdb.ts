@@ -104,11 +104,6 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
  *
  * @returns True if healthy, false otherwise.
  */
-/**
- * Checks health of the master database.
- *
- * @returns True if healthy, false otherwise.
- */
 export async function healthCheck(): Promise<boolean> {
     const start = Date.now();
     let client: AnyDbClient | null = null;
@@ -122,7 +117,7 @@ export async function healthCheck(): Promise<boolean> {
         DATABASE: dbConfig.database || 'master_db',
         USER: dbConfig.user || 'root',
         PASSWORD: dbConfig.password ? '[MASKED]' : 'NOT_SET',
-        POOL_LIMIT: dbConfig.connectionLimit || 10,
+        POOL_LIMIT: dbConfig.connectionLimit || 50,
         ACQUIRE_TIMEOUT: `${(dbConfig.acquireTimeout || 30000) / 1000}s`,
         IDLE_TIMEOUT: `${(dbConfig.idleTimeout || 60000) / 1000}s`,
         MYSQL_VERSION: '11.7.2-MariaDB',
