@@ -112,16 +112,16 @@ export async function healthCheck(): Promise<boolean> {
     // === DEVELOPMENT DEBUG LOGS ===
     console.info("=== DATABASE CONNECTION DEBUG ===", {
         DRIVER: dbConfig.driver,
-        HOST: dbConfig.host || 'localhost',
-        PORT: dbConfig.port || 3306,
-        DATABASE: dbConfig.database || 'master_db',
-        USER: dbConfig.user || 'root',
-        PASSWORD: dbConfig.password ? '[MASKED]' : 'NOT_SET',
-        POOL_LIMIT: dbConfig.connectionLimit || 50,
+        HOST: dbConfig.host,
+        PORT: dbConfig.port,
+        DATABASE: dbConfig.database,
+        USER: dbConfig.user,
+        PASSWORD: dbConfig.password,
+        POOL_LIMIT: dbConfig.connectionLimit,
         ACQUIRE_TIMEOUT: `${(dbConfig.acquireTimeout || 30000) / 1000}s`,
         IDLE_TIMEOUT: `${(dbConfig.idleTimeout || 60000) / 1000}s`,
         MYSQL_VERSION: '11.7.2-MariaDB',
-        APP_ENV: process.env.APP_ENV || 'development'
+        APP_ENV: process.env.APP_ENV
     });
 
     try {
