@@ -16,7 +16,7 @@ export interface QueryResult<T> {
 }
 
 export interface DBAdapter {
-    initPool?: (config: Omit<DbConfig, 'database' | 'driver'>) => Promise<void>;
+    initPool?: (config: Omit<DbConfig, 'driver'>) => Promise<void>;
     closePool?: () => Promise<void>;
     getConnection: (database: string) => Promise<AnyDbClient>;
     connect: (config: DbConfig) => Promise<AnyDbClient>;
