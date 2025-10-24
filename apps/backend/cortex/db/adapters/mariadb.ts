@@ -7,14 +7,13 @@ export class MariaDBAdapter implements DBAdapter {
     private static pool: mariadb.Pool | null = null;
     private static poolsInitialized = false;
 
-    async initPool(config: Omit<DbConfig, 'driver'>): Promise<void> {
+    async initPool(config: Omit<DbConfig, 'database' | 'driver'>): Promise<void> {
         if (MariaDBAdapter.poolsInitialized) return;
         MariaDBAdapter.pool = mariadb.createPool({
             host: config.host,
             port: config.port,
             user: config.user,
             password: config.password,
-            database: config.database,
             connectionLimit: config.connectionLimit || 50,
             acquireTimeout: config.acquireTimeout || 30000,
             idleTimeout: config.idleTimeout || 60000,

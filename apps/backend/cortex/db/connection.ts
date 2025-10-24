@@ -58,7 +58,6 @@ export class Connection {
                     port: this.config.port,
                     user: this.config.user,
                     password: this.config.password,
-                    database: this.config.database,
                     ssl: this.config.ssl,
                     connectionLimit: this.config.connectionLimit,
                     acquireTimeout: this.config.acquireTimeout,

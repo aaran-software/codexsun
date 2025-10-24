@@ -107,46 +107,15 @@ export async function withTransaction<T>(callback: (client: AnyDbClient) => Prom
 export async function healthCheck(): Promise<boolean> {
     const start = Date.now();
     let client: AnyDbClient | null = null;
-    const dbConfig = getMasterDbConfig();
-
-    // === DEVELOPMENT DEBUG LOGS ===
-    console.info("=== DATABASE CONNECTION DEBUG ===", {
-        DRIVER: dbConfig.driver,
-        HOST: dbConfig.host,
-        PORT: dbConfig.port,
-        DATABASE: dbConfig.database,
-        USER: dbConfig.user,
-        PASSWORD: dbConfig.password,
-        POOL_LIMIT: dbConfig.connectionLimit,
-        ACQUIRE_TIMEOUT: `${(dbConfig.acquireTimeout || 30000) / 1000}s`,
-        IDLE_TIMEOUT: `${(dbConfig.idleTimeout || 60000) / 1000}s`,
-        MYSQL_VERSION: '11.7.2-MariaDB',
-        APP_ENV: process.env.APP_ENV
-    });
 
     try {
         client = await Connection.getInstance().getClient(dbConfig.database);
         await client.query('SELECT 1');
-
-        const duration = Date.now() - start;
-        logHealthCheck('success', {
-            database: dbConfig.database || 'default',
-            duration,
-            connected: true,
-            client_type: client.constructor.name
-        });
-
+        logHealthCheck('success', { database: dbConfig.database || 'default', duration: Date.now() - start });
         return true;
     } catch (error) {
         const errMsg = (error as Error).message || 'Unknown health check error';
-        const duration = Date.now() - start;
-
-        logHealthCheck('error', {
-            database: dbConfig.database || 'default',
-            duration,
-            error: errMsg
-        });
-
+        logHealthCheck('error', { database: dbConfig.database || 'default', duration: Date.now() - start, error: errMsg });
         return false;
     } finally {
         if (client) {
