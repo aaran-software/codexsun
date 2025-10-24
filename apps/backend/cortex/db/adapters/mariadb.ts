@@ -7,13 +7,14 @@ export class MariaDBAdapter implements DBAdapter {
     private static pool: mariadb.Pool | null = null;
     private static poolsInitialized = false;
 
-    async initPool(config: Omit<DbConfig, 'database' | 'driver'>): Promise<void> {
+    async initPool(config: Omit<DbConfig, 'driver'>): Promise<void> {
         if (MariaDBAdapter.poolsInitialized) return;
         MariaDBAdapter.pool = mariadb.createPool({
             host: config.host,
             port: config.port,
             user: config.user,
             password: config.password,
+            database: config.database,
             connectionLimit: config.connectionLimit || 50,
             acquireTimeout: config.acquireTimeout || 30000,
             idleTimeout: config.idleTimeout || 60000,
@@ -44,11 +45,22 @@ export class MariaDBAdapter implements DBAdapter {
         });
 
         const connection = await MariaDBAdapter.pool.getConnection();
+
+        // After pool creation
         try {
-            if (database) {
-                await connection.query(`USE \`${database}\``);
-            }
-            await connection.query('SELECT 1'); // Health ping
+            const conn = await MariaDBAdapter.pool.getConnection();
+            await conn.query('SELECT 1');
+            conn.release();
+            console.log('MariaDB pool warmed up');
+        } catch (err) {
+            console.warn('Pool warm-up failed:', err);
+        }
+
+        try {
+            // if (database) {
+            //     await connection.query(`USE \`${database}\``);
+            // }
+            // await connection.query('SELECT 1'); // Health ping
             return {
                 query: async (text: string, params?: any[]) => {
                     const result = await connection.query(text, params);
