@@ -30,7 +30,7 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Tech Media') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -45,5 +45,8 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        @routes
+{{--        <script type="module" src="{{ mix('js/app.js') }}"></script>--}}
+
     </body>
 </html>

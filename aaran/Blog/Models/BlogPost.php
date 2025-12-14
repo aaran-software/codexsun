@@ -2,58 +2,64 @@
 
 namespace Aaran\Blog\Models;
 
-use Aaran\Core\User\Models\User;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class BlogPost extends Model
 {
+    use SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'title', 'slug', 'excerpt', 'body', 'featured_image',
+        'blog_category_id', 'user_id', 'published', 'active_id'
+    ];
 
-    public function scopeActive(Builder $query, $status = '1'): Builder
+    protected $casts = [
+        'published' => 'boolean',
+    ];
+
+    public function category()
     {
-        return $query->where('active_id', $status);
+        return $this->belongsTo(BlogCategory::class, 'blog_category_id');
     }
+
+    public function author()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(BlogTag::class, 'blog_post_tag');
+    }
+
     public function comments()
     {
         return $this->hasMany(BlogComment::class);
     }
-    public function scopeSearchByName(Builder $query, string $search): Builder
-    {
-        return $query->where('vname', 'like', "%$search%");
-    }
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 
-    public function category(): BelongsTo
+    public function images()
     {
-        return $this->belongsTo(BlogCategory::class);
-    }
-
-    public function tag(): BelongsTo
-    {
-        return $this->belongsTo(BlogTag::class);
-    }
-
-    public static function type($id)
-    {
-        return BlogCategory::find($id)->vname ?? 'Unknown';
+        return $this->hasMany(BlogPostImage::class)->orderBy('sort_order');
     }
 
     public function likes()
     {
-        return $this->hasMany(BlogLike::class, 'blog_post_id');
+        return $this->hasMany(BlogLike::class);
     }
 
-    public static function tagName($str)
+    public function getFeaturedImageUrlAttribute(): ?string
     {
-        if ($str) {
-            return BlogTag::find($str)->vname;
-        } else return '';
+        return $this->featured_image ? Storage::disk('public')->url($this->featured_image) : null;
     }
 
+    public function getImagesWithUrl()
+    {
+        return $this->images->map(function ($image) {
+            $image->url = Storage::disk('public')->url($image->image_path);
+            return $image;
+        });
+    }
 }

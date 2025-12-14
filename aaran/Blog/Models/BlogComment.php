@@ -2,33 +2,26 @@
 
 namespace Aaran\Blog\Models;
 
-use Aaran\Core\User\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BlogComment extends Model
 {
-    protected $guarded = [];
+    use SoftDeletes;
 
-    public function scopeActive(Builder $query, $status = '1'): Builder
+    protected $fillable = ['blog_post_id', 'user_id', 'body', 'approved'];
+
+    protected $casts = [
+        'approved' => 'boolean',
+    ];
+
+    public function post()
     {
-        return $query->where('active_id', $status);
+        return $this->belongsTo(BlogPost::class);
     }
 
-    public function scopeSearchByName(Builder $query, string $search): Builder
-    {
-        return $query->where('vname', 'like', "%$search%");
-    }
-
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    public function blogPost()
-    {
-        return $this->belongsTo(BlogPost::class, 'blog_post_id');
-    }
-
 }

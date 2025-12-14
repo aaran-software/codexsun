@@ -7,21 +7,24 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Aaran\Assets\Features\Customise::hasBlog()) {
-
+        if (Aaran\Core\Features\Customise::hasBlog()) {
             Schema::create('blog_posts', function (Blueprint $table) {
                 $table->id();
-                $table->string('vname');
+                $table->string('title');
+                $table->string('slug')->unique();
+                $table->text('excerpt')->nullable();
                 $table->longText('body');
-                $table->longText('image')->nullable();
+                $table->string('featured_image')->nullable();// e.g., primary thumbnail
                 $table->foreignId('blog_category_id')->references('id')->on('blog_categories');
-                $table->foreignId('blog_tag_id')->references('id')->on('blog_tags');
                 $table->foreignId('user_id')->references('id')->on('users');
-                $table->boolean('visibility')->nullable();
-                $table->tinyInteger('active_id')->nullable();
+                $table->boolean('published')->default(true);
+                $table->tinyInteger('active_id')->default(1);
                 $table->timestamps();
-            });
+                $table->softDeletes();
 
+                $table->index('blog_category_id');
+                $table->index('published');
+            });
         }
     }
 
