@@ -15,6 +15,7 @@ return new class extends Migration {
                 $table->string('slug')->unique();
                 $table->tinyInteger('active_id')->default(1);
                 $table->timestamps();
+                $table->softDeletes();
             });
         }
     }

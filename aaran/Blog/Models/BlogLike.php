@@ -3,9 +3,11 @@
 namespace Aaran\Blog\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BlogLike extends Model
 {
+    use SoftDeletes;
 
     public $incrementing = false; // Since composite primary key
 

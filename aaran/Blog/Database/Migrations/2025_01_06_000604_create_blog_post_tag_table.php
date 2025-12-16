@@ -13,6 +13,7 @@ return new class extends Migration {
                 $table->foreignId('blog_post_id')->constrained()->onDelete('cascade');
                 $table->foreignId('blog_tag_id')->constrained()->onDelete('cascade');
                 $table->timestamps();
+                $table->softDeletes();
 
                 $table->unique(['blog_post_id', 'blog_tag_id']);
             });
