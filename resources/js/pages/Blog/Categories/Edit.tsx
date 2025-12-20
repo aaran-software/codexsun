@@ -1,11 +1,104 @@
-import Layout from '@/layouts/app-layout'
-import { Head } from '@inertiajs/react'
+import AppLayout from '@/layouts/app-layout';
+import { Head, useForm } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { route } from 'ziggy-js';
 
-export default function Edit({}) {
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    active_id: number;
+}
+
+interface Props {
+    category: Category;
+}
+
+export default function Edit({ category }: Props) {
+    const { data, setData, put, processing, errors } = useForm({
+        name: category.name,
+        slug: category.slug,
+        active_id: category.active_id,
+    });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        put(route('blog.categories.update', category.id));
+    };
+
     return (
-        <Layout>
-            <Head title="Edit"/>
-edit
-        </Layout>
-    )
+        <AppLayout title="Edit Category">
+            <Head title={`Edit ${category.name}`} />
+
+            <div className="mx-auto max-w-xl px-4 py-8">
+                <h1 className="mb-6 text-lg sm:text-2xl font-bold">
+                    Edit Blog Category
+                </h1>
+
+                <form onSubmit={submit} className="space-y-5">
+                    <div>
+                        <Label>Name</Label>
+                        <Input
+                            value={data.name}
+                            onChange={(e) =>
+                                setData('name', e.target.value)
+                            }
+                        />
+                        {errors.name && (
+                            <p className="text-sm text-red-500">
+                                {errors.name}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <Label>Slug</Label>
+                        <Input
+                            value={data.slug}
+                            onChange={(e) =>
+                                setData('slug', e.target.value)
+                            }
+                        />
+                        {errors.slug && (
+                            <p className="text-sm text-red-500">
+                                {errors.slug}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <Label>Status</Label>
+                        <Select
+                            value={data.active_id}
+                            onValueChange={(v) => setData('active_id', Number(v))}
+
+                        >
+                            <SelectTrigger className={"bg-background text-foreground"}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1">Active</SelectItem>
+                                <SelectItem value="0">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button disabled={processing}>
+                            Update Category
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </AppLayout>
+    );
 }

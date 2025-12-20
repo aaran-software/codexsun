@@ -139,13 +139,16 @@ export default function Index() {
     const clearFilter = useCallback(
         (key: 'search' | 'active_filter') => {
             const updates: Partial<typeof localFilters> = {};
+
             if (key === 'search') updates.search = '';
             if (key === 'active_filter') updates.active_filter = 'all';
+
             setLocalFilters((prev) => ({ ...prev, ...updates }));
             navigate(updates);
         },
         [navigate],
     );
+
 
     const activeFilterBadges = useMemo(() => {
         const badges: JSX.Element[] = [];
@@ -200,7 +203,7 @@ export default function Index() {
                 <div className="flex flex-col gap-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold">Blog Categories</h1>
+                        <h1 className="text-lg sm:text-2xl font-bold">Blog Categories</h1>
 
                         <div className="flex items-center gap-3">
                             {trashedCount > 0 && (
@@ -245,9 +248,12 @@ export default function Index() {
                                         search: e.target.value,
                                     }))
                                 }
-                                onKeyDown={(e) =>
-                                    e.key === 'Enter' && navigate()
-                                }
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        navigate({ search: localFilters.search });
+                                    }
+                                }}
+
                                 className="pl-10"
                             />
                         </div>
@@ -255,14 +261,18 @@ export default function Index() {
                         <select
                             value={localFilters.active_filter}
                             onChange={(e) => {
+                                const value = e.target.value as 'all' | 'active' | 'inactive';
+
                                 setLocalFilters((prev) => ({
                                     ...prev,
-                                    active_filter: e.target.value as any,
+                                    active_filter: value,
                                 }));
-                                navigate();
+
+                                navigate({ active_filter: value });
                             }}
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-48"
+                            className={"bg-background text-foreground"}
                         >
+
                             <option value="all">All Status</option>
                             <option value="active">Active Only</option>
                             <option value="inactive">Inactive Only</option>
@@ -271,12 +281,16 @@ export default function Index() {
                         <select
                             value={localFilters.per_page}
                             onChange={(e) => {
+                                const value = e.target.value;
+
                                 setLocalFilters((prev) => ({
                                     ...prev,
-                                    per_page: e.target.value,
+                                    per_page: value,
                                 }));
-                                navigate();
+
+                                navigate({ per_page: value });
                             }}
+
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-32"
                         >
                             <option value="25">25</option>
@@ -285,7 +299,19 @@ export default function Index() {
                         </select>
 
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={navigate}>
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    navigate({
+                                        search: localFilters.search,
+                                        active_filter:
+                                            localFilters.active_filter === 'all'
+                                                ? undefined
+                                                : localFilters.active_filter,
+                                        per_page: localFilters.per_page,
+                                    })
+                                }
+                            >
                                 <Search className="mr-2 h-4 w-4" />
                                 Apply
                             </Button>
@@ -309,7 +335,8 @@ export default function Index() {
 
                     {/* Data Table - Guaranteed valid pagination object */}
                     <DataTable
-                        data={safePagination}
+                        data={safePagination.data}
+                        pagination={safePagination}
                         onPageChange={(page) => navigate({ page })}
                         emptyMessage="No categories found."
                         isLoading={isNavigating}

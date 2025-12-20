@@ -49,6 +49,7 @@ import { NavSpares } from '@/components/nav-spares';
 import { index as todos } from '@/routes/todos';
 import {index as enquiries } from '@/routes/enquiries/index';
 import { index as calls } from '@/routes/calls/index';
+import { index as categories } from '@/routes/blog/categories';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -56,8 +57,8 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Enquiry',
-        href: enquiries(),
+        title: 'Category',
+        href: categories(),
         icon: UserRoundSearch,
     },
     {

@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @routes
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -45,7 +46,6 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
-        @routes
 {{--        <script type="module" src="{{ mix('js/app.js') }}"></script>--}}
 
     </body>
