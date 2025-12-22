@@ -194,7 +194,7 @@ export default function Index() {
                             setPublished(e.target.value);
                             navigate({ published: e.target.value });
                         }}
-                        className="rounded-md border px-3 py-2 text-sm"
+                        className="rounded-md border px-3 py-2 text-sm bg-background text-foreground"
                     >
                         <option value="">All Status</option>
                         <option value="1">Published</option>
