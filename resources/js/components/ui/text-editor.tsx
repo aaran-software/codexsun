@@ -2,35 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 import ImageBtn from "../ImageBtn";
 
-// export default function restoreCursorPosition(container: HTMLElement, offset: number) {
-//     const selection = window.getSelection();
-//     if (!selection) return;
-//
-//     let currentOffset = 0;
-//     let nodeStack: Node[] = [container]; // ✅ Fix here
-//     let node: Node | undefined;
-//
-//     while ((node = nodeStack.pop())) {
-//         if (node.nodeType === Node.TEXT_NODE) {
-//             const textLength = node.textContent?.length ?? 0;
-//
-//             if (currentOffset + textLength >= offset) {
-//                 const range = document.createRange();
-//                 const position = offset - currentOffset;
-//                 range.setStart(node, position);
-//                 range.collapse(true);
-//                 selection.removeAllRanges();
-//                 selection.addRange(range);
-//                 return;
-//             }
-//             currentOffset += textLength;
-//         } else {
-//             let i = node.childNodes.length;
-//             while (i--) nodeStack.push(node.childNodes[i]); // this is now valid
-//         }
-//     }
-// }
-
 export default function TextEditor({
                                        id,
                                        value,
@@ -64,12 +35,17 @@ export default function TextEditor({
     const [isFormatting, setIsFormatting] = useState(false);
 
     useEffect(() => {
-        if (isFormatting) return; // 🚫 DO NOT sync while formatting
+        const editor = editorRef.current;
+        if (!editor) return;
 
-        if (editorRef.current && value !== editorRef.current.innerHTML) {
-            editorRef.current.innerHTML = value || "";
+        // Only inject initial value once
+        if (editor.innerHTML === "") {
+            editor.innerHTML = value || "";
+            setRawMessage(value || "");
         }
-    }, [value, isFormatting]);
+    }, [editorRef.current]);
+
+
 
 
     // Function to apply formatting
@@ -371,52 +347,15 @@ export default function TextEditor({
         editorRef.current.appendChild(mediaElement);
         editorRef.current.appendChild(document.createElement("br"));
     };
-    const handleContentChange = useCallback(() => {
-        if (isFormatting) return;   // ⛔ STOP AUTOSAVE during bold/italic clicks
+    const handleContentChange = () => {
+        if (isFormatting) return;
+        if (!editorRef.current) return;
 
-        const editor = editorRef.current;
-        if (!editor) return;
+        const html = editorRef.current.innerHTML;
+        setRawMessage(html);
+        onChange(html);
+    };
 
-        const selection = window.getSelection();
-        if (!selection || !selection.rangeCount) return;
-
-        const range = selection.getRangeAt(0);
-
-        // Prevent inserting multiple markers accidentally
-        const existingMarker = editor.querySelector("#caret-marker");
-        if (existingMarker) existingMarker.remove();
-
-        // Insert temporary caret marker
-        const marker = document.createElement("span");
-        marker.id = "caret-marker";
-        marker.textContent = "\u200B";
-        range.insertNode(marker);
-
-        // Save updated HTML
-        const newHtml = editor.innerHTML;
-        if (newHtml !== rawMessage) {
-            setRawMessage(newHtml);
-            onChange(newHtml);
-            localStorage.setItem(`editor-draft-${id}`, newHtml);
-        }
-
-        // Restore caret position after DOM update
-        requestAnimationFrame(() => {
-            const markerEl = editor.querySelector("#caret-marker");
-            if (!markerEl) return;
-
-            const newRange = document.createRange();
-            newRange.setStartAfter(markerEl);
-            newRange.collapse(true);
-
-            const sel = window.getSelection();
-            sel?.removeAllRanges();
-            sel?.addRange(newRange);
-
-            // Cleanup
-            markerEl.remove();
-        });
-    }, [rawMessage, id, onChange, isFormatting]);
 
 
     useEffect(() => {
@@ -605,21 +544,6 @@ export default function TextEditor({
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    // Autosave and draft
-    useEffect(() => {
-        const saved = localStorage.getItem(`editor-draft-${id}`);
-
-        if (saved && editorRef.current) {
-            setRawMessage(saved);
-            editorRef.current.innerHTML = saved;
-            onChange(saved); // sync to parent
-        }
-    }, [id]);
-
-    useEffect(() => {
-        localStorage.setItem("editor-draft", rawMessage);
-    }, [rawMessage]);
 
     const toggleLineThrough = () => {
         const selection = window.getSelection();
