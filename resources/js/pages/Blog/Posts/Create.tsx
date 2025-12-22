@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft } from 'lucide-react';
+import TextEditor from '@/components/ui/text-editor';
 
 interface Category {
     id: number;
@@ -110,11 +111,18 @@ export default function Create() {
                             {/* Body */}
                             <div className="space-y-2">
                                 <Label>Content</Label>
-                                <Textarea
-                                    rows={10}
+                                {/*<Textarea*/}
+                                {/*    rows={10}*/}
+                                {/*    value={data.body}*/}
+                                {/*    onChange={(e) => setData('body', e.target.value)}*/}
+                                {/*/>*/}
+
+                                <TextEditor
+                                    id="blog-body"
                                     value={data.body}
-                                    onChange={(e) => setData('body', e.target.value)}
+                                    onChange={(html) => setData('body', html)}
                                 />
+
                                 {errors.body && (
                                     <p className="text-sm text-destructive">{errors.body}</p>
                                 )}

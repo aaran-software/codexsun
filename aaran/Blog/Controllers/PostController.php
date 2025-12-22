@@ -26,21 +26,26 @@ class PostController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        // 📄 Per page
+        // ✅ Active / Inactive (Published / Draft)
+        if ($request->filled('published')) {
+            $query->where('published', (bool) $request->published);
+        }
+
         $perPage = $request->get('per_page', 15);
 
         $posts = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Blog/Posts/Index', [
             'posts' => $posts,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'published']),
             'can' => [
-                'create' => true, // later replace with policy
+                'create' => true,
                 'delete' => true,
             ],
             'trashedCount' => BlogPost::onlyTrashed()->count(),
         ]);
     }
+
 
 
     public function create(): Response
@@ -113,20 +118,30 @@ class PostController extends Controller
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
+        // 📸 Image update
         if ($request->hasFile('featured_image')) {
-            // Delete old image if exists
             if ($post->featured_image) {
                 Storage::disk('public')->delete($post->featured_image);
             }
-            $data['featured_image'] = $request->file('featured_image')->store('blog/featured', 'public');
+
+            $data['featured_image'] = $request->file('featured_image')
+                ->store('blog/featured', 'public');
         }
 
+        // 🔗 Update slug
         $data['slug'] = Str::slug($data['title']);
 
+        // ✅ THIS WAS MISSING
+        $post->update($data);
+
+        // 🔖 Sync tags
         $post->tags()->sync($request->tags ?? []);
 
-        return redirect()->route('blog.posts.index')->with('success', 'Blog post updated successfully.');
+        return redirect()
+            ->route('blog.posts.index')
+            ->with('success', 'Blog post updated successfully.');
     }
+
 
     public function destroy(BlogPost $post): RedirectResponse
     {
