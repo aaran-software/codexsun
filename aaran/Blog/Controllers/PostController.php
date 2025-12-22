@@ -16,16 +16,32 @@ use Inertia\Response;
 
 class PostController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $posts = BlogPost::with(['category', 'author', 'tags'])
-            ->orderByDesc('created_at')
-            ->paginate(15);
+        $query = BlogPost::with(['category', 'author'])
+            ->orderByDesc('created_at');
+
+        // 🔍 Search
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // 📄 Per page
+        $perPage = $request->get('per_page', 15);
+
+        $posts = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('Blog/Posts/Index', [
-            'posts' => $posts
+            'posts' => $posts,
+            'filters' => $request->only(['search', 'per_page']),
+            'can' => [
+                'create' => true, // later replace with policy
+                'delete' => true,
+            ],
+            'trashedCount' => BlogPost::onlyTrashed()->count(),
         ]);
     }
+
 
     public function create(): Response
     {

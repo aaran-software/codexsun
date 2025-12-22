@@ -47,9 +47,9 @@ import {index as out_service_centers } from '@/routes/out_service_centers/index'
 import { NavService } from '@/components/nav-service';
 import { NavSpares } from '@/components/nav-spares';
 import { index as todos } from '@/routes/todos';
-import {index as enquiries } from '@/routes/enquiries/index';
 import { index as calls } from '@/routes/calls/index';
 import { index as categories } from '@/routes/blog/categories';
+import { index as tags } from '@/routes/blog/tags';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -59,6 +59,16 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Category',
         href: categories(),
+        icon: UserRoundSearch,
+    },
+    {
+        title: 'Tags',
+        href: tags(),
+        icon: UserRoundSearch,
+    },
+    {
+        title: 'Posts',
+        href: blogs(),
         icon: UserRoundSearch,
     },
     {

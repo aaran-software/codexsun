@@ -14,7 +14,6 @@ return new class extends Migration {
                 $table->boolean('liked')->default(true);
                 $table->timestamps();
                 $table->softDeletes();
-
                 $table->primary(['blog_post_id', 'user_id']); // Enforces one like per user per post
                 $table->index('blog_post_id');
             });

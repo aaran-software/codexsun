@@ -1,4 +1,4 @@
-// resources/js/Pages/Blog/Blogs/Index.tsx (Ultimate Stable Version - No More Crashes)
+// resources/js/Pages/Blog/Tags/Index.tsx (Ultimate Stable Version - No More Crashes)
 
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -27,7 +27,7 @@ import {
 import type { BreadcrumbItem } from '@/types';
 import { Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 
-interface Blog {
+interface BlogTag {
     id: number;
     name: string;
     slug: string;
@@ -47,8 +47,8 @@ interface Pagination<T> {
     per_page: number;
 }
 
-interface BlogPageProps {
-    blogs?: Pagination<Blog>; // Optional to handle missing prop
+interface BlogTagsPageProps {
+    tags?: Pagination<BlogTag>; // Optional to handle missing prop
     filters?: {
         search?: string;
         active_filter?: 'all' | 'active' | 'inactive';
@@ -60,25 +60,25 @@ interface BlogPageProps {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Blog', href: route('blogs.index') },
-    { title: 'Blogs', href: route('blogs.index') },
+    { title: 'Blog', href: route('blog.tags.index') },
+    { title: 'Tags', href: route('blog.tags.index') },
 ];
 
 export default function Index() {
-    const pageProps = usePage<BlogPageProps>().props;
+    const pageProps = usePage<BlogTagsPageProps>().props;
 
     // Ultimate safe defaults - guarantees pagination object always exists
-    const safePagination: Pagination<Blog> = {
-        data: pageProps.blogs?.data ?? [],
-        current_page: pageProps.blogs?.current_page ?? 1,
-        last_page: pageProps.blogs?.last_page ?? 1,
-        from: pageProps.blogs?.from ?? null,
-        to: pageProps.blogs?.to ?? null,
-        total: pageProps.blogs?.total ?? 0,
-        per_page: pageProps.blogs?.per_page ?? 50,
+    const safePagination: Pagination<BlogTag> = {
+        data: pageProps.tags?.data ?? [],
+        current_page: pageProps.tags?.current_page ?? 1,
+        last_page: pageProps.tags?.last_page ?? 1,
+        from: pageProps.tags?.from ?? null,
+        to: pageProps.tags?.to ?? null,
+        total: pageProps.tags?.total ?? 0,
+        per_page: pageProps.tags?.per_page ?? 50,
     };
 
-    const blogs = safePagination.data;
+    const tags = safePagination.data;
 
     const filters = pageProps.filters ?? {};
     const can = pageProps.can ?? { create: false, delete: false };
@@ -116,7 +116,7 @@ export default function Index() {
         (extra = {}) => {
             setIsNavigating(true);
             router.get(
-                route('blogs.index'),
+                route('blog.tags.index'),
                 { ...buildPayload(), ...extra },
                 {
                     preserveState: true,
@@ -130,7 +130,7 @@ export default function Index() {
 
     const handleReset = () => {
         router.get(
-            route('blogs.index'),
+            route('blog.tags.index'),
             {},
             { preserveState: true, replace: true },
         );
@@ -196,14 +196,14 @@ export default function Index() {
     }, [localFilters.search, localFilters.active_filter, clearFilter]);
 
     return (
-        <AppLayout title="Blog" breadcrumb={breadcrumbs}>
-            <Head title="Blog" />
+        <AppLayout title="Blog Tags" breadcrumb={breadcrumbs}>
+            <Head title="Blog Tags" />
 
             <div className="container mx-auto px-4 py-6">
                 <div className="flex flex-col gap-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                        <h1 className="text-lg sm:text-2xl font-bold">Blog</h1>
+                        <h1 className="text-lg sm:text-2xl font-bold">Blog Tags</h1>
 
                         <div className="flex items-center gap-3">
                             {trashedCount > 0 && (
@@ -216,17 +216,17 @@ export default function Index() {
                                             </Badge>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Deleted Blogs</p>
+                                            <p>Deleted tags</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
 
                             {can.create && (
-                                <Link href={route('blogs.create')}>
+                                <Link href={route('blog.tags.create')}>
                                     <Button>
                                         <Plus className="mr-2 h-4 w-4" />
-                                        New Blog
+                                        New Tag
                                     </Button>
                                 </Link>
                             )}
@@ -338,7 +338,7 @@ export default function Index() {
                         data={safePagination.data}
                         pagination={safePagination}
                         onPageChange={(page) => navigate({ page })}
-                        emptyMessage="No Blogs found."
+                        emptyMessage="No tags found."
                         isLoading={isNavigating}
                     >
                         <TableHeader>
@@ -357,82 +357,82 @@ export default function Index() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {blogs.map((blog) => (
+                            {tags.map((tag) => (
                                 <TableRow
-                                    key={blog.id}
+                                    key={tag.id}
                                     className={
-                                        blog.deleted_at ? 'opacity-60' : ''
+                                        tag.deleted_at ? 'opacity-60' : ''
                                     }
                                 >
                                     <TableCell className="font-medium">
-                                        {blog.deleted_at ? (
+                                        {tag.deleted_at ? (
                                             <span className="text-muted-foreground">
-                                                {blog.name}
+                                                {tag.name}
                                             </span>
                                         ) : (
                                             <Link
                                                 href={route(
-                                                    'blog.blogs.edit',
-                                                    blog.id,
+                                                    'blog.tags.edit',
+                                                    tag.id,
                                                 )}
                                                 className="hover:text-primary hover:underline"
                                             >
-                                                {blog.name}
+                                                {tag.name}
                                             </Link>
                                         )}
                                     </TableCell>
                                     <TableCell className="font-mono text-sm text-muted-foreground">
-                                        {blog.slug}
+                                        {tag.slug}
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <Badge
                                             variant={
-                                                blog.active_id === 1
+                                                tag.active_id === 1
                                                     ? 'default'
                                                     : 'secondary'
                                             }
                                             className={
-                                                blog.active_id === 1
+                                                tag.active_id === 1
                                                     ? 'bg-green-500 text-white'
                                                     : ''
                                             }
                                         >
-                                            {blog.active_id === 1
+                                            {tag.active_id === 1
                                                 ? 'Active'
                                                 : 'Inactive'}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        {blog.posts_count ?? '—'}
+                                        {tag.posts_count ?? '—'}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <TableActions
-                                            id={blog.id}
+                                            id={tag.id}
                                             editRoute={route(
-                                                'blogs.edit',
-                                                blog.id,
+                                                'blog.tags.edit',
+                                                tag.id,
                                             )}
                                             deleteRoute={route(
-                                                'blogs.destroy',
-                                                blog.id,
+                                                'blog.tags.destroy',
+                                                tag.id,
                                             )}
                                             restoreRoute={
-                                                blog.deleted_at
+                                                tag.deleted_at
                                                     ? route(
-                                                        'blogs.restore',
-                                                        blog.id,
-                                                    )
+                                                          'blog.tags.restore',
+                                                          tag.id,
+                                                      )
                                                     : undefined
                                             }
                                             forceDeleteRoute={
-                                                blog.deleted_at
+                                                tag.deleted_at
                                                     ? route(
-                                                        'blogs.forceDelete',
-                                                        blog.id,
-                                                    )
+                                                          'blog.tags.forceDelete',
+                                                          tag.id,
+                                                      )
                                                     : undefined
                                             }
-                                            isDeleted={!!blog.deleted_at}
+                                            isDeleted={!!tag.deleted_at}
                                             canDelete={can.delete}
                                         />
                                     </TableCell>

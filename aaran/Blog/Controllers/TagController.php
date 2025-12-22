@@ -17,9 +17,16 @@ class TagController extends Controller
         $tags = BlogTag::orderBy('name')->paginate(20);
 
         return Inertia::render('Blog/Tags/Index', [
-            'tags' => $tags
+            'tags' => $tags,
+            'can' => [
+                'create' => true,
+                'delete' => true,
+            ],
+            'trashedCount' => BlogTag::onlyTrashed()->count(),
+            'filters' => request()->only(['search', 'active_filter', 'per_page']),
         ]);
     }
+
 
     public function create(): Response
     {
@@ -52,11 +59,14 @@ class TagController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:blog_tags,name,' . $tag->id,
+            'active_id' => 'required|integer|in:0,1',
         ]);
+
 
         $tag->update([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
+            'active_id' => (int) $request['active_id'],
         ]);
 
         return redirect()->route('blog.tags.index')->with('success', 'Tag updated successfully.');
