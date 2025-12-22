@@ -50,6 +50,7 @@ import { index as todos } from '@/routes/todos';
 import { index as calls } from '@/routes/calls/index';
 import { index as categories } from '@/routes/blog/categories';
 import { index as tags } from '@/routes/blog/tags';
+import { index as posts } from '@/routes/blog/posts';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -68,7 +69,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Posts',
-        href: blogs(),
+        href: posts(),
         icon: UserRoundSearch,
     },
     {
