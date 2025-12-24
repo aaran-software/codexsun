@@ -54,8 +54,8 @@ interface PageProps {
 
 export default function Post() {
     const { post, recentPosts } = usePage<PageProps>().props;
-    const handleBlog = (slug: string) => {
-        router.visit(`/blog/web/articles/${slug}`);
+    const handleBlog = (id: string) => {
+        router.visit(`/blog/web/articles/${id}`);
     };
 
     const timelineComments = (post.comments ?? []).map((comment) => ({
@@ -259,7 +259,7 @@ export default function Post() {
                         <div
                             key={recent.id}
                             className="grid grid-cols-[30%_70%] gap-4 items-start cursor-pointer"
-                            onClick={() => handleBlog(recent.slug)}
+                            onClick={() => handleBlog(recent.id)}
                         >
                             {recent.featured_image && (
                                 <img
