@@ -86,7 +86,14 @@ class PostController extends Controller
             'published' => 'boolean',
             'images' => 'required|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'meta_keywords' => ['nullable', 'array'],
+            'meta_keywords.*' => ['string', 'max:50'],
         ]);
+        $data['meta_keywords'] = collect($data['meta_keywords'] ?? [])
+            ->map(fn ($k) => trim(strtolower($k)))
+            ->unique()
+            ->values()
+            ->toArray();
 
         // ✅ Create post ONCE
         $post = BlogPost::create([
@@ -96,6 +103,7 @@ class PostController extends Controller
             'blog_category_id' => $data['blog_category_id'],
             'slug' => $this->generateUniqueSlug($data['title']),
             'user_id' => Auth::id(),
+            'meta_keywords' => $data['meta_keywords'] ?? [],
             'published' => $data['published'] ?? true,
             'active_id' => 1,
         ]);
@@ -156,7 +164,15 @@ class PostController extends Controller
             'published' => 'boolean',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'meta_keywords' => ['nullable', 'array'],
+            'meta_keywords.*' => ['string', 'max:50'],
         ]);
+
+        $data['meta_keywords'] = collect($data['meta_keywords'] ?? [])
+            ->map(fn ($k) => trim(strtolower($k)))
+            ->unique()
+            ->values()
+            ->toArray();
 
         // Update post fields
         $post->update([
@@ -166,6 +182,7 @@ class PostController extends Controller
             'blog_category_id' => $data['blog_category_id'],
             'published' => $data['published'] ?? $post->published,
             'slug' => Str::slug($data['title']),
+            'meta_keywords' => $data['meta_keywords'] ?? $post->meta_keywords,
         ]);
 
         // 📸 Add NEW images (do NOT delete old ones)

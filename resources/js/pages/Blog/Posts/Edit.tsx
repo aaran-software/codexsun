@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import TextEditor from '@/components/ui/text-editor';
+import { useState } from 'react';
 
 /* ------------------------------------------------------------------ */
 /* TYPES */
@@ -46,6 +47,7 @@ interface BlogPost {
     blog_category_id: number;
     featured_image: string | null;
     published: boolean;
+    meta_keywords:string[],
     images: PostImage[];
 }
 
@@ -69,9 +71,11 @@ export default function Edit() {
         blog_category_id: post.blog_category_id,
         tags: selectedTags ?? [],
         images: [] as File[],
+        meta_keywords: post.meta_keywords ?? [],
         published: post.published,
         _method: 'put', // 👈 IMPORTANT for PATCH
     });
+    const [keywordInput, setKeywordInput] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,6 +84,28 @@ export default function Edit() {
             forceFormData: true, // 👈 REQUIRED for image update
         });
     };
+
+    const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== 'Enter') return;
+
+        e.preventDefault();
+
+        const value = keywordInput.trim().toLowerCase();
+
+        if (!value) return;
+        if (data.meta_keywords.includes(value)) return;
+
+        setData('meta_keywords', [...data.meta_keywords, value]);
+        setKeywordInput('');
+    };
+
+    const removeKeyword = (keyword: string) => {
+        setData(
+            'meta_keywords',
+            data.meta_keywords.filter(k => k !== keyword)
+        );
+    };
+
 
     return (
         <AppLayout title="Edit Blog Post">
@@ -294,6 +320,46 @@ export default function Edit() {
 
                             </div>
 
+                            {/* SEO Meta Keywords */}
+                            <div className="space-y-2">
+                                <Label>SEO Meta Keywords</Label>
+
+                                <Input
+                                    placeholder="Type keyword and press Enter"
+                                    value={keywordInput}
+                                    onChange={(e) => setKeywordInput(e.target.value)}
+                                    onKeyDown={handleKeywordKeyDown}
+                                />
+
+                                {/* Pills */}
+                                {data.meta_keywords.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {data.meta_keywords.map((keyword, index) => (
+                                            <span
+                                                key={index}
+                                                className="flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                                            >
+                    {keyword}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeKeyword(keyword)}
+                                                    className="ml-1 text-primary hover:text-destructive"
+                                                >
+                        ×
+                    </button>
+                </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <p className="text-xs text-muted-foreground">
+                                    Press <strong>Enter</strong> to add multiple keywords
+                                </p>
+
+                                {errors.meta_keywords && (
+                                    <p className="text-sm text-destructive">{errors.meta_keywords}</p>
+                                )}
+                            </div>
                             {/* Published */}
                             <div className="flex items-center gap-3">
                                 <Switch

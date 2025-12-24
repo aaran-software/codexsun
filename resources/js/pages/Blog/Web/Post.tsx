@@ -1,6 +1,6 @@
 'use client';
 
-import { router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import WebMenu from '@/pages/web/web-menu';
 import FooterSection from '@/pages/web/home/FooterSection';
 import Timeline from '@/components/blog/timeline';
@@ -29,7 +29,7 @@ export type BlogPost = {
     created_at: string;
     comments?: BlogComment[];
     images?: BlogImage[];
-
+    meta_keywords?: string[];
     likes_count?: number;
     liked?: boolean;
 
@@ -53,7 +53,12 @@ interface PageProps {
 }
 
 export default function Post() {
-    const { post, recentPosts } = usePage<PageProps>().props;
+    const { post, recentPosts, auth } = usePage<PageProps & {
+        auth: {
+            user: any | null;
+        };
+    }>().props;
+
     const handleBlog = (id: string) => {
         router.visit(`/blog/web/articles/${id}`);
     };
@@ -86,9 +91,71 @@ export default function Post() {
         );
     };
 
-
     return (
         <>
+            <Head>
+                {/* Title */}
+                <title>{post.title}</title>
+
+                {/* Meta Description */}
+                <meta
+                    name="description"
+                    content={
+                        post.body
+                            .replace(/<[^>]+>/g, '') // remove HTML
+                            .slice(0, 160)
+                    }
+                />
+
+                {/* Keywords */}
+                {post.meta_keywords && post.meta_keywords.length > 0 && (
+                    <meta
+                        name="keywords"
+                        content={post.meta_keywords.join(', ')}
+                    />
+                )}
+
+
+                {/* Author */}
+                {post.author?.name && (
+                    <meta name="author" content={post.author.name} />
+                )}
+
+                {/* Open Graph (Facebook, WhatsApp, LinkedIn) */}
+                <meta property="og:title" content={post.title} />
+                <meta
+                    property="og:description"
+                    content={post.body.replace(/<[^>]+>/g, '').slice(0, 160)}
+                />
+                <meta
+                    property="og:image"
+                    content={
+                        post.featured_image
+                            ? `${window.location.origin}/storage/${post.featured_image}`
+                            : ''
+                    }
+                />
+                <meta
+                    property="og:url"
+                    content={window.location.href}
+                />
+                <meta property="og:type" content="article" />
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={post.title} />
+                <meta
+                    name="twitter:description"
+                    content={post.body.replace(/<[^>]+>/g, '').slice(0, 160)}
+                />
+                {post.featured_image && (
+                    <meta
+                        name="twitter:image"
+                        content={`${window.location.origin}/storage/${post.featured_image}`}
+                    />
+                )}
+            </Head>
+
             <WebMenu />
             <section className="relative overflow-hidden py-36">
                 {/* Background gradient */}
@@ -221,30 +288,51 @@ export default function Post() {
                     ></div>
                     {/* Comments */}
 
-                        <div className="mt-10 border-t pt-6 space-y-6">
-                            <h2 className="text-2xl font-semibold">Comments</h2>
-                            <Timeline
-                                items={timelineComments}
-                                showCollapse
-                                isHeading={false}
-                            />
+                    {/* Comments */}
+                    <div className="mt-10 border-t pt-6 space-y-6">
+                        <h2 className="text-2xl font-semibold">Comments</h2>
 
+                        {/* Existing comments always visible */}
+                        <Timeline
+                            items={timelineComments}
+                            showCollapse
+                            isHeading={false}
+                        />
+
+                        {/* Comment form only for logged-in users */}
+                        {auth?.user ? (
                             <div className="mt-6 space-y-3">
-                <textarea
-                    className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    rows={4}
-                    placeholder="Write a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                />
+            <textarea
+                className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={4}
+                placeholder="Write a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+            />
+
                                 <button
                                     onClick={handleSubmit}
-                                    className=" bg-primary text-primary-foreground border px-5 py-2 rounded-md transition cursor-pointer"
+                                    className="bg-primary text-primary-foreground px-5 py-2 rounded-md transition"
                                 >
                                     Submit Comment
                                 </button>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="mt-6 rounded-lg border bg-muted p-4 text-sm">
+                                <p className="text-muted-foreground">
+                                    Please{' '}
+                                    <a
+                                        href={route('login')}
+                                        className="font-semibold text-primary underline"
+                                    >
+                                        login
+                                    </a>{' '}
+                                    to write a comment.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
 
                     <div className="mb-20"></div>
                 </div>

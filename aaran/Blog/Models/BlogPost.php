@@ -13,11 +13,12 @@ class BlogPost extends Model
 
     protected $fillable = [
         'title', 'slug', 'excerpt', 'body', 'featured_image',
-        'blog_category_id', 'user_id', 'published', 'active_id'
+        'blog_category_id', 'user_id','meta_keywords', 'published', 'active_id'
     ];
 
     protected $casts = [
         'published' => 'boolean',
+        'meta_keywords' => 'array',
     ];
 
     public function category()

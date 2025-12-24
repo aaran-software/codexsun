@@ -17,6 +17,7 @@ return new class extends Migration {
                 $table->string('featured_image')->nullable();// e.g., primary thumbnail
                 $table->foreignId('blog_category_id')->references('id')->on('blog_categories');
                 $table->foreignId('user_id')->references('id')->on('users');
+                $table->json('meta_keywords')->nullable();
                 $table->boolean('published')->default(true);
                 $table->tinyInteger('active_id')->default(1);
                 $table->timestamps();
