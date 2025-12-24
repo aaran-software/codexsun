@@ -5,6 +5,7 @@ import WebMenu from '@/pages/web/web-menu';
 import FooterSection from '@/pages/web/home/FooterSection';
 import Timeline from '@/components/blog/timeline';
 import { useState } from 'react';
+import { route } from 'ziggy-js';
 
 type BlogPost = {
     id: number;
@@ -12,7 +13,7 @@ type BlogPost = {
     body: string;
     featured_image?: string;
     created_at: string;
-
+    comments?: BlogComment[];
     category?: {
         name: string;
     };
@@ -38,24 +39,34 @@ export default function Post() {
         router.visit(`/blog/web/articles/${slug}`);
     };
 
-    const [comments, setComments] = useState(initialComments);
+    const timelineComments = (post.comments ?? []).map((comment) => ({
+        date: comment.created_at,
+        title: 'Comment',
+        description: comment.body,
+        user: {
+            name: comment.user.name,
+            initial: comment.user.name.charAt(0).toUpperCase(),
+        },
+        icon: <span>💬</span>,
+    }));
+
     const [newComment, setNewComment] = useState("");
     const handleSubmit = () => {
         if (!newComment.trim()) return;
-        const newEntry = {
-            date: new Date().toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-            }),
-            title: "New Comment",
-            description: newComment,
-            user: { name: "Muthu", initial: "M" },
-            icon: <span>💬</span>,
-        };
-        setComments([newEntry, ...comments]);
-        setNewComment("");
+
+        router.post(
+            route('blog.comments.store'),
+            {
+                blog_post_id: post.id,
+                body: newComment,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => setNewComment(''),
+            }
+        );
     };
+
 
     return (
         <>
@@ -112,7 +123,12 @@ export default function Post() {
 
                         <div className="mt-10 border-t pt-6 space-y-6">
                             <h2 className="text-2xl font-semibold">Comments</h2>
-                            <Timeline items={comments} showCollapse isHeading={false} />
+                            <Timeline
+                                items={timelineComments}
+                                showCollapse
+                                isHeading={false}
+                            />
+
                             <div className="mt-6 space-y-3">
                 <textarea
                     className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -123,7 +139,7 @@ export default function Post() {
                 />
                                 <button
                                     onClick={handleSubmit}
-                                    className="bg-primary text-foreground px-5 py-2 rounded-md hover:bg-primary/90 transition"
+                                    className=" bg-primary text-primary-foreground border px-5 py-2 rounded-md transition cursor-pointer"
                                 >
                                     Submit Comment
                                 </button>

@@ -183,26 +183,26 @@ class PostController extends Controller
 
     public function post(BlogPost $post): \Inertia\Response
     {
+        $post->load([
+            'category',
+            'author',
+            'tags',
+            'comments.user',
+        ]);
+
         $recentPosts = BlogPost::where('id', '!=', $post->id)
             ->where('published', true)
             ->latest()
             ->limit(5)
-            ->get([
-                'id',
-                'title',
-                'slug',
-                'featured_image',
-                'created_at',
-                'user_id'
-            ]);
-
-        $recentPosts->load('author');
+            ->get(['id', 'title', 'slug', 'featured_image', 'created_at', 'user_id'])
+            ->load('author');
 
         return Inertia::render('Blog/Web/Post', [
-            'post' => $post->load(['category', 'author', 'tags']),
+            'post' => $post,
             'recentPosts' => $recentPosts,
         ]);
     }
+
 
 
 }

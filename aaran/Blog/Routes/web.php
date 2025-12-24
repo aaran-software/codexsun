@@ -1,6 +1,7 @@
 <?php
 
 use Aaran\Blog\Controllers\CategoryController;
+use Aaran\Blog\Controllers\CommentController;
 use Aaran\Blog\Controllers\PostController;
 use Aaran\Blog\Controllers\PostImageController;
 use Aaran\Blog\Controllers\TagController;
@@ -73,4 +74,6 @@ Route::get('blog/web/articles', [PostController::class, 'articles'])
 Route::get('blog/web/articles/{post}', [PostController::class, 'post'])
     ->name('blog.web.post');
 
+Route::post('blog/comments', [CommentController::class, 'store'])
+    ->name('blog.comments.store');
 
