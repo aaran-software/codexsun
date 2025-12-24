@@ -131,7 +131,7 @@ class PostController extends Controller
 
     public function edit(BlogPost $post): Response
     {
-        $post->load('tags');
+        $post->load(['tags', 'images']);
 
         $categories = BlogCategory::where('active_id', 1)->orderBy('name')->get();
         $tags = BlogTag::where('active_id', 1)->orderBy('name')->get();
@@ -154,32 +154,47 @@ class PostController extends Controller
             'tags' => 'array',
             'tags.*' => 'exists:blog_tags,id',
             'published' => 'boolean',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // 📸 Image update
-        if ($request->hasFile('featured_image')) {
-            if ($post->featured_image) {
-                Storage::disk('public')->delete($post->featured_image);
-            }
+        // Update post fields
+        $post->update([
+            'title' => $data['title'],
+            'excerpt' => $data['excerpt'] ?? null,
+            'body' => $data['body'],
+            'blog_category_id' => $data['blog_category_id'],
+            'published' => $data['published'] ?? $post->published,
+            'slug' => Str::slug($data['title']),
+        ]);
 
-            $data['featured_image'] = $request->file('featured_image')
-                ->store('blog/featured', 'public');
+        // 📸 Add NEW images (do NOT delete old ones)
+        if ($request->hasFile('images')) {
+            $startIndex = $post->images()->count();
+
+            foreach ($request->file('images') as $index => $image) {
+                $path = $image->store('blog/images', 'public');
+
+                // ⭐ If no featured image, set first uploaded
+                if (!$post->featured_image) {
+                    $post->update(['featured_image' => $path]);
+                }
+
+                $post->images()->create([
+                    'image_path' => $path,
+                    'sort_order' => $startIndex + $index,
+                ]);
+            }
         }
 
-        // 🔗 Update slug
-        $data['slug'] = Str::slug($data['title']);
-
-        // ✅ THIS WAS MISSING
-        $post->update($data);
-
-        // 🔖 Sync tags
+        // Sync tags
         $post->tags()->sync($request->tags ?? []);
 
         return redirect()
             ->route('blog.posts.index')
             ->with('success', 'Blog post updated successfully.');
     }
+
 
 
     public function destroy(BlogPost $post): RedirectResponse

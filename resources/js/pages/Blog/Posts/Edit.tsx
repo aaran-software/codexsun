@@ -33,6 +33,11 @@ interface Tag {
     name: string;
 }
 
+interface PostImage {
+    id: number;
+    image_path: string;
+}
+
 interface BlogPost {
     id: number;
     title: string;
@@ -41,6 +46,7 @@ interface BlogPost {
     blog_category_id: number;
     featured_image: string | null;
     published: boolean;
+    images: PostImage[];
 }
 
 interface PageProps {
@@ -62,7 +68,7 @@ export default function Edit() {
         body: post.body,
         blog_category_id: post.blog_category_id,
         tags: selectedTags ?? [],
-        featured_image: null as File | null,
+        images: [] as File[],
         published: post.published,
         _method: 'put', // 👈 IMPORTANT for PATCH
     });
@@ -237,21 +243,34 @@ export default function Edit() {
                                 <Input
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     onChange={(e) =>
                                         setData(
-                                            'featured_image',
-                                            e.target.files
-                                                ? e.target.files[0]
-                                                : null,
+                                            'images',
+                                            e.target.files ? Array.from(e.target.files) : []
                                         )
                                     }
                                 />
+
                                 {post.featured_image && (
                                     <p className="text-xs text-muted-foreground">
                                         Current image will be replaced if you
                                         upload a new one.
                                     </p>
                                 )}
+                                {post.images?.length > 0 && (
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {post.images.map((img) => (
+                                            <img
+                                                key={img.id}
+                                                src={`/storage/${img.image_path}`}
+                                                className="h-24 w-full object-cover rounded"
+                                                alt="Post image"
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
                             </div>
 
                             {/* Published */}
