@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 
 // UI
@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import TextEditor from '@/components/ui/text-editor';
 
 /* ------------------------------------------------------------------ */
@@ -259,17 +259,38 @@ export default function Edit() {
                                     </p>
                                 )}
                                 {post.images?.length > 0 && (
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-4 gap-4">
                                         {post.images.map((img) => (
-                                            <img
+                                            <div
                                                 key={img.id}
-                                                src={`/storage/${img.image_path}`}
-                                                className="h-24 w-full object-cover rounded"
-                                                alt="Post image"
-                                            />
+                                                className="relative group rounded overflow-hidden"
+                                            >
+                                                <img
+                                                    src={`/storage/${img.image_path}`}
+                                                    className="h-28 w-full object-cover"
+                                                />
+
+                                                {/* Delete Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (confirm('Delete this image?')) {
+                                                            router.delete(
+                                                                route('blog.posts.images.destroy', img.id),
+                                                                { preserveScroll: true }
+                                                            );
+                                                        }
+                                                    }}
+
+                                                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
+
 
                             </div>
 

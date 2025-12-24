@@ -5,6 +5,7 @@ namespace Aaran\Blog\Controllers;
 use Aaran\Blog\Models\BlogPost;
 use Aaran\Blog\Models\BlogPostImage;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -33,12 +34,20 @@ class PostImageController extends Controller
         return back()->with('success', 'Gallery images uploaded successfully.');
     }
 
-    public function destroy(BlogPostImage $image)
+    public function destroy(BlogPostImage $image): RedirectResponse
     {
+        // Delete file
         Storage::disk('public')->delete($image->image_path);
+
+        // If featured image → clear it
+        if ($image->post->featured_image === $image->image_path) {
+            $image->post->update(['featured_image' => null]);
+        }
+
+        // Delete record
         $image->delete();
 
-        return back()->with('success', 'Image deleted successfully.');
+        return back()->with('success', 'Image removed');
     }
 
     public function reorder(Request $request, BlogPost $post)

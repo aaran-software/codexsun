@@ -59,6 +59,7 @@ class BlogPost extends Model
             ->where('liked', true)
             ->exists();
     }
+
     public function getFeaturedImageUrlAttribute(): ?string
     {
         return $this->featured_image ? Storage::disk('public')->url($this->featured_image) : null;

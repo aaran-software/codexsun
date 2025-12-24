@@ -80,3 +80,8 @@ Route::post('blog/comments', [CommentController::class, 'store'])
 Route::post('blog/posts/like', [\Aaran\Blog\Controllers\BlogLikeController::class, 'toggle'])
     ->name('blog.posts.like')
     ->middleware('auth');
+
+Route::delete(
+    '/blog/posts/images/{image}',
+    [\Aaran\Blog\Controllers\PostImageController::class, 'destroy']
+)->name('blog.posts.images.destroy');
