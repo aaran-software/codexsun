@@ -1,8 +1,10 @@
 'use client';
 
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import WebMenu from '@/pages/web/web-menu';
 import FooterSection from '@/pages/web/home/FooterSection';
+import Timeline from '@/components/blog/timeline';
+import { useState } from 'react';
 
 type BlogPost = {
     id: number;
@@ -27,10 +29,33 @@ type BlogPost = {
 
 interface PageProps {
     post: BlogPost;
+    recentPosts: BlogPost[];
 }
 
 export default function Post() {
-    const { post } = usePage<PageProps>().props;
+    const { post, recentPosts } = usePage<PageProps>().props;
+    const handleBlog = (slug: string) => {
+        router.visit(`/blog/web/articles/${slug}`);
+    };
+
+    const [comments, setComments] = useState(initialComments);
+    const [newComment, setNewComment] = useState("");
+    const handleSubmit = () => {
+        if (!newComment.trim()) return;
+        const newEntry = {
+            date: new Date().toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            }),
+            title: "New Comment",
+            description: newComment,
+            user: { name: "Muthu", initial: "M" },
+            icon: <span>💬</span>,
+        };
+        setComments([newEntry, ...comments]);
+        setNewComment("");
+    };
 
     return (
         <>
@@ -80,80 +105,75 @@ export default function Post() {
 
                     {/* Content HTML */}
                     <div
-                        className="
-              mt-5 prose prose-neutral dark:prose-invert max-w-none
-              [&>h2]:text-4xl [&>h2]:font-bold [&>h2]:mt-6 [&>h2]:mb-3 [&>h2]:py-2 [&>h2]:text-gradient
-              [&>h3]:text-2xl [&>h3]:font-semibold [&>h3]:mt-5 [&>h3]:mb-3 [&>h3]:py-2 [&>h3]:text-foreground/90
-              [&>h4]:text-lg [&>h4]:font-medium [&>h4]:mt-4 [&>h4]:mb-2 [&>h4]:py-2 [&>h4]:text-foreground/85
-              [&>p]:text-base [&>p]:leading-relaxed [&>p]:mb-4 [&>p]:py-2 [&>p]:text-foreground/80
-              [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-4 [&>ul]:py-2
-              [&>li]:text-base [&>li]:leading-relaxed [&>li]:mb-1 [&>li]:py-1 [&>li]:text-foreground/80
-              [&>a]:text-primary [&>a]:underline hover:[&>a]:text-primary/80
-              [&>strong]:text-foreground [&>strong]:font-semibold
-              [&>img]:rounded-xl [&>img]:my-4 [&>img]:shadow-md
-              [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
-              [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-foreground/70 [&_blockquote]:my-4
-            "
+                        className=""
                         dangerouslySetInnerHTML={{ __html: post.body }}
-                    />
-
+                    ></div>
                     {/* Comments */}
 
-                {/*    {post.isComment && (*/}
-                {/*        <div className="mt-10 border-t pt-6 space-y-6">*/}
-                {/*            <h2 className="text-2xl font-semibold">Comments</h2>*/}
-                {/*            <Timeline items={comments} showCollapse isHeading={false} />*/}
-                {/*            <div className="mt-6 space-y-3">*/}
-                {/*<textarea*/}
-                {/*    className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"*/}
-                {/*    rows={4}*/}
-                {/*    placeholder="Write a comment..."*/}
-                {/*    value={newComment}*/}
-                {/*    onChange={(e) => setNewComment(e.target.value)}*/}
-                {/*/>*/}
-                {/*                <button*/}
-                {/*                    onClick={handleSubmit}*/}
-                {/*                    className="bg-primary text-foreground px-5 py-2 rounded-md hover:bg-primary/90 transition"*/}
-                {/*                >*/}
-                {/*                    Submit Comment*/}
-                {/*                </button>*/}
-                {/*            </div>*/}
-                {/*        </div>*/}
-                {/*    )}*/}
+                        <div className="mt-10 border-t pt-6 space-y-6">
+                            <h2 className="text-2xl font-semibold">Comments</h2>
+                            <Timeline items={comments} showCollapse isHeading={false} />
+                            <div className="mt-6 space-y-3">
+                <textarea
+                    className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    rows={4}
+                    placeholder="Write a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                />
+                                <button
+                                    onClick={handleSubmit}
+                                    className="bg-primary text-foreground px-5 py-2 rounded-md hover:bg-primary/90 transition"
+                                >
+                                    Submit Comment
+                                </button>
+                            </div>
+                        </div>
 
                     <div className="mb-20"></div>
                 </div>
 
                 {/* Sidebar */}
                 <div className="flex flex-col gap-6 h-full pr-1 pb-20 md:pb-0 lg:border-l lg:pl-5 border-ring/30">
-                    {/*<GlobalSearch onSearchApi={""} onNavigate={() => {}} />*/}
-                    <h2 className="text-xl font-semibold border-b pb-2">Recent Posts</h2>
-                    {/*{recentBlogs.map((recent, idx) => (*/}
-                    {/*    <div*/}
-                    {/*        key={idx}*/}
-                    {/*        className="grid grid-cols-[30%_70%] gap-4 items-start cursor-pointer"*/}
-                    {/*        onClick={() => {*/}
-                    {/*            handleBlog(recent.id);*/}
-                    {/*        }}*/}
-                    {/*    >*/}
-                    {/*        <img*/}
-                    {/*            src={recent.PostImage}*/}
-                    {/*            alt="Thumbnail"*/}
-                    {/*            className="rounded-md w-full h-full object-scale-down "*/}
-                    {/*        />*/}
-                    {/*        <div className="flex flex-col">*/}
-                    {/*            <h3 className="text-lg font-bold text-foreground line-clamp-2">*/}
-                    {/*                {recent.title}*/}
-                    {/*            </h3>*/}
-                    {/*            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">*/}
-                    {/*                <p className="font-medium">{recent.author.name}</p>*/}
-                    {/*                <span>•</span>*/}
-                    {/*                <p>{recent.date}</p>*/}
-                    {/*            </div>*/}
-                    {/*        </div>*/}
-                    {/*    </div>*/}
-                    {/*))}*/}
+                    <h2 className="text-xl font-semibold border-b pb-2">
+                        Recent Posts
+                    </h2>
+
+                    {recentPosts.map((recent) => (
+                        <div
+                            key={recent.id}
+                            className="grid grid-cols-[30%_70%] gap-4 items-start cursor-pointer"
+                            onClick={() => handleBlog(recent.slug)}
+                        >
+                            {recent.featured_image && (
+                                <img
+                                    src={`/storage/${recent.featured_image}`}
+                                    alt={recent.title}
+                                    className="rounded-md w-full h-full object-cover"
+                                />
+                            )}
+
+                            <div className="flex flex-col">
+                                <h3 className="text-lg font-bold line-clamp-2">
+                                    {recent.title}
+                                </h3>
+
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                    {recent.author && (
+                                        <p className="font-medium">
+                                            {recent.author.name}
+                                        </p>
+                                    )}
+                                    <span>•</span>
+                                    <p>
+                                        {new Date(recent.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
+
             </div>
             <FooterSection />
         </>
