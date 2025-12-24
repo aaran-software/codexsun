@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { route } from 'ziggy-js';
 
-interface Category {
+interface Tag {
     id: number;
     name: string;
     slug: string;
@@ -20,28 +20,28 @@ interface Category {
 }
 
 interface Props {
-    category: Category;
+    tag: Tag;
 }
 
-export default function Edit({ category }: Props) {
+export default function Edit({ tag }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        name: category.name,
-        slug: category.slug,
-        active_id: category.active_id,
+        name: tag.name,
+        slug: tag.slug,
+        active_id: tag.active_id,
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(route('blog.categories.update', category.id));
+        put(route('blog.tags.update', tag.id));
     };
 
     return (
-        <AppLayout title="Edit Category">
-            <Head title={`Edit ${category.name}`} />
+        <AppLayout title="Edit Tag">
+            <Head title={`Edit ${tag.name}`} />
 
             <div className="mx-auto max-w-xl px-4 py-8">
                 <h1 className="mb-6 text-lg sm:text-2xl font-bold">
-                    Edit Blog Category
+                    Edit Blog Tag
                 </h1>
 
                 <form onSubmit={submit} className="space-y-5">
@@ -94,7 +94,7 @@ export default function Edit({ category }: Props) {
 
                     <div className="flex justify-end">
                         <Button disabled={processing}>
-                            Update Category
+                            Update Tag
                         </Button>
                     </div>
                 </form>

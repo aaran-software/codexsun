@@ -4,13 +4,24 @@ import { route } from 'ziggy-js';
 
 // UI
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft } from 'lucide-react';
+import TextEditor from '@/components/ui/text-editor';
+
+/* ------------------------------------------------------------------ */
+/* TYPES */
+/* ------------------------------------------------------------------ */
 
 interface Category {
     id: number;
@@ -22,46 +33,59 @@ interface Tag {
     name: string;
 }
 
-interface PageProps {
-    categories: Category[];
-    tags: Tag[];
+interface BlogPost {
+    id: number;
+    title: string;
+    excerpt: string | null;
+    body: string;
+    blog_category_id: number;
+    featured_image: string | null;
+    published: boolean;
 }
 
-export default function Create() {
-    const page = usePage<PageProps>();
+interface PageProps {
+    post: BlogPost;
+    categories: Category[];
+    tags: Tag[];
+    selectedTags: number[];
+}
 
-    const categories = page.props.categories ?? [];
-    const tags = page.props.tags ?? [];
+/* ------------------------------------------------------------------ */
 
-    const { data, setData, post, processing, errors } = useForm({
-        title: '',
-        excerpt: '',
-        body: '',
-        blog_category_id: '',
-        tags: [] as number[],
+export default function Edit() {
+    const { post, categories, tags, selectedTags } =
+        usePage<PageProps>().props;
+
+    const { data, setData, post: submit, processing, errors } = useForm({
+        title: post.title,
+        excerpt: post.excerpt ?? '',
+        body: post.body,
+        blog_category_id: post.blog_category_id,
+        tags: selectedTags ?? [],
         featured_image: null as File | null,
-        published: true,
+        published: post.published,
+        _method: 'put', // 👈 IMPORTANT for PATCH
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post(route('blog.posts.store'), {
-            forceFormData: true, // IMPORTANT for file upload
+        submit(route('blog.posts.update', post.id), {
+            forceFormData: true, // 👈 REQUIRED for image update
         });
     };
 
     return (
-        <AppLayout title="Create Blog Post">
-            <Head title="Create Blog Post" />
+        <AppLayout title="Edit Blog Post">
+            <Head title="Edit Blog Post" />
 
             <div className="container mx-auto max-w-4xl px-4 py-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Create Blog Post</h1>
+                        <h1 className="text-2xl font-bold">Edit Blog Post</h1>
                         <p className="text-muted-foreground">
-                            Add a new blog article
+                            Update your blog article
                         </p>
                     </div>
 
@@ -79,7 +103,7 @@ export default function Create() {
                     <CardHeader>
                         <CardTitle>Post Details</CardTitle>
                         <CardDescription>
-                            Fill all required fields to publish your post
+                            Update required fields and save changes
                         </CardDescription>
                     </CardHeader>
 
@@ -90,10 +114,14 @@ export default function Create() {
                                 <Label>Title</Label>
                                 <Input
                                     value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('title', e.target.value)
+                                    }
                                 />
                                 {errors.title && (
-                                    <p className="text-sm text-destructive">{errors.title}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.title}
+                                    </p>
                                 )}
                             </div>
 
@@ -103,37 +131,55 @@ export default function Create() {
                                 <Textarea
                                     rows={3}
                                     value={data.excerpt}
-                                    onChange={(e) => setData('excerpt', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('excerpt', e.target.value)
+                                    }
                                 />
                             </div>
 
                             {/* Body */}
                             <div className="space-y-2">
                                 <Label>Content</Label>
-                                <Textarea
-                                    rows={10}
+                                {/*<Textarea*/}
+                                {/*    rows={10}*/}
+                                {/*    value={data.body}*/}
+                                {/*    onChange={(e) =>*/}
+                                {/*        setData('body', e.target.value)*/}
+                                {/*    }*/}
+                                {/*/>*/}
+                                <TextEditor
+                                    id="blog-body"
                                     value={data.body}
-                                    onChange={(e) => setData('body', e.target.value)}
+                                    onChange={(html) => setData('body', html)}
                                 />
                                 {errors.body && (
-                                    <p className="text-sm text-destructive">{errors.body}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.body}
+                                    </p>
                                 )}
                             </div>
 
                             {/* Category */}
                             <div className="space-y-2">
-                                <Label htmlFor="blog_category_id">Category</Label>
+                                <Label>Category</Label>
                                 <select
-                                    id="blog_category_id"
                                     value={data.blog_category_id}
-                                    onChange={(e) => setData('blog_category_id', Number(e.target.value))}
+                                    onChange={(e) =>
+                                        setData(
+                                            'blog_category_id',
+                                            Number(e.target.value),
+                                        )
+                                    }
                                     className="w-full rounded-md border px-3 py-2"
-                                    required
                                 >
-                                    <option value="">Select category</option>
-
+                                    <option value="">
+                                        Select category
+                                    </option>
                                     {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
+                                        <option
+                                            key={category.id}
+                                            value={category.id}
+                                        >
                                             {category.name}
                                         </option>
                                     ))}
@@ -145,7 +191,6 @@ export default function Create() {
                                     </p>
                                 )}
                             </div>
-
 
                             {/* Tags */}
                             <div className="space-y-2">
@@ -159,15 +204,23 @@ export default function Create() {
                                         >
                                             <input
                                                 type="checkbox"
-                                                value={tag.id}
-                                                checked={data.tags.includes(tag.id)}
+                                                checked={data.tags.includes(
+                                                    tag.id,
+                                                )}
                                                 onChange={(e) => {
                                                     if (e.target.checked) {
-                                                        setData('tags', [...data.tags, tag.id]);
+                                                        setData('tags', [
+                                                            ...data.tags,
+                                                            tag.id,
+                                                        ]);
                                                     } else {
                                                         setData(
                                                             'tags',
-                                                            data.tags.filter((id) => id !== tag.id)
+                                                            data.tags.filter(
+                                                                (id) =>
+                                                                    id !==
+                                                                    tag.id,
+                                                            ),
                                                         );
                                                     }
                                                 }}
@@ -187,13 +240,16 @@ export default function Create() {
                                     onChange={(e) =>
                                         setData(
                                             'featured_image',
-                                            e.target.files ? e.target.files[0] : null,
+                                            e.target.files
+                                                ? e.target.files[0]
+                                                : null,
                                         )
                                     }
                                 />
-                                {errors.featured_image && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.featured_image}
+                                {post.featured_image && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Current image will be replaced if you
+                                        upload a new one.
                                     </p>
                                 )}
                             </div>
@@ -212,11 +268,15 @@ export default function Create() {
                             {/* Actions */}
                             <div className="flex gap-3 pt-4">
                                 <Button type="submit" disabled={processing}>
-                                    {processing ? 'Saving...' : 'Create Post'}
+                                    {processing
+                                        ? 'Saving...'
+                                        : 'Update Post'}
                                 </Button>
 
                                 <Button variant="outline" asChild>
-                                    <Link href={route('blog.posts.index')}>
+                                    <Link
+                                        href={route('blog.posts.index')}
+                                    >
                                         Cancel
                                     </Link>
                                 </Button>

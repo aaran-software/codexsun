@@ -19,7 +19,7 @@ interface Props {
     onSuccess?: () => void;
 }
 
-export default function CategoryForm({ onSuccess }: Props) {
+export default function TagForm({ onSuccess }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         slug: '',
@@ -29,7 +29,7 @@ export default function CategoryForm({ onSuccess }: Props) {
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post(route('blog.categories.store'), {
+        post(route('blog.tags.store'), {
             onSuccess: () => {
                 onSuccess?.();
             },
@@ -40,7 +40,7 @@ export default function CategoryForm({ onSuccess }: Props) {
         <Layout>
             <Head title="Create"/>
             <h1 className="mb-6 text-lg sm:text-2xl font-bold pl-10 pt-10">
-                Create Blog Category
+                Create Blog Tag
             </h1>
             <form onSubmit={submit} className="space-y-5 p-10">
                 <div>
@@ -83,7 +83,7 @@ export default function CategoryForm({ onSuccess }: Props) {
 
                 <div className="flex justify-end gap-2">
                     <Button type="submit" disabled={processing}>
-                        Create Category
+                        Create Tag
                     </Button>
                 </div>
             </form>

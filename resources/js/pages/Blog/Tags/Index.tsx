@@ -1,4 +1,4 @@
-// resources/js/Pages/Blog/Categories/Index.tsx (Ultimate Stable Version - No More Crashes)
+// resources/js/Pages/Blog/Tags/Index.tsx (Ultimate Stable Version - No More Crashes)
 
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -27,7 +27,7 @@ import {
 import type { BreadcrumbItem } from '@/types';
 import { Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 
-interface BlogCategory {
+interface BlogTag {
     id: number;
     name: string;
     slug: string;
@@ -47,8 +47,8 @@ interface Pagination<T> {
     per_page: number;
 }
 
-interface BlogCategoriesPageProps {
-    categories?: Pagination<BlogCategory>; // Optional to handle missing prop
+interface BlogTagsPageProps {
+    tags?: Pagination<BlogTag>; // Optional to handle missing prop
     filters?: {
         search?: string;
         active_filter?: 'all' | 'active' | 'inactive';
@@ -60,25 +60,25 @@ interface BlogCategoriesPageProps {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Blog', href: route('blog.categories.index') },
-    { title: 'Categories', href: route('blog.categories.index') },
+    { title: 'Blog', href: route('blog.tags.index') },
+    { title: 'Tags', href: route('blog.tags.index') },
 ];
 
 export default function Index() {
-    const pageProps = usePage<BlogCategoriesPageProps>().props;
+    const pageProps = usePage<BlogTagsPageProps>().props;
 
     // Ultimate safe defaults - guarantees pagination object always exists
-    const safePagination: Pagination<BlogCategory> = {
-        data: pageProps.categories?.data ?? [],
-        current_page: pageProps.categories?.current_page ?? 1,
-        last_page: pageProps.categories?.last_page ?? 1,
-        from: pageProps.categories?.from ?? null,
-        to: pageProps.categories?.to ?? null,
-        total: pageProps.categories?.total ?? 0,
-        per_page: pageProps.categories?.per_page ?? 50,
+    const safePagination: Pagination<BlogTag> = {
+        data: pageProps.tags?.data ?? [],
+        current_page: pageProps.tags?.current_page ?? 1,
+        last_page: pageProps.tags?.last_page ?? 1,
+        from: pageProps.tags?.from ?? null,
+        to: pageProps.tags?.to ?? null,
+        total: pageProps.tags?.total ?? 0,
+        per_page: pageProps.tags?.per_page ?? 50,
     };
 
-    const categories = safePagination.data;
+    const tags = safePagination.data;
 
     const filters = pageProps.filters ?? {};
     const can = pageProps.can ?? { create: false, delete: false };
@@ -116,7 +116,7 @@ export default function Index() {
         (extra = {}) => {
             setIsNavigating(true);
             router.get(
-                route('blog.categories.index'),
+                route('blog.tags.index'),
                 { ...buildPayload(), ...extra },
                 {
                     preserveState: true,
@@ -130,7 +130,7 @@ export default function Index() {
 
     const handleReset = () => {
         router.get(
-            route('blog.categories.index'),
+            route('blog.tags.index'),
             {},
             { preserveState: true, replace: true },
         );
@@ -196,14 +196,14 @@ export default function Index() {
     }, [localFilters.search, localFilters.active_filter, clearFilter]);
 
     return (
-        <AppLayout title="Blog Categories" breadcrumb={breadcrumbs}>
-            <Head title="Blog Categories" />
+        <AppLayout title="Blog Tags" breadcrumb={breadcrumbs}>
+            <Head title="Blog Tags" />
 
             <div className="container mx-auto px-4 py-6">
                 <div className="flex flex-col gap-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                        <h1 className="text-lg sm:text-2xl font-bold">Blog Categories</h1>
+                        <h1 className="text-lg sm:text-2xl font-bold">Blog Tags</h1>
 
                         <div className="flex items-center gap-3">
                             {trashedCount > 0 && (
@@ -216,17 +216,17 @@ export default function Index() {
                                             </Badge>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Deleted categories</p>
+                                            <p>Deleted tags</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
 
                             {can.create && (
-                                <Link href={route('blog.categories.create')}>
+                                <Link href={route('blog.tags.create')}>
                                     <Button>
                                         <Plus className="mr-2 h-4 w-4" />
-                                        New Category
+                                        New Tag
                                     </Button>
                                 </Link>
                             )}
@@ -338,7 +338,7 @@ export default function Index() {
                         data={safePagination.data}
                         pagination={safePagination}
                         onPageChange={(page) => navigate({ page })}
-                        emptyMessage="No categories found."
+                        emptyMessage="No tags found."
                         isLoading={isNavigating}
                     >
                         <TableHeader>
@@ -357,82 +357,82 @@ export default function Index() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {categories.map((category) => (
+                            {tags.map((tag) => (
                                 <TableRow
-                                    key={category.id}
+                                    key={tag.id}
                                     className={
-                                        category.deleted_at ? 'opacity-60' : ''
+                                        tag.deleted_at ? 'opacity-60' : ''
                                     }
                                 >
                                     <TableCell className="font-medium">
-                                        {category.deleted_at ? (
+                                        {tag.deleted_at ? (
                                             <span className="text-muted-foreground">
-                                                {category.name}
+                                                {tag.name}
                                             </span>
                                         ) : (
                                             <Link
                                                 href={route(
-                                                    'blog.categories.edit',
-                                                    category.id,
+                                                    'blog.tags.edit',
+                                                    tag.id,
                                                 )}
                                                 className="hover:text-primary hover:underline"
                                             >
-                                                {category.name}
+                                                {tag.name}
                                             </Link>
                                         )}
                                     </TableCell>
                                     <TableCell className="font-mono text-sm text-muted-foreground">
-                                        {category.slug}
+                                        {tag.slug}
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <Badge
                                             variant={
-                                                category.active_id === 1
+                                                tag.active_id === 1
                                                     ? 'default'
                                                     : 'secondary'
                                             }
                                             className={
-                                                category.active_id === 1
+                                                tag.active_id === 1
                                                     ? 'bg-green-500 text-white'
                                                     : ''
                                             }
                                         >
-                                            {category.active_id === 1
+                                            {tag.active_id === 1
                                                 ? 'Active'
                                                 : 'Inactive'}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        {category.posts_count ?? '—'}
+                                        {tag.posts_count ?? '—'}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <TableActions
-                                            id={category.id}
+                                            id={tag.id}
                                             editRoute={route(
-                                                'blog.categories.edit',
-                                                category.id,
+                                                'blog.tags.edit',
+                                                tag.id,
                                             )}
                                             deleteRoute={route(
-                                                'blog.categories.destroy',
-                                                category.id,
+                                                'blog.tags.destroy',
+                                                tag.id,
                                             )}
                                             restoreRoute={
-                                                category.deleted_at
+                                                tag.deleted_at
                                                     ? route(
-                                                          'blog.categories.restore',
-                                                          category.id,
+                                                          'blog.tags.restore',
+                                                          tag.id,
                                                       )
                                                     : undefined
                                             }
                                             forceDeleteRoute={
-                                                category.deleted_at
+                                                tag.deleted_at
                                                     ? route(
-                                                          'blog.categories.forceDelete',
-                                                          category.id,
+                                                          'blog.tags.forceDelete',
+                                                          tag.id,
                                                       )
                                                     : undefined
                                             }
-                                            isDeleted={!!category.deleted_at}
+                                            isDeleted={!!tag.deleted_at}
                                             canDelete={can.delete}
                                         />
                                     </TableCell>

@@ -90,11 +90,13 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:blog_categories,name,' . $category->id,
+            'active_id' => 'required|integer|in:0,1',
         ]);
 
         $category->update([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
+            'active_id' => (int) $validated['active_id'],
         ]);
 
         return redirect()->route('blog.categories.index')
