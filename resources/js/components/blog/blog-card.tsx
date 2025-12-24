@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FaCalendarAlt, FaUser } from "react-icons/fa";
 import ImageButton from '../ImageBtn';
-import { BlogPost } from '@/pages/Blog/Web/Articles';
+import { BlogPost } from '@/pages/Blog/Web/Post';
 
 type BlogCarouselCardProps = {
     blogs: BlogPost[];

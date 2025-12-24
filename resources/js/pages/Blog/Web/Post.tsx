@@ -6,14 +6,33 @@ import FooterSection from '@/pages/web/home/FooterSection';
 import Timeline from '@/components/blog/timeline';
 import { useState } from 'react';
 import { route } from 'ziggy-js';
-
-type BlogPost = {
+import { ImageCarousel } from '@/components/blog/ImageCarousel';
+import { motion } from 'framer-motion';
+import { Heart } from 'lucide-react';
+type BlogComment = {
+    id: number;
+    body: string;
+    created_at: string;
+    user: {
+        name: string;
+    };
+};
+type BlogImage = {
+    id: number;
+    image_path: string;
+};
+export type BlogPost = {
     id: number;
     title: string;
     body: string;
     featured_image?: string;
     created_at: string;
     comments?: BlogComment[];
+    images?: BlogImage[];
+
+    likes_count?: number;
+    liked?: boolean;
+
     category?: {
         name: string;
     };
@@ -71,38 +90,119 @@ export default function Post() {
     return (
         <>
             <WebMenu />
+            <section className="relative overflow-hidden py-36">
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#f53003] via-red-600 to-orange-700" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-8 px-5 md:px-[10%]">
+                {/* Soft noise / overlay */}
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
+
+                {/* Decorative glow */}
+                <div className="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
+
+                <div className="relative mx-auto max-w-6xl px-6 text-center text-white lg:px-8">
+                    {/* Title */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="mb-8 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl lg:text-7xl"
+                    >
+                        {post.title}
+                    </motion.h1>
+
+                    {/* Meta */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        className="flex flex-wrap items-center justify-center gap-4"
+                    >
+                        {/* Author */}
+                        <div className="flex items-center gap-3 rounded-full bg-white/10 px-5 py-2 backdrop-blur-md">
+                            {/*<div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg font-bold">*/}
+                            {/*    {post.author?.name?.slice(0, 1)}*/}
+                            {/*</div>*/}
+                            <span className="text-sm font-semibold">
+                    {post.author?.name}
+                </span>
+                        </div>
+
+                        {/* Divider */}
+                        <span className="hidden h-4 w-px bg-white/30 md:block" />
+
+                        {/* Date */}
+                        <div className="rounded-full bg-white/10 px-5 py-2 text-sm backdrop-blur-md">
+                            {new Date(post.created_at).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                            })}
+                        </div>
+
+                        {/* Divider */}
+                        <span className="hidden h-4 w-px bg-white/30 md:block" />
+
+                        <div className="flex items-center gap-3 rounded-full bg-white/10 px-5 py-2 backdrop-blur-md">
+                            {/*<div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg font-bold">*/}
+                            {/*    {post.author?.name?.slice(0, 1)}*/}
+                            {/*</div>*/}
+                            <span className="text-sm font-semibold">
+                    {post.category?.name}
+                </span>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[70%_30%] gap-8 px-5 md:px-[10%] mt-10">
                 <div>
-                    <img
-                        src={`/storage/${ post.featured_image }`}
-                        alt="Blog Cover"
-                        className="rounded-xl w-full h-[70vh] object-cover"
-                    />
+                    <ImageCarousel post={post} />
+
 
                     {/* Author */}
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mt-4">
+                    {/*<div className="flex items-center gap-3 text-sm text-muted-foreground mt-4">*/}
 
-                        <div className={"rounded-full w-8 h-8 object-cover capitalize bg-gray-400 text-white text-xl font-extrabold flex justify-center items-center"}>{post.author?.name.slice(0,1)}</div>
-                        <p className="font-semibold text-foreground">{post.author?.name}</p>
-                        <div className="flex items-center gap-1">
-                            <span className="w-2 h-2 border rounded-full bg-primary"></span>
-                            <p className="text-foreground/80">  {new Date(post.created_at).toLocaleDateString()}</p>
-                        </div>
-                    </div>
+                    {/*    <div className={"rounded-full w-8 h-8 object-cover capitalize bg-gray-400 text-white text-xl font-extrabold flex justify-center items-center"}>{post.author?.name.slice(0,1)}</div>*/}
+                    {/*    <p className="font-semibold text-foreground">{post.author?.name}</p>*/}
+                    {/*    <div className="flex items-center gap-1">*/}
+                    {/*        <span className="w-2 h-2 border rounded-full bg-primary"></span>*/}
+                    {/*        <p className="text-foreground/80">  {new Date(post.created_at).toLocaleDateString()}</p>*/}
+                    {/*    </div>*/}
+                    {/*</div>*/}
 
                     {/* Title */}
-                    <h1 className="text-2xl font-bold text-foreground/80 leading-tight my-5">
-                        {post.title}
-                    </h1>
+                    {/*<h1 className="text-2xl font-bold text-foreground/80 leading-tight my-5">*/}
+                    {/*    {post.title}*/}
+                    {/*</h1>*/}
 
                     {/* Tags & Category */}
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-2">
-                        <p className="font-medium text-foreground">Category:</p>
-                        <span className="px-3 py-1 bg-foreground/10 text-foreground rounded-full">
-              {post.category?.name}
-            </span>
-                        <p className="font-medium ml-4 text-foreground">Tags:</p>
+                    <div className="flex flex-wrap py-5 items-center gap-3 text-sm text-muted-foreground mt-2">
+            {/*            <p className="font-medium text-foreground">Category:</p>*/}
+            {/*            <span className="px-3 py-1 bg-foreground/10 text-foreground rounded-full">*/}
+            {/*  {post.category?.name}*/}
+            {/*</span>*/}
+
+                        <button
+                            onClick={() =>
+                                router.post(route('blog.posts.like'), {
+                                    blog_post_id: post.id,
+                                }, {
+                                    preserveScroll: true,
+                                })
+                            }
+                            className={`flex items-center gap-2 rounded-full border px-4 py-2 transition
+        ${post.liked
+                                ? 'bg-red-500 text-white border-red-500'
+                                : 'bg-white text-gray-700 hover:bg-red-50'
+                            }`}
+                        >
+                            <Heart
+                                className={`h-5 w-5 ${post.liked ? 'fill-white' : ''}`}
+                            />
+                            <span>{post.likes_count}</span>
+                        </button>
+                        <p className="font-medium text-foreground">Tags:</p>
                         {post.tags?.map((tag, idx) => (
                             <span
                                 key={tag.id ?? idx}

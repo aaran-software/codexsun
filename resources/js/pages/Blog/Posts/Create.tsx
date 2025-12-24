@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft } from 'lucide-react';
 import TextEditor from '@/components/ui/text-editor';
+import { useState } from 'react';
 
 interface Category {
     id: number;
@@ -33,6 +34,7 @@ export default function Create() {
 
     const categories = page.props.categories ?? [];
     const tags = page.props.tags ?? [];
+    const [previews, setPreviews] = useState<string[]>([]);
 
     const { data, setData, post, processing, errors } = useForm({
         title: '',
@@ -40,9 +42,19 @@ export default function Create() {
         body: '',
         blog_category_id: '',
         tags: [] as number[],
-        featured_image: null as File | null,
+            images: [] as File[],
         published: true,
     });
+    const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files) return;
+
+        const files = Array.from(e.target.files);
+
+        setData('images', files);
+
+        const urls = files.map(file => URL.createObjectURL(file));
+        setPreviews(urls);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -187,24 +199,52 @@ export default function Create() {
                             </div>
 
                             {/* Featured Image */}
-                            <div className="space-y-2">
-                                <Label>Featured Image</Label>
+                            {/* Images */}
+                            <div className="space-y-3">
+                                <Label>Images</Label>
+
                                 <Input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) =>
-                                        setData(
-                                            'featured_image',
-                                            e.target.files ? e.target.files[0] : null,
-                                        )
-                                    }
+                                    multiple // ✅ allow multiple
+                                    onChange={handleImagesChange}
                                 />
-                                {errors.featured_image && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.featured_image}
-                                    </p>
+
+                                <p className="text-xs text-muted-foreground">
+                                    ℹ️ First selected image will be used as the thumbnail
+                                </p>
+
+                                {/* Preview */}
+                                {previews.length > 0 && (
+                                    <div className="grid grid-cols-4 gap-3 mt-3">
+                                        {previews.map((src, index) => (
+                                            <div
+                                                key={index}
+                                                className={`relative border rounded-lg overflow-hidden ${
+                                                    index === 0 ? 'ring-2 ring-primary' : ''
+                                                }`}
+                                            >
+                                                <img
+                                                    src={src}
+                                                    alt="Preview"
+                                                    className="w-full h-24 object-cover"
+                                                />
+
+                                                {index === 0 && (
+                                                    <span className="absolute bottom-1 left-1 bg-primary text-white text-[10px] px-2 py-0.5 rounded">
+                            Thumbnail
+                        </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {errors.images && (
+                                    <p className="text-sm text-destructive">{errors.images}</p>
                                 )}
                             </div>
+
 
                             {/* Published */}
                             <div className="flex items-center gap-3">

@@ -50,6 +50,15 @@ class BlogPost extends Model
         return $this->hasMany(BlogLike::class);
     }
 
+    public function likedByUser(?int $userId): bool
+    {
+        if (!$userId) return false;
+
+        return $this->likes()
+            ->where('user_id', $userId)
+            ->where('liked', true)
+            ->exists();
+    }
     public function getFeaturedImageUrlAttribute(): ?string
     {
         return $this->featured_image ? Storage::disk('public')->url($this->featured_image) : null;

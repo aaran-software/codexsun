@@ -77,3 +77,6 @@ Route::get('blog/web/articles/{post}', [PostController::class, 'post'])
 Route::post('blog/comments', [CommentController::class, 'store'])
     ->name('blog.comments.store');
 
+Route::post('blog/posts/like', [\Aaran\Blog\Controllers\BlogLikeController::class, 'toggle'])
+    ->name('blog.posts.like')
+    ->middleware('auth');

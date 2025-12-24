@@ -4,31 +4,7 @@ import { usePage, router } from '@inertiajs/react';
 import WebMenu from '@/pages/web/web-menu';
 import FooterSection from '@/pages/web/home/FooterSection';
 import { motion } from 'framer-motion';
-
-export type BlogPost = {
-    id: number;
-    title: string;
-    slug: string;
-    excerpt?: string;
-    body?: string;
-    featured_image?: string;
-    created_at: string;
-
-    category?: {
-        id: number;
-        name: string;
-    };
-
-    author?: {
-        id: number;
-        name: string;
-    };
-
-    tags?: {
-        id: number;
-        name: string;
-    }[];
-};
+import { BlogPost } from './Post';
 
 interface PageProps {
     posts: {

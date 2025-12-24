@@ -2,6 +2,7 @@
 
 namespace Aaran\Blog\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -9,9 +10,17 @@ class BlogLike extends Model
 {
     use SoftDeletes;
 
-    public $incrementing = false; // Since composite primary key
+    protected $table = 'blog_likes';
 
-    protected $fillable = ['blog_post_id', 'user_id', 'liked'];
+    public $incrementing = false;   // composite key
+    protected $primaryKey = null;   // 👈 VERY IMPORTANT
+    protected $keyType = 'int';
+
+    protected $fillable = [
+        'blog_post_id',
+        'user_id',
+        'liked',
+    ];
 
     protected $casts = [
         'liked' => 'boolean',

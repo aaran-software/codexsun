@@ -59,36 +59,75 @@ class PostController extends Controller
         ]);
     }
 
+    private function generateUniqueSlug(string $title): string
+    {
+        $slug = \Illuminate\Support\Str::slug($title);
+        $original = $slug;
+        $count = 1;
+
+        while (\Aaran\Blog\Models\BlogPost::where('slug', $slug)->exists()) {
+            $slug = "{$original}-{$count}";
+            $count++;
+        }
+
+        return $slug;
+    }
+
+
     public function store(Request $request): RedirectResponse
     {
-        $data =  $request->validate([
+        $data = $request->validate([
             'title' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'body' => 'required|string',
             'blog_category_id' => 'required|exists:blog_categories,id',
-            'tags' => 'array',
+            'tags' => 'nullable|array',
             'tags.*' => 'exists:blog_tags,id',
             'published' => 'boolean',
-            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB max
+            'images' => 'required|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        if ($request->hasFile('featured_image')) {
-            $data['featured_image'] = $request->file('featured_image')->store('blog/featured', 'public');
+        // ✅ Create post ONCE
+        $post = BlogPost::create([
+            'title' => $data['title'],
+            'excerpt' => $data['excerpt'] ?? null,
+            'body' => $data['body'],
+            'blog_category_id' => $data['blog_category_id'],
+            'slug' => $this->generateUniqueSlug($data['title']),
+            'user_id' => Auth::id(),
+            'published' => $data['published'] ?? true,
+            'active_id' => 1,
+        ]);
+
+        // 📸 Handle images
+        foreach ($request->file('images') as $index => $image) {
+            $path = $image->store('blog/images', 'public');
+
+            // ⭐ First image = featured image
+            if ($index === 0) {
+                $post->update([
+                    'featured_image' => $path,
+                ]);
+            }
+
+            // 📷 Save gallery image
+            $post->images()->create([
+                'image_path' => $path,
+                'sort_order' => $index,
+            ]);
         }
 
-        $data['slug'] = Str::slug($data['title']);
-        $data['user_id'] = Auth::id();
-        $data['active_id'] = 1;
-
-        $post = BlogPost::create($data);
-
-        if ($request->has('tags')) {
-            $post->tags()->sync($request->tags);
+        // 🔖 Attach tags
+        if (!empty($data['tags'])) {
+            $post->tags()->sync($data['tags']);
         }
 
-
-        return redirect()->route('blog.posts.index')->with('success', 'Blog post created successfully.');
+        return redirect()
+            ->route('blog.posts.index')
+            ->with('success', 'Blog post created successfully.');
     }
+
 
     public function edit(BlogPost $post): Response
     {
@@ -187,7 +226,9 @@ class PostController extends Controller
             'category',
             'author',
             'tags',
+            'images',
             'comments.user',
+            'likes',
         ]);
 
         $recentPosts = BlogPost::where('id', '!=', $post->id)
@@ -198,7 +239,11 @@ class PostController extends Controller
             ->load('author');
 
         return Inertia::render('Blog/Web/Post', [
-            'post' => $post,
+            'post' => [
+                ...$post->toArray(),
+                'likes_count' => $post->likes()->where('liked', true)->count(),
+                'liked' => $post->likedByUser(auth()->id()),
+            ],
             'recentPosts' => $recentPosts,
         ]);
     }
