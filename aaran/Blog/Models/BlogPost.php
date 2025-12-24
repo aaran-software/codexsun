@@ -72,9 +72,4 @@ class BlogPost extends Model
         });
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
-
 }

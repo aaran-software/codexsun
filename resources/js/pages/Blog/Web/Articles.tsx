@@ -15,8 +15,8 @@ interface PageProps {
 export default function Articles() {
     const { posts } = usePage<PageProps>().props;
 
-    const handleBlog = (slug: string) => {
-        router.visit(`/blog/web/articles/${slug}`);
+    const handleBlog = (id: string) => {
+        router.visit(`/blog/web/articles/${id}`);
     };
 
     return (
@@ -53,7 +53,7 @@ export default function Articles() {
                     {posts.data.map((blog) => (
                         <div
                             key={blog.id}
-                            onClick={() => handleBlog(blog.slug)}
+                            onClick={() => handleBlog(blog.id)}
                             className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 p-3 border border-ring/30 rounded-md hover:shadow cursor-pointer transition"
                         >
                             {/* Image */}
