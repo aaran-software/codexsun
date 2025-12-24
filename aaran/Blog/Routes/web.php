@@ -64,3 +64,13 @@ Route::middleware(['auth', 'verified'])->prefix('blog')->group(function () {
     Route::patch('posts/{post}/images/reorder', [PostImageController::class, 'reorder'])
         ->name('blog.posts.images.reorder');
 });
+
+
+
+Route::get('blog/web/articles', [PostController::class, 'articles'])
+    ->name('blog.web.articles');
+
+Route::get('blog/web/{post}/post', [PostController::class, 'post'])
+    ->name('blog.web.post');
+
+

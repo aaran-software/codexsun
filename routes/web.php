@@ -1,5 +1,6 @@
 <?php
 
+use Aaran\Blog\Controllers\PostController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CallLogController;
 use App\Http\Controllers\CallLogNoteController;
@@ -468,3 +469,10 @@ Route::post('/calls/quick-store', [CallLogController::class, 'quickStore'])
 
 Route::post('/calls/update-enquiry', [CallLogController::class, 'updateEnquiry'])
     ->name('calls.updateEnquiry');
+
+
+
+
+
+
+

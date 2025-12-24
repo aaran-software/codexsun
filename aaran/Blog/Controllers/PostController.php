@@ -149,4 +149,37 @@ class PostController extends Controller
 
         return redirect()->route('blog.posts.index')->with('success', 'Blog post deleted successfully.');
     }
+
+
+    public function articles(Request $request): Response
+    {
+        $query = BlogPost::with(['category', 'author'])
+            ->orderByDesc('created_at');
+
+        // 🔍 Search
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // ✅ Active / Inactive (Published / Draft)
+        if ($request->filled('published')) {
+            $query->where('published', (bool) $request->published);
+        }
+
+        $perPage = $request->get('per_page', 15);
+
+        $posts = $query->paginate($perPage)->withQueryString();
+
+        return Inertia::render('Blog/Web/Articles', [
+            'posts' => $posts,
+            'filters' => $request->only(['search', 'per_page', 'published']),
+            'can' => [
+                'create' => true,
+                'delete' => true,
+            ],
+            'trashedCount' => BlogPost::onlyTrashed()->count(),
+        ]);
+    }
+
+
 }
