@@ -1,11 +1,48 @@
 'use client';
 
+import { usePage, router } from '@inertiajs/react';
 import WebMenu from '@/pages/web/web-menu';
 import FooterSection from '@/pages/web/home/FooterSection';
 import { motion } from 'framer-motion';
 
+export type BlogPost = {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt?: string;
+    body?: string;
+    featured_image?: string;
+    created_at: string;
 
-export default function articles() {
+    category?: {
+        id: number;
+        name: string;
+    };
+
+    author?: {
+        id: number;
+        name: string;
+    };
+
+    tags?: {
+        id: number;
+        name: string;
+    }[];
+};
+
+interface PageProps {
+    posts: {
+        data: BlogPost[];
+    };
+}
+
+export default function Articles() {
+    const { posts } = usePage<PageProps>().props;
+
+    const handleBlog = (slug: string) => {
+        router.visit(`/blog/web/articles/${slug}`);
+    };
+
     return (
         <>
             <WebMenu />
@@ -21,21 +58,80 @@ export default function articles() {
                     >
                         All-in-One Tech Repair
                     </motion.h1>
+
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                         className="mx-auto max-w-3xl text-xl md:text-2xl"
                     >
-                        Desktop • Laptop • Camera • Server • Printer — We fix
-                        everything
+                        Desktop • Laptop • Camera • Server • Printer — We fix everything
                     </motion.p>
                 </div>
             </section>
 
-            <div className="flex h-screen flex-col">blogs</div>
+            {/* Content */}
+            <div className="grid lg:grid-cols-[70%_30%] gap-5 px-5 md:px-[10%]">
+                {/* Blog List */}
+                <div className="space-y-5 pt-20 md:pb-10">
+                    {posts.data.map((blog) => (
+                        <div
+                            key={blog.id}
+                            onClick={() => handleBlog(blog.slug)}
+                            className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 p-3 border border-ring/30 rounded-md hover:shadow cursor-pointer transition"
+                        >
+                            {/* Image */}
+                            <img
+                                src={`/storage/${blog.featured_image}`}
+                                alt={blog.title}
+                                loading="lazy"
+                                className="object-scale-down w-[50%] md:w-[60%] h-full rounded"
+                            />
 
-            {/* Footer */}
+
+                            {/* Content */}
+                            <div className="flex flex-col justify-between pr-4">
+                                <div>
+                                    <h2 className="text-xl font-bold line-clamp-2">
+                                        {blog.title}
+                                    </h2>
+
+                                    <p className="text-sm line-clamp-3 mt-1 text-muted-foreground">
+                                        {blog.excerpt}
+                                    </p>
+                                </div>
+
+                                <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-2">
+                                    {blog.author && (
+                                        <span className="font-semibold">
+                                            {blog.author.name}
+                                        </span>
+                                    )}
+
+                                    <span>
+                                        {new Date(blog.created_at).toLocaleDateString()}
+                                    </span>
+
+                                    {blog.category && (
+                                        <span className="bg-primary/10 px-2 rounded text-primary">
+                                            {blog.category.name}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Sidebar (optional static for now) */}
+                <div className="flex flex-col gap-6 lg:border-l py-20 lg:pl-5 border-ring/30">
+                    <h3 className="text-lg font-semibold">Sidebar</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Categories & Tags can be loaded later via Inertia props.
+                    </p>
+                </div>
+            </div>
+
             <FooterSection />
         </>
     );

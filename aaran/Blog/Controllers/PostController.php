@@ -181,5 +181,11 @@ class PostController extends Controller
         ]);
     }
 
+    public function post(BlogPost $post): Response
+    {
+        return Inertia::render('Blog/Web/Post', [
+            'post' => $post->load(['category', 'author', 'tags']),
+        ]);
+    }
 
 }

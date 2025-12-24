@@ -70,7 +70,7 @@ Route::middleware(['auth', 'verified'])->prefix('blog')->group(function () {
 Route::get('blog/web/articles', [PostController::class, 'articles'])
     ->name('blog.web.articles');
 
-Route::get('blog/web/{post}/post', [PostController::class, 'post'])
+Route::get('blog/web/articles/{post}', [PostController::class, 'post'])
     ->name('blog.web.post');
 
 

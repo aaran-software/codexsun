@@ -35,7 +35,6 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-
 Route::get('/abouts', function () {
     return Inertia::render('web/About');
 })->name('abouts');
@@ -47,7 +46,6 @@ Route::get('/web-services', function () {
 Route::get('/web-contacts', function () {
     return Inertia::render('web/web-contact');
 })->name('web-contacts');
-
 
 Route::middleware(['auth', 'verified'])->group(function () {
 //    Route::get('dashboard', function () {
