@@ -60,17 +60,22 @@ export default function BlogCardsList({ posts }: { posts: BlogPost[] }) {
                         </div>
                         <div className="mt-2 px-2 text-xs text-muted-foreground flex flex-wrap gap-2">
                             {p.author && (
-                                <span className="font-semibold">
+                                <span className="font-semibold uppercase bg-gray-400 text-white rounded-full w-6 h-6 text-lg flex items-center justify-center">
+                                            {p.author.name.slice(0,1)}
+                                        </span>
+                            )}
+                            {p.author && (
+                                <span className="font-semibold flex items-center">
                                             {p.author.name}
                                         </span>
                             )}
 
-                            <span>
+                            <span className={"flex items-center"}>
                                         {new Date(p.created_at).toLocaleDateString()}
                                     </span>
 
                             {p.category && (
-                                <span className="bg-primary/10 px-2 rounded text-primary">
+                                <span className="bg-primary/10 px-2 rounded text-primary flex items-center">
                                             {p.category.name}
                                         </span>
                             )}
