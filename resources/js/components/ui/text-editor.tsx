@@ -28,8 +28,8 @@ export default function TextEditor({
     const [isJustifyFull, setIsJustifyFull] = useState(false);
 
     const [listMode, setListMode] = useState<"ul" | "ol" | null>(null);
-    const [isLineThrough, setIsLineThrough] = useState(false);
-    const [showTableDropdown, setShowTableDropdown] = useState(false);
+    // const [isLineThrough, setIsLineThrough] = useState(false);
+    // const [showTableDropdown, setShowTableDropdown] = useState(false);
 //   const imageInputRef = useRef<HTMLInputElement | null>(null);
 //   const videoInputRef = useRef<HTMLInputElement | null>(null);
     const [isFormatting, setIsFormatting] = useState(false);
@@ -302,51 +302,29 @@ export default function TextEditor({
         }
     };
 
-    const handleImage = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.onchange = (e: any) => {
-            const file = e.target.files?.[0];
-            if (file) insertMedia(file, "image");
-        };
-        input.click();
-    };
 
-    const handleVideo = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "video/*";
-        input.onchange = (e: any) => {
-            const file = e.target.files?.[0];
-            if (file) insertMedia(file, "video");
-        };
-        input.click();
-    };
 
-    const insertMedia = (file: File, type: "image" | "video") => {
-        if (!editorRef.current) return;
-
-        const url = URL.createObjectURL(file);
-
-        let mediaElement: HTMLImageElement | HTMLVideoElement;
-        if (type === "image") {
-            mediaElement = document.createElement("img");
-            mediaElement.src = url;
-        } else {
-            mediaElement = document.createElement("video");
-            mediaElement.src = url;
-            mediaElement.controls = true;
-        }
-
-        mediaElement.style.maxWidth = "100%";
-        mediaElement.style.margin = "0.5rem 0";
-
-        editorRef.current.appendChild(mediaElement);
-        editorRef.current.appendChild(document.createElement("br"));
-    };
+    // const insertMedia = (file: File, type: "image" | "video") => {
+    //     if (!editorRef.current) return;
+    //
+    //     const url = URL.createObjectURL(file);
+    //
+    //     let mediaElement: HTMLImageElement | HTMLVideoElement;
+    //     if (type === "image") {
+    //         mediaElement = document.createElement("img");
+    //         mediaElement.src = url;
+    //     } else {
+    //         mediaElement = document.createElement("video");
+    //         mediaElement.src = url;
+    //         mediaElement.controls = true;
+    //     }
+    //
+    //     mediaElement.style.maxWidth = "100%";
+    //     mediaElement.style.margin = "0.5rem 0";
+    //
+    //     editorRef.current.appendChild(mediaElement);
+    //     editorRef.current.appendChild(document.createElement("br"));
+    // };
     const handleContentChange = () => {
         if (isFormatting) return;
         if (!editorRef.current) return;
@@ -386,7 +364,7 @@ export default function TextEditor({
             setIsJustifyRight(document.queryCommandState("justifyRight"));
             setIsJustifyFull(document.queryCommandState("justifyFull"));
 
-            setIsLineThrough(document.queryCommandState("strikeThrough"));
+            // setIsLineThrough(document.queryCommandState("strikeThrough"));
         };
 
         // Listen to selection changes for enabling/disabling buttons
@@ -530,296 +508,321 @@ export default function TextEditor({
     );
 
     //   focus table cell
-    const tableDropdownRef = useRef<HTMLDivElement>(null);
+    // const tableDropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (
-                tableDropdownRef.current &&
-                !tableDropdownRef.current.contains(e.target as Node)
-            ) {
-                setShowTableDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // useEffect(() => {
+    //     const handleClickOutside = (e: MouseEvent) => {
+    //         if (
+    //             tableDropdownRef.current &&
+    //             !tableDropdownRef.current.contains(e.target as Node)
+    //         )
+    //         {
+    //             setShowTableDropdown(false);
+    //         }
+    //     };
+    //     document.addEventListener("mousedown", handleClickOutside);
+    //     return () => document.removeEventListener("mousedown", handleClickOutside);
+    // }, []);
 
-    const toggleLineThrough = () => {
-        const selection = window.getSelection();
-        const hasTextSelected = selection && !selection.isCollapsed;
+    // const handleImage = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const input = document.createElement("input");
+    //     input.type = "file";
+    //     input.accept = "image/*";
+    //     input.onchange = (e: any) => {
+    //         const file = e.target.files?.[0];
+    //         if (file) insertMedia(file, "image");
+    //     };
+    //     input.click();
+    // };
+    //
+    // const handleVideo = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const input = document.createElement("input");
+    //     input.type = "file";
+    //     input.accept = "video/*";
+    //     input.onchange = (e: any) => {
+    //         const file = e.target.files?.[0];
+    //         if (file) insertMedia(file, "video");
+    //     };
+    //     input.click();
+    // };
+    //
+    // const toggleLineThrough = () => {
+    //     const selection = window.getSelection();
+    //     const hasTextSelected = selection && !selection.isCollapsed;
+    //
+    //     if (hasTextSelected) {
+    //         const newVal = !document.queryCommandState("strikeThrough");
+    //         setIsLineThrough(newVal);
+    //         applyFormatting("strikeThrough");
+    //     } else {
+    //         const newVal = !isLineThrough;
+    //         setIsLineThrough(newVal);
+    //         applyFormatting("strikeThrough", undefined, true);
+    //     }
+    // };
 
-        if (hasTextSelected) {
-            const newVal = !document.queryCommandState("strikeThrough");
-            setIsLineThrough(newVal);
-            applyFormatting("strikeThrough");
-        } else {
-            const newVal = !isLineThrough;
-            setIsLineThrough(newVal);
-            applyFormatting("strikeThrough", undefined, true);
-        }
-    };
+    // const insertBasicTable = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     if (!editorRef.current) return;
+    //     const selection = window.getSelection();
+    //     const range = selection?.getRangeAt(0);
+    //     if (!range || !editorRef.current.contains(range.commonAncestorContainer))
+    //         return;
+    //
+    //     const table = document.createElement("table");
+    //     table.setAttribute("border", "1");
+    //     table.style.borderCollapse = "collapse";
+    //     table.style.width = "100%";
+    //     table.style.border = "1px solid #ccc";
+    //
+    //     const thead = document.createElement("thead");
+    //     const trHead = document.createElement("tr");
+    //
+    //     for (let i = 0; i < 3; i++) {
+    //         const th = document.createElement("th");
+    //         th.dataset.row = "0";
+    //         th.dataset.col = i.toString();
+    //         th.textContent = `Header ${i + 1}`;
+    //         th.style.padding = "8px";
+    //         th.style.border = "1px solid #ccc";
+    //         th.style.backgroundColor = "#f1f1f1";
+    //         th.style.fontWeight = "bold";
+    //         th.style.textAlign = "left";
+    //         th.contentEditable = "plaintext-only";
+    //         trHead.appendChild(th);
+    //     }
+    //
+    //     // Spacer for control cell
+    //     const controlHeader = document.createElement("th");
+    //     controlHeader.style.width = "60px";
+    //     trHead.appendChild(controlHeader);
+    //     thead.appendChild(trHead);
+    //     table.appendChild(thead);
+    //
+    //     const tbody = document.createElement("tbody");
+    //
+    //     const createRow = (rowIndex: number) => {
+    //         const tr = document.createElement("tr");
+    //
+    //         for (let i = 0; i < 3; i++) {
+    //             const td = document.createElement("td");
+    //             td.dataset.row = rowIndex.toString();
+    //             td.dataset.col = i.toString();
+    //             td.style.padding = "8px";
+    //             td.style.height = "45px";
+    //             td.style.border = "1px solid #ccc";
+    //             td.contentEditable = "plaintext-only";
+    //             tr.appendChild(td);
+    //         }
+    //
+    //         // Action buttons cell
+    //         const controlCell = document.createElement("td");
+    //         controlCell.style.width = "60px";
+    //         controlCell.style.border = "1px solid #ccc";
+    //         controlCell.style.textAlign = "center";
+    //         controlCell.style.verticalAlign = "middle";
+    //         controlCell.style.position = "relative";
+    //         controlCell.style.padding = "0";
+    //
+    //         const wrapper = document.createElement("div");
+    //         wrapper.style.display = "none";
+    //         wrapper.style.justifyContent = "center";
+    //         wrapper.style.gap = "5px";
+    //         wrapper.style.padding = "6px";
+    //
+    //         const addBtn = document.createElement("button");
+    //         addBtn.textContent = "+";
+    //         addBtn.style.cursor = "pointer";
+    //         addBtn.title = "Add Row";
+    //         addBtn.style.background = "none";
+    //         addBtn.style.border = "none";
+    //         addBtn.style.fontSize = "16px";
+    //         addBtn.onclick = () => {
+    //             const newRow = createRow([...tbody.children].length + 1);
+    //             tbody.insertBefore(newRow, tr.nextSibling);
+    //             updateRowIndices();
+    //         };
+    //
+    //         const removeBtn = document.createElement("button");
+    //         removeBtn.textContent = "×";
+    //         removeBtn.title = "Remove Row";
+    //         removeBtn.style.cursor = "pointer";
+    //         removeBtn.style.background = "none";
+    //         removeBtn.style.border = "none";
+    //         removeBtn.style.color = "red";
+    //         removeBtn.style.fontSize = "16px";
+    //         removeBtn.onclick = () => {
+    //             if (tbody.children.length > 1) {
+    //                 tr.remove();
+    //                 updateRowIndices();
+    //             } else {
+    //                 alert("At least one row is required.");
+    //             }
+    //         };
+    //
+    //         wrapper.appendChild(addBtn);
+    //         wrapper.appendChild(removeBtn);
+    //         controlCell.appendChild(wrapper);
+    //         tr.appendChild(controlCell);
+    //
+    //         // Hover to show/hide buttons
+    //         tr.onmouseenter = () => {
+    //             wrapper.style.display = "flex";
+    //         };
+    //         tr.onmouseleave = () => {
+    //             wrapper.style.display = "none";
+    //         };
+    //
+    //         return tr;
+    //     };
+    //
+    //     // Update row indices
+    //     const updateRowIndices = () => {
+    //         [...tbody.children].forEach((rowEl, rowIndex) => {
+    //             [...rowEl.children].forEach((cellEl, colIndex) => {
+    //                 if (cellEl instanceof HTMLElement) {
+    //                     cellEl.dataset.row = (rowIndex + 1).toString();
+    //                     cellEl.dataset.col = colIndex.toString();
+    //                 }
+    //             });
+    //         });
+    //     };
+    //
+    //     // Initial 2 rows
+    //     for (let j = 0; j < 2; j++) {
+    //         tbody.appendChild(createRow(j + 1));
+    //     }
+    //
+    //     table.appendChild(tbody);
+    //
+    //     table.addEventListener("input", (e) => {
+    //         const target = e.target as HTMLElement;
+    //         if (target.tagName === "TD" || target.tagName === "TH") {
+    //             const row = target.dataset.row;
+    //             const col = target.dataset.col;
+    //             const content = target.textContent;
+    //             console.log(`Cell [${row}, ${col}] changed to:`, content);
+    //         }
+    //     });
+    //
+    //     range.deleteContents();
+    //     range.insertNode(table);
+    //     onChange(editorRef.current!.innerHTML);
+    //     setRawMessage(editorRef.current.innerHTML);
+    // };
+    //
+    // const getSelectedTable = (): HTMLTableElement | null => {
+    //     const selection = window.getSelection();
+    //     if (!selection || selection.rangeCount === 0) return null;
+    //
+    //     let node = selection.anchorNode as Node | null;
+    //     while (node) {
+    //         if (
+    //             node.nodeType === Node.ELEMENT_NODE &&
+    //             (node as Element).tagName === "TABLE"
+    //         ) {
+    //             return node as HTMLTableElement;
+    //         }
+    //         node = node.parentNode;
+    //     }
+    //     return null;
+    // };
 
-    const insertBasicTable = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        if (!editorRef.current) return;
-        const selection = window.getSelection();
-        const range = selection?.getRangeAt(0);
-        if (!range || !editorRef.current.contains(range.commonAncestorContainer))
-            return;
+    // const addRowToSelectedTable = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const table = getSelectedTable();
+    //     if (!table) return;
+    //
+    //     const tbody = table.querySelector("tbody");
+    //     const columns = table.rows[0]?.cells.length || 3;
+    //     const newRow = document.createElement("tr");
+    //
+    //     for (let i = 0; i < columns; i++) {
+    //         const td = document.createElement("td");
+    //         td.contentEditable = "true";
+    //         td.style.padding = "8px";
+    //         td.style.height = "45px";
+    //         td.style.border = "1px solid #ccc";
+    //         td.textContent = "";
+    //         td.contentEditable = "plaintext-only";
+    //         newRow.appendChild(td);
+    //     }
+    //
+    //     tbody?.appendChild(newRow);
+    //     onChange(editorRef.current!.innerHTML);
+    //     setRawMessage(editorRef.current!.innerHTML);
+    // };
+    //
+    // const addColToSelectedTable= (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const table = getSelectedTable();
+    //     if (!table) return;
+    //
+    //     const rows = table.rows;
+    //     for (let i = 0; i < rows.length; i++) {
+    //         const cell =
+    //             i === 0 ? document.createElement("th") : document.createElement("td");
+    //         cell.contentEditable = "true";
+    //         cell.textContent = i === 0 ? `Header ${rows[0].cells.length + 1}` : "";
+    //         cell.style.padding = "8px";
+    //         cell.style.border = "1px solid #ccc";
+    //         cell.contentEditable = "plaintext-only";
+    //
+    //         if (i === 0) {
+    //             cell.style.backgroundColor = "#f1f1f1";
+    //             cell.style.fontWeight = "bold";
+    //         }
+    //
+    //         rows[i].appendChild(cell);
+    //     }
+    //
+    //     onChange(editorRef.current!.innerHTML);
+    //     setRawMessage(editorRef.current!.innerHTML);
+    // };
 
-        const table = document.createElement("table");
-        table.setAttribute("border", "1");
-        table.style.borderCollapse = "collapse";
-        table.style.width = "100%";
-        table.style.border = "1px solid #ccc";
+    // const removeTable = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const table = getSelectedTable();
+    //     if (!table || !editorRef.current) return;
+    //
+    //     table.remove();
+    //     onChange(editorRef.current!.innerHTML);
+    //     setRawMessage(editorRef.current.innerHTML);
+    // };
 
-        const thead = document.createElement("thead");
-        const trHead = document.createElement("tr");
-
-        for (let i = 0; i < 3; i++) {
-            const th = document.createElement("th");
-            th.dataset.row = "0";
-            th.dataset.col = i.toString();
-            th.textContent = `Header ${i + 1}`;
-            th.style.padding = "8px";
-            th.style.border = "1px solid #ccc";
-            th.style.backgroundColor = "#f1f1f1";
-            th.style.fontWeight = "bold";
-            th.style.textAlign = "left";
-            th.contentEditable = "plaintext-only";
-            trHead.appendChild(th);
-        }
-
-        // Spacer for control cell
-        const controlHeader = document.createElement("th");
-        controlHeader.style.width = "60px";
-        trHead.appendChild(controlHeader);
-        thead.appendChild(trHead);
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-
-        const createRow = (rowIndex: number) => {
-            const tr = document.createElement("tr");
-
-            for (let i = 0; i < 3; i++) {
-                const td = document.createElement("td");
-                td.dataset.row = rowIndex.toString();
-                td.dataset.col = i.toString();
-                td.style.padding = "8px";
-                td.style.height = "45px";
-                td.style.border = "1px solid #ccc";
-                td.contentEditable = "plaintext-only";
-                tr.appendChild(td);
-            }
-
-            // Action buttons cell
-            const controlCell = document.createElement("td");
-            controlCell.style.width = "60px";
-            controlCell.style.border = "1px solid #ccc";
-            controlCell.style.textAlign = "center";
-            controlCell.style.verticalAlign = "middle";
-            controlCell.style.position = "relative";
-            controlCell.style.padding = "0";
-
-            const wrapper = document.createElement("div");
-            wrapper.style.display = "none";
-            wrapper.style.justifyContent = "center";
-            wrapper.style.gap = "5px";
-            wrapper.style.padding = "6px";
-
-            const addBtn = document.createElement("button");
-            addBtn.textContent = "+";
-            addBtn.style.cursor = "pointer";
-            addBtn.title = "Add Row";
-            addBtn.style.background = "none";
-            addBtn.style.border = "none";
-            addBtn.style.fontSize = "16px";
-            addBtn.onclick = () => {
-                const newRow = createRow([...tbody.children].length + 1);
-                tbody.insertBefore(newRow, tr.nextSibling);
-                updateRowIndices();
-            };
-
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "×";
-            removeBtn.title = "Remove Row";
-            removeBtn.style.cursor = "pointer";
-            removeBtn.style.background = "none";
-            removeBtn.style.border = "none";
-            removeBtn.style.color = "red";
-            removeBtn.style.fontSize = "16px";
-            removeBtn.onclick = () => {
-                if (tbody.children.length > 1) {
-                    tr.remove();
-                    updateRowIndices();
-                } else {
-                    alert("At least one row is required.");
-                }
-            };
-
-            wrapper.appendChild(addBtn);
-            wrapper.appendChild(removeBtn);
-            controlCell.appendChild(wrapper);
-            tr.appendChild(controlCell);
-
-            // Hover to show/hide buttons
-            tr.onmouseenter = () => {
-                wrapper.style.display = "flex";
-            };
-            tr.onmouseleave = () => {
-                wrapper.style.display = "none";
-            };
-
-            return tr;
-        };
-
-        // Update row indices
-        const updateRowIndices = () => {
-            [...tbody.children].forEach((rowEl, rowIndex) => {
-                [...rowEl.children].forEach((cellEl, colIndex) => {
-                    if (cellEl instanceof HTMLElement) {
-                        cellEl.dataset.row = (rowIndex + 1).toString();
-                        cellEl.dataset.col = colIndex.toString();
-                    }
-                });
-            });
-        };
-
-        // Initial 2 rows
-        for (let j = 0; j < 2; j++) {
-            tbody.appendChild(createRow(j + 1));
-        }
-
-        table.appendChild(tbody);
-
-        table.addEventListener("input", (e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === "TD" || target.tagName === "TH") {
-                const row = target.dataset.row;
-                const col = target.dataset.col;
-                const content = target.textContent;
-                console.log(`Cell [${row}, ${col}] changed to:`, content);
-            }
-        });
-
-        range.deleteContents();
-        range.insertNode(table);
-        onChange(editorRef.current!.innerHTML);
-        setRawMessage(editorRef.current.innerHTML);
-    };
-
-    const getSelectedTable = (): HTMLTableElement | null => {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return null;
-
-        let node = selection.anchorNode as Node | null;
-        while (node) {
-            if (
-                node.nodeType === Node.ELEMENT_NODE &&
-                (node as Element).tagName === "TABLE"
-            ) {
-                return node as HTMLTableElement;
-            }
-            node = node.parentNode;
-        }
-        return null;
-    };
-
-    const addRowToSelectedTable = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const table = getSelectedTable();
-        if (!table) return;
-
-        const tbody = table.querySelector("tbody");
-        const columns = table.rows[0]?.cells.length || 3;
-        const newRow = document.createElement("tr");
-
-        for (let i = 0; i < columns; i++) {
-            const td = document.createElement("td");
-            td.contentEditable = "true";
-            td.style.padding = "8px";
-            td.style.height = "45px";
-            td.style.border = "1px solid #ccc";
-            td.textContent = "";
-            td.contentEditable = "plaintext-only";
-            newRow.appendChild(td);
-        }
-
-        tbody?.appendChild(newRow);
-        onChange(editorRef.current!.innerHTML);
-        setRawMessage(editorRef.current!.innerHTML);
-    };
-
-    const addColToSelectedTable= (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const table = getSelectedTable();
-        if (!table) return;
-
-        const rows = table.rows;
-        for (let i = 0; i < rows.length; i++) {
-            const cell =
-                i === 0 ? document.createElement("th") : document.createElement("td");
-            cell.contentEditable = "true";
-            cell.textContent = i === 0 ? `Header ${rows[0].cells.length + 1}` : "";
-            cell.style.padding = "8px";
-            cell.style.border = "1px solid #ccc";
-            cell.contentEditable = "plaintext-only";
-
-            if (i === 0) {
-                cell.style.backgroundColor = "#f1f1f1";
-                cell.style.fontWeight = "bold";
-            }
-
-            rows[i].appendChild(cell);
-        }
-
-        onChange(editorRef.current!.innerHTML);
-        setRawMessage(editorRef.current!.innerHTML);
-    };
-
-    const removeTable = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const table = getSelectedTable();
-        if (!table || !editorRef.current) return;
-
-        table.remove();
-        onChange(editorRef.current!.innerHTML);
-        setRawMessage(editorRef.current.innerHTML);
-    };
-
-    const removeLastRowFromSelectedTable = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const table = getSelectedTable();
-        if (!table) return;
-
-        const tbody = table.querySelector("tbody");
-        const rowCount = tbody?.rows.length || 0;
-
-        if (rowCount > 0) {
-            tbody?.deleteRow(rowCount - 1);
-            onChange(editorRef.current!.innerHTML);
-            setRawMessage(editorRef.current!.innerHTML);
-        }
-    };
-
-    const removeLastColFromSelectedTable = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const table = getSelectedTable();
-        if (!table) return;
-
-        const rows = table.rows;
-        const colCount = rows[0]?.cells.length || 0;
-
-        if (colCount === 0) return;
-
-        for (let i = 0; i < rows.length; i++) {
-            rows[i].deleteCell(colCount - 1);
-        }
-
-        setRawMessage(editorRef.current!.innerHTML);
-    };
+    // const removeLastRowFromSelectedTable = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const table = getSelectedTable();
+    //     if (!table) return;
+    //
+    //     const tbody = table.querySelector("tbody");
+    //     const rowCount = tbody?.rows.length || 0;
+    //
+    //     if (rowCount > 0) {
+    //         tbody?.deleteRow(rowCount - 1);
+    //         onChange(editorRef.current!.innerHTML);
+    //         setRawMessage(editorRef.current!.innerHTML);
+    //     }
+    // };
+    //
+    // const removeLastColFromSelectedTable = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     e.preventDefault();
+    //     const table = getSelectedTable();
+    //     if (!table) return;
+    //
+    //     const rows = table.rows;
+    //     const colCount = rows[0]?.cells.length || 0;
+    //
+    //     if (colCount === 0) return;
+    //
+    //     for (let i = 0; i < rows.length; i++) {
+    //         rows[i].deleteCell(colCount - 1);
+    //     }
+    //
+    //     setRawMessage(editorRef.current!.innerHTML);
+    // };
 
     //   Paste handling
 
@@ -1079,111 +1082,111 @@ export default function TextEditor({
                                 </TooltipContent>
                             </Tooltip>
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={toggleLineThrough}
-                                        icon="strikethrough"
-                                        className={`p-2 hover:bg-gray-300 rounded-md ${
-                                            isLineThrough ? "border border-ring/50 bg-foreground/20" : ""
-                                        }`}
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Strikethrough</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <ImageBtn*/}
+                            {/*            onClick={toggleLineThrough}*/}
+                            {/*            icon="strikethrough"*/}
+                            {/*            className={`p-2 hover:bg-gray-300 rounded-md ${*/}
+                            {/*                isLineThrough ? "border border-ring/50 bg-foreground/20" : ""*/}
+                            {/*            }`}*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Strikethrough</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
 
 
 
-                            <div
-                                className="relative inline-block"
-                                onMouseEnter={() => setShowTableDropdown(true)}
-                                onMouseLeave={() => setShowTableDropdown(false)}
-                            >
-                                <ImageBtn
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setShowTableDropdown((prev) => !prev);
-                                    }}
-                                    className={`p-2 hover:bg-gray-300 rounded-md ${
-                                        isLineThrough
-                                            ? "border border-ring/50 bg-foreground/20"
-                                            : ""
-                                    }`}
-                                    icon="table"
-                                />
+                            {/*<div*/}
+                            {/*    className="relative inline-block"*/}
+                            {/*    onMouseEnter={() => setShowTableDropdown(true)}*/}
+                            {/*    onMouseLeave={() => setShowTableDropdown(false)}*/}
+                            {/*>*/}
+                            {/*    <ImageBtn*/}
+                            {/*        onClick={(e) => {*/}
+                            {/*            e.preventDefault();*/}
+                            {/*            setShowTableDropdown((prev) => !prev);*/}
+                            {/*        }}*/}
+                            {/*        className={`p-2 hover:bg-gray-300 rounded-md ${*/}
+                            {/*            isLineThrough*/}
+                            {/*                ? "border border-ring/50 bg-foreground/20"*/}
+                            {/*                : ""*/}
+                            {/*        }`}*/}
+                            {/*        icon="table"*/}
+                            {/*    />*/}
 
-                                {showTableDropdown && (
-                                    <div
-                                        ref={tableDropdownRef}
-                                        className="absolute z-10  w-48 bg-white border border-gray-300 shadow-lg rounded-md p-2 text-sm"
-                                    >
-                                        <button
-                                            onClick={insertBasicTable}
-                                            className="w-full text-left px-3 py-1 hover:bg-gray-100"
-                                        >
-                                            Insert Table (3x3)
-                                        </button>
-                                        <button
-                                            onClick={addRowToSelectedTable}
-                                            className="w-full text-left px-3 py-1 hover:bg-gray-100"
-                                        >
-                                            Add Row
-                                        </button>
-                                        <button
-                                            onClick={addColToSelectedTable}
-                                            className="w-full text-left px-3 py-1 hover:bg-gray-100"
-                                        >
-                                            Add Column
-                                        </button>
-                                        <button
-                                            onClick={removeTable}
-                                            className="w-full text-left px-3 py-1 hover:bg-gray-100 text-red-600"
-                                        >
-                                            Remove Table
-                                        </button>
+                            {/*    {showTableDropdown && (*/}
+                            {/*        <div*/}
+                            {/*            ref={tableDropdownRef}*/}
+                            {/*            className="absolute z-10  w-48 bg-white border border-gray-300 shadow-lg rounded-md p-2 text-sm"*/}
+                            {/*        >*/}
+                            {/*            <button*/}
+                            {/*                onClick={insertBasicTable}*/}
+                            {/*                className="w-full text-left px-3 py-1 hover:bg-gray-100"*/}
+                            {/*            >*/}
+                            {/*                Insert Table (3x3)*/}
+                            {/*            </button>*/}
+                            {/*            <button*/}
+                            {/*                onClick={addRowToSelectedTable}*/}
+                            {/*                className="w-full text-left px-3 py-1 hover:bg-gray-100"*/}
+                            {/*            >*/}
+                            {/*                Add Row*/}
+                            {/*            </button>*/}
+                            {/*            <button*/}
+                            {/*                onClick={addColToSelectedTable}*/}
+                            {/*                className="w-full text-left px-3 py-1 hover:bg-gray-100"*/}
+                            {/*            >*/}
+                            {/*                Add Column*/}
+                            {/*            </button>*/}
+                            {/*            <button*/}
+                            {/*                onClick={removeTable}*/}
+                            {/*                className="w-full text-left px-3 py-1 hover:bg-gray-100 text-red-600"*/}
+                            {/*            >*/}
+                            {/*                Remove Table*/}
+                            {/*            </button>*/}
 
-                                        <button
-                                            onClick={removeLastRowFromSelectedTable}
-                                            className="w-full text-left px-3 py-1 hover:bg-gray-100 text-red-500"
-                                        >
-                                            Remove Row
-                                        </button>
-                                        <button
-                                            onClick={removeLastColFromSelectedTable}
-                                            className="w-full text-left px-3 py-1 hover:bg-gray-100 text-red-500"
-                                        >
-                                            Remove Column
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={handleImage}
-                                        icon="image"
-                                        className="p-2 hover:bg-gray-300 rounded-md"
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Image</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            {/*            <button*/}
+                            {/*                onClick={removeLastRowFromSelectedTable}*/}
+                            {/*                className="w-full text-left px-3 py-1 hover:bg-gray-100 text-red-500"*/}
+                            {/*            >*/}
+                            {/*                Remove Row*/}
+                            {/*            </button>*/}
+                            {/*            <button*/}
+                            {/*                onClick={removeLastColFromSelectedTable}*/}
+                            {/*                className="w-full text-left px-3 py-1 hover:bg-gray-100 text-red-500"*/}
+                            {/*            >*/}
+                            {/*                Remove Column*/}
+                            {/*            </button>*/}
+                            {/*        </div>*/}
+                            {/*    )}*/}
+                            {/*</div>*/}
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <ImageBtn*/}
+                            {/*            onClick={handleImage}*/}
+                            {/*            icon="image"*/}
+                            {/*            className="p-2 hover:bg-gray-300 rounded-md"*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Image</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={handleVideo}
-                                        icon="video"
-                                        className="p-2 hover:bg-gray-300 rounded-md"
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Video</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <ImageBtn*/}
+                            {/*            onClick={handleVideo}*/}
+                            {/*            icon="video"*/}
+                            {/*            className="p-2 hover:bg-gray-300 rounded-md"*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Video</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
 
 
                         </div>

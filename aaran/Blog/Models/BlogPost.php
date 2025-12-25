@@ -13,11 +13,12 @@ class BlogPost extends Model
 
     protected $fillable = [
         'title', 'slug', 'excerpt', 'body', 'featured_image',
-        'blog_category_id', 'user_id', 'published', 'active_id'
+        'blog_category_id', 'user_id','meta_keywords', 'published', 'active_id'
     ];
 
     protected $casts = [
         'published' => 'boolean',
+        'meta_keywords' => 'array',
     ];
 
     public function category()
@@ -50,6 +51,16 @@ class BlogPost extends Model
         return $this->hasMany(BlogLike::class);
     }
 
+    public function likedByUser(?int $userId): bool
+    {
+        if (!$userId) return false;
+
+        return $this->likes()
+            ->where('user_id', $userId)
+            ->where('liked', true)
+            ->exists();
+    }
+
     public function getFeaturedImageUrlAttribute(): ?string
     {
         return $this->featured_image ? Storage::disk('public')->url($this->featured_image) : null;
@@ -62,4 +73,5 @@ class BlogPost extends Model
             return $image;
         });
     }
+
 }

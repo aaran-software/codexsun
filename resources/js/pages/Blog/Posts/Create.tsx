@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft } from 'lucide-react';
 import TextEditor from '@/components/ui/text-editor';
+import { useState } from 'react';
 
 interface Category {
     id: number;
@@ -33,6 +34,8 @@ export default function Create() {
 
     const categories = page.props.categories ?? [];
     const tags = page.props.tags ?? [];
+    const [previews, setPreviews] = useState<string[]>([]);
+    const [keywordInput, setKeywordInput] = useState('');
 
     const { data, setData, post, processing, errors } = useForm({
         title: '',
@@ -40,9 +43,41 @@ export default function Create() {
         body: '',
         blog_category_id: '',
         tags: [] as number[],
-        featured_image: null as File | null,
+            images: [] as File[],
+        meta_keywords: [] as string[],
         published: true,
     });
+    const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files) return;
+
+        const files = Array.from(e.target.files);
+
+        setData('images', files);
+
+        const urls = files.map(file => URL.createObjectURL(file));
+        setPreviews(urls);
+    };
+
+    const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== 'Enter') return;
+
+        e.preventDefault();
+
+        const value = keywordInput.trim().toLowerCase();
+
+        if (!value) return;
+        if (data.meta_keywords.includes(value)) return;
+
+        setData('meta_keywords', [...data.meta_keywords, value]);
+        setKeywordInput('');
+    };
+
+    const removeKeyword = (keyword: string) => {
+        setData(
+            'meta_keywords',
+            data.meta_keywords.filter(k => k !== keyword)
+        );
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -187,24 +222,93 @@ export default function Create() {
                             </div>
 
                             {/* Featured Image */}
-                            <div className="space-y-2">
-                                <Label>Featured Image</Label>
+                            {/* Images */}
+                            <div className="space-y-3">
+                                <Label>Images</Label>
+
                                 <Input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) =>
-                                        setData(
-                                            'featured_image',
-                                            e.target.files ? e.target.files[0] : null,
-                                        )
-                                    }
+                                    multiple // ✅ allow multiple
+                                    onChange={handleImagesChange}
                                 />
-                                {errors.featured_image && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.featured_image}
-                                    </p>
+
+                                <p className="text-xs text-muted-foreground">
+                                    ℹ️ First selected image will be used as the thumbnail
+                                </p>
+
+                                {/* Preview */}
+                                {previews.length > 0 && (
+                                    <div className="grid grid-cols-4 gap-3 mt-3">
+                                        {previews.map((src, index) => (
+                                            <div
+                                                key={index}
+                                                className={`relative border rounded-lg overflow-hidden ${
+                                                    index === 0 ? 'ring-2 ring-primary' : ''
+                                                }`}
+                                            >
+                                                <img
+                                                    src={src}
+                                                    alt="Preview"
+                                                    className="w-full h-24 object-cover"
+                                                />
+
+                                                {index === 0 && (
+                                                    <span className="absolute bottom-1 left-1 bg-primary text-white text-[10px] px-2 py-0.5 rounded">
+                            Thumbnail
+                        </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {errors.images && (
+                                    <p className="text-sm text-destructive">{errors.images}</p>
                                 )}
                             </div>
+
+                            {/* SEO Meta Keywords */}
+                            <div className="space-y-2">
+                                <Label>SEO Meta Keywords</Label>
+
+                                <Input
+                                    placeholder="Type keyword and press Enter"
+                                    value={keywordInput}
+                                    onChange={(e) => setKeywordInput(e.target.value)}
+                                    onKeyDown={handleKeywordKeyDown}
+                                />
+
+                                {/* Pills */}
+                                {data.meta_keywords.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {data.meta_keywords.map((keyword, index) => (
+                                            <span
+                                                key={index}
+                                                className="flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                                            >
+                    {keyword}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeKeyword(keyword)}
+                                                    className="ml-1 text-primary hover:text-destructive"
+                                                >
+                        ×
+                    </button>
+                </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <p className="text-xs text-muted-foreground">
+                                    Press <strong>Enter</strong> to add multiple keywords
+                                </p>
+
+                                {errors.meta_keywords && (
+                                    <p className="text-sm text-destructive">{errors.meta_keywords}</p>
+                                )}
+                            </div>
+
 
                             {/* Published */}
                             <div className="flex items-center gap-3">

@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 
 // UI
@@ -16,8 +16,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import TextEditor from '@/components/ui/text-editor';
+import { useState } from 'react';
 
 /* ------------------------------------------------------------------ */
 /* TYPES */
@@ -33,6 +34,11 @@ interface Tag {
     name: string;
 }
 
+interface PostImage {
+    id: number;
+    image_path: string;
+}
+
 interface BlogPost {
     id: number;
     title: string;
@@ -41,6 +47,8 @@ interface BlogPost {
     blog_category_id: number;
     featured_image: string | null;
     published: boolean;
+    meta_keywords:string[],
+    images: PostImage[];
 }
 
 interface PageProps {
@@ -62,10 +70,12 @@ export default function Edit() {
         body: post.body,
         blog_category_id: post.blog_category_id,
         tags: selectedTags ?? [],
-        featured_image: null as File | null,
+        images: [] as File[],
+        meta_keywords: post.meta_keywords ?? [],
         published: post.published,
         _method: 'put', // 👈 IMPORTANT for PATCH
     });
+    const [keywordInput, setKeywordInput] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -74,6 +84,28 @@ export default function Edit() {
             forceFormData: true, // 👈 REQUIRED for image update
         });
     };
+
+    const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== 'Enter') return;
+
+        e.preventDefault();
+
+        const value = keywordInput.trim().toLowerCase();
+
+        if (!value) return;
+        if (data.meta_keywords.includes(value)) return;
+
+        setData('meta_keywords', [...data.meta_keywords, value]);
+        setKeywordInput('');
+    };
+
+    const removeKeyword = (keyword: string) => {
+        setData(
+            'meta_keywords',
+            data.meta_keywords.filter(k => k !== keyword)
+        );
+    };
+
 
     return (
         <AppLayout title="Edit Blog Post">
@@ -237,23 +269,97 @@ export default function Edit() {
                                 <Input
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     onChange={(e) =>
                                         setData(
-                                            'featured_image',
-                                            e.target.files
-                                                ? e.target.files[0]
-                                                : null,
+                                            'images',
+                                            e.target.files ? Array.from(e.target.files) : []
                                         )
                                     }
                                 />
+
                                 {post.featured_image && (
                                     <p className="text-xs text-muted-foreground">
                                         Current image will be replaced if you
                                         upload a new one.
                                     </p>
                                 )}
+                                {post.images?.length > 0 && (
+                                    <div className="grid grid-cols-4 gap-4">
+                                        {post.images.map((img) => (
+                                            <div
+                                                key={img.id}
+                                                className="relative group rounded overflow-hidden"
+                                            >
+                                                <img
+                                                    src={`/storage/${img.image_path}`}
+                                                    className="h-28 w-full object-cover"
+                                                />
+
+                                                {/* Delete Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (confirm('Delete this image?')) {
+                                                            router.delete(
+                                                                route('blog.posts.images.destroy', img.id),
+                                                                { preserveScroll: true }
+                                                            );
+                                                        }
+                                                    }}
+
+                                                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+
                             </div>
 
+                            {/* SEO Meta Keywords */}
+                            <div className="space-y-2">
+                                <Label>SEO Meta Keywords</Label>
+
+                                <Input
+                                    placeholder="Type keyword and press Enter"
+                                    value={keywordInput}
+                                    onChange={(e) => setKeywordInput(e.target.value)}
+                                    onKeyDown={handleKeywordKeyDown}
+                                />
+
+                                {/* Pills */}
+                                {data.meta_keywords.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {data.meta_keywords.map((keyword, index) => (
+                                            <span
+                                                key={index}
+                                                className="flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                                            >
+                    {keyword}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeKeyword(keyword)}
+                                                    className="ml-1 text-primary hover:text-destructive"
+                                                >
+                        ×
+                    </button>
+                </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <p className="text-xs text-muted-foreground">
+                                    Press <strong>Enter</strong> to add multiple keywords
+                                </p>
+
+                                {errors.meta_keywords && (
+                                    <p className="text-sm text-destructive">{errors.meta_keywords}</p>
+                                )}
+                            </div>
                             {/* Published */}
                             <div className="flex items-center gap-3">
                                 <Switch

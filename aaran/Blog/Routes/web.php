@@ -1,6 +1,7 @@
 <?php
 
 use Aaran\Blog\Controllers\CategoryController;
+use Aaran\Blog\Controllers\CommentController;
 use Aaran\Blog\Controllers\PostController;
 use Aaran\Blog\Controllers\PostImageController;
 use Aaran\Blog\Controllers\TagController;
@@ -70,7 +71,17 @@ Route::middleware(['auth', 'verified'])->prefix('blog')->group(function () {
 Route::get('blog/web/articles', [PostController::class, 'articles'])
     ->name('blog.web.articles');
 
-Route::get('blog/web/{post}/post', [PostController::class, 'post'])
+Route::get('blog/web/articles/{post}', [PostController::class, 'post'])
     ->name('blog.web.post');
 
+Route::post('blog/comments', [CommentController::class, 'store'])
+    ->name('blog.comments.store');
 
+Route::post('blog/posts/like', [\Aaran\Blog\Controllers\BlogLikeController::class, 'toggle'])
+    ->name('blog.posts.like')
+    ->middleware('auth');
+
+Route::delete(
+    '/blog/posts/images/{image}',
+    [\Aaran\Blog\Controllers\PostImageController::class, 'destroy']
+)->name('blog.posts.images.destroy');

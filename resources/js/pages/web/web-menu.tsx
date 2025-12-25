@@ -42,6 +42,7 @@ export default function WebMenu() {
         { name: 'Home', href: '/' },
         { name: 'About', href: '/abouts' },
         { name: 'Services', href: '/web-services' },
+        { name: 'Blogs', href: '/blog/web/articles' },
         { name: 'Contact', href: '/web-contacts' },
     ];
 
