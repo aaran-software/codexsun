@@ -1194,28 +1194,30 @@ export default function TextEditor({
 
                     {isPreviewMode && <div></div>}
 
-                    {/*<div className="flex gap-4 flex-wrap">*/}
-                    {/*    <ImageBtn*/}
-                    {/*        icon="edit"*/}
-                    {/*        label="Write"*/}
-                    {/*        onClick={() => setIsPreviewMode(false)}*/}
-                    {/*        className={`px-4 p-1 text-sm font-medium transition-colors ${*/}
-                    {/*            !isPreviewMode*/}
-                    {/*                ? "bg-black text-white"*/}
-                    {/*                : "bg-white text-black hover:bg-gray-100"*/}
-                    {/*        }`}*/}
-                    {/*    />*/}
-                    {/*    <ImageBtn*/}
-                    {/*        icon="view"*/}
-                    {/*        label="Preview"*/}
-                    {/*        onClick={() => setIsPreviewMode(true)}*/}
-                    {/*        className={`px-4 p-1 text-sm font-medium transition-colors ${*/}
-                    {/*            isPreviewMode*/}
-                    {/*                ? "bg-black text-white"*/}
-                    {/*                : "bg-white text-black hover:bg-gray-100"*/}
-                    {/*        }`}*/}
-                    {/*    />*/}
-                    {/*</div>*/}
+                    <div className="flex gap-4 flex-wrap">
+                        <ImageBtn
+                            icon="edit"
+                            label="Write"
+                            onClick={(e) => {e.preventDefault();  setIsPreviewMode(false)}}
+                            className={`px-4 p-1 text-sm font-medium transition-colors ${
+                                !isPreviewMode
+                                    ? "bg-black text-white"
+                                    : "bg-white text-black hover:bg-gray-100"
+                            }`}
+                        />
+                        <ImageBtn
+                            icon="view"
+                            label="Preview"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setIsPreviewMode(true)}}
+                            className={`px-4 p-1 text-sm font-medium transition-colors ${
+                                isPreviewMode
+                                    ? "bg-black text-white"
+                                    : "bg-white text-black hover:bg-gray-100"
+                            }`}
+                        />
+                    </div>
                 </div>
 
                 {!isPreviewMode && (
@@ -1233,7 +1235,7 @@ export default function TextEditor({
                     <div className="mt-6">
                         <h2 className="font-bold mb-2">Preview:</h2>
                         <div
-                            className="p-4 border border-ring/30 rounded bg-gray-50 prose prose-sm max-w-none"
+                            className="p-4 border border-ring/30 rounded bg-background text-foreground prose prose-sm max-w-none"
                             dangerouslySetInnerHTML={{ __html: rawMessage }}
                         ></div>
                     </div>
