@@ -24,6 +24,7 @@ type BlogImage = {
 export type BlogPost = {
     id: number;
     title: string;
+    slug:string;
     body: string;
     featured_image?: string;
     created_at: string;
@@ -59,8 +60,8 @@ export default function Post() {
         };
     }>().props;
 
-    const handleBlog = (id: string) => {
-        router.visit(`/blog/web/articles/${id}`);
+    const handleBlog = (slug: string) => {
+        router.visit(`/blog/web/articles/${slug}`);
     };
 
     const timelineComments = (post.comments ?? []).map((comment) => ({
@@ -347,7 +348,7 @@ export default function Post() {
                         <div
                             key={recent.id}
                             className="grid grid-cols-[30%_70%] gap-4 items-start cursor-pointer"
-                            onClick={() => handleBlog(recent.id)}
+                            onClick={() => handleBlog(recent.slug)}
                         >
                             {recent.featured_image && (
                                 <img

@@ -5,6 +5,7 @@ import WebMenu from '@/pages/web/web-menu';
 import FooterSection from '@/pages/web/home/FooterSection';
 import { motion } from 'framer-motion';
 import { BlogPost } from './Post';
+import BlogCardsList from '@/components/blog/blog-list';
 
 interface PageProps {
     posts: {
@@ -15,9 +16,9 @@ interface PageProps {
 export default function Articles() {
     const { posts } = usePage<PageProps>().props;
 
-    const handleBlog = (id: string) => {
-        router.visit(`/blog/web/articles/${id}`);
-    };
+    // const handleBlog = (slug: string) => {
+    //     router.visit(`/blog/web/articles/${slug}`);
+    // };
 
     return (
         <>
@@ -46,68 +47,7 @@ export default function Articles() {
                 </div>
             </section>
 
-            {/* Content */}
-            <div className="grid lg:grid-cols-[70%_30%] gap-5 px-5 md:px-[10%]">
-                {/* Blog List */}
-                <div className="space-y-5 pt-20 md:pb-10">
-                    {posts.data.map((blog) => (
-                        <div
-                            key={blog.id}
-                            onClick={() => handleBlog(blog.id)}
-                            className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 p-3 border border-ring/30 rounded-md hover:shadow cursor-pointer transition"
-                        >
-                            {/* Image */}
-                            <img
-                                src={`/storage/${blog.featured_image}`}
-                                alt={blog.title}
-                                loading="lazy"
-                                className="object-scale-down w-[50%] md:w-[60%] h-full rounded"
-                            />
-
-
-                            {/* Content */}
-                            <div className="flex flex-col justify-between pr-4">
-                                <div>
-                                    <h2 className="text-xl font-bold line-clamp-2">
-                                        {blog.title}
-                                    </h2>
-
-                                    <p className="text-sm line-clamp-3 mt-1 text-muted-foreground">
-                                        {blog.excerpt}
-                                    </p>
-                                </div>
-
-                                <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-2">
-                                    {blog.author && (
-                                        <span className="font-semibold">
-                                            {blog.author.name}
-                                        </span>
-                                    )}
-
-                                    <span>
-                                        {new Date(blog.created_at).toLocaleDateString()}
-                                    </span>
-
-                                    {blog.category && (
-                                        <span className="bg-primary/10 px-2 rounded text-primary">
-                                            {blog.category.name}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Sidebar (optional static for now) */}
-                <div className="flex flex-col gap-6 lg:border-l py-20 lg:pl-5 border-ring/30">
-                    <h3 className="text-lg font-semibold">Sidebar</h3>
-                    <p className="text-sm text-muted-foreground">
-                        Categories & Tags can be loaded later via Inertia props.
-                    </p>
-                </div>
-            </div>
-
+            <BlogCardsList posts={posts.data} />
             <FooterSection />
         </>
     );

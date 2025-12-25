@@ -252,16 +252,19 @@ class PostController extends Controller
         ]);
     }
 
-    public function post(BlogPost $post): \Inertia\Response
+    public function post(string $slug): \Inertia\Response
     {
-        $post->load([
-            'category',
-            'author',
-            'tags',
-            'images',
-            'comments.user',
-            'likes',
-        ]);
+        $post = BlogPost::where('slug', $slug)
+            ->where('published', true)
+            ->with([
+                'category',
+                'author',
+                'tags',
+                'images',
+                'comments.user',
+                'likes',
+            ])
+            ->firstOrFail();
 
         $recentPosts = BlogPost::where('id', '!=', $post->id)
             ->where('published', true)
@@ -274,12 +277,12 @@ class PostController extends Controller
             'post' => [
                 ...$post->toArray(),
                 'likes_count' => $post->likes()->where('liked', true)->count(),
-                'liked' => $post->likedByUser(auth()->id()),
+                'liked' => auth()->check()
+                    ? $post->likedByUser(auth()->id())
+                    : false,
             ],
             'recentPosts' => $recentPosts,
         ]);
     }
-
-
 
 }
