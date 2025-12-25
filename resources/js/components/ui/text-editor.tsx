@@ -852,7 +852,7 @@ export default function TextEditor({
                 {/*    />*/}
                 {/*)}*/}
 
-                <div className="flex justify-between mt-4 gap-5">
+                <div className="flex flex-row-reverse justify-between mt-4 gap-5">
                     {!isPreviewMode && (
                         <div className="flex items-center gap-2 flex-wrap">
                             <Tooltip>
@@ -1219,7 +1219,6 @@ export default function TextEditor({
 
                     <div className="flex gap-4 flex-nowrap">
                         <button
-                            label="Write"
                             onClick={(e) => {e.preventDefault();  setIsPreviewMode(false)}}
                             className={`px-4 p-1 h-max text-sm font-medium transition-colors ${
                                 !isPreviewMode
