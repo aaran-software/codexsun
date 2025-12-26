@@ -148,11 +148,13 @@ export default function Index() {
         <AppLayout title="Blog Posts" breadcrumb={breadcrumbs}>
             <Head title="Blog Posts" />
 
-            <div className="container mx-auto px-4 py-6 space-y-6">
+            <div className="px-4 py-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Blog Posts</h1>
-
+                   <div className={"flex flex-col"}>
+                       <h1 className="text-2xl font-bold text-foreground/80">Blog Posts</h1>
+                       <p className={"text-sm text-foreground/50"}>List out All Articles</p>
+                   </div>
                     <div className="flex items-center gap-3">
                         {trashedCount ? (
                             <Badge variant="destructive">
@@ -176,7 +178,7 @@ export default function Index() {
 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-3">
-                    <div className="relative flex-1 max-w-sm">
+                    <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             className="pl-9"
@@ -208,7 +210,7 @@ export default function Index() {
                             setPerPage(e.target.value);
                             navigate({ per_page: e.target.value });
                         }}
-                        className="rounded-md border px-3 py-2 text-sm"
+                        className="rounded-md border px-3 py-2 text-sm bg-background text-foreground"
                     >
                         <option value="15">15</option>
                         <option value="25">25</option>

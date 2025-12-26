@@ -16,8 +16,8 @@ export default function TextEditor({
     const editorRef = useRef<HTMLDivElement>(null);
     const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-    const [textColor, setTextColor] = useState("#000000");
-    const [bgColor, setBgColor] = useState("#ffffff");
+    // const [textColor, setTextColor] = useState("#000000");
+    // const [bgColor, setBgColor] = useState("#ffffff");
 
     const [isBold, setIsBold] = useState(false);
     const [isItalic, setIsItalic] = useState(false);
@@ -173,54 +173,54 @@ export default function TextEditor({
     };
 
     // Helper function to transform selected text (for uppercase/lowercase)
-    const transformSelectedText = (
-        e: React.MouseEvent<HTMLButtonElement>,
-        transformFn: (text: string) => string
-    ) => {
-        e.preventDefault();
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
+    // const transformSelectedText = (
+    //     e: React.MouseEvent<HTMLButtonElement>,
+    //     transformFn: (text: string) => string
+    // ) => {
+    //     e.preventDefault();
+    //     const selection = window.getSelection();
+    //     if (!selection || selection.rangeCount === 0 || !editorRef.current) return;
+    //
+    //     const range = selection.getRangeAt(0);
+    //     // Ensure the selection is within our editable div
+    //     if (!editorRef.current.contains(range.commonAncestorContainer)) return;
+    //
+    //     if (range.collapsed) return; // no text selected
+    //
+    //     const selectedText = range.toString();
+    //     const transformedText = transformFn(selectedText);
+    //
+    //     // Replace the selected text. For complex styling, you'd insert a span.
+    //     // For simple text transformation, replacing with a text node is fine.
+    //     range.deleteContents();
+    //     range.insertNode(document.createTextNode(transformedText));
+    //
+    //     // After modification, update the rawMessage from the DOM
+    //     setRawMessage(editorRef.current.innerHTML);
+    //     onChange(editorRef.current!.innerHTML);
+    //
+    // };
 
-        const range = selection.getRangeAt(0);
-        // Ensure the selection is within our editable div
-        if (!editorRef.current.contains(range.commonAncestorContainer)) return;
+    // const handleUppercase = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     transformSelectedText(e, (text) => text.toUpperCase());
+    // };
+    //
+    // const handleLowercase = (e: React.MouseEvent<HTMLButtonElement>) => {
+    //     transformSelectedText(e, (text) => text.toLowerCase());
+    // };
 
-        if (range.collapsed) return; // no text selected
-
-        const selectedText = range.toString();
-        const transformedText = transformFn(selectedText);
-
-        // Replace the selected text. For complex styling, you'd insert a span.
-        // For simple text transformation, replacing with a text node is fine.
-        range.deleteContents();
-        range.insertNode(document.createTextNode(transformedText));
-
-        // After modification, update the rawMessage from the DOM
-        setRawMessage(editorRef.current.innerHTML);
-        onChange(editorRef.current!.innerHTML);
-
-    };
-
-    const handleUppercase = (e: React.MouseEvent<HTMLButtonElement>) => {
-        transformSelectedText(e, (text) => text.toUpperCase());
-    };
-
-    const handleLowercase = (e: React.MouseEvent<HTMLButtonElement>) => {
-        transformSelectedText(e, (text) => text.toLowerCase());
-    };
-
-
-    const handleTextColorInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const color = e.target.value;
-        setTextColor(color);
-        applyFormatting("foreColor", color);
-    };
-
-    const handleBgColorInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const color = e.target.value;
-        setBgColor(color);
-        applyFormatting("backColor", color);
-    };
+    //
+    // const handleTextColorInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const color = e.target.value;
+    //     setTextColor(color);
+    //     applyFormatting("foreColor", color);
+    // };
+    //
+    // const handleBgColorInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const color = e.target.value;
+    //     setBgColor(color);
+    //     applyFormatting("backColor", color);
+    // };
 
     const applyLinkToSelection = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -852,7 +852,7 @@ export default function TextEditor({
                 {/*    />*/}
                 {/*)}*/}
 
-                <div className="flex justify-between mt-4 gap-5">
+                <div className="flex flex-row-reverse justify-between mt-4 gap-5">
                     {!isPreviewMode && (
                         <div className="flex items-center gap-2 flex-wrap">
                             <Tooltip>
@@ -900,59 +900,59 @@ export default function TextEditor({
                                 </TooltipContent>
                             </Tooltip>
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={handleUppercase}
-                                        icon="uppercase"
-                                        className="p-2 hover:bg-gray-300 rounded-md"
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Uppercase</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <ImageBtn*/}
+                            {/*            onClick={handleUppercase}*/}
+                            {/*            icon="uppercase"*/}
+                            {/*            className="p-2 hover:bg-gray-300 rounded-md"*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Uppercase</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={handleLowercase}
-                                        className="p-2 hover:bg-gray-300 rounded-md"
-                                        icon="lowercase"
-                                    />
-                                </TooltipTrigger>
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <ImageBtn*/}
+                            {/*            onClick={handleLowercase}*/}
+                            {/*            className="p-2 hover:bg-gray-300 rounded-md"*/}
+                            {/*            icon="lowercase"*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
 
-                                <TooltipContent>
-                                    <p>Image</p>
-                                </TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <input
-                                        type="color"
-                                        value={textColor}
-                                        onInput={handleTextColorInput}
-                                        className="w-6 h-6 cursor-pointer"
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Text Color</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Lowercase</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <input*/}
+                            {/*            type="color"*/}
+                            {/*            value={textColor}*/}
+                            {/*            onInput={handleTextColorInput}*/}
+                            {/*            className="w-6 h-6 cursor-pointer"*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Text Color</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <input
-                                        type="color"
-                                        value={bgColor}
-                                        onInput={handleBgColorInput}
-                                        className="w-6 h-6 cursor-pointer"
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Background Color</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            {/*<Tooltip>*/}
+                            {/*    <TooltipTrigger asChild>*/}
+                            {/*        <input*/}
+                            {/*            type="color"*/}
+                            {/*            value={bgColor}*/}
+                            {/*            onInput={handleBgColorInput}*/}
+                            {/*            className="w-6 h-6 cursor-pointer"*/}
+                            {/*        />*/}
+                            {/*    </TooltipTrigger>*/}
+                            {/*    <TooltipContent>*/}
+                            {/*        <p>Background Color</p>*/}
+                            {/*    </TooltipContent>*/}
+                            {/*</Tooltip>*/}
 
                             <select
                                 onChange={(e) => {
@@ -979,65 +979,88 @@ export default function TextEditor({
                                 <option value="72">72</option>
                             </select>
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={toggleAlignLeft}
-                                        icon="alignleft"
-                                        className={`p-2 hover:bg-gray-300 rounded-md ${
-                                            isJustifyLeft ? "border border-ring/50 bg-foreground/20" : ""
-                                        }`}
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Align Left</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            <div className="relative inline-flex group">
+                                {/* MAIN BUTTON */}
+                                <ImageBtn
+                                    icon="alignleft"
+                                    className="p-2 rounded-md hover:bg-gray-300"
+                                />
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={toggleAlignCenter}
-                                        icon="aligncenter"
-                                        className={`p-2 hover:bg-gray-300 rounded-md ${
-                                            isJustifyCenter ? "border border-ring/50 bg-foreground/20" : ""
-                                        }`}
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Align Center</p>
-                                </TooltipContent>
-                            </Tooltip>
+                                {/* HOVER BUFFER (invisible, prevents flicker) */}
+                                <div className="absolute left-0 top-full h-3 w-full" />
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={toggleAlignRight}
-                                        icon="alignright"
-                                        className={`p-2 hover:bg-gray-300 rounded-md ${
-                                            isJustifyRight ? "border border-ring/50 bg-foreground/20" : ""
-                                        }`}
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Align Right</p>
-                                </TooltipContent>
-                            </Tooltip>
+                                {/* HOVER PANEL */}
+                                <div
+                                    className="
+            absolute left-0 top-[calc(100%+0.75rem)]
+            hidden group-hover:flex
+            gap-1 rounded-md border bg-background p-2 shadow-md
+            z-50
+        "
+                                >
+                                    {/* buttons unchanged */}
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <ImageBtn
+                                                onClick={toggleAlignLeft}
+                                                icon="alignleft"
+                                                className={`p-2 rounded-md hover:bg-gray-300 ${
+                                                    isJustifyLeft ? "border border-ring/50 bg-foreground/20" : ""
+                                                }`}
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Align Left</p>
+                                        </TooltipContent>
+                                    </Tooltip>
 
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <ImageBtn
-                                        onClick={toggleAlignFull}
-                                        icon="alignjustify"
-                                        className={`p-2 hover:bg-gray-300 rounded-md ${
-                                            isJustifyFull ? "border border-ring/50 bg-foreground/20" : ""
-                                        }`}
-                                    />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Justify</p>
-                                </TooltipContent>
-                            </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <ImageBtn
+                                                onClick={toggleAlignCenter}
+                                                icon="aligncenter"
+                                                className={`p-2 rounded-md hover:bg-gray-300 ${
+                                                    isJustifyCenter ? "border border-ring/50 bg-foreground/20" : ""
+                                                }`}
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Align Center</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <ImageBtn
+                                                onClick={toggleAlignRight}
+                                                icon="alignright"
+                                                className={`p-2 rounded-md hover:bg-gray-300 ${
+                                                    isJustifyRight ? "border border-ring/50 bg-foreground/20" : ""
+                                                }`}
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Align Right</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <ImageBtn
+                                                onClick={toggleAlignFull}
+                                                icon="alignjustify"
+                                                className={`p-2 rounded-md hover:bg-gray-300 ${
+                                                    isJustifyFull ? "border border-ring/50 bg-foreground/20" : ""
+                                                }`}
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Justify</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                            </div>
+
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1194,28 +1217,26 @@ export default function TextEditor({
 
                     {isPreviewMode && <div></div>}
 
-                    {/*<div className="flex gap-4 flex-wrap">*/}
-                    {/*    <ImageBtn*/}
-                    {/*        icon="edit"*/}
-                    {/*        label="Write"*/}
-                    {/*        onClick={() => setIsPreviewMode(false)}*/}
-                    {/*        className={`px-4 p-1 text-sm font-medium transition-colors ${*/}
-                    {/*            !isPreviewMode*/}
-                    {/*                ? "bg-black text-white"*/}
-                    {/*                : "bg-white text-black hover:bg-gray-100"*/}
-                    {/*        }`}*/}
-                    {/*    />*/}
-                    {/*    <ImageBtn*/}
-                    {/*        icon="view"*/}
-                    {/*        label="Preview"*/}
-                    {/*        onClick={() => setIsPreviewMode(true)}*/}
-                    {/*        className={`px-4 p-1 text-sm font-medium transition-colors ${*/}
-                    {/*            isPreviewMode*/}
-                    {/*                ? "bg-black text-white"*/}
-                    {/*                : "bg-white text-black hover:bg-gray-100"*/}
-                    {/*        }`}*/}
-                    {/*    />*/}
-                    {/*</div>*/}
+                    <div className="flex gap-4 flex-nowrap">
+                        <button
+                            onClick={(e) => {e.preventDefault();  setIsPreviewMode(false)}}
+                            className={`px-4 p-1 h-max text-sm font-medium transition-colors ${
+                                !isPreviewMode
+                                    ? "bg-foreground text-background"
+                                    : "bg-background text-foreground hover:bg-gray-100"
+                            }`}
+                        >Write</button>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setIsPreviewMode(true)}}
+                            className={`px-4 p-1 h-max text-sm font-medium transition-colors ${
+                                isPreviewMode
+                                    ? "bg-foreground text-background"
+                                    : "bg-background text-foreground hover:bg-gray-100"
+                            }`}
+                        >Preview</button>
+                    </div>
                 </div>
 
                 {!isPreviewMode && (
@@ -1233,7 +1254,7 @@ export default function TextEditor({
                     <div className="mt-6">
                         <h2 className="font-bold mb-2">Preview:</h2>
                         <div
-                            className="p-4 border border-ring/30 rounded bg-gray-50 prose prose-sm max-w-none"
+                            className="p-4 border border-ring/30 rounded bg-background text-foreground prose prose-sm max-w-none"
                             dangerouslySetInnerHTML={{ __html: rawMessage }}
                         ></div>
                     </div>
