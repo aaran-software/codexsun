@@ -4,6 +4,7 @@ namespace Aaran;
 
 use Aaran\Blog\Providers\BlogServiceProvider;
 use Aaran\Core\Providers\CoreServiceProvider;
+use Aaran\Ecart\Providers\EcartServiceProvider;
 use Illuminate\Support\ServiceProvider;
 
 class AaranServiceProvider extends ServiceProvider
@@ -12,6 +13,7 @@ class AaranServiceProvider extends ServiceProvider
     {
         $this->app->register(CoreServiceProvider::class);
         $this->app->register(BlogServiceProvider::class);
+        $this->app->register(EcartServiceProvider::class);
 
     }
 
