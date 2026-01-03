@@ -1,6 +1,5 @@
 'use client';
 import "../../../../css/textiles.css"
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import FooterSection from '@/pages/web/home/FooterSection';
 import Header from '@/components/header/header';
@@ -8,14 +7,14 @@ import {
     ArrowRight,
     Award,
     CheckCircle2,
-    ChevronLeft,
-    ChevronRight,
     Shield,
     Target,
     TrendingUp,
     Users, Zap
 } from 'lucide-react';
-import { useState } from 'react';
+import Testimonials from '@/components/about/testimonials/Testimonials';
+import ProcessStep from '@/components/about/history/ProcessStep';
+import Team from '@/components/about/team/team';
 // import FullScreenSlider from '@/pages/web/slider';
 
 
@@ -141,15 +140,7 @@ const processSteps = [
 
 
 export default function Home() {
-    const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-    const nextTestimonial = () => {
-        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-    };
-
-    const prevTestimonial = () => {
-        setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-    };
     const navItems = [
         { name: 'Home', href: '/tirupur-textiles' },
         { name: 'About', href: '/tirupur-textiles/about' },
@@ -159,7 +150,7 @@ export default function Home() {
     ];
     return (
         <>
-            <Header navItems={navItems}/>
+            <Header navItems={navItems} companyName={"Tirupur Textiles"}/>
 
             <div className="flex flex-col">
                 {/* Hero Section */}
@@ -245,77 +236,7 @@ export default function Home() {
                 </section>
 
                 {/* Testimonials Section */}
-                <section className="py-16 md:py-24">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-                                What Our Clients Say
-                            </h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                Don't just take our word for it. Hear from the
-                                businesses we've helped succeed.
-                            </p>
-                        </div>
-                        <div className="relative mx-auto max-w-4xl">
-                            <Card className="border-border/50">
-                                <CardContent className="p-8 md:p-12">
-                                    <div className="mb-6 flex justify-center">
-                                        {[
-                                            ...Array(
-                                                testimonials[currentTestimonial]
-                                                    .rating,
-                                            ),
-                                        ].map((_, i) => (
-                                            <svg
-                                                key={i}
-                                                className="h-6 w-6 fill-primary text-primary"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                                            </svg>
-                                        ))}
-                                    </div>
-                                    <blockquote className="mb-6 text-center text-lg text-foreground italic md:text-xl">
-                                        "{testimonials[currentTestimonial].text}
-                                        "
-                                    </blockquote>
-                                    <div className="text-center">
-                                        <p className="font-semibold">
-                                            {
-                                                testimonials[currentTestimonial]
-                                                    .name
-                                            }
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {
-                                                testimonials[currentTestimonial]
-                                                    .company
-                                            }
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <div className="mt-6 flex justify-center gap-4">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={prevTestimonial}
-                                    aria-label="Previous testimonial"
-                                >
-                                    <ChevronLeft className="h-5 w-5" />
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={nextTestimonial}
-                                    aria-label="Next testimonial"
-                                >
-                                    <ChevronRight className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <Testimonials testimonials={testimonials} />
 
                 {/* Our Process Section */}
                 <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
@@ -329,70 +250,12 @@ export default function Home() {
                                 exceptional results every time.
                             </p>
                         </div>
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-                            {processSteps.map((step, index) => (
-                                <div key={index} className="relative">
-                                    <div className="mb-4 flex items-center">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-2xl font-bold text-white">
-                                            {step.number}
-                                        </div>
-                                        {index < processSteps.length - 1 && (
-                                            <div className="ml-4 hidden h-0.5 flex-1 bg-gradient-to-r from-primary to-secondary lg:block" />
-                                        )}
-                                    </div>
-                                    <h3 className="mb-2 text-xl font-semibold">
-                                        {step.title}
-                                    </h3>
-                                    <p className="text-muted-foreground">
-                                        {step.description}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
+                       <ProcessStep processSteps={processSteps} />
                     </div>
                 </section>
 
                 {/* Experts Section */}
-                <section className="py-16 md:py-24 px-4 md:px-[10%]">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-                                Meet Our Experts
-                            </h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                The talented professionals driving innovation
-                                and excellence at Texties Company.
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                            {experts.map((expert) => (
-                                <Card
-                                    key={expert.id}
-                                    className="overflow-hidden border-border/50 transition-shadow hover:shadow-lg py-0"
-                                >
-                                    <div className="aspect-square overflow-hidden">
-                                        <img
-                                            src={expert.image}
-                                            alt={expert.name}
-                                            className="h-full w-full object-cover transition-transform hover:scale-105"
-                                        />
-                                    </div>
-                                    <CardContent className="p-3">
-                                        <h3 className="mb-1 text-xl font-semibold">
-                                            {expert.name}
-                                        </h3>
-                                        <p className="mb-3 text-sm font-medium text-primary">
-                                            {expert.role}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {expert.bio}
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+              <Team TeamMember={experts} title={"Meet Our Experts"} description={" The talented professionals driving innovation and excellence at Texties Company."} />
 
                 {/* Partners Section */}
                 <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">

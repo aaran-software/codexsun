@@ -3,7 +3,6 @@
 import FooterSection from '@/pages/web/home/FooterSection';
 import Header from '@/components/header/header';
 import "../../../../css/textiles.css"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Scissors,
     Palette,
@@ -17,6 +16,10 @@ import {
     Sparkles,
     Target, Users
 } from 'lucide-react';
+import ServiceCard from '@/components/service/ServiceCard';
+import { Card, CardContent } from '@/components/ui/card';
+import ProcessStep from '@/components/about/history/ProcessStep';
+import ProcessIcon from '@/components/service/Processicon';
 
 const services = [
     {
@@ -139,7 +142,7 @@ const navItems = [
 export default function About() {
     return (
         <>
-            <Header navItems={navItems}/>
+            <Header navItems={navItems} companyName={"Tirupur Textiles"}/>
 
             <div className="flex flex-col">
                 {/* Hero Section */}
@@ -154,71 +157,16 @@ export default function About() {
                     </div>
                 </section>
 
-                {/* Services Grid */}
-                <section className="py-16 md:py-24">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">What We Offer</h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                A complete range of services to support your textile needs from concept to delivery.
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                            {services.map((service, index) => (
-                                <Card key={index} className="border-border/50 transition-shadow hover:shadow-lg">
-                                    <CardHeader>
-                                        <div className="mb-4 inline-flex rounded-lg bg-primary/10 w-max p-3">
-                                            <service.icon className="h-8 w-8 text-primary" />
-                                        </div>
-                                        <CardTitle className="text-2xl">{service.title}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="mb-4 text-muted-foreground">{service.description}</p>
-                                        <ul className="space-y-2">
-                                            {service.features.map((feature, idx) => (
-                                                <li key={idx} className="flex items-start text-sm">
-                                                    <CheckCircle2 className="mr-2 mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                                                    <span>{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                <div className={"px-4 md:px-[10%]"}>
+                    <ServiceCard services={services} title={"What We Offer"} description={"A complete range of services to support your textile needs from concept to delivery."}/>
+
+                </div>
 
                 {/* Process Section */}
-                <section className="bg-muted/30 py-16 md:py-24">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Our Service Process</h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                A proven methodology that ensures successful outcomes for every project.
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
-                            {processSteps.map((step, index) => (
-                                <div key={index} className="relative text-center">
-                                    <div className="mb-4 flex justify-center">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
-                                            <step.icon className="h-8 w-8 text-white" />
-                                        </div>
-                                    </div>
-                                    <h3 className="mb-2 text-lg font-semibold">{step.title}</h3>
-                                    <p className="text-sm text-muted-foreground">{step.description}</p>
-                                    {index < processSteps.length - 1 && (
-                                        <div className="absolute right-0 top-8 hidden h-0.5 w-full bg-gradient-to-r from-primary to-secondary lg:block" />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                <ProcessIcon processSteps={processSteps} title={'Our Service Process'} description={"A proven methodology that ensures successful outcomes for every project."} />
 
                 {/* Benefits Section */}
-                <section className="py-16 md:py-24">
+                <section className="py-16 md:py-24 px-4 md:px-[10%]">
                     <div className="container mx-auto px-4 md:px-6">
                         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
                             <div>

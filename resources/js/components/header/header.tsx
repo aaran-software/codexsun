@@ -6,22 +6,22 @@ import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-type nav={
-    name:string;
+interface nav{
+    name:string
     href:string
 }
 
 interface HeaderProps{
     navItems:nav[]
+    companyName:string
 }
 
-export default function Header({navItems}:HeaderProps) {
+export default function Header({navItems,companyName}:HeaderProps) {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenu, setMobileMenu] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const { auth } = usePage<any>().props;
 
-    const { appName } = usePage().props as unknown as { appName: string };
     const currentUrl = usePage<any>().url;
 
     useEffect(() => {
@@ -90,9 +90,9 @@ export default function Header({navItems}:HeaderProps) {
                                     scrolled || darkMode
                                         ? 'text-[#1b1b18] fill-black dark:text-[#EDEDEC]'
                                         : 'text-white'
-                                } group-hover:text-[#8F1F8D] dark:group-hover:text-[#8F1F8D]`}
+                                } group-hover:text-primary dark:group-hover:text-primary`}
                             >
-                                {appName || 'Tech Media'}
+                                {companyName}
                             </span>
                         </Link>
 
@@ -115,7 +115,7 @@ export default function Header({navItems}:HeaderProps) {
                                                     {item.name}
                                                 </span>
                                                 <span
-                                                    className={`absolute right-0 bottom-0 left-0 h-0.5 transform bg-[#8F1F8D] transition-transform duration-300 ${
+                                                    className={`absolute right-0 bottom-0 left-0 h-0.5 transform bg-primary transition-transform duration-300 ${
                                                         active
                                                             ? 'scale-x-100'
                                                             : 'scale-x-0 group-hover:scale-x-100'

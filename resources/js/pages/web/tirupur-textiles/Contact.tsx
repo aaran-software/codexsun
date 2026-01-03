@@ -57,7 +57,7 @@ export default function Home() {
     ];
     return (
         <>
-            <Header navItems={navItems} />
+            <Header navItems={navItems} companyName={"Tirupur Textiles"}/>
 
             <div className="flex flex-col">
                 {/* Hero Section */}
