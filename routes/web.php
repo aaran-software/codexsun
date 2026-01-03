@@ -471,6 +471,21 @@ Route::post('/calls/update-enquiry', [CallLogController::class, 'updateEnquiry']
 
 
 
+//Tiruput texties
 
+Route::get('/tirupur-textiles', function () {
+    return Inertia::render('web/tirupur-textiles/Home');
+})->name('tirupur-textiles');
 
+Route::get('/tirupur-textiles/about', function () {
+    return Inertia::render('web/tirupur-textiles/About');
+})->name('tirupur-textiles.about');
+
+Route::get('/tirupur-textiles/services', function () {
+    return Inertia::render('web/tirupur-textiles/Services');
+})->name('tirupur-textiles.services');
+
+Route::get('/tirupur-textiles/contact', function () {
+    return Inertia::render('web/tirupur-textiles/Contact');
+})->name('tirupur-textiles.contact');
 
