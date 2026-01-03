@@ -1,46 +1,17 @@
 'use client';
-import "../../../../css/textiles.css"
-import { Card, CardContent } from '@/components/ui/card';
-import FooterSection from '@/pages/web/home/FooterSection';
-import Header from '@/components/header/header';
 import {
     ArrowRight,
-    Award,
     CheckCircle2,
-    Shield,
     Target,
     TrendingUp,
-    Users, Zap
 } from 'lucide-react';
 import Testimonials from '@/components/about/testimonials/Testimonials';
 import ProcessStep from '@/components/about/history/ProcessStep';
 import Team from '@/components/about/team/team';
+import Layout from '@/pages/web/tirupur-textiles/Layout/Layout';
+import { useState } from 'react';
 // import FullScreenSlider from '@/pages/web/slider';
 
-
-const testimonials = [
-    {
-        id: 1,
-        name: 'Sarah Johnson',
-        company: 'Fashion Forward Inc.',
-        text: 'Texties Company has been our trusted partner for over 5 years. Their quality and reliability are unmatched in the industry.',
-        rating: 5,
-    },
-    {
-        id: 2,
-        name: 'Michael Chen',
-        company: 'Global Textiles Ltd.',
-        text: 'The innovation and attention to detail that Texties brings to every project is exceptional. Highly recommended!',
-        rating: 5,
-    },
-    {
-        id: 3,
-        name: 'Emily Rodriguez',
-        company: 'Sustainable Fabrics Co.',
-        text: 'Working with Texties has transformed our business. Their expertise and customer service are second to none.',
-        rating: 5,
-    },
-];
 
 const partners = [
     { id: 1, src: '/assets/partner.jpg', alt: 'Partner 1' },
@@ -82,38 +53,38 @@ const experts = [
     },
 ];
 
-const whyChooseUs = [
-    {
-        icon: Award,
-        title: 'Industry Excellence',
-        description: 'Award-winning quality and innovation recognized globally in the textile industry.',
-    },
-    {
-        icon: Users,
-        title: 'Expert Team',
-        description: 'Dedicated professionals with decades of combined experience in textile solutions.',
-    },
-    {
-        icon: TrendingUp,
-        title: 'Proven Results',
-        description: 'Track record of delivering exceptional outcomes for clients across industries.',
-    },
-    {
-        icon: Shield,
-        title: 'Quality Assurance',
-        description: 'Rigorous quality control processes ensuring the highest standards in every project.',
-    },
-    {
-        icon: Zap,
-        title: 'Fast Delivery',
-        description: 'Efficient processes and logistics ensuring timely delivery without compromising quality.',
-    },
-    {
-        icon: Target,
-        title: 'Custom Solutions',
-        description: 'Tailored approaches designed to meet your specific business needs and objectives.',
-    },
-];
+// const whyChooseUs = [
+//     {
+//         icon: Award,
+//         title: 'Industry Excellence',
+//         description: 'Award-winning quality and innovation recognized globally in the textile industry.',
+//     },
+//     {
+//         icon: Users,
+//         title: 'Expert Team',
+//         description: 'Dedicated professionals with decades of combined experience in textile solutions.',
+//     },
+//     {
+//         icon: TrendingUp,
+//         title: 'Proven Results',
+//         description: 'Track record of delivering exceptional outcomes for clients across industries.',
+//     },
+//     {
+//         icon: Shield,
+//         title: 'Quality Assurance',
+//         description: 'Rigorous quality control processes ensuring the highest standards in every project.',
+//     },
+//     {
+//         icon: Zap,
+//         title: 'Fast Delivery',
+//         description: 'Efficient processes and logistics ensuring timely delivery without compromising quality.',
+//     },
+//     {
+//         icon: Target,
+//         title: 'Custom Solutions',
+//         description: 'Tailored approaches designed to meet your specific business needs and objectives.',
+//     },
+// ];
 
 const processSteps = [
     {
@@ -138,20 +109,42 @@ const processSteps = [
     },
 ];
 
+const testimonials = [
+    {
+        id: 1,
+        name: 'Sarah Johnson',
+        company: 'Fashion Forward Inc.',
+        text: 'Texties Company has been our trusted partner for over 5 years. Their quality and reliability are unmatched in the industry.',
+        rating: 5,
+    },
+    {
+        id: 2,
+        name: 'Michael Chen',
+        company: 'Global Textiles Ltd.',
+        text: 'The innovation and attention to detail that Texties brings to every project is exceptional. Highly recommended!',
+        rating: 5,
+    },
+    {
+        id: 3,
+        name: 'Emily Rodriguez',
+        company: 'Sustainable Fabrics Co.',
+        text: 'Working with Texties has transformed our business. Their expertise and customer service are second to none.',
+        rating: 5,
+    },
+];
 
 export default function Home() {
 
-    const navItems = [
-        { name: 'Home', href: '/tirupur-textiles' },
-        { name: 'About', href: '/tirupur-textiles/about' },
-        { name: 'Services', href: '/tirupur-textiles/services' },
-        { name: 'Blogs', href: '/blog/web/articles' },
-        { name: 'Contact', href: '/tirupur-textiles/contact' },
-    ];
+    const [categories] = useState([
+        { title: "Men", image: "/assets/hero.jpg" },
+        { title: "Women", image: "/assets/hero.jpg" },
+        { title: "Kids", image: "/assets/hero.jpg" },
+        { title: "Formal Wear", image: "/assets/hero.jpg" },
+        { title: "Casual Wear", image: "/assets/hero.jpg" },
+        { title: "Ethnic Wear", image: "/assets/hero.jpg" },
+    ]);
     return (
-        <>
-            <Header navItems={navItems} companyName={"Tirupur Textiles"}/>
-
+        <Layout>
             <div className="flex flex-col">
                 {/* Hero Section */}
                 <section className="relative overflow-hidden">
@@ -196,95 +189,84 @@ export default function Home() {
                     </div>
                 </section>
 
+                <section className="py-12 md:py-16 bg-gray-50">
+                    <div className="container mx-auto px-4">
+
+                        {/* Heading */}
+                        <div className="text-center mb-10">
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                                Categories
+                            </h2>
+                            <p className="mt-2 text-gray-600">
+                                Explore our fashion collections
+                            </p>
+                        </div>
+
+                        {/* Categories Grid */}
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6">
+                            {categories.map((category, index) => (
+                                <div
+                                    key={index}
+                                    className="flex flex-col items-center text-center"
+                                >
+                                    {/* Circle Card */}
+                                    <div className="relative h-24 w-24 sm:h-32 sm:w-32 md:h-48 md:w-48 rounded-full overflow-hidden shadow-md">
+                                        <img
+                                            src={category.image}
+                                            alt={category.title}
+                                            className="h-full w-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/30" />
+                                    </div>
+
+                                    {/* Title */}
+                                    <p className="mt-3 text-sm font-medium text-gray-800">
+                                        {category.title}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                    </div>
+                </section>
 
                 {/*<FullScreenSlider />*/}
 
                 {/* Why Choose Us Section */}
-                <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-                                Why Choose Texties
-                            </h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                Discover what sets us apart and makes us the
-                                preferred choice for textile solutions
-                                worldwide.
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {whyChooseUs.map((item, index) => (
-                                <Card
-                                    key={index}
-                                    className="border-border/50 transition-shadow hover:shadow-lg"
-                                >
-                                    <CardContent className="p-6">
-                                        <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
-                                            <item.icon className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <h3 className="mb-2 text-xl font-semibold">
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-muted-foreground">
-                                            {item.description}
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Testimonials Section */}
-                <Testimonials testimonials={testimonials} />
-
-                {/* Our Process Section */}
-                <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-                                Our Process
-                            </h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                A streamlined approach designed to deliver
-                                exceptional results every time.
-                            </p>
-                        </div>
-                       <ProcessStep processSteps={processSteps} />
-                    </div>
-                </section>
-
-                {/* Experts Section */}
-              <Team TeamMember={experts} title={"Meet Our Experts"} description={" The talented professionals driving innovation and excellence at Texties Company."} />
-
-                {/* Partners Section */}
-                <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
-                    <div className="container mx-auto px-4 md:px-6">
-                        <div className="mb-12 text-center">
-                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
-                                Our Trusted Partners
-                            </h2>
-                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                                Proud to collaborate with industry leaders who
-                                share our commitment to excellence.
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
-                            {partners.map((partner) => (
-                                <div
-                                    key={partner.id}
-                                    className="flex items-center justify-center rounded-lg bg-background p-6 transition-shadow hover:shadow-md"
-                                >
-                                    <img
-                                        src={partner.src}
-                                        alt={partner.alt}
-                                        className="h-auto w-full max-w-[120px] object-contain opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                {/*<section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">*/}
+                {/*    <div className="container mx-auto px-4 md:px-6">*/}
+                {/*        <div className="mb-12 text-center">*/}
+                {/*            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">*/}
+                {/*                Why Choose Texties*/}
+                {/*            </h2>*/}
+                {/*            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">*/}
+                {/*                Discover what sets us apart and makes us the*/}
+                {/*                preferred choice for textile solutions*/}
+                {/*                worldwide.*/}
+                {/*            </p>*/}
+                {/*        </div>*/}
+                {/*        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">*/}
+                {/*            {whyChooseUs.map((item, index) => (*/}
+                {/*                <Card*/}
+                {/*                    key={index}*/}
+                {/*                    className="border-border/50 transition-shadow hover:shadow-lg"*/}
+                {/*                >*/}
+                {/*                    <CardContent className="p-6">*/}
+                {/*                        <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3">*/}
+                {/*                            <item.icon className="h-6 w-6 text-primary" />*/}
+                {/*                        </div>*/}
+                {/*                        <h3 className="mb-2 text-xl font-semibold">*/}
+                {/*                            {item.title}*/}
+                {/*                        </h3>*/}
+                {/*                        <p className="text-muted-foreground">*/}
+                {/*                            {item.description}*/}
+                {/*                        </p>*/}
+                {/*                    </CardContent>*/}
+                {/*                </Card>*/}
+                {/*            ))}*/}
+                {/*        </div>*/}
+                {/*    </div>*/}
+                {/*</section>*/}
 
                 {/* Mission & Vision Section */}
                 <section className="py-16 md:py-24 px-4 md:px-[10%]">
@@ -369,6 +351,58 @@ export default function Home() {
                     </div>
                 </section>
 
+                {/* Our Process Section */}
+                <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
+                    <div className="container mx-auto px-4 md:px-6">
+                        <div className="mb-12 text-center">
+                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+                                Our Process
+                            </h2>
+                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                                A streamlined approach designed to deliver
+                                exceptional results every time.
+                            </p>
+                        </div>
+                       <ProcessStep processSteps={processSteps} />
+                    </div>
+                </section>
+
+                {/* Experts Section */}
+              <Team TeamMember={experts} title={"Meet Our Experts"} description={" The talented professionals driving innovation and excellence at Texties Company."} />
+
+                {/* Partners Section */}
+                <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
+                    <div className="container mx-auto px-4 md:px-6">
+                        <div className="mb-12 text-center">
+                            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+                                Our Trusted Partners
+                            </h2>
+                            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                                Proud to collaborate with industry leaders who
+                                share our commitment to excellence.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
+                            {partners.map((partner) => (
+                                <div
+                                    key={partner.id}
+                                    className="flex items-center justify-center rounded-lg bg-background p-6 transition-shadow hover:shadow-md"
+                                >
+                                    <img
+                                        src={partner.src}
+                                        alt={partner.alt}
+                                        className="h-auto w-full max-w-[120px] object-contain opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+
+                {/* Testimonials Section */}
+                <Testimonials testimonials={testimonials} />
+
                 {/* CTA Section */}
                 <section className="bg-gradient-to-r from-primary to-secondary py-16 md:py-24">
                     <div className="container mx-auto px-4 text-center md:px-6 flex justify-center flex-col items-center">
@@ -390,9 +424,6 @@ export default function Home() {
                     </div>
                 </section>
             </div>
-
-            {/* Footer */}
-            <FooterSection />
-        </>
+        </Layout>
     );
 }

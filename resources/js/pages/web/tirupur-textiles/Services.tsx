@@ -1,7 +1,6 @@
 'use client';
+import Layout from '@/pages/web/tirupur-textiles/Layout/Layout';
 
-import FooterSection from '@/pages/web/home/FooterSection';
-import Header from '@/components/header/header';
 import "../../../../css/textiles.css"
 import {
     Scissors,
@@ -18,13 +17,12 @@ import {
 } from 'lucide-react';
 import ServiceCard from '@/components/service/ServiceCard';
 import { Card, CardContent } from '@/components/ui/card';
-import ProcessStep from '@/components/about/history/ProcessStep';
 import ProcessIcon from '@/components/service/Processicon';
 
 const services = [
     {
         icon: Scissors,
-        title: 'Custom Textile Manufacturing',
+        title: 'Custom Manufacturing',
         description:
             'Tailored textile production solutions designed to meet your specific requirements, from concept to final product.',
         features: [
@@ -132,22 +130,16 @@ const benefits = [
     'Commitment to sustainability and ethical practices',
     'Proven track record of successful projects',
 ];
-const navItems = [
-    { name: 'Home', href: '/tirupur-textiles' },
-    { name: 'About', href: '/tirupur-textiles/about' },
-    { name: 'Services', href: '/tirupur-textiles/services' },
-    { name: 'Blogs', href: '/blog/web/articles' },
-    { name: 'Contact', href: '/tirupur-textiles/contact' },
-];
 export default function About() {
     return (
-        <>
-            <Header navItems={navItems} companyName={"Tirupur Textiles"}/>
+        <Layout>
 
             <div className="flex flex-col">
                 {/* Hero Section */}
-                <section className="bg-gradient-to-br from-primary to-secondary py-16 md:py-24">
-                    <div className="container mx-auto px-4 text-center md:px-6">
+                <section className="py-16 md:py-24 relative">
+                    <img src={"/assets/hero.jpg"} alt={"about page hero image"} className={"absolute inset-0 w-full h-full object-cover"} />
+                    <div className={"absolute inset-0 bg-gradient-to-br from-primary/70 to-secondary/70 "} />
+                    <div className="relative container mx-auto px-4 text-center md:px-6 z-10">
                         <h1 className="mb-4 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl">
                             Our Services
                         </h1>
@@ -156,7 +148,6 @@ export default function About() {
                         </p>
                     </div>
                 </section>
-
                 <div className={"px-4 md:px-[10%]"}>
                     <ServiceCard services={services} title={"What We Offer"} description={"A complete range of services to support your textile needs from concept to delivery."}/>
 
@@ -245,7 +236,6 @@ export default function About() {
 
             </div>
 
-            <FooterSection/>
-        </>
+        </Layout>
     );
 }
