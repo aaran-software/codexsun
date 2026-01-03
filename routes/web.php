@@ -489,3 +489,12 @@ Route::get('/tirupur-textiles/contact', function () {
     return Inertia::render('web/tirupur-textiles/Contact');
 })->name('tirupur-textiles.contact');
 
+Route::get('/tirupur-textiles/gallery', function () {
+    return Inertia::render('web/tirupur-textiles/gallery/index');
+})->name('tirupur-textiles.gallery');
+
+Route::get('/tirupur-textiles/gallery/{slug}', function ($slug) {
+    return Inertia::render('web/tirupur-textiles/gallery/show', [
+        'slug' => $slug,
+    ]);
+});

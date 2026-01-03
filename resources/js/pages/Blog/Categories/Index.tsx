@@ -2,7 +2,7 @@
 
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { route } from 'ziggy-js';
 
 import DataTable from '@/components/table/DataTable';

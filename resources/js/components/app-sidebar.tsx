@@ -1,4 +1,3 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -14,14 +13,11 @@ import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
-    BookOpen,
     MonitorCog,
-    Folder,
     LayoutGrid,
     Laptop,
     Bolt,
     Contact,
-    StickyNote,
     NotebookPen,
     UserRoundSearch,
     Drill,
@@ -33,8 +29,6 @@ import {
 
 
 import AppLogo from './app-logo';
-import {index as blogs} from '@/routes/blogs/index';
-import { index as contactTypes } from '@/routes/contact-types/index';
 import { index as contacts } from '@/routes/contacts';
 import { index as service_inward } from '@/routes/service_inwards/index';
 import { index as job_cards } from '@/routes/job_cards/index';

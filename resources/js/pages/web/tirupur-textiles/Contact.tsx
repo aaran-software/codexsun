@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
-import Header from '@/components/header/header';
-import FooterSection from '@/pages/web/home/FooterSection';
+import Layout from '@/pages/web/tirupur-textiles/Layout/Layout';
 
 export default function Home() {
 
@@ -48,21 +47,15 @@ export default function Home() {
             setTimeout(() => setSubmitStatus('idle'), 5000);
         }, 1500);
     };
-    const navItems = [
-        { name: 'Home', href: '/tirupur-textiles' },
-        { name: 'About', href: '/tirupur-textiles/about' },
-        { name: 'Services', href: '/tirupur-textiles/services' },
-        { name: 'Blogs', href: '/blog/web/articles' },
-        { name: 'Contact', href: '/tirupur-textiles/contact' },
-    ];
     return (
-        <>
-            <Header navItems={navItems} companyName={"Tirupur Textiles"}/>
-
+        <Layout>
             <div className="flex flex-col">
-                {/* Hero Section */}
-                <section className="bg-gradient-to-br from-primary to-secondary py-16 md:py-24">
-                    <div className="container mx-auto px-4 text-center md:px-6">
+
+
+                <section className="py-16 md:py-24 relative">
+                    <img src={"/assets/hero.jpg"} alt={"about page hero image"} className={"absolute inset-0 w-full h-full object-cover"} />
+                    <div className={"absolute inset-0 bg-gradient-to-br from-primary/70 to-secondary/70 "} />
+                    <div className="relative container mx-auto px-4 text-center md:px-6 z-10">
                         <h1 className="mb-4 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl">
                             Get In Touch
                         </h1>
@@ -71,7 +64,6 @@ export default function Home() {
                         </p>
                     </div>
                 </section>
-
                 {/* Contact Form & Info Section */}
                 <section className="py-16 md:py-24 px-4 md:px-[10%]">
                     <div className="container mx-auto px-4 md:px-6">
@@ -268,8 +260,6 @@ export default function Home() {
                 {/* Map Section */}
             </div>
 
-            {/* Footer */}
-            <FooterSection />
-        </>
+        </Layout>
     );
 }
