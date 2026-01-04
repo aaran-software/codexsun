@@ -1,12 +1,12 @@
 'use client';
 
-import FooterSection from '@/pages/web/home/FooterSection';
-import Header from '@/components/header/header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Award, Users, Globe, TrendingUp, Heart, Lightbulb } from 'lucide-react';
 import "../../../../css/textiles.css"
 import Team from '@/components/about/team/team';
 import ChainProcess from '@/components/about/history/ChainProcess';
+import Layout from '@/pages/web/tirupur-textiles/Layout/Layout';
+import Counter from '@/components/Common/counter';
 
 const values = [
     {
@@ -60,17 +60,10 @@ const milestones = [
 ];
 
 const stats = [
-    { icon: Users, value: '500+', label: 'Happy Clients' },
-    { icon: Globe, value: '50+', label: 'Countries Served' },
-    { icon: Award, value: '25+', label: 'Industry Awards' },
-    { icon: TrendingUp, value: '20+', label: 'Years Experience' },
-];
-const navItems = [
-    { name: 'Home', href: '/tirupur-textiles' },
-    { name: 'About', href: '/tirupur-textiles/about' },
-    { name: 'Services', href: '/tirupur-textiles/services' },
-    { name: 'Blogs', href: '/blog/web/articles' },
-    { name: 'Contact', href: '/tirupur-textiles/contact' },
+    { icon: Users, value: 500, suffix: "+", label: "Happy Clients" },
+    { icon: Globe, value: 50, suffix: "+", label: "Countries Served" },
+    { icon: Award, value: 25, suffix: "+", label: "Industry Awards" },
+    { icon: TrendingUp, value: 20, suffix: "+", label: "Years Experience" },
 ];
 
 const experts = [
@@ -105,13 +98,13 @@ const experts = [
 ];
 export default function About() {
     return (
-        <>
-            <Header navItems={navItems} companyName={'Tirupur Textiles'} />
-
+        <Layout>
             <div className="flex flex-col">
                 {/* Hero Section */}
-                <section className="bg-gradient-to-br from-primary to-secondary py-16 md:py-24">
-                    <div className="container mx-auto px-4 text-center md:px-6">
+                <section className="py-16 md:py-24 relative">
+                    <img src={"/assets/hero.jpg"} alt={"about page hero image"} className={"absolute inset-0 w-full h-full object-cover"} />
+                    <div className={"absolute inset-0 bg-gradient-to-br from-primary/70 to-secondary/70 "} />
+                    <div className="relative container mx-auto px-4 text-center md:px-6 z-10">
                         <h1 className="mb-4 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl">
                             About Texties Company
                         </h1>
@@ -129,22 +122,28 @@ export default function About() {
                         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
                             {stats.map((stat, index) => (
                                 <div key={index} className="text-center">
+
+                                    {/* Icon */}
                                     <div className="mb-3 flex justify-center">
                                         <div className="rounded-full bg-primary/10 p-3">
                                             <stat.icon className="h-6 w-6 text-primary" />
                                         </div>
                                     </div>
-                                    <div className="mb-1 text-3xl font-bold text-primary md:text-4xl">
-                                        {stat.value}
-                                    </div>
+
+                                    {/* Counter */}
+                                    <Counter value={stat.value} suffix={stat.suffix} />
+
+                                    {/* Label */}
                                     <div className="text-sm text-muted-foreground md:text-base">
                                         {stat.label}
                                     </div>
+
                                 </div>
                             ))}
                         </div>
                     </div>
                 </section>
+
 
                 {/* Our Story Section */}
                 <section className="py-16 md:py-24">
@@ -238,8 +237,7 @@ export default function About() {
                 <Team TeamMember={experts} title={"Meet Our Experts"} description={" The talented professionals driving innovation and excellence at Texties Company."} />
 
             </div>
-            {/* Footer */}
-            <FooterSection />
-        </>
+
+        </Layout>
     );
 }
