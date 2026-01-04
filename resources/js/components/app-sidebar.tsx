@@ -42,9 +42,9 @@ import { NavService } from '@/components/nav-service';
 import { NavSpares } from '@/components/nav-spares';
 import { index as todos } from '@/routes/todos';
 import { index as calls } from '@/routes/calls/index';
-import { index as categories } from '@/routes/blog/categories';
-import { index as tags } from '@/routes/blog/tags';
-import { index as posts } from '@/routes/blog/posts';
+// import { index as categories } from '@/routes/blog/categories';
+// import { index as tags } from '@/routes/blog/tags';
+// import { index as posts } from '@/routes/blog/posts';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -53,17 +53,17 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Category',
-        href: categories(),
+        href: dashboard(),
         icon: UserRoundSearch,
     },
     {
         title: 'Tags',
-        href: tags(),
+        href: dashboard(),
         icon: UserRoundSearch,
     },
     {
         title: 'Posts',
-        href: posts(),
+        href: dashboard(),
         icon: UserRoundSearch,
     },
     {
