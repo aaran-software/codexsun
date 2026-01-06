@@ -4,15 +4,16 @@ export interface serviceData {
     icon: LucideIcon
     title: string
     description: string
-    features: string[]
+    features?: string[]
 }
 
 interface  ServiceCardProps{
     services:serviceData[]
     title:string;
     description:string
+    className?:string
 }
-export default function ServiceCard({ services,title,description }:ServiceCardProps) {
+export default function ServiceCard({ services,title,description,className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" }:ServiceCardProps) {
     return (
         <section className="py-16 md:py-24">
             <div className="container mx-auto px-4 md:px-6">
@@ -24,7 +25,7 @@ export default function ServiceCard({ services,title,description }:ServiceCardPr
                         {description}
                     </p>
                 </div>
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <div className={`gap-8 ${className}`}>
                     {services.map((service, index) => (
                         <Card
                             key={index}
@@ -42,17 +43,21 @@ export default function ServiceCard({ services,title,description }:ServiceCardPr
                                 <p className="mb-4 text-muted-foreground">
                                     {service.description}
                                 </p>
-                                <ul className="space-y-2">
-                                    {service.features.map((feature, idx) => (
-                                        <li
-                                            key={idx}
-                                            className="flex items-start text-sm"
-                                        >
-                                            <CheckCircle2 className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-primary" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                {service.features && (
+                                    <ul className="space-y-2">
+                                        {service.features.map(
+                                            (feature, idx) => (
+                                                <li
+                                                    key={idx}
+                                                    className="flex items-start text-sm"
+                                                >
+                                                    <CheckCircle2 className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-primary" />
+                                                    <span>{feature}</span>
+                                                </li>
+                                            ),
+                                        )}
+                                    </ul>
+                                )}
                             </CardContent>
                         </Card>
                     ))}

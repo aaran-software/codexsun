@@ -498,3 +498,23 @@ Route::get('/tirupur-textiles/gallery/{slug}', function ($slug) {
         'slug' => $slug,
     ]);
 });
+
+
+
+//Tech Media
+
+Route::get('/tech-media', function () {
+    return Inertia::render('web/tech-media/Home');
+})->name('tech-media');
+
+Route::get('/tech-media/about', function () {
+    return Inertia::render('web/tech-media/About');
+})->name('tech-media.about');
+
+Route::get('/tech-media/services', function () {
+    return Inertia::render('web/tech-media/Services');
+})->name('tech-media.services');
+
+Route::get('/tech-media/contact', function () {
+    return Inertia::render('web/tech-media/Contact');
+})->name('tech-media.contact');

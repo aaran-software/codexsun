@@ -363,12 +363,12 @@ export default function Home() {
                                 exceptional results every time.
                             </p>
                         </div>
-                       <ProcessStep processSteps={processSteps} />
+                        <ProcessStep processSteps={processSteps} />
                     </div>
                 </section>
 
                 {/* Experts Section */}
-              <Team TeamMember={experts} title={"Meet Our Experts"} description={" The talented professionals driving innovation and excellence at Texties Company."} />
+                <Team TeamMember={experts} title={"Meet Our Experts"} description={" The talented professionals driving innovation and excellence at Texties Company."} />
 
                 {/* Partners Section */}
                 <section className="bg-muted/30 py-16 md:py-24 px-4 md:px-[10%]">
