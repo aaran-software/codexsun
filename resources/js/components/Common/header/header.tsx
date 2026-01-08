@@ -206,7 +206,7 @@ export default function Header({navItems,companyName}:HeaderProps) {
                                         href={item.href}
                                         className={`block rounded-md px-3 py-2 transition-all duration-200 ${
                                             current === item.name
-                                                ? 'bg-[#f53003] font-semibold text-white'
+                                                ? 'bg-primary font-semibold text-white'
                                                 : 'text-[#1b1b18] hover:bg-gray-100 dark:text-[#EDEDEC] dark:hover:bg-gray-800'
                                         }`}
                                         onClick={() => setMobileMenu(false)}

@@ -1,7 +1,7 @@
 'use client';
 
 import FooterSection from '@/pages/web/home/FooterSection';
-import Header from '@/components/header/header';
+import Header from '@/components/Common/header/header';
 import "../../../../../css/textiles.css"
 import { ReactNode } from 'react';
 const navItems = [
