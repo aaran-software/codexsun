@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\DeployController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -48,6 +49,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('todos', function () {
         return Inertia::render('todos');
     })->name('todos');
+
+    Route::post('deploy', [DeployController::class, 'update'])->name('deploy.update');
 
 });
 
