@@ -1,9 +1,9 @@
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import Heading from '@/components/heading';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -23,16 +23,17 @@ export default function Deploy() {
         setError(null);
 
         try {
+            const token = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
+
             const response = await fetch('/deploy', {
                 method: 'POST',
+                credentials: 'same-origin', // 🔴 REQUIRED
                 headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': token ?? '',
+                    'Accept': 'application/json',
                 },
-                credentials: 'same-origin',
             });
 
             const data = await response.json();
@@ -48,6 +49,7 @@ export default function Deploy() {
             setLoading(false);
         }
     };
+
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
