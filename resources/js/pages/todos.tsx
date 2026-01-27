@@ -5,7 +5,7 @@ export default function todos() {
     return (
         <Layout>
             <Head title="todos" />
-            <div className="mx-auto bg-green-500 p-3 py-20 text-5xl text-white">
+            <div className="mx-auto bg-red-500 p-3 py-20 text-5xl w-full text-white">
                 todos
             </div>
         </Layout>
