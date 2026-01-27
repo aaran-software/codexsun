@@ -1,13 +1,24 @@
 import WebLayout from '@/layouts/web-layout';
 import { Head } from '@inertiajs/react';
+import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
+import CtaSection from '@/pages/web/home/blocks/cta';
+import FooterCard from '@/components/blocks/footers/FooterCard';
 
 export default function index() {
     return (
         <WebLayout>
             <Head title="About us" />
-            <div className="mx-auto bg-blue-500 p-3 py-20 text-5xl text-orange-400">
-                about us
-            </div>
+
+            <MenuBackdrop
+                image="/assets/techmedia/repair.jpg"
+                title="Blogs"
+                subtitle="Ideas that inform. Stories that inspire"
+            />
+
+            <CtaSection />
+
+            <FooterCard />
+
         </WebLayout>
     );
 }
