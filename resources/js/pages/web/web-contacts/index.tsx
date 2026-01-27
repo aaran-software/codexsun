@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react'
-import WebLayout from '@/layouts/web-layout';
-import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
-import CtaSection from '@/pages/web/home/blocks/cta';
 import FooterCard from '@/components/blocks/footers/FooterCard';
+import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
+import WebLayout from '@/layouts/web-layout';
+import CtaSection from '@/pages/web/home/blocks/cta';
 
 export default function index() {
     return (

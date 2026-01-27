@@ -29,16 +29,20 @@ export default function index() {
                         </div>
                         <div className="flex flex-col justify-center space-y-6">
                             <h2 className="text-3xl font-bold md:text-4xl">
-                                Our Mission
+                                IT Services & Solutions We Do
                             </h2>
                             <p className="text-lg text-muted-foreground">
-                                To provide reliable computer hardware solutions
-                                and expert repair services. We combine technical
-                                expertise with a customer-first approach to
-                                deliver reliable hardware solutions and expert
-                                repair services. Whether you need a new laptop,
-                                a custom PC build, or professional repairs,
-                                we're your trusted local technology partner.
+                                Tech Media is a trusted technology solutions
+                                company based in Tirupur, Tamil Nadu, delivering
+                                reliable IT services, computer hardware
+                                solutions, and business software support to
+                                growing businesses. Since our inception, we have
+                                focused on one simple goal — making technology
+                                work smoothly for businesses, <br/>
+                                We help organizations streamline operations, improve
+                                productivity, and scale confidently through the
+                                right mix of hardware, software, and IT
+                                consulting.
                             </p>
                             <p className="text-lg text-muted-foreground">
                                 We combine technical expertise with a
@@ -123,25 +127,24 @@ export default function index() {
                     <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
                         <div className="flex flex-col justify-center space-y-6">
                             <h2 className="text-3xl font-bold md:text-4xl">
-                                Expert Team
+                                Our Expert Team
                             </h2>
                             <p className="text-lg text-muted-foreground">
-                                Our team consists of experienced hardware
-                                specialists, repair technicians, and IT
-                                professionals who are passionate about
-                                technology and committed to your satisfaction.
+                                We’re a dedicated team of hardware specialists, repair
+                                technicians, and IT professionals who genuinely love
+                                technology and take pride in delivering reliable solutions.
                             </p>
                             <p className="text-lg text-muted-foreground">
-                                With years of combined experience in computer
-                                sales, repairs, and custom builds, we bring deep
-                                technical knowledge and practical expertise to
-                                every customer interaction.
+                                With years of hands-on experience in computer sales,
+                                diagnostics, repairs, and custom builds, we combine deep
+                                technical expertise with a customer-first approach—so you
+                                always get solutions you can trust.
                             </p>
                         </div>
                         <div>
                             <img
                                 src="/assets/techmedia/pc.jpg"
-                                alt="Custom PC Build"
+                                alt="Our technical team working on custom PC builds"
                                 className="rounded-lg shadow-lg"
                             />
                         </div>
@@ -149,10 +152,10 @@ export default function index() {
                 </div>
             </section>
 
+
             <CtaSection />
 
             <FooterCard />
-
         </WebLayout>
     );
 }
