@@ -4,20 +4,24 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class DeployController extends Controller
 {
     public function run(Request $request)
     {
-        $request->validate([
+        // Always return JSON (no abort(), no redirects)
+        if (! auth()->check() || ! auth()->user()->is_admin) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        $validated = $request->validate([
             'action' => 'required|string',
         ]);
 
-        // Only allow authorised users
-        abort_unless(auth()->user()?->is_admin, 403);
-
+        // UI → Python flag mapping
         $map = [
             'full' => ['y', 'y', 'y', 'y'],
             'node' => ['y', 'n', 'n', 'n'],
@@ -26,11 +30,13 @@ class DeployController extends Controller
             'build' => ['n', 'n', 'n', 'y'],
         ];
 
-        if (! isset($map[$request->action])) {
-            abort(400, 'Invalid deploy action');
+        if (! isset($map[$validated['action']])) {
+            return response()->json([
+                'message' => 'Invalid deploy action',
+            ], 400);
         }
 
-        [$installNode, $updateNpm, $npmInstall, $buildNpm] = $map[$request->action];
+        [$installNode, $updateNpm, $npmInstall, $buildNpm] = $map[$validated['action']];
 
         $process = new Process([
             'sudo',
@@ -49,7 +55,10 @@ class DeployController extends Controller
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new ProcessFailedException($process);
+            return response()->json([
+                'message' => 'Deploy failed',
+                'output' => $process->getErrorOutput() ?: $process->getOutput(),
+            ], 500);
         }
 
         return response()->json([

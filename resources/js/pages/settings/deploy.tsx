@@ -1,75 +1,117 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import SettingsLayout from '@/layouts/settings/layout';
+import type { BreadcrumbItem } from '@/types';
 
-type Action = 'full' | 'node' | 'npm' | 'update_build' | 'build';
+type DeployAction =
+    | 'full'
+    | 'node'
+    | 'npm'
+    | 'update_build'
+    | 'build';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Deploy', href: '/deploy' },
+];
 
 export default function Deploy() {
-    const [loading, setLoading] = useState<Action | null>(null);
+    const [loading, setLoading] = useState<DeployAction | null>(null);
     const [output, setOutput] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const run = async (action: Action) => {
+    const runDeploy = async (action: DeployAction) => {
         setLoading(action);
         setOutput(null);
         setError(null);
 
         try {
-            const res = await fetch('/deploy', {
+            const token = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
+
+            const response = await fetch('/deploy', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
+                    'X-CSRF-TOKEN': token ?? '',
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')!
-                        .getAttribute('content')!,
                 },
                 body: JSON.stringify({ action }),
             });
 
-            const data = await res.json();
+            const text = await response.text();
 
-            if (!res.ok) throw new Error(data.message || 'Deploy failed');
+            let data: any;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                throw new Error(text.slice(0, 300));
+            }
 
-            setOutput(data.output);
-        } catch (e: any) {
-            setError(e.message);
+            if (!response.ok) {
+                throw new Error(data.message || 'Deployment failed');
+            }
+
+            setOutput(data.output || 'Deployment completed successfully');
+        } catch (err: any) {
+            setError(err.message || 'Deployment failed');
         } finally {
             setLoading(null);
         }
     };
 
-    const Button = ({ action, label }: { action: Action; label: string }) => (
-        <button
-            onClick={() => run(action)}
+    const DeployButton = ({
+                              action,
+                              label,
+                          }: {
+        action: DeployAction;
+        label: string;
+    }) => (
+        <Button
+            onClick={() => runDeploy(action)}
             disabled={loading !== null}
-            className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
         >
             {loading === action ? 'Running…' : label}
-        </button>
+        </Button>
     );
 
     return (
-        <>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Deploy" />
 
-            <div className="space-y-4">
-                <h1 className="text-xl font-bold">Deployment</h1>
+            <SettingsLayout>
+                <div className="space-y-6">
+                    <Heading
+                        variant="small"
+                        title="Deploy Application"
+                        description="Run deployment actions using Python"
+                    />
 
-                <div className="grid gap-3">
-                    <Button action="full" label="1️⃣ Full installation" />
-                    <Button action="node" label="2️⃣ Install Node" />
-                    <Button action="npm" label="3️⃣ Install npm" />
-                    <Button action="update_build" label="4️⃣ Update & build" />
-                    <Button action="build" label="5️⃣ Only build" />
+                    <div className="grid gap-3 max-w-md">
+                        <DeployButton action="full" label="1️⃣ Full installation" />
+                        <DeployButton action="node" label="2️⃣ Install Node" />
+                        <DeployButton action="npm" label="3️⃣ Install npm" />
+                        <DeployButton action="update_build" label="4️⃣ Update & build" />
+                        <DeployButton action="build" label="5️⃣ Only build" />
+                    </div>
+
+                    {output && (
+                        <pre className="max-h-96 overflow-auto rounded-md bg-black p-4 text-sm text-green-400">
+                            {output}
+                        </pre>
+                    )}
+
+                    {error && (
+                        <pre className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                            {error}
+                        </pre>
+                    )}
                 </div>
-
-                {output && (
-                    <pre className="mt-4 overflow-auto bg-gray-100 p-3 text-sm">
-                        {output}
-                    </pre>
-                )}
-
-                {error && <div className="mt-2 text-red-600">{error}</div>}
-            </div>
-        </>
+            </SettingsLayout>
+        </AppLayout>
     );
 }

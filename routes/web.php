@@ -55,7 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::post('/deploy', [DeployController::class, 'run'])
-    ->middleware(['auth', 'verified']);
+    ->middleware(['auth']);
 
 
 require __DIR__.'/settings.php';
