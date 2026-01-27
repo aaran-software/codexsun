@@ -50,9 +50,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('todos');
     })->name('todos');
 
-    Route::post('deploy', [DeployController::class, 'update'])->name('deploy.update');
     Route::get('/settings/deploy', fn () => Inertia::render('settings/deploy'));
 
 });
+
+Route::post('/deploy', [DeployController::class, 'run'])
+    ->middleware(['auth', 'verified']);
+
 
 require __DIR__.'/settings.php';

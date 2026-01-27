@@ -3,45 +3,58 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use Exception;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\Request;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class DeployController extends Controller
 {
-    public function update()
+    public function run(Request $request)
     {
-        $output = [];
+        $request->validate([
+            'action' => 'required|string',
+        ]);
 
-        /**
-         * @throws Exception
-         */
-        $run = function ($cmd) use (&$output) {
-            $process = Process::fromShellCommandline($cmd, base_path());
-            $process->setTimeout(600);
-            $process->run();
+        // Only allow authorised users
+        abort_unless(auth()->user()?->is_admin, 403);
 
-            if (! $process->isSuccessful()) {
-                throw new Exception($process->getErrorOutput());
-            }
+        $map = [
+            'full' => ['y', 'y', 'y', 'y'],
+            'node' => ['y', 'n', 'n', 'n'],
+            'npm' => ['n', 'y', 'n', 'n'],
+            'update_build' => ['n', 'n', 'y', 'y'],
+            'build' => ['n', 'n', 'n', 'y'],
+        ];
 
-            $output[] = "▶ $cmd";
-            $output[] = $process->getOutput();
-        };
+        if (! isset($map[$request->action])) {
+            abort(400, 'Invalid deploy action');
+        }
 
-        // ✅ UPDATE ONLY
-        $run('git pull --ff-only');
-        $run('npm install --production');
-        $run('npm run build');
+        [$installNode, $updateNpm, $npmInstall, $buildNpm] = $map[$request->action];
 
-        Artisan::call('optimize:clear');
-        Artisan::call('config:cache');
-        Artisan::call('route:cache');
-        Artisan::call('view:cache');
+        $process = new Process([
+            'sudo',
+            '-u',
+            'www-data',
+            'python3',
+            base_path('ideploy.py'),
+            '--install-node', $installNode,
+            '--update-npm', $updateNpm,
+            '--npm-install', $npmInstall,
+            '--build-npm', $buildNpm,
+        ]);
+
+        $process->setTimeout(900);
+
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
 
         return response()->json([
-            'status' => 'updated',
-            'output' => $output,
+            'success' => true,
+            'output' => $process->getOutput(),
         ]);
     }
 }
