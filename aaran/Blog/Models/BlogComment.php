@@ -2,9 +2,9 @@
 
 namespace Aaran\Blog\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User; // ✅ ADD THIS LINE
+use Illuminate\Database\Eloquent\SoftDeletes; // ✅ ADD THIS LINE
 
 class BlogComment extends Model
 {
@@ -14,7 +14,7 @@ class BlogComment extends Model
         'blog_post_id',
         'user_id',
         'body',
-        'approved'
+        'approved',
     ];
 
     protected $casts = [

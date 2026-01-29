@@ -13,7 +13,7 @@ class BlogTagSeeder extends Seeder
         $tags = [
             'laptop', 'desktop', 'gaming', 'repair', 'windows', 'linux',
             'ssd', 'ram-upgrade', 'virus-removal', 'data-recovery',
-            'discount', 'new-arrival', 'budget-build', 'high-end'
+            'discount', 'new-arrival', 'budget-build', 'high-end',
         ];
 
         foreach ($tags as $name) {
