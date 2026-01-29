@@ -141,3 +141,82 @@
         @apply bg-background text-foreground;
     }
 }
+
+
+/* =========================
+   Global Loader Backdrop
+========================= */
+.global-loader-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: hsl(var(--background) / 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fade-in 0.15s ease-out;
+}
+
+/* =========================
+   Spinner Ring
+========================= */
+.global-loader-ring {
+    width: 88px;
+    height: 88px;
+    border-radius: 9999px;
+    border: 3px solid hsl(var(--muted));
+    border-top-color: hsl(var(--foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: spin 1s linear infinite;
+}
+
+/* =========================
+   Morphing Letter
+========================= */
+.global-loader-letter {
+    font-size: 30px;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    animation: morph 1.2s ease-in-out infinite;
+    display: inline-block;
+    letter-spacing: 0.02em;
+}
+
+/*!* =========================*/
+/*   Animations*/
+/*========================= *!*/
+/*@keyframes spin {*/
+/*    to {*/
+/*        transform: rotate(360deg);*/
+/*    }*/
+/*}*/
+
+/*@keyframes morph {*/
+/*    0% {*/
+/*        transform: scale(1) rotate(0deg);*/
+/*        letter-spacing: 0.02em;*/
+/*        opacity: 0.85;*/
+/*    }*/
+/*    50% {*/
+/*        transform: scale(1.25) rotate(12deg);*/
+/*        letter-spacing: 0.12em;*/
+/*        opacity: 1;*/
+/*    }*/
+/*    100% {*/
+/*        transform: scale(1) rotate(0deg);*/
+/*        letter-spacing: 0.02em;*/
+/*        opacity: 0.85;*/
+/*    }*/
+/*}*/
+
+/*@keyframes fade-in {*/
+/*    from {*/
+/*        opacity: 0;*/
+/*    }*/
+/*    to {*/
+/*        opacity: 1;*/
+/*    }*/
+/*}*/

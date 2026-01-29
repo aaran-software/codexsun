@@ -57,5 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::post('/deploy', [DeployController::class, 'run'])
     ->middleware(['auth']);
 
+Route::get('/slow', function () {
+    sleep(2); // 2 seconds delay
+
+    return Inertia::render('web/home/index');
+});
 
 require __DIR__.'/settings.php';
