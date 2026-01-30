@@ -2,6 +2,7 @@
 import subprocess
 import sys
 import os
+import pwd
 from datetime import datetime
 from pathlib import Path
 
@@ -37,8 +38,10 @@ def ensure_repo():
 def ensure_user():
     if os.geteuid() == 0:
         fail("Do not run ideploy as root")
-    if os.getlogin() != APP_USER:
-        fail(f"Run ideploy as `{APP_USER}`")
+
+    current_user = pwd.getpwuid(os.geteuid()).pw_name
+    if current_user != APP_USER:
+        fail(f"Run ideploy as `{APP_USER}` (current: {current_user})")
 
 def lock():
     if LOCK_FILE.exists():
