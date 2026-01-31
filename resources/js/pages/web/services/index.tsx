@@ -7,156 +7,165 @@ import CtaSection from '@/pages/web/home/blocks/cta';
 export default function Services() {
     return (
         <WebLayout>
-            <Head title="IT Services & Solutions" />
+            <Head title="Capabilities | The Tirupur Textiles" />
 
+            {/* Hero */}
             <MenuBackdrop
                 image="/assets/techmedia/services-hero.jpg"
-                title="IT Services & Solutions"
-                subtitle="Reliable technology solutions that support, secure, and scale your business"
+                title="Our Manufacturing Capabilities"
+                subtitle="Wholesale knitted garment manufacturing from Tirupur"
             />
 
             {/* Intro */}
             <section className="px-4 py-16 md:px-[10%]">
                 <div className="container max-w-4xl">
-                    <p className="text-lg text-muted-foreground leading-relaxed">
-                        At <strong>Tech Media</strong>, we deliver comprehensive
-                        IT services and technology solutions designed to support,
-                        secure, and scale your business. Our focus is on
-                        reliability, performance, and long-term value—so your
-                        technology works for you, not against you.
+                    <p className="text-lg leading-relaxed text-muted-foreground">
+                        At <strong>The Tirupur Textiles</strong>, we specialize
+                        in large-scale knitted garment manufacturing for brands,
+                        wholesalers, and bulk buyers. Our capabilities are built
+                        around consistent quality, reliable timelines, and
+                        factory-direct supply.
                     </p>
                 </div>
             </section>
 
-            {/* IT Infrastructure */}
-            <section className="px-4 py-20 bg-muted/30 md:px-[10%]">
-                <div className="grid gap-12 lg:grid-cols-2 items-center">
+            {/* Bulk Manufacturing */}
+            <section className="bg-muted/30 px-4 py-20 md:px-[10%]">
+                <div className="grid items-center gap-12 lg:grid-cols-2">
                     <div>
-                        <h2 className="text-3xl font-bold mb-6">
-                            💻 IT Infrastructure & Hardware Solutions
+                        <h2 className="mb-4 text-3xl font-bold">
+                            🧵 Bulk Manufacturing
                         </h2>
-                        <ul className="space-y-3 text-lg text-muted-foreground">
-                            <li>• Desktop & Laptop sales, installation, and upgrades</li>
-                            <li>• Servers, storage, and workstation setup</li>
-                            <li>• Printer, scanner, and peripheral support</li>
-                            <li>• Annual Maintenance Contracts (AMC)</li>
+                        <p className="mb-6 text-muted-foreground">
+                            High-volume knitted garment production with stable
+                            quality across all lots.
+                        </p>
+                        <ul className="space-y-3 text-muted-foreground">
+                            <li>• Men’s, Women’s & Kids wear</li>
+                            <li>
+                                • T-Shirts, polos, track pants & casual wear
+                            </li>
+                            <li>• Flexible MOQ for repeat buyers</li>
+                            <li>• Consistent sizing & stitching</li>
                         </ul>
                     </div>
                     <img
-                        src="https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0"
-                        alt="IT hardware and infrastructure setup"
+                        src="https://images.unsplash.com/photo-1581092919535-7146c8c2b1f9"
+                        alt="Bulk garment manufacturing"
                         className="rounded-lg shadow-lg"
                     />
                 </div>
             </section>
 
-            {/* Networking & Security */}
+            <CtaSection />
+
+            {/* Custom Branding */}
             <section className="px-4 py-20 md:px-[10%]">
-                <div className="grid gap-12 lg:grid-cols-2 items-center lg:flex-row-reverse">
+                <div className="grid items-center gap-12 lg:grid-cols-2 lg:flex-row-reverse">
                     <img
-                        src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31"
-                        alt="Network and cybersecurity solutions"
+                        src="https://images.unsplash.com/photo-1520974735194-6c4b59c8d93b"
+                        alt="Custom garment branding"
                         className="rounded-lg shadow-lg"
                     />
                     <div>
-                        <h2 className="text-3xl font-bold mb-6">
-                            🖧 Networking & Security
+                        <h2 className="mb-4 text-3xl font-bold">
+                            🏷 Custom Branding (OEM / Private Label)
                         </h2>
-                        <ul className="space-y-3 text-lg text-muted-foreground">
-                            <li>• Office LAN / WAN networking</li>
-                            <li>• Wi-Fi setup and optimization</li>
-                            <li>• Firewall, antivirus, and endpoint security</li>
-                            <li>• Data backup and disaster recovery solutions</li>
+                        <p className="mb-6 text-muted-foreground">
+                            Build your brand with our private-label
+                            manufacturing support.
+                        </p>
+                        <ul className="space-y-3 text-muted-foreground">
+                            <li>• Neck labels & wash care labels</li>
+                            <li>• Custom sizing & measurements</li>
+                            <li>• Brand-specific packaging</li>
+                            <li>• Color & style consistency</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
-            {/* Business Software */}
-            <section className="px-4 py-20 bg-muted/30 md:px-[10%]">
-                <div className="grid gap-12 lg:grid-cols-2 items-center">
+            <CtaSection />
+
+            {/* Fabric & GSM */}
+            <section className="bg-muted/30 px-4 py-20 md:px-[10%]">
+                <div className="grid items-center gap-12 lg:grid-cols-2">
                     <div>
-                        <h2 className="text-3xl font-bold mb-6">
-                            🧠 Business Software & ERP Solutions
+                        <h2 className="mb-4 text-3xl font-bold">
+                            🧶 Fabric & GSM Options
                         </h2>
-                        <ul className="space-y-3 text-lg text-muted-foreground">
-                            <li>• ERP & CRM implementation</li>
-                            <li>• Accounting & inventory software support</li>
-                            <li>• Customization, integration, and user training</li>
-                            <li>• Software upgrades and performance tuning</li>
+                        <p className="mb-6 text-muted-foreground">
+                            Premium Tirupur-sourced cotton fabrics for comfort
+                            and durability.
+                        </p>
+                        <ul className="space-y-3 text-muted-foreground">
+                            <li>• 100% Cotton & cotton blends</li>
+                            <li>• Single jersey, rib & interlock</li>
+                            <li>• GSM options: 160 / 180 / 200 / 220+</li>
+                            <li>• Combed & bio-washed fabrics</li>
                         </ul>
                     </div>
                     <img
-                        src="https://images.unsplash.com/photo-1551288049-bebda4e38f71"
-                        alt="Business software and ERP systems"
+                        src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f"
+                        alt="Cotton fabric and GSM options"
                         className="rounded-lg shadow-lg"
                     />
                 </div>
             </section>
 
-            {/* Cloud & Server */}
+            <CtaSection />
+
+            {/* Quality Control */}
             <section className="px-4 py-20 md:px-[10%]">
-                <div className="grid gap-12 lg:grid-cols-2 items-center lg:flex-row-reverse">
+                <div className="grid items-center gap-12 lg:grid-cols-2 lg:flex-row-reverse">
                     <img
-                        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa"
-                        alt="Cloud and server solutions"
+                        src="https://images.unsplash.com/photo-1581090700227-1e37b190418e"
+                        alt="Garment quality control"
                         className="rounded-lg shadow-lg"
                     />
                     <div>
-                        <h2 className="text-3xl font-bold mb-6">
-                            ☁️ Cloud & Server Solutions
+                        <h2 className="mb-4 text-3xl font-bold">
+                            ✅ Quality Control
                         </h2>
-                        <ul className="space-y-3 text-lg text-muted-foreground">
-                            <li>• On-premise and cloud server setup</li>
-                            <li>• Email hosting & domain management</li>
-                            <li>• Cloud backup and migration support</li>
-                            <li>• Remote access and collaboration tools</li>
+                        <p className="mb-6 text-muted-foreground">
+                            Quality checks at every stage of production to
+                            ensure consistent output.
+                        </p>
+                        <ul className="space-y-3 text-muted-foreground">
+                            <li>• Fabric inspection</li>
+                            <li>• In-line production checks</li>
+                            <li>• Measurement & stitching accuracy</li>
+                            <li>• Final finishing inspection</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
-            {/* IT Support */}
-            <section className="px-4 py-20 bg-muted/30 md:px-[10%]">
-                <div className="grid gap-12 lg:grid-cols-2 items-center">
-                    <div>
-                        <h2 className="text-3xl font-bold mb-6">
-                            🔧 IT Support & Managed Services
-                        </h2>
-                        <ul className="space-y-3 text-lg text-muted-foreground">
-                            <li>• On-call and remote technical support</li>
-                            <li>• System health monitoring</li>
-                            <li>• OS installation and patch management</li>
-                            <li>• Troubleshooting and performance optimization</li>
-                        </ul>
-                    </div>
-                    <img
-                        src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789"
-                        alt="IT support and managed services team"
-                        className="rounded-lg shadow-lg"
-                    />
-                </div>
-            </section>
+            <CtaSection />
 
-            {/* Consulting */}
-            <section className="px-4 py-20 md:px-[10%]">
-                <div className="grid gap-12 lg:grid-cols-2 items-center lg:flex-row-reverse">
-                    <img
-                        src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
-                        alt="IT consulting and digital transformation"
-                        className="rounded-lg shadow-lg"
-                    />
+            {/* Logistics */}
+            <section className="bg-muted/30 px-4 py-20 md:px-[10%]">
+                <div className="grid items-center gap-12 lg:grid-cols-2">
                     <div>
-                        <h2 className="text-3xl font-bold mb-6">
-                            🏢 IT Consulting & Digital Enablement
+                        <h2 className="mb-4 text-3xl font-bold">
+                            🚚 Logistics & Delivery
                         </h2>
-                        <ul className="space-y-3 text-lg text-muted-foreground">
-                            <li>• Technology planning and IT audits</li>
-                            <li>• Hardware & software procurement consulting</li>
-                            <li>• Cost optimization and scalability planning</li>
-                            <li>• Process automation and workflow improvement</li>
+                        <p className="mb-6 text-muted-foreground">
+                            Reliable dispatch and transport coordination for
+                            bulk shipments.
+                        </p>
+                        <ul className="space-y-3 text-muted-foreground">
+                            <li>• Direct dispatch from Tirupur</li>
+                            <li>• Regular supply to Pondicherry</li>
+                            <li>• Secure bulk packaging</li>
+                            <li>• Domestic & export-ready support</li>
                         </ul>
                     </div>
+                    <img
+                        src="https://images.unsplash.com/photo-1600880292089-90a7e086ee0c"
+                        alt="Garment logistics and delivery"
+                        className="rounded-lg shadow-lg"
+                    />
                 </div>
             </section>
 

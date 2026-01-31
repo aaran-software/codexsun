@@ -3,9 +3,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import AppLogoIcon from '@/components/app-logo-icon';
-import { dashboard, login, register } from '@/routes';
 import TttLogoIcon from '@/components/blocks/logo/ttt-logo-icon';
+import { dashboard, login, register } from '@/routes';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
@@ -42,7 +41,7 @@ export default function WebMenu() {
     const navItems = [
         { name: 'Home', href: '/' },
         { name: 'About', href: '/abouts' },
-        { name: 'Services', href: '/services' },
+        { name: 'Manufacturing', href: '/services' },
         { name: 'Blogs', href: '/blogs' },
         { name: 'Contact', href: '/web-contacts' },
     ];
