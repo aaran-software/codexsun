@@ -5,6 +5,7 @@ import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { dashboard, login, register } from '@/routes';
+import TttLogoIcon from '@/components/blocks/logo/ttt-logo-icon';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
@@ -69,21 +70,24 @@ export default function WebMenu() {
                                 {/*    TM*/}
                                 {/*</span>*/}
 
-                                <AppLogoIcon className={`h-10 w-auto ${
-                                    scrolled || darkMode
-                                        ? 'text-[#1b1b18] fill-[#8F1F8D]  dark:text-[#EDEDEC]'
-                                        : 'text-white fill-white'
-                                }`} />
+                                <TttLogoIcon
+                                    className={`h-8 w-auto ${
+                                        scrolled || darkMode
+                                            ? 'fill-[#8F1F8D] text-[#1b1b18] dark:text-[#EDEDEC]'
+                                            : 'fill-white text-white'
+                                    }`}
+                                />
                             </div>
 
                             <span
                                 className={`text-2xl font-medium transition-colors ${
                                     scrolled || darkMode
-                                        ? 'text-[#1b1b18] fill-black dark:text-[#EDEDEC]'
+                                        ? 'fill-black text-[#1b1b18] dark:text-[#EDEDEC]'
                                         : 'text-white'
                                 } group-hover:text-[#8F1F8D] dark:group-hover:text-[#8F1F8D]`}
                             >
-                                {appName || 'Tech Media'}
+                                {/*{appName || 'Tech Media'}*/}
+                                The Tirupur Textiles
                             </span>
                         </Link>
 

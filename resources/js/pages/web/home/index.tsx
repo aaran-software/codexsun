@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react'
 import FooterCard from '@/components/blocks/footers/FooterCard';
-import FullScreenSlider from '@/components/blocks/sliders/slider';
+import CategoryGrid from '@/components/blocks/sliders/CategoryGrid';
+import FloatingWhatsApp from '@/components/blocks/sliders/FloatingWhatsApp';
+import TttSlider from '@/components/blocks/sliders/tttslider';
 import WebLayout from '@/layouts/web-layout';
 import CtaSection from '@/pages/web/home/blocks/cta';
 import FeaturesSection from '@/pages/web/home/blocks/features';
@@ -13,20 +15,22 @@ export default function index() {
         <WebLayout>
             <Head title="Home" />
 
-            <FullScreenSlider />
+            <FloatingWhatsApp />
+
+            <TttSlider />
+            <CategoryGrid />
 
             <FeaturesSection />
 
-            <Showcase/>
+            <Showcase />
 
-            <Partners/>
+            <Partners />
 
             <Testimonial />
 
             <CtaSection />
 
-            <FooterCard/>
-
+            <FooterCard />
         </WebLayout>
     );
 }
