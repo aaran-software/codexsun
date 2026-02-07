@@ -4,11 +4,12 @@ import CategoryGrid from '@/components/blocks/sliders/CategoryGrid';
 import FloatingWhatsApp from '@/components/blocks/sliders/FloatingWhatsApp';
 import TttSlider from '@/components/blocks/sliders/tttslider';
 import WebLayout from '@/layouts/web-layout';
-import CtaSection from '@/pages/web/home/blocks/cta';
-import FeaturesSection from '@/pages/web/home/blocks/features';
-import Partners from '@/pages/web/home/blocks/partners';
-import Showcase from '@/pages/web/home/blocks/Showcase';
-import Testimonial from '@/pages/web/home/blocks/testiomonials';
+import AboutSection from '@/pages/web/home/blocks/AboutSection';
+import CallToAction from '@/pages/web/home/blocks/CallToAction';
+import FactoryAdvantage from '@/pages/web/home/blocks/FactoryAdvantage';
+import HeroSection from '@/pages/web/home/blocks/HeroSection';
+import ProductRange from '@/pages/web/home/blocks/ProductRange';
+import WhyChooseUs from '@/pages/web/home/blocks/WhyChooseUs';
 
 export default function index() {
     return (
@@ -21,15 +22,14 @@ export default function index() {
 
             <CategoryGrid />
 
-            <FeaturesSection />
+            <HeroSection />
+            <AboutSection />
+            <WhyChooseUs />
+            <ProductRange />
+            <FactoryAdvantage />
+            <CallToAction />
 
-            <Showcase />
-
-            <Partners />
-
-            <Testimonial />
-
-            <CtaSection />
+            {/*<CtaSection />*/}
 
             <FooterCard />
         </WebLayout>
