@@ -177,7 +177,7 @@ export default function FullScreenSlider() {
                             backgroundImage: `url(${slides[current].image})`,
                         }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/40 to-transparent" />
                     </div>
 
                     <div className="relative flex h-full items-center">
@@ -209,7 +209,7 @@ export default function FullScreenSlider() {
                                     {slides[current].tagline}
                                 </motion.p>
 
-                                <motion.p
+                                <motion.div
                                     initial={{ y: 30, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.6 }}
@@ -223,7 +223,7 @@ export default function FullScreenSlider() {
                                             {slides[current].bulk}
                                         </span>
                                     </div>
-                                </motion.p>
+                                </motion.div>
 
                                 <motion.div
                                     initial={{ scale: 0.8 }}
@@ -252,7 +252,7 @@ export default function FullScreenSlider() {
                     width="56"
                     height="56"
                     viewBox="0 0 56 56"
-                    className="rotate-[-90deg]"
+                    className="-rotate-90"
                 >
                     <circle
                         cx="28"

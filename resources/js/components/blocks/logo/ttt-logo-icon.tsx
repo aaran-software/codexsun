@@ -5,11 +5,11 @@ export default function TttLogoIcon(props: SVGAttributes<SVGElement>) {
         <svg
             {...props}
             xmlns="http://www.w3.org/2000/svg"
-            shape-rendering="geometricPrecision"
-            text-rendering="geometricPrecision"
-            image-rendering="optimizeQuality"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
+            shapeRendering="geometricPrecision"
+            textRendering="geometricPrecision"
+            imageRendering="optimizeQuality"
+            fillRule="evenodd"
+            clipRule="evenodd"
             viewBox="0 0 6683000 5526000"
         >
             <g id="Layer_x0020_1">

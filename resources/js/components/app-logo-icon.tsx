@@ -1,4 +1,4 @@
-import { SVGAttributes } from 'react';
+import type { SVGAttributes } from 'react';
 
 export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
     return (
@@ -13,11 +13,11 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
         <svg
             {...props}
             xmlns="http://www.w3.org/2000/svg"
-            shape-rendering="geometricPrecision"
-            text-rendering="geometricPrecision"
-            image-rendering="optimizeQuality"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
+            shapeRendering="geometricPrecision"
+            textRendering="geometricPrecision"
+            imageRendering="optimizeQuality"
+            fillRule="evenodd"
+            clipRule="evenodd"
             viewBox="0 0 1660.07 1579.62"
         >
             <g id="Layer_x0020_1">

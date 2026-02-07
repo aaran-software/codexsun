@@ -18,6 +18,7 @@ export default function index() {
             <FloatingWhatsApp />
 
             <TttSlider />
+
             <CategoryGrid />
 
             <FeaturesSection />
