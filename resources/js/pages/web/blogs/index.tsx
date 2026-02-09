@@ -1,8 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
 import WebLayout from '@/layouts/web-layout';
 import CtaSection from '@/pages/web/home/blocks/cta';
+import { Head, Link } from '@inertiajs/react';
 import BlogSidebarRight from './blocks/BlogSidebarRight';
 
 const blogs = [
@@ -74,12 +74,12 @@ export default function BlogIndex() {
                                 <Link
                                     key={blog.id}
                                     href={`/blog/${blog.id}`}
-                                    className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-sm transition hover:shadow-xl md:flex-row"
+                                    className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-xl md:flex-row"
                                 >
                                     <img
                                         src={blog.image}
                                         alt={blog.title}
-                                        className="h-56 w-full object-cover md:w-72"
+                                        className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-105 md:w-72"
                                     />
 
                                     <div className="flex-1 p-6">

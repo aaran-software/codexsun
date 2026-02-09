@@ -220,3 +220,7 @@
 /*        opacity: 1;*/
 /*    }*/
 /*}*/
+
+.sidebar-title {
+    @apply text-sm font-semibold text-gray-900 uppercase tracking-wide;
+}
