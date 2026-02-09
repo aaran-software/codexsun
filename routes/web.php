@@ -63,4 +63,12 @@ Route::get('/slow', function () {
     return Inertia::render('web/home/index');
 });
 
+Route::get('/catalog/{category}', function ($category) {
+    return Inertia::render('catalog/category', [
+        'category' => $category,
+    ]);
+})->name('catalog.category');
+
+
+
 require __DIR__.'/settings.php';

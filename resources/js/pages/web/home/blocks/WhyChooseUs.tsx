@@ -1,4 +1,5 @@
 import Features from './features';
+import FadeUp from '@/components/animate/fade-up';
 
 export default function WhyChooseUs() {
     const features = [
@@ -31,7 +32,12 @@ export default function WhyChooseUs() {
     return (
         <section className="bg-gray-50 py-16">
             <div className="container mx-auto px-4">
-                <h2 className="mb-8 text-2xl font-semibold">Why Choose Us</h2>
+
+                <FadeUp>
+                    <h2 className="mb-8 text-2xl font-semibold">
+                        Why Choose Us
+                    </h2>
+                </FadeUp>
 
                 <Features features={features} />
             </div>

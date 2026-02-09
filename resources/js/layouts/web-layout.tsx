@@ -1,16 +1,13 @@
 import React from 'react';
 import WebMenu from '@/components/blocks/menu/web-menu';
+import ScrollProgress from '@/components/animate/ScrollProgress';
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
-            <WebMenu/>
+
+            <WebMenu />
             {children}
-            <script
-                src="https://www.google.com/recaptcha/api.js"
-                async
-                defer
-            ></script>
         </>
     );
 }

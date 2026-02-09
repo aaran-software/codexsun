@@ -5,6 +5,7 @@ import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import TttLogoIcon from '@/components/blocks/logo/ttt-logo-icon';
 import { dashboard, login, register } from '@/routes';
+import ScrollProgress from '@/components/animate/ScrollProgress';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
@@ -57,6 +58,7 @@ export default function WebMenu() {
                         : 'bg-transparent'
                 }`}
             >
+                <ScrollProgress />
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo */}

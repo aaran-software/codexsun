@@ -1,14 +1,20 @@
-import { Head } from '@inertiajs/react'
+import { Head } from '@inertiajs/react';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import CategoryGrid from '@/components/blocks/sliders/CategoryGrid';
 import FloatingWhatsApp from '@/components/blocks/sliders/FloatingWhatsApp';
 import TttSlider from '@/components/blocks/sliders/tttslider';
 import WebLayout from '@/layouts/web-layout';
 import AboutSection from '@/pages/web/home/blocks/AboutSection';
+import BlogShowcaseSection from '@/pages/web/home/blocks/BlogShowcaseSection';
+import BrandSlider from '@/pages/web/home/blocks/BrandSlider';
 import CallToAction from '@/pages/web/home/blocks/CallToAction';
+import CatalogSection from '@/pages/web/home/blocks/CatalogSection';
 import FactoryAdvantage from '@/pages/web/home/blocks/FactoryAdvantage';
 import HeroSection from '@/pages/web/home/blocks/HeroSection';
+import LocationSection from '@/pages/web/home/blocks/LocationSection';
+import NewsletterSection from '@/pages/web/home/blocks/NewsletterSection';
 import ProductRange from '@/pages/web/home/blocks/ProductRange';
+import StatsSection from '@/pages/web/home/blocks/StatsSection';
 import WhyChooseUs from '@/pages/web/home/blocks/WhyChooseUs';
 
 export default function index() {
@@ -20,16 +26,19 @@ export default function index() {
 
             <TttSlider />
 
-            <CategoryGrid />
-
             <HeroSection />
+            {/*<CategoryGrid />*/}
             <AboutSection />
-            <WhyChooseUs />
+            <StatsSection />
+            <CatalogSection />
             <ProductRange />
+            <WhyChooseUs />
+            <BrandSlider />
             <FactoryAdvantage />
+            <BlogShowcaseSection />
             <CallToAction />
-
-            {/*<CtaSection />*/}
+            <LocationSection />
+            <NewsletterSection />
 
             <FooterCard />
         </WebLayout>

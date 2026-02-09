@@ -18,7 +18,11 @@ const currentYear = new Date().getFullYear();
 // Hardcoded data — no Laravel/Inertia needed
 const footer = {
     companyName: 'Tech Media',
-    tagline: 'Trusted computer repair center since 2002.',
+    tagline:
+        'A factory outlet showroom operated by TEAMA,\n' +
+        ' representing 600+ Tirupur garment manufacturing\n' +
+        ' units. Direct sourcing, factory pricing, and bulk\n' +
+        ' supply for wholesalers, retailers, and corporates.',
     address:
         '436, Avinashi Road, Near CITU Office, Tiruppur, Tamil Nadu 641602',
     email: 'support@techmedia.in',
