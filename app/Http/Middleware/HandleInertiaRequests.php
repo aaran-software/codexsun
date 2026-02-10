@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use Aaran\Core\Tenant\Tenant;
+use Aaran\Core\Services\TenantService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,7 +39,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'tenant' => Tenant::payload(),
+            'tenant' => TenantService::payload(),
             'industry' => config('aaran-app.app_code'),
             'auth' => [
                 'user' => $request->user(),

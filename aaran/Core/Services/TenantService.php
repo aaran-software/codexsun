@@ -1,8 +1,8 @@
 <?php
 
-namespace Aaran\Core\Tenant;
+namespace Aaran\Core\Services;
 
-class Tenant
+class TenantService
 {
     public static function key(): string
     {

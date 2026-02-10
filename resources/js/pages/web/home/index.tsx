@@ -27,7 +27,7 @@ export default function index() {
         };
     };
 
-    console.log('Tenant from backend:', tenant);
+    console.log('TenantService from backend:', tenant);
 
     return (
         <WebLayout>
