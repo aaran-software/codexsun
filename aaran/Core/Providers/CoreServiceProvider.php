@@ -23,6 +23,7 @@ class CoreServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../Config/aaran.php', 'aaran-app');
         $this->mergeConfigFrom(__DIR__.'/../Config/software.php', 'software');
+        $this->mergeConfigFrom(__DIR__.'/../Config/tenants.php', 'tenants');
 
         $this->mergeConfigFrom(__DIR__.'/../Settings/developer.php', 'developer');
     }

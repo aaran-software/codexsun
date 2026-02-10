@@ -3,18 +3,18 @@
 import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ScrollProgress from '@/components/animate/ScrollProgress';
 import TttLogoIcon from '@/components/blocks/logo/ttt-logo-icon';
 import { dashboard, login, register } from '@/routes';
-import ScrollProgress from '@/components/animate/ScrollProgress';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenu, setMobileMenu] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
-    const { auth } = usePage<any>().props;
+    const { auth } = usePage<never>().props;
 
     const { appName } = usePage().props as unknown as { appName: string };
-    const currentUrl = usePage<any>().url;
+    const currentUrl = usePage<never>().url;
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);

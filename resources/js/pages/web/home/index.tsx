@@ -1,6 +1,5 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import FooterCard from '@/components/blocks/footers/FooterCard';
-import CategoryGrid from '@/components/blocks/sliders/CategoryGrid';
 import FloatingWhatsApp from '@/components/blocks/sliders/FloatingWhatsApp';
 import TttSlider from '@/components/blocks/sliders/tttslider';
 import WebLayout from '@/layouts/web-layout';
@@ -18,6 +17,18 @@ import StatsSection from '@/pages/web/home/blocks/StatsSection';
 import WhyChooseUs from '@/pages/web/home/blocks/WhyChooseUs';
 
 export default function index() {
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { tenant } = usePage().props as {
+        tenant?: {
+            key: string;
+            name: string;
+            industry?: string;
+        };
+    };
+
+    console.log('Tenant from backend:', tenant);
+
     return (
         <WebLayout>
             <Head title="Home" />
