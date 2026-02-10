@@ -2,24 +2,22 @@
 import subprocess
 import sys
 import os
-import pwd
-from datetime import datetime
 from pathlib import Path
+from datetime import datetime
 
 # ==================================================
 # CONFIG
 # ==================================================
 APP_DIR = Path.cwd()
-APP_USER = "devops"
-
+EXPECTED_USER = "devops"
 LOCK_FILE = Path("/tmp/ideploy.lock")
 
 # ==================================================
 # HELPERS
 # ==================================================
-def run(cmd):
+def run(cmd, check=True):
     print(f"\n▶ {cmd}")
-    subprocess.check_call(cmd, shell=True, cwd=APP_DIR)
+    subprocess.run(cmd, shell=True, cwd=APP_DIR, check=check)
 
 def info(msg):
     print(f"\nℹ️  {msg}")
@@ -29,33 +27,37 @@ def fail(msg):
     sys.exit(1)
 
 # ==================================================
-# SAFETY
+# SAFETY CHECKS
 # ==================================================
-def ensure_repo():
-    if not (APP_DIR / ".git").exists():
-        fail(f"Not a git repository: {APP_DIR}")
-
-def ensure_user():
+def ensure_correct_user():
     if os.geteuid() == 0:
-        fail("Do not run ideploy as root")
+        fail("Do NOT run ideploy as root")
 
-    current_user = pwd.getpwuid(os.geteuid()).pw_name
-    if current_user != APP_USER:
-        fail(f"Run ideploy as `{APP_USER}` (current: {current_user})")
+    current = os.getlogin()
+    if current != EXPECTED_USER:
+        fail(f"User mismatch: running as '{current}', expected '{EXPECTED_USER}'")
 
-def lock():
+def ensure_git_repo():
+    if not (APP_DIR / ".git").exists():
+        fail("Not a git repository")
+
+def ensure_laravel_app():
+    if not (APP_DIR / "artisan").exists():
+        fail("artisan not found — not a Laravel application")
+
+def acquire_lock():
     if LOCK_FILE.exists():
         fail("Another deploy is already running")
     LOCK_FILE.write_text(str(os.getpid()))
 
-def unlock():
+def release_lock():
     LOCK_FILE.unlink(missing_ok=True)
 
 # ==================================================
-# GIT
+# GIT (SAFE UPDATE)
 # ==================================================
 def git_update():
-    info("Updating source code")
+    info("Updating source code safely")
 
     branch = subprocess.check_output(
         "git symbolic-ref --short HEAD",
@@ -65,18 +67,39 @@ def git_update():
     ).strip()
 
     run("git fetch origin")
+
+    # Preserve runtime files
+    run("git update-index --skip-worktree .env || true")
+
     run(f"git reset --hard origin/{branch}")
-    run("git clean -fd")
+
+    # Safe clean (DO NOT remove runtime state)
+    run(
+        "git clean -fd "
+        "-e .env "
+        "-e storage "
+        "-e bootstrap/cache "
+        "-e node_modules "
+        "-e public/build"
+    )
+
+# ==================================================
+# ENVIRONMENT
+# ==================================================
+def ensure_env():
+    if not (APP_DIR / ".env").exists():
+        info(".env missing — restoring from example")
+        run("cp .env.example .env")
 
 # ==================================================
 # NPM
 # ==================================================
 def npm_build():
     if not (APP_DIR / "package.json").exists():
-        info("No package.json, skipping npm")
+        info("No frontend detected — skipping npm")
         return
 
-    info("Building frontend")
+    info("Building frontend assets")
 
     try:
         run("npm run build")
@@ -88,18 +111,25 @@ def npm_build():
 # ==================================================
 # LARAVEL
 # ==================================================
-def laravel_optimize():
-    if not (APP_DIR / "artisan").exists():
-        info("Not a Laravel app, skipping optimize")
-        return
-
-    info("Optimizing Laravel")
+def laravel_deploy():
+    info("Running Laravel deployment steps")
 
     run("php artisan down || true")
+
+    # Always clear first (idempotent)
     run("php artisan optimize:clear")
+    run("php artisan config:clear")
+    run("php artisan route:clear")
+    run("php artisan view:clear")
+
+    # Optional migrations (safe)
+    run("php artisan migrate --force || true")
+
+    # Rebuild caches (only AFTER env is confirmed)
     run("php artisan config:cache")
     run("php artisan route:cache")
     run("php artisan view:cache")
+
     run("php artisan up")
 
 # ==================================================
@@ -107,20 +137,22 @@ def laravel_optimize():
 # ==================================================
 def main():
     print("\n==============================")
-    print("🚀 DEPLOY STARTED")
+    print("🚀 SAFE DEPLOY STARTED")
     print(datetime.now())
     print("==============================")
 
-    ensure_repo()
-    ensure_user()
-    lock()
+    ensure_correct_user()
+    ensure_git_repo()
+    ensure_laravel_app()
+    acquire_lock()
 
     try:
+        ensure_env()
         git_update()
         npm_build()
-        laravel_optimize()
+        laravel_deploy()
     finally:
-        unlock()
+        release_lock()
 
     print("\n✅ DEPLOY COMPLETED SUCCESSFULLY")
 
