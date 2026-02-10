@@ -16,66 +16,12 @@ export default function Contact() {
         <WebLayout>
             <Head title="Contact Us" />
 
-            {/* reCAPTCHA */}
-            <script
-                src="https://www.google.com/recaptcha/api.js"
-                async
-                defer
-            />
-
             <MenuBackdrop
                 image="/assets/techmedia/contact-hero.jpg"
                 title="Contact Tech Media"
                 subtitle="Trusted computer repair & IT solutions since 2002"
             />
 
-            {/* About */}
-            <motion.section
-                className="px-4 py-16 md:px-[10%]"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-            >
-                <div className="container max-w-4xl space-y-6">
-                    <h2 className="text-3xl font-bold">About Tech Media</h2>
-                    <p className="text-lg text-muted-foreground">
-                        Tech Media is a trusted technology solutions company
-                        based in Tirupur, Tamil Nadu, delivering reliable IT
-                        services, computer hardware solutions, and business
-                        software support to growing businesses.
-                    </p>
-                    <p className="text-lg text-muted-foreground">
-                        We help organizations streamline operations, improve
-                        productivity, and scale confidently through the right
-                        mix of hardware, software, and IT consulting.
-                    </p>
-                </div>
-            </motion.section>
-
-            {/* Trust Badges */}
-            <section className="px-4 py-10 md:px-[10%]">
-                <div className="container grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {[
-                        'Since 2002',
-                        'AMC Support',
-                        'Certified Technicians',
-                        'Business-Focused IT',
-                    ].map((item, index) => (
-                        <motion.div
-                            key={item}
-                            className="rounded-xl border bg-background p-6 text-center shadow-sm"
-                            variants={fadeUp}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.15 }}
-                        >
-                            <p className="text-lg font-semibold">{item}</p>
-                        </motion.div>
-                    ))}
-                </div>
-            </section>
 
             {/* Contact + Form */}
             <section className="px-4 py-20 bg-muted/30 md:px-[10%]">

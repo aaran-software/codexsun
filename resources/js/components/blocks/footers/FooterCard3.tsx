@@ -1,4 +1,5 @@
 import { Link } from "@inertiajs/react";
+import { JSX } from 'react';
 
 export default function Footer() {
     return (

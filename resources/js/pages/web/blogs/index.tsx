@@ -4,6 +4,7 @@ import WebLayout from '@/layouts/web-layout';
 import CtaSection from '@/pages/web/home/blocks/cta';
 import { Head, Link } from '@inertiajs/react';
 import BlogSidebarRight from './blocks/BlogSidebarRight';
+import CallToAction from '@/pages/web/home/blocks/CallToAction';
 
 const blogs = [
     {
@@ -111,7 +112,7 @@ export default function BlogIndex() {
                 </div>
             </section>
 
-            <CtaSection />
+            <CallToAction />
             <FooterCard />
         </WebLayout>
     );
