@@ -24,8 +24,8 @@ class AaranServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($industry = Tenant::industry()) {
-            config(['aaran-app.app_code' => config("software.$industry")]);
-        }
+//        if ($industry = Tenant::industry()) {
+//            config(['aaran-app.app_code' => config("software.$industry")]);
+//        }
     }
 }
