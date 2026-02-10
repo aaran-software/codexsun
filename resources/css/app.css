@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
+@import "./ttt.css";
+@import "./techmedia.css";
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import React, { useEffect } from 'react';
 import WebMenu from '@/components/blocks/menu/web-menu';
+import { useTenantFavicon } from '@/hooks/useTenantFavicon';
 
 type Tenant = {
     key: string;
@@ -9,6 +10,7 @@ type Tenant = {
 };
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
+    useTenantFavicon();
     const { tenant } = usePage().props as {
         tenant?: Tenant;
     };
@@ -21,6 +23,7 @@ export default function WebLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <>
+
             <WebMenu />
             {children}
 

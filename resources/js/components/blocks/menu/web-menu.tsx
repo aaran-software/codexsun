@@ -4,7 +4,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ScrollProgress from '@/components/animate/ScrollProgress';
-import TttLogoIcon from '@/components/blocks/logo/ttt-logo-icon';
+import { TenantLogo } from '@/components/theme/tenant-logo';
 import { dashboard, login, register } from '@/routes';
 
 export default function WebMenu() {
@@ -12,8 +12,7 @@ export default function WebMenu() {
     const [mobileMenu, setMobileMenu] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const { auth } = usePage<never>().props;
-
-    const { appName } = usePage().props as unknown as { appName: string };
+    const { tenant } = usePage().props as any
     const currentUrl = usePage<never>().url;
 
     useEffect(() => {
@@ -67,28 +66,27 @@ export default function WebMenu() {
                             className="group flex items-center space-x-2"
                         >
                             <div className="h-10 w-12 rounded-lg transition-transform group-hover:scale-110">
-                                {/*<span className="text-white flex justify-center items-center text-center text-2xl w-full">*/}
-                                {/*    TM*/}
-                                {/*</span>*/}
-
-                                <TttLogoIcon
+                                <TenantLogo
                                     className={`h-8 w-auto ${
+                                        // scrolled || darkMode
+                                        //     ? 'fill-[#8F1F8D] text-[#1b1b18] dark:text-[#EDEDEC]'
+                                        //     : 'fill-white text-white'
+
                                         scrolled || darkMode
-                                            ? 'fill-[#8F1F8D] text-[#1b1b18] dark:text-[#EDEDEC]'
-                                            : 'fill-white text-white'
-                                    }`}
+                                            ? 'text-primary'
+                                            : 'text-foreground'
+                                    } } group-hover:text-primary`}
                                 />
                             </div>
 
                             <span
                                 className={`text-2xl font-medium transition-colors ${
                                     scrolled || darkMode
-                                        ? 'fill-black text-[#1b1b18] dark:text-[#EDEDEC]'
-                                        : 'text-white'
-                                } group-hover:text-[#8F1F8D] dark:group-hover:text-[#8F1F8D]`}
+                                        ? 'text-primary'
+                                        : 'text-foreground'
+                                } // ? 'fill-black dark:text-[#EDEDEC]' // : 'text-white' } text-[#1b1b18] group-hover:text-[#8F1F8D] dark:group-hover:text-[#8F1F8D]`}
                             >
-                                {/*{appName || 'Tech Media'}*/}
-                                The Tirupur Textiles
+                                {tenant.name}
                             </span>
                         </Link>
 

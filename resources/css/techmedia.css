@@ -1,0 +1,38 @@
+/* =========================
+   TECHMEDIA THEME
+========================= */
+html[data-client="techmedia"] {
+    --background: oklch(0.13 0.01 260);
+    --foreground: oklch(0.98 0 0);
+
+    --card: oklch(0.16 0.01 260);
+    --card-foreground: oklch(0.98 0 0);
+
+    --popover: oklch(0.16 0.01 260);
+    --popover-foreground: oklch(0.98 0 0);
+
+    --primary: oklch(0.47 0.21 327);          /* cyan-blue */
+    --primary-foreground: oklch(0.13 0 0);
+
+    --secondary: oklch(0.24 0.02 260);
+    --secondary-foreground: oklch(0.98 0 0);
+
+    --muted: oklch(0.22 0.01 260);
+    --muted-foreground: oklch(0.7 0 0);
+
+    --accent: oklch(0.65 0.2 190);           /* neon dev accent */
+    --accent-foreground: oklch(0.13 0 0);
+
+    --border: oklch(0.25 0.01 260);
+    --input: oklch(0.25 0.01 260);
+    --ring: oklch(0.7 0.18 210);
+
+    --sidebar: oklch(0.12 0.01 260);
+    --sidebar-foreground: oklch(0.98 0 0);
+    --sidebar-primary: oklch(0.7 0.18 210);
+    --sidebar-primary-foreground: oklch(0.13 0 0);
+    --sidebar-accent: oklch(0.22 0.01 260);
+    --sidebar-accent-foreground: oklch(0.98 0 0);
+    --sidebar-border: oklch(0.25 0.01 260);
+    --sidebar-ring: oklch(0.7 0.18 210);
+}

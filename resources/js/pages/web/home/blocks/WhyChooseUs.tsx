@@ -74,7 +74,7 @@ export default function WhyChooseUs() {
                                 className="rounded-xl bg-white p-8 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg"
                             >
                                 {/* Icon */}
-                                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white">
+                                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
                                     <Icon size={22} />
                                 </div>
 
