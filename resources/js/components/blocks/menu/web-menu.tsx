@@ -1,16 +1,17 @@
 'use client';
 
-import ScrollProgress from '@/components/animate/ScrollProgress';
-import { TenantLogo } from '@/components/theme/tenant-logo';
-import { dashboard, login, register } from '@/routes';
 import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ScrollProgress from '@/components/animate/ScrollProgress';
+import { TenantLogo } from '@/components/theme/tenant-logo';
+import { dashboard, login, register } from '@/routes';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenu, setMobileMenu] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
+
     const { auth } = usePage<never>().props;
     const { tenant } = usePage().props as any;
     const currentUrl = usePage<never>().url;
@@ -26,18 +27,6 @@ export default function WebMenu() {
         else document.documentElement.classList.remove('dark');
     }, [darkMode]);
 
-    useEffect(() => {
-        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-            anchor.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = document.querySelector(
-                    anchor.getAttribute('href')!,
-                );
-                target?.scrollIntoView({ behavior: 'smooth' });
-            });
-        });
-    }, []);
-
     const navItems = [
         { name: 'Home', href: '/' },
         { name: 'About', href: '/abouts' },
@@ -52,12 +41,11 @@ export default function WebMenu() {
         <>
             <header
                 className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
-                    scrolled
-                        ? 'bg-white shadow-md dark:bg-[#0a0a0a]'
-                        : 'bg-transparent'
+                    scrolled ? 'bg-secondary shadow-md' : 'bg-transparent'
                 }`}
             >
                 <ScrollProgress />
+
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo */}
@@ -66,17 +54,16 @@ export default function WebMenu() {
                                 <TenantLogo
                                     className={`h-auto w-8 transition-colors duration-300 ${
                                         scrolled || darkMode
-                                            ? 'fill-primary text-primary hover:fill-primary hover:text-primary'
-                                            : 'fill-secondary text-secondary hover:fill-secondary hover:text-secondary'
-                                    } `}
+                                            ? 'fill-primary text-primary'
+                                            : 'fill-secondary text-secondary'
+                                    }`}
                                 />
-
                                 <span
-                                    className={`shrink-0 text-3xl font-semibold transition-colors duration-300 ${
+                                    className={`text-3xl font-semibold transition-colors duration-300 ${
                                         scrolled || darkMode
-                                            ? 'text-primary hover:text-primary'
-                                            : 'text-secondary hover:text-secondary'
-                                    } `}
+                                            ? 'text-primary'
+                                            : 'text-secondary'
+                                    }`}
                                 >
                                     {tenant.name}
                                 </span>
@@ -88,24 +75,27 @@ export default function WebMenu() {
                             <ul className="flex space-x-8">
                                 {navItems.map((item) => {
                                     const active = current === item.name;
+
                                     return (
                                         <li key={item.name}>
                                             <Link
                                                 href={item.href}
                                                 className={`group relative overflow-hidden pb-1 font-medium transition-all duration-200 ${
                                                     scrolled || darkMode
-                                                        ? 'text-[#1b1b18] dark:text-[#EDEDEC]'
-                                                        : 'text-white'
+                                                        ? 'text-primary'
+                                                        : 'text-secondary'
                                                 }`}
                                             >
                                                 <span className="relative z-10">
                                                     {item.name}
                                                 </span>
+
+                                                {/* Animated Underline */}
                                                 <span
                                                     className={`absolute bottom-0 left-0 h-0.5 w-full origin-left transform transition-all duration-300 ${
                                                         scrolled
                                                             ? 'bg-primary'
-                                                            : 'bg-white'
+                                                            : 'bg-secondary'
                                                     } ${
                                                         active
                                                             ? 'scale-x-100'
@@ -119,16 +109,16 @@ export default function WebMenu() {
                             </ul>
                         </nav>
 
-                        {/* Right: Auth + Theme */}
+                        {/* Right Side */}
                         <div className="hidden items-center space-x-4 md:flex">
                             {auth?.user ? (
                                 <Link
                                     href={dashboard()}
                                     className={`group flex items-center space-x-1 font-medium transition-all duration-200 ${
                                         scrolled || darkMode
-                                            ? 'text-[#1b1b18] dark:text-[#EDEDEC]'
-                                            : 'text-white'
-                                    } hover:text-[#f53003] dark:hover:text-[#FF4433]`}
+                                            ? 'text-primary'
+                                            : 'text-secondary'
+                                    } hover:text-primary`}
                                 >
                                     <LayoutDashboard className="h-4 w-4 transition-transform group-hover:scale-110" />
                                     <span>Dashboard</span>
@@ -137,35 +127,31 @@ export default function WebMenu() {
                                 <>
                                     <Link
                                         href={login()}
-                                        className={`group font-medium transition-all duration-200 ${
+                                        className={`group flex items-center font-medium transition-all duration-200 ${
                                             scrolled || darkMode
-                                                ? 'text-[#1b1b18] dark:text-[#EDEDEC]'
-                                                : 'text-white'
-                                        } hover:text-[#f53003] dark:hover:text-[#FF4433]`}
+                                                ? 'text-primary'
+                                                : 'text-secondary'
+                                        } hover:text-primary`}
                                     >
-                                        <LogIn className="mr-1 inline h-4 w-4 transition-transform group-hover:scale-110" />
+                                        <LogIn className="mr-1 h-4 w-4 transition-transform group-hover:scale-110" />
                                         Log in
                                     </Link>
-                                    {/*<Link*/}
-                                    {/*    href={register()}*/}
-                                    {/*    className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm font-medium transition-all duration-200 hover:border-[#f53003] hover:bg-[#f53003] hover:text-white dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#FF4433] dark:hover:bg-[#FF4433] dark:hover:text-white"*/}
-                                    {/*>*/}
-                                    {/*    Register*/}
-                                    {/*</Link>*/}
                                 </>
                             )}
+
+                            {/* Theme Toggle */}
                             <button
                                 onClick={() => setDarkMode(!darkMode)}
-                                className={`group rounded-full p-2 transition-all duration-200 ${
+                                className={`rounded-full p-2 transition-all duration-200 ${
                                     scrolled || darkMode
-                                        ? 'text-[#1b1b18] dark:text-[#EDEDEC]'
-                                        : 'text-white'
-                                } hover:bg-gray-200 dark:hover:bg-gray-800`}
+                                        ? 'text-primary'
+                                        : 'text-secondary'
+                                } hover:bg-primary/10`}
                             >
                                 {darkMode ? (
-                                    <Sun className="h-5 w-5 transition-transform group-hover:rotate-180" />
+                                    <Sun className="h-5 w-5 transition-transform hover:rotate-180" />
                                 ) : (
-                                    <Moon className="h-5 w-5 transition-transform group-hover:-rotate-12" />
+                                    <Moon className="h-5 w-5 transition-transform hover:-rotate-12" />
                                 )}
                             </button>
                         </div>
@@ -175,8 +161,8 @@ export default function WebMenu() {
                             onClick={() => setMobileMenu(!mobileMenu)}
                             className={`p-1 transition-transform duration-200 md:hidden ${
                                 scrolled || darkMode
-                                    ? 'text-[#1b1b18] dark:text-[#EDEDEC]'
-                                    : 'text-white'
+                                    ? 'text-primary'
+                                    : 'text-secondary'
                             } hover:scale-110`}
                         >
                             {mobileMenu ? (
@@ -189,51 +175,54 @@ export default function WebMenu() {
 
                     {/* Mobile Menu */}
                     {mobileMenu && (
-                        <div className="animate-in border-t bg-white duration-300 slide-in-from-top-2 md:hidden dark:border-[#3E3E3A] dark:bg-[#0a0a0a]">
+                        <div className="animate-in border-t border-primary/20 bg-secondary duration-300 slide-in-from-top-2 md:hidden">
                             <nav className="space-y-1 px-4 py-3">
                                 {navItems.map((item) => (
                                     <Link
                                         key={item.name}
                                         href={item.href}
+                                        onClick={() => setMobileMenu(false)}
                                         className={`block rounded-md px-3 py-2 transition-all duration-200 ${
                                             current === item.name
-                                                ? 'bg-[#f53003] font-semibold text-white'
-                                                : 'text-[#1b1b18] hover:bg-gray-100 dark:text-[#EDEDEC] dark:hover:bg-gray-800'
+                                                ? 'bg-primary font-semibold text-secondary'
+                                                : 'text-primary hover:bg-primary/10'
                                         }`}
-                                        onClick={() => setMobileMenu(false)}
                                     >
                                         {item.name}
                                     </Link>
                                 ))}
-                                <div className="space-y-1 border-t pt-3 dark:border-[#3E3E3A]">
+
+                                <div className="space-y-1 border-t border-primary/20 pt-3">
                                     {auth?.user ? (
                                         <Link
                                             href={dashboard()}
-                                            className="flex items-center rounded-md px-3 py-2 text-[#1b1b18] hover:bg-gray-100 dark:text-[#EDEDEC] dark:hover:bg-gray-800"
+                                            className="flex items-center rounded-md px-3 py-2 text-primary hover:bg-primary/10"
                                         >
-                                            <LayoutDashboard className="mr-2 h-4 w-4" />{' '}
+                                            <LayoutDashboard className="mr-2 h-4 w-4" />
                                             Dashboard
                                         </Link>
                                     ) : (
                                         <>
                                             <Link
                                                 href={login()}
-                                                className="flex items-center rounded-md px-3 py-2 text-[#1b1b18] hover:bg-gray-100 dark:text-[#EDEDEC] dark:hover:bg-gray-800"
+                                                className="flex items-center rounded-md px-3 py-2 text-primary hover:bg-primary/10"
                                             >
-                                                <LogIn className="mr-2 h-4 w-4" />{' '}
+                                                <LogIn className="mr-2 h-4 w-4" />
                                                 Log in
                                             </Link>
+
                                             <Link
                                                 href={register()}
-                                                className="block rounded-md px-3 py-2 text-[#1b1b18] hover:bg-gray-100 dark:text-[#EDEDEC] dark:hover:bg-gray-800"
+                                                className="block rounded-md px-3 py-2 text-primary hover:bg-primary/10"
                                             >
                                                 Register
                                             </Link>
                                         </>
                                     )}
+
                                     <button
                                         onClick={() => setDarkMode(!darkMode)}
-                                        className="flex w-full items-center rounded-md px-3 py-2 text-[#1b1b18] transition-all hover:bg-gray-100 dark:text-[#EDEDEC] dark:hover:bg-gray-800"
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-primary hover:bg-primary/10"
                                     >
                                         {darkMode ? (
                                             <Sun className="mr-2 h-4 w-4" />
