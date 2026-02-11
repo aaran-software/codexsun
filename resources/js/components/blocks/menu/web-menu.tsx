@@ -1,18 +1,18 @@
 'use client';
 
-import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import ScrollProgress from '@/components/animate/ScrollProgress';
 import { TenantLogo } from '@/components/theme/tenant-logo';
 import { dashboard, login, register } from '@/routes';
+import { Link, usePage } from '@inertiajs/react';
+import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenu, setMobileMenu] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const { auth } = usePage<never>().props;
-    const { tenant } = usePage().props as any
+    const { tenant } = usePage().props as any;
     const currentUrl = usePage<never>().url;
 
     useEffect(() => {
@@ -61,33 +61,26 @@ export default function WebMenu() {
                 <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo */}
-                        <Link
-                            href="/"
-                            className="group flex items-center space-x-2"
-                        >
-                            <div className="h-10 w-12 rounded-lg transition-transform group-hover:scale-110">
+                        <Link href="/">
+                            <div className="group flex items-center space-x-2 transition-transform duration-300 hover:scale-105">
                                 <TenantLogo
-                                    className={`h-8 w-auto ${
-                                        // scrolled || darkMode
-                                        //     ? 'fill-[#8F1F8D] text-[#1b1b18] dark:text-[#EDEDEC]'
-                                        //     : 'fill-white text-white'
-
+                                    className={`h-auto w-8 transition-colors duration-300 ${
                                         scrolled || darkMode
-                                            ? 'text-primary'
-                                            : 'text-foreground'
-                                    } } group-hover:text-primary`}
+                                            ? 'fill-primary text-primary hover:fill-primary hover:text-primary'
+                                            : 'fill-secondary text-secondary hover:fill-secondary hover:text-secondary'
+                                    } `}
                                 />
-                            </div>
 
-                            <span
-                                className={`text-2xl font-medium transition-colors ${
-                                    scrolled || darkMode
-                                        ? 'text-primary'
-                                        : 'text-foreground'
-                                } // ? 'fill-black dark:text-[#EDEDEC]' // : 'text-white' } text-[#1b1b18] group-hover:text-[#8F1F8D] dark:group-hover:text-[#8F1F8D]`}
-                            >
-                                {tenant.name}
-                            </span>
+                                <span
+                                    className={`shrink-0 text-3xl font-semibold transition-colors duration-300 ${
+                                        scrolled || darkMode
+                                            ? 'text-primary hover:text-primary'
+                                            : 'text-secondary hover:text-secondary'
+                                    } `}
+                                >
+                                    {tenant.name}
+                                </span>
+                            </div>
                         </Link>
 
                         {/* Desktop Menu */}
@@ -109,7 +102,11 @@ export default function WebMenu() {
                                                     {item.name}
                                                 </span>
                                                 <span
-                                                    className={`absolute right-0 bottom-0 left-0 h-0.5 transform bg-[#8F1F8D] transition-transform duration-300 ${
+                                                    className={`absolute bottom-0 left-0 h-0.5 w-full origin-left transform transition-all duration-300 ${
+                                                        scrolled
+                                                            ? 'bg-primary'
+                                                            : 'bg-white'
+                                                    } ${
                                                         active
                                                             ? 'scale-x-100'
                                                             : 'scale-x-0 group-hover:scale-x-100'

@@ -1,0 +1,8 @@
+{
+    "features": {
+        "has_login": true,
+        "has_register": false,
+        "show_search": true,
+        "dark_mode": false
+    }
+}

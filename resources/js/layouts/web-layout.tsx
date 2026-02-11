@@ -3,28 +3,87 @@ import React, { useEffect } from 'react';
 import WebMenu from '@/components/blocks/menu/web-menu';
 import { useTenantFavicon } from '@/hooks/useTenantFavicon';
 
+type Theme = {
+    colors?: Record<string, string>;
+    typography?: {
+        font_family?: string;
+    };
+    radius?: Record<string, string>;
+    logos?: {
+        menu?: { src: string; width: number; height: number };
+        footer?: { src: string; width: number; height: number };
+        spinner?: { src: string; width: number; height: number };
+    };
+    features?: {
+        has_login?: boolean;
+        has_register?: boolean;
+    };
+};
+
 type Tenant = {
     key: string;
     name: string;
     industry: string;
+    theme?: Theme;
 };
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
     useTenantFavicon();
+
     const { tenant } = usePage().props as {
         tenant?: Tenant;
     };
 
+    /**
+     * Apply tenant key to html dataset
+     */
     useEffect(() => {
         if (tenant?.key) {
             document.documentElement.dataset.client = tenant.key;
         }
     }, [tenant?.key]);
 
+    /**
+     * Autoload theme as CSS variables
+     */
+    useEffect(() => {
+        if (!tenant?.theme) return;
+
+        const { colors, typography, radius } = tenant.theme;
+
+        // Apply colors
+        if (colors) {
+            Object.entries(colors).forEach(([key, value]) => {
+                document.documentElement.style.setProperty(
+                    `--${key}`,
+                    value
+                );
+            });
+        }
+
+        // Apply font
+        if (typography?.font_family) {
+            document.documentElement.style.setProperty(
+                '--font-family',
+                typography.font_family
+            );
+        }
+
+        // Apply radius
+        if (radius) {
+            Object.entries(radius).forEach(([key, value]) => {
+                document.documentElement.style.setProperty(
+                    `--radius-${key}`,
+                    value
+                );
+            });
+        }
+    }, [tenant?.theme]);
+
     return (
         <>
-
             <WebMenu />
+
             {children}
 
             {/* DEV-only tenant badge */}

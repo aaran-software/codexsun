@@ -28,7 +28,7 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
                     clipRule="evenodd"
                     d="M447.41 266.65l483.58 0 -149 443.46 -484 0 149.42 -443.46zm632.4 0l485.39 0 -149.42 443.46 -484.97 0 149 -443.46zm287.25 588.05l-154.41 458.27 -484.4 0 153.97 -458.27 484.84 0zm-787.63 458.27l-484.57 0 154.41 -458.27 484.13 0 -153.97 458.27z"
                 />
-                <rect fill="none" width="1660.06" height="1579.62" />
+                {/*<rect fill="none" width="1660.06" height="1579.62" />*/}
             </g>
         </svg>
     );

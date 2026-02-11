@@ -1,0 +1,63 @@
+{
+    "colors": {
+        "primary": "#8F1F8D",
+        "secondary": "#111111",
+        "accent": "#F5A623",
+        "background": "#FFFFFF",
+        "surface": "#F9FAFB",
+        "text": "#1F2937",
+        "muted": "#6B7280",
+
+        "menu_bg": "#FFFFFF",
+        "menu_text": "#111111",
+        "menu_hover": "#8F1F8D",
+
+        "footer_bg": "#111111",
+        "footer_text": "#FFFFFF",
+
+        "button_bg": "#8F1F8D",
+        "button_text": "#FFFFFF"
+    },
+
+    "typography": {
+        "font_family": "Poppins, sans-serif",
+        "heading_weight": "600",
+        "body_weight": "400"
+    },
+
+    "logos": {
+        "menu": {
+            "src": "/storage/tenants/ttt/logo-menu.png",
+            "width": 140,
+            "height": 50
+        },
+        "footer": {
+            "src": "/storage/tenants/ttt/logo-footer.png",
+            "width": 180,
+            "height": 60
+        },
+        "spinner": {
+            "src": "/storage/tenants/ttt/logo-spinner.png",
+            "width": 80,
+            "height": 80
+        }
+    },
+
+    "layout": {
+        "menu_style": "default",
+        "menu_sticky": true,
+        "container_width": "1280px"
+    },
+
+    "features": {
+        "has_login": true,
+        "has_register": false,
+        "show_search": true,
+        "dark_mode": false
+    },
+
+    "radius": {
+        "card": "12px",
+        "button": "8px"
+    }
+}

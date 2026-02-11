@@ -7,7 +7,7 @@ export function useTenantFavicon() {
     useEffect(() => {
         if (!tenant?.key) return;
 
-        const faviconUrl = `/tenants/${tenant.key}/favicon.ico`;
+        const faviconUrl = `/assets/${tenant.key}/logo/favicon.ico`;
 
         const link =
             document.querySelector("link[rel='icon']") ||
