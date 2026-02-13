@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import WebLayout from '@/layouts/web-layout';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
-import CtaSection from '@/pages/web/home/blocks/cta';
+import CtaSection from '@/pages/web/home/blocks/cta/cta';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 24 },

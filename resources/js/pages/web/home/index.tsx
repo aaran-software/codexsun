@@ -3,18 +3,19 @@ import FooterCard from '@/components/blocks/footers/FooterCard';
 import FloatingWhatsApp from '@/components/blocks/sliders/FloatingWhatsApp';
 import TttSlider from '@/components/blocks/sliders/tttslider';
 import WebLayout from '@/layouts/web-layout';
-import AboutSection from '@/pages/web/home/blocks/AboutSection';
-import BlogShowcaseSection from '@/pages/web/home/blocks/BlogShowcaseSection';
-import BrandSlider from '@/pages/web/home/blocks/BrandSlider';
-import CallToAction from '@/pages/web/home/blocks/CallToAction';
-import CatalogSection from '@/pages/web/home/blocks/CatalogSection';
+import AboutSection from '@/pages/web/home/blocks/about/AboutSection';
+import BlogShowcaseSection from '@/pages/web/home/blocks/blog/BlogShowcaseSection';
+import BrandSlider from '@/pages/web/home/blocks/branding/BrandSlider';
+import CatalogSection from '@/pages/web/home/blocks/Product/CatalogSection';
+import CallToAction from '@/pages/web/home/blocks/cta/CallToAction';
 import FactoryAdvantage from '@/pages/web/home/blocks/FactoryAdvantage';
 import HeroSection from '@/pages/web/home/blocks/HeroSection';
-import LocationSection from '@/pages/web/home/blocks/LocationSection';
-import NewsletterSection from '@/pages/web/home/blocks/NewsletterSection';
+import LocationSection from '@/pages/web/home/blocks/location/LocationSection';
 import ProductRange from '@/pages/web/home/blocks/ProductRange';
 import StatsSection from '@/pages/web/home/blocks/StatsSection';
-import WhyChooseUs from '@/pages/web/home/blocks/WhyChooseUs';
+import NewsletterSection from '@/pages/web/home/blocks/subscribtion/NewsletterSection';
+import WhyChooseUs from '@/pages/web/home/blocks/whyus/WhyChooseUs';
+import Partners from '@/pages/web/home/blocks/branding/partners';
 
 export default function index() {
 
@@ -44,7 +45,8 @@ export default function index() {
             <CatalogSection />
             <ProductRange />
             <WhyChooseUs />
-            <BrandSlider />
+            <Partners/>
+            {/*<BrandSlider />*/}
             <FactoryAdvantage />
             <BlogShowcaseSection />
             <CallToAction />
@@ -52,6 +54,7 @@ export default function index() {
             <NewsletterSection />
 
             <FooterCard />
+            {/*<FooterCard3/>*/}
         </WebLayout>
     );
 }

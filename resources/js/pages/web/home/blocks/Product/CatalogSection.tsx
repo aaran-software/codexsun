@@ -1,4 +1,4 @@
-import { catalogCategories } from '../catalogData';
+import { catalogCategories } from '../../catalogData';
 import CatalogCard from './CatalogCard';
 
 export default function CatalogSection() {

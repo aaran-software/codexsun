@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { brandLogos } from './data/brand-logos';
+import { brandLogos } from '../data/brand-logos';
 
 export default function BrandSlider() {
     return (

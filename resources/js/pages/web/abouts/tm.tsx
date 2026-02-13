@@ -3,7 +3,7 @@ import { Award, Target, TrendingUp, Users } from 'lucide-react';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
 import WebLayout from '@/layouts/web-layout';
-import CtaSection from '@/pages/web/home/blocks/cta';
+import CtaSection from '@/pages/web/home/blocks/cta/cta';
 
 export default function index() {
     return (
