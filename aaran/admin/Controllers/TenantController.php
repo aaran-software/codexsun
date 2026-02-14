@@ -48,7 +48,6 @@ class TenantController extends Controller
         ]);
     }
 
-
     public function create()
     {
         return Inertia::render('Admin/Tenants/Create');
@@ -87,9 +86,19 @@ class TenantController extends Controller
 
     public function update(Request $request, Tenant $tenant)
     {
-        $tenant->update($request->all());
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:tenants,slug,'.$tenant->id],
+            'domain' => ['nullable', 'string'],
+            'industry' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+        ]);
 
-        return back()->with('success', 'Updated');
+        $tenant->update($validated);
+
+        return redirect()
+            ->route('admin.tenants.index')
+            ->with('success', 'Tenant updated successfully.');
     }
 
     public function destroy(Tenant $tenant)

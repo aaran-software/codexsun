@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import React, { useEffect } from 'react';
 import WebMenu from '@/components/blocks/menu/web-menu';
 import { useTenantFavicon } from '@/hooks/useTenantFavicon';
+import GlobalSpinner from '@/components/blocks/spinner/global-spinner';
 
 type Theme = {
     colors?: Record<string, string>;
@@ -82,6 +83,7 @@ export default function WebLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <>
+            <GlobalSpinner />
             <WebMenu />
 
             {children}

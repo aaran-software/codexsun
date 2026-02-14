@@ -1,12 +1,16 @@
 'use client';
 
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { MoreHorizontal, Plus, RotateCcw, Search, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { MoreHorizontal, RotateCcw, Search, X } from 'lucide-react';
+import { useMemo } from 'react';
 import { useRoute } from 'ziggy-js';
 
-import DataTable from '@/components/table/DataTable';
+import CrudTable from '@/components/table/CrudTable';
+import ListLayout from '@/components/table/ListLayout';
 import TableColumnsToggle from '@/components/table/TableColumnsToggle';
+import { useColumnVisibility } from '@/components/table/useColumnVisibility';
+import { useCrudFilters } from '@/components/table/useCrudFilters';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,92 +34,36 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { index as tenantRoutes } from '@/routes/admin/tenants/index';
 import type { BreadcrumbItem } from '@/types';
 
-export default function Index() {
+export default function List() {
     const props = usePage().props as any;
     const tenants = props.tenants;
-    const filters = props.filters ?? {};
-
+    const serverFilters = props.filters ?? {};
     const route = useRoute();
 
-    /* ------------------------------------------------------------
-     | Filters
-     ------------------------------------------------------------ */
+    /* ------------------------------------------------------------------
+     | CRUD Filters Hook
+     ------------------------------------------------------------------ */
 
-    const [localFilters, setLocalFilters] = useState({
-        search: filters.search || '',
-        status: filters.status || 'all',
-        per_page: filters.per_page || '25',
-    });
-
-    const [isNavigating, setIsNavigating] = useState(false);
-
-    useEffect(() => {
-        setLocalFilters({
-            search: filters.search || '',
-            status: filters.status || 'all',
-            per_page: filters.per_page || '25',
+    const { filters, setFilters, navigate, isNavigating } =
+        useCrudFilters({
+            initialFilters: {
+                search: serverFilters.search || '',
+                status: serverFilters.status || 'all',
+                per_page: serverFilters.per_page || '25',
+            },
+            routeName: 'admin.tenants.index',
+            debounceKeys: ['search'],
         });
-    }, [filters]);
 
-    const buildPayload = useCallback(() => {
-        return {
-            search: localFilters.search || undefined,
-            status:
-                localFilters.status === 'all' ? undefined : localFilters.status,
-            per_page: localFilters.per_page,
-        };
-    }, [localFilters]);
-
-    const navigate = useCallback(
-        (extra: Record<string, any> = {}, resetPage = true) => {
-            setIsNavigating(true);
-
-            router.get(
-                route('admin.tenants.index'),
-                {
-                    ...buildPayload(),
-                    ...(resetPage ? { page: 1 } : {}),
-                    ...extra,
-                },
-                {
-                    preserveState: true,
-                    replace: true,
-                    preserveScroll: true,
-                    onFinish: () => setIsNavigating(false),
-                },
-            );
-        },
-        [route, buildPayload],
-    );
-
-    const handleReset = () => {
-        router.get(route('admin.tenants.index'), {}, { replace: true });
-    };
-
-    const handlePerPageChange = (perPage: number) => {
-        setLocalFilters((prev) => ({
-            ...prev,
-            per_page: String(perPage),
-        }));
-        navigate({ per_page: perPage }, true);
-    };
-
-    // Debounced search
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            navigate({}, true);
-        }, 500);
-        return () => clearTimeout(timeout);
-    }, [localFilters.search]);
-
-    /* ------------------------------------------------------------
-     | Column Toggle
-     ------------------------------------------------------------ */
+    /* ------------------------------------------------------------------
+     | Column Visibility Hook
+     ------------------------------------------------------------------ */
 
     const columnConfig = [
         { key: 'name', label: 'Name' },
@@ -125,42 +73,29 @@ export default function Index() {
         { key: 'status', label: 'Status' },
     ];
 
-    const [visibleColumns, setVisibleColumns] = useState<string[]>(
-        columnConfig.map((col) => col.key),
-    );
-
-    const toggleColumn = (key: string) => {
-        setVisibleColumns((prev) =>
-            prev.includes(key)
-                ? prev.filter((col) => col !== key)
-                : [...prev, key],
+    const { visibleColumns, toggleColumn } =
+        useColumnVisibility(
+            'tenant_columns',
+            columnConfig.map((col) => col.key),
         );
-    };
 
-    // Persist column visibility
-    useEffect(() => {
-        const saved = localStorage.getItem('tenant_columns');
-        if (saved) setVisibleColumns(JSON.parse(saved));
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem('tenant_columns', JSON.stringify(visibleColumns));
-    }, [visibleColumns]);
-
-    /* ------------------------------------------------------------
+    /* ------------------------------------------------------------------
      | Active Filter Badges
-     ------------------------------------------------------------ */
+     ------------------------------------------------------------------ */
 
     const activeBadges = useMemo(() => {
         const items = [];
 
-        if (localFilters.search) {
+        if (filters.search) {
             items.push(
                 <Badge key="search" variant="secondary" className="gap-1">
-                    Search: {localFilters.search}
+                    Search: {filters.search}
                     <button
                         onClick={() =>
-                            setLocalFilters((p) => ({ ...p, search: '' }))
+                            setFilters((p: any) => ({
+                                ...p,
+                                search: '',
+                            }))
                         }
                     >
                         <X className="h-3 w-3" />
@@ -169,13 +104,13 @@ export default function Index() {
             );
         }
 
-        if (localFilters.status !== 'all') {
+        if (filters.status !== 'all') {
             items.push(
                 <Badge key="status" variant="secondary" className="gap-1">
-                    Status: {localFilters.status}
+                    Status: {filters.status}
                     <button
                         onClick={() =>
-                            setLocalFilters((p) => ({
+                            setFilters((p: any) => ({
                                 ...p,
                                 status: 'all',
                             }))
@@ -188,11 +123,11 @@ export default function Index() {
         }
 
         return items.length ? items : null;
-    }, [localFilters]);
+    }, [filters]);
 
-    /* ------------------------------------------------------------
+    /* ------------------------------------------------------------------
      | Breadcrumbs
-     ------------------------------------------------------------ */
+     ------------------------------------------------------------------ */
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
@@ -203,37 +138,26 @@ export default function Index() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tenants" />
 
-            <div className="space-y-6 p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Tenants</h1>
-                        <p className="text-sm text-muted-foreground">
-                            Manage tenant accounts
-                        </p>
-                    </div>
+            <ListLayout
+                title="Tenants"
+                description="Manage tenant accounts"
+                createRoute={route('admin.tenants.create')}
+            >
+                {/* ------------------------------------------------------------
+                 | Filters Section
+                 ------------------------------------------------------------ */}
 
-                    <Button asChild>
-                        <Link href={route('admin.tenants.create')}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Tenant
-                        </Link>
-                    </Button>
-                </div>
-
-                {/* Filters */}
-
-                <div className="flex flex-wrap items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="relative max-w-sm flex-1">
                             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 className="pl-10"
                                 placeholder="Search name, slug, domain..."
-                                value={localFilters.search}
+                                value={filters.search}
                                 onChange={(e) =>
-                                    setLocalFilters((prev) => ({
-                                        ...prev,
+                                    setFilters((p: any) => ({
+                                        ...p,
                                         search: e.target.value,
                                     }))
                                 }
@@ -241,10 +165,10 @@ export default function Index() {
                         </div>
 
                         <Select
-                            value={localFilters.status}
+                            value={filters.status}
                             onValueChange={(v: any) => {
-                                setLocalFilters((prev) => ({
-                                    ...prev,
+                                setFilters((p: any) => ({
+                                    ...p,
                                     status: v,
                                 }));
                                 navigate({ status: v });
@@ -265,19 +189,16 @@ export default function Index() {
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={handleReset}
+                            onClick={() => navigate({}, true)}
                         >
                             <RotateCcw className="h-4 w-4" />
                         </Button>
                     </div>
-
-                    <div>
-                        <TableColumnsToggle
-                            columns={columnConfig}
-                            visibleColumns={visibleColumns}
-                            onToggle={toggleColumn}
-                        />
-                    </div>
+                    <TableColumnsToggle
+                        columns={columnConfig}
+                        visibleColumns={visibleColumns}
+                        onToggle={toggleColumn}
+                    />
                 </div>
 
                 {/* Active Filters */}
@@ -287,15 +208,22 @@ export default function Index() {
                     </div>
                 )}
 
-                {/* Table */}
-                <DataTable
+                {/* ------------------------------------------------------------
+                 | CRUD TABLE
+                 ------------------------------------------------------------ */}
+
+                <CrudTable
                     data={tenants.data}
                     pagination={tenants}
-                    perPage={parseInt(localFilters.per_page)}
-                    onPerPageChange={handlePerPageChange}
+                    perPage={parseInt(filters.per_page)}
+                    onPerPageChange={(perPage) =>
+                        navigate({ per_page: perPage }, true)
+                    }
                     onPageChange={(page) => navigate({ page }, false)}
-                    emptyMessage="No tenants found."
                     isLoading={isNavigating}
+                    columnConfig={columnConfig}
+                    visibleColumns={visibleColumns}
+                    toggleColumn={toggleColumn}
                 >
                     <TableHeader>
                         <TableRow className="border-b bg-muted font-semibold">
@@ -396,8 +324,8 @@ export default function Index() {
                             </TableRow>
                         ))}
                     </TableBody>
-                </DataTable>
-            </div>
+                </CrudTable>
+            </ListLayout>
         </AppLayout>
     );
 }
