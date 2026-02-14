@@ -1,8 +1,8 @@
 <?php
 
-namespace Database\Seeders;
+namespace Aaran\admin\database\seeders;
 
-use App\Models\Role;
+use Aaran\admin\Models\Role;
 use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder

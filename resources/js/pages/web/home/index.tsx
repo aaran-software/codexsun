@@ -1,7 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import FloatingWhatsApp from '@/components/blocks/sliders/FloatingWhatsApp';
-import TechmediaSlider from '@/components/blocks/sliders/TechmediaSlider';
+import FullScreenSlider from '@/components/slider/FullScreenSlider';
 import WebLayout from '@/layouts/web-layout';
 import AboutSection from '@/pages/web/home/blocks/about/AboutSection';
 import BlogShowcaseSection from '@/pages/web/home/blocks/blog/BlogShowcaseSection';
@@ -18,13 +18,9 @@ import WhyChooseUs from '@/pages/web/home/blocks/whyus/WhyChooseUs';
 
 export default function index() {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { tenant } = usePage().props as {
-        tenant?: {
-            key: string;
-            name: string;
-            industry?: string;
-        };
-    };
+    const { tenant } = usePage().props
+
+    // console.log(tenant.industry)
 
     console.log('TenantService from backend:', tenant);
 
@@ -34,7 +30,10 @@ export default function index() {
 
             <FloatingWhatsApp />
 
-            <TechmediaSlider />
+            {/*<TechmediaSlider />*/}
+
+
+            <FullScreenSlider/>
 
             <HeroSection />
             <AboutSection />

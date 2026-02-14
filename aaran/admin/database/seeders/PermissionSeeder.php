@@ -1,8 +1,8 @@
 <?php
 
-namespace Database\Seeders;
+namespace Aaran\admin\database\seeders;
 
-use App\Models\Permission;
+use Aaran\admin\Models\Permission;
 use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder

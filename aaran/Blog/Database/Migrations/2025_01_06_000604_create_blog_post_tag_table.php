@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Aaran\Core\Features\Customise::hasBlog()) {
             Schema::create('blog_post_tag', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('blog_post_id')->constrained()->onDelete('cascade');
@@ -17,7 +16,6 @@ return new class extends Migration {
 
                 $table->unique(['blog_post_id', 'blog_tag_id']);
             });
-        }
     }
 
     public function down(): void

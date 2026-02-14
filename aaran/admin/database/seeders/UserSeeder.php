@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Seeders;
+namespace Aaran\admin\database\seeders;
 
-use App\Models\Permission;
-use App\Models\Role;
+use Aaran\admin\Models\Permission;
+use Aaran\admin\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;

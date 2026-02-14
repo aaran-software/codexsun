@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Aaran\admin\database\seeders\PermissionSeeder;
+use Aaran\admin\database\seeders\RoleSeeder;
+use Aaran\admin\database\seeders\UserSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,6 +18,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PermissionSeeder::class,
             UserSeeder::class,
+            TenantSeeder::class,
+            SliderSeeder::class,
         ]);
     }
 }

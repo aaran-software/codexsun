@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use Aaran\Core\Services\TenantService;
+use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,11 +36,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $tenant = app(TenantResolver::class)->resolve();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'tenant' => TenantService::payload(),
-            'industry' => config('aaran-app.app_code'),
+
+            'tenant' => $tenant?->only([
+                'id',
+                'name',
+                'slug',
+                'industry',
+                'domain',
+            ]),
+
             'auth' => [
                 'user' => $request->user(),
             ],

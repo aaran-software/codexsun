@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\DeployController;
+use App\Http\Controllers\TenantController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -69,6 +70,8 @@ Route::get('/catalog/{category}', function ($category) {
     ]);
 })->name('catalog.category');
 
+
+Route::get('/api/tenant', [TenantController::class, 'current']);
 
 
 require __DIR__.'/settings.php';

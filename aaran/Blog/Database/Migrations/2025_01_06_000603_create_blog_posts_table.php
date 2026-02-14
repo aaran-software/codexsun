@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Aaran\Core\Features\Customise::hasBlog()) {
             Schema::create('blog_posts', function (Blueprint $table) {
                 $table->id();
                 $table->string('title');
@@ -27,7 +26,6 @@ return new class extends Migration
                 $table->index('blog_category_id');
                 $table->index('published');
             });
-        }
     }
 
     public function down(): void
