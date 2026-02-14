@@ -1,5 +1,6 @@
 'use client';
 
+import { Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -28,7 +29,8 @@ export default function TableColumnsToggle({
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
-                    Columns
+                    <Settings2 className="mr-2 h-4 w-4" />
+                    View
                 </Button>
             </DropdownMenuTrigger>
 
