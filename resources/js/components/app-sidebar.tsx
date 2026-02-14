@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard, todos } from '@/routes';
+import { index as tenantRoutes } from '@/routes/admin/tenants/index';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
 
@@ -28,8 +29,8 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Dashboard',
-        href: dashboard(),
+        title: 'tenants',
+        href: tenantRoutes(),
         icon: LayoutGrid,
     },
 ];

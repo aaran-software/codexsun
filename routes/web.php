@@ -1,7 +1,9 @@
 <?php
 
+use Aaran\admin\Controllers\SliderController;
+
+use Aaran\admin\Controllers\TenantController;
 use App\Http\Controllers\Settings\DeployController;
-use App\Http\Controllers\TenantController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -72,6 +74,16 @@ Route::get('/catalog/{category}', function ($category) {
 
 
 Route::get('/api/tenant', [TenantController::class, 'current']);
+
+
+Route::middleware(['auth'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        Route::resource('tenants', TenantController::class);
+        Route::resource('sliders', SliderController::class);
+    });
 
 
 require __DIR__.'/settings.php';

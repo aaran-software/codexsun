@@ -36,7 +36,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $tenant = app(TenantResolver::class)->resolve();
+        $tenant = app()->bound('currentTenant')
+            ? app('currentTenant')
+            : null;
 
         return [
             ...parent::share($request),
@@ -44,10 +46,17 @@ class HandleInertiaRequests extends Middleware
 
             'tenant' => $tenant?->only([
                 'id',
+                'key',
                 'name',
                 'slug',
                 'industry',
                 'domain',
+                'logo',
+                'favicon',
+                'theme',
+                'settings',
+                'features',
+                'seo',
             ]),
 
             'auth' => [

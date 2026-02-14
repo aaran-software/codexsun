@@ -18,14 +18,10 @@ class ResolveTenant
             abort(404, 'Tenant not found');
         }
 
-        // Share globally with Inertia
-        Inertia::share('tenant', [
-            'id' => $tenant->id,
-            'name' => $tenant->name,
-            'slug' => $tenant->slug,
-            'industry' => $tenant->industry,
-            'domain' => $tenant->domain,
-        ]);
+
+        if (! $tenant->isAccessible()) {
+            abort(403, 'Tenant suspended or inactive');
+        }
 
         // Optional: bind tenant in container
         app()->instance('currentTenant', $tenant);

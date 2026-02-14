@@ -2,24 +2,68 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tenant extends Model
 {
-    /** @use HasFactory<\Database\Factories\TenantFactory> */
-    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
+        'key',
         'name',
         'slug',
-        'domain',
         'industry',
+
+        'domain',
+        'custom_domain',
+        'force_https',
+
+        'logo',
+        'favicon',
+        'theme',
+        'settings',
+        'features',
+        'seo',
+
         'is_active',
+        'is_suspended',
     ];
 
-    public function sliders()
+    protected $casts = [
+        'theme' => 'array',
+        'settings' => 'array',
+        'features' => 'array',
+        'seo' => 'array',
+        'force_https' => 'boolean',
+        'is_active' => 'boolean',
+        'is_suspended' => 'boolean',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function subscription()
     {
-        return $this->hasMany(Slider::class);
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasFeature(string $feature): bool
+    {
+        return data_get($this->features, $feature, false);
+    }
+
+    public function isAccessible(): bool
+    {
+        return $this->is_active && ! $this->is_suspended;
     }
 }
