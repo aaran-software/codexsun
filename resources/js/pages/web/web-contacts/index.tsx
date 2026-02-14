@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
-import WebLayout from '@/layouts/web-layout';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
-import CtaSection from '@/pages/web/home/blocks/cta/cta';
+import WebLayout from '@/layouts/web-layout';
+import CtaSection from '@/pages/web/home/tenants/techmedia/blocks/cta/cta';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 24 },

@@ -1,10 +1,9 @@
+import { Head, Link } from '@inertiajs/react';
 import FooterCard from '@/components/blocks/footers/FooterCard';
 import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
 import WebLayout from '@/layouts/web-layout';
-import CtaSection from '@/pages/web/home/blocks/cta/cta';
-import { Head, Link } from '@inertiajs/react';
+import CallToAction from '@/pages/web/home/tenants/default/blocks/cta/CallToAction';
 import BlogSidebarRight from './blocks/BlogSidebarRight';
-import CallToAction from '@/pages/web/home/blocks/cta/CallToAction';
 
 const blogs = [
     {
