@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogIn, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ScrollProgress from '@/components/animate/ScrollProgress';
+import { tenantNav } from '@/components/blocks/menu/tenantNav';
 import { TenantLogo } from '@/components/theme/tenant-logo';
 import { dashboard, login, register } from '@/routes';
 
@@ -27,13 +28,8 @@ export default function WebMenu() {
         else document.documentElement.classList.remove('dark');
     }, [darkMode]);
 
-    const navItems = [
-        { name: 'Home', href: '/' },
-        { name: 'About', href: '/abouts' },
-        { name: 'Manufacturing', href: '/services' },
-        { name: 'Blogs', href: '/blogs' },
-        { name: 'Contact', href: '/web-contacts' },
-    ];
+    const key = tenant?.key ?? 'default';
+    const navItems = tenantNav[key] ?? tenantNav.default;
 
     const current = navItems.find((i) => i.href === currentUrl)?.name || '';
 
