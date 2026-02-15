@@ -46,6 +46,8 @@ export default function List() {
     const serverFilters = props.filters ?? {};
     const route = useRoute();
 
+    console.log(usePage().props.flash);
+
     /* ------------------------------------------------------------------
      | CRUD Filters Hook
      ------------------------------------------------------------------ */

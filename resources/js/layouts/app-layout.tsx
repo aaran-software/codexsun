@@ -6,7 +6,7 @@ import type { AppLayoutProps } from '@/types';
 
 export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => (
     <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
-        <GlobalSpinner />
+        {/*<GlobalSpinner />*/}
         {children}
         <FlashToaster />
         <Toaster richColors position="top-right" />

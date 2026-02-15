@@ -74,7 +74,10 @@ class TenantController extends Controller
             ]),
         ]);
 
-        return redirect()->route('admin.tenants.index');
+        return redirect()
+            ->route('admin.tenants.index')
+            ->with('success', 'Tenant created successfully.');
+
     }
 
     public function edit(Tenant $tenant)
@@ -98,7 +101,10 @@ class TenantController extends Controller
 
         return redirect()
             ->route('admin.tenants.index')
-            ->with('success', 'Tenant updated successfully.');
+            ->with([
+                'success' => 'Tenant updated successfully.',
+                'flash_id' => uniqid(),
+            ]);
     }
 
     public function destroy(Tenant $tenant)
