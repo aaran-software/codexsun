@@ -8,7 +8,8 @@ type LogoProps = React.SVGProps<SVGSVGElement>
 
 export function TenantLogo(props: LogoProps) {
     const { tenant } = usePage().props as any
-    const key = tenant?.key ?? "default"
+    const key = tenant?.name ?? "default"
+    // console.log(tenant.name)
 
     switch (key) {
         case "techmedia":

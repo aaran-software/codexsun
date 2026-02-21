@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     AnimatePresence,
     motion,
@@ -13,23 +13,23 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     getCTAColorClasses,
     getHighlightClasses,
-} from '@/components/slider/slider.colors';
+} from './slider.colors';
 import type {
     BackgroundMode,
     SlideDirection,
-} from '@/components/slider/slider.types';
-import { useCurrentTenant } from '@/lib/tenant';
+} from './slider.types';
 
 // Constants outside component
 const PROGRESS_RADIUS = 26;
 const CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
 
 export default function FullScreenSlider() {
-    const tenant = useCurrentTenant();
+    const { slider = { slides: [], options: {} } } = usePage<{
+        slider?: { slides: any[]; options?: any };
+    }>().props;
 
-    // Safely access slider data with fallbacks
-    const slides = tenant.slider?.slides ?? [];
-    const sliderOptions = tenant.slider?.options ?? {
+    const slides = slider.slides ?? [];
+    const sliderOptions = slider.options ?? {
         parallax: true,
         defaultVariant: 'saas',
         defaultIntensity: 'medium',

@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
+import FullScreenSlider from '@/components/blocks/slider/FullScreenSlider';
 import WebLayout from '@/layouts/web-layout';
 import type { HomePageProps } from '@/types/web';
 
@@ -8,11 +8,8 @@ export default function Home({ message }: HomePageProps) {
         <WebLayout>
             <Head title="Home" />
 
-            <MenuBackdrop
-                image="/assets/techmedia/repair.jpg"
-                title="Blogs"
-                subtitle="Ideas that inform. Stories that inspire."
-            />
+            <FullScreenSlider />
+
 
             <div className="py-10">
                 <div className="mx-auto max-w-5xl px-4">

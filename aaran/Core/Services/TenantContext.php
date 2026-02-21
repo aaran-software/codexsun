@@ -9,8 +9,8 @@ class TenantContext
         return [
             'tenant' => [
                 'id' => 1,
-                'name' => 'Aaran',
-                'short_name' => 'A',
+                'name' => 'techmedia',
+                'short_name' => 'TM',
                 'displayName' => 'Techmedia',
                 'domain' => 'localhost',
                 'logo' => '',
