@@ -24,4 +24,11 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
+    server: {
+        host: 'localhost',                    // or '0.0.0.0'
+        port: 5173,
+        cors: true,                    // ← enables CORS for all origins (dev only)
+        // or more strict:
+        // cors: { origin: 'https://techmedia.in' }
+    },
 });

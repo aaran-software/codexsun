@@ -63,7 +63,7 @@ class HomeController extends Controller
                     'title' => '',
                     'tagline' => '',
                     'action' => ['text' => 'Build Your PC', 'href' => '/custom-pc'],
-                    'media' => ['type' => 'youtube', 'videoId' => 'jEiGVbT0wVI'],
+                    'media' => ['type' => 'youtube', 'videoId' => 'GckqQX355iE'],
                     'duration' => 18000,
                     'showOverlay' => false,
                     'overlayColor' => 'bg-green-100/20',
