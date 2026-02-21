@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
 type Props = {
     children: React.ReactNode;
@@ -10,10 +10,10 @@ export default function FadeUp({ children, delay = 0 }: Props) {
         <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: true, margin: '-80px' }}
             transition={{
                 duration: 0.6,
-                ease: "easeOut",
+                ease: 'easeOut',
                 delay,
             }}
         >

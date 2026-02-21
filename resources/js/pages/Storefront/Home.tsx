@@ -2,7 +2,6 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useRoute } from 'ziggy-js';
 import WebLayout from '@/layouts/web-layout';
 
-
 interface Theme {
     mode: 'light' | 'dark';
     variables?: Record<string, string>;

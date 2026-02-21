@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 
 export function DefaultLogo(props: React.SVGProps<SVGSVGElement>) {

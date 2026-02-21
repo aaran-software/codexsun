@@ -15,7 +15,6 @@ export interface Tenant {
     // add any other tenant fields you actually pass from backend
 }
 
-
 export interface SharedProps {
     tenant?: Tenant;
     // other globally shared props (auth, flash, etc.)
@@ -30,4 +29,3 @@ export interface HomePageProps extends SharedProps {
 // export interface AboutPageProps extends SharedProps {
 //     // page-specific props
 // }
-

@@ -10,14 +10,8 @@ import {
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import {
-    getCTAColorClasses,
-    getHighlightClasses,
-} from './slider.colors';
-import type {
-    BackgroundMode,
-    SlideDirection,
-} from './slider.types';
+import { getCTAColorClasses, getHighlightClasses } from './slider.colors';
+import type { BackgroundMode, SlideDirection } from './slider.types';
 
 // Constants outside component
 const PROGRESS_RADIUS = 26;

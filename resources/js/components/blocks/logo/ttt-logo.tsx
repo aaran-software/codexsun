@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 
 export function TTTLogo(props: React.SVGProps<SVGSVGElement>) {

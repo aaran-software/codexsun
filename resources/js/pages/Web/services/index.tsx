@@ -5,7 +5,6 @@ import MenuBackdrop from '@/components/blocks/menu/menu-backdrop';
 import WebLayout from '@/layouts/web-layout';
 
 export default function ServicesPage() {
-
     return (
         <WebLayout>
             <Head title="Services" />

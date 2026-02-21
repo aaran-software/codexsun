@@ -7,11 +7,8 @@ export default function Home() {
     return (
         <WebLayout>
             <Head title="Home" />
-
             <FullScreenSlider />
-
-hi
-
+            hi
         </WebLayout>
     );
 }

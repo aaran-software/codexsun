@@ -37,7 +37,7 @@ export default function GlobalSpinner() {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
             {/* Spinner ring */}
             <div className="relative flex h-24 w-24 items-center justify-center">
-                <div className="absolute inset-0 rounded-full border-4 border-muted border-t-foreground animate-spin" />
+                <div className="absolute inset-0 animate-spin rounded-full border-4 border-muted border-t-foreground" />
 
                 {/* Stable center letter */}
                 <span className="text-5xl font-bold text-foreground select-none">
