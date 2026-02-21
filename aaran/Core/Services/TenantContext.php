@@ -16,11 +16,11 @@ class TenantContext
                 'logo' => '',
                 'primary_color' => 'green',
             ],
-            'menu' => [                     // ← added as separate top-level prop
+            'menu' => [
                 ['label' => 'Home',     'href' => '/'],
-                ['label' => 'Features', 'href' => '/features'],
-                ['label' => 'Pricing',  'href' => '/pricing'],
-                ['label' => 'About',    'href' => '/about'],
+                ['label' => 'Services', 'href' => '/services'],
+                ['label' => 'Custom Pc',  'href' => '/custom-pc'],
+                ['label' => 'Blog',    'href' => '/blog'],
                 ['label' => 'Contact',  'href' => '/contact'],
             ],
         ];
