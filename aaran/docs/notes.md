@@ -21,3 +21,5 @@ https://github.com/ansonbenny/Social-Media
 ssh -p 65002 u831445660@147.93.23.68
 
 Tech@1947#
+
+chmod -x iphp.sh
