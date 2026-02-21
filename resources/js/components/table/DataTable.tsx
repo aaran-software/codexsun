@@ -2,8 +2,8 @@
 
 import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import TablePagination from './TablePagination';
 import { Table } from '@/components/ui/table';
+import TablePagination from './TablePagination';
 
 interface PaginationMeta {
     current_page: number;

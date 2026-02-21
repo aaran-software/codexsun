@@ -17,7 +17,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import { index as tenantRoutes } from '@/routes/admin/tenants/index';
+// import { index as tenantRoutes } from '@/routes/admin/tenants/index';
 
 interface User {
     id: number;
@@ -44,7 +44,7 @@ export default function Create() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
-        { title: 'Tenants', href: tenantRoutes().url },
+        // { title: 'Tenants', href: tenantRoutes().url },
         { title: 'Create', href: '#' },
     ];
 

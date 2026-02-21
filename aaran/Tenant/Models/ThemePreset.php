@@ -3,18 +3,18 @@
 namespace Aaran\Tenant\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ThemePreset extends Model
 {
-    protected $guarded = [];
-
-    protected $casts = [
-        'variables' => 'array',
+    protected $fillable = [
+        'name',
+        'slug',
+        'variables',
+        'is_premium',
     ];
 
-    public function themes(): HasMany
-    {
-        return $this->hasMany(Theme::class, 'preset_id');
-    }
+    protected $casts = [
+        'variables'   => 'array',
+        'is_premium'  => 'boolean',
+    ];
 }

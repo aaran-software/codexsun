@@ -1,15 +1,22 @@
-import type { ReactNode } from 'react';
-import WebMenu from '@/components/blocks/menu/web-menu';
+import { usePage } from '@inertiajs/react';
+import type { PropsWithChildren } from 'react';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
-interface Props {
-    children: ReactNode;
-}
+export default function WebLayout({ children }: PropsWithChildren) {
+    const { tenant } = usePage().props as any;
 
-export default function WebLayout({ children }: Props) {
+    const theme = tenant?.theme ?? {
+        mode: 'light' as const,
+        variables: {},
+    };
+
     return (
-        <>
-            <WebMenu />
-            <main>{children}</main>
-        </>
+        <ThemeProvider theme={theme}>
+            <div className="min-h-screen bg-background text-foreground antialiased">
+                {children}
+                <Toaster />
+            </div>
+        </ThemeProvider>
     );
 }

@@ -36,7 +36,7 @@ class TenantContext
                 'theme' => $this->themeService->resolve($tenant),
             ],
 
-            'themePresets' => ThemePreset::select('id', 'name')->get(),
+            'themePresets' => ThemePreset::select('id', 'name')->get()->toArray(),
         ];
     }
 }

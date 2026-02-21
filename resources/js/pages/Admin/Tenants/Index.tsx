@@ -28,9 +28,6 @@ import {
 } from '@/components/ui/select';
 // @ts-ignore
 
-import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
 import {
     TableBody,
     TableCell,
@@ -38,6 +35,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import type { BreadcrumbItem } from '@/types';
 
 export default function List() {
     const props = usePage().props as any;
