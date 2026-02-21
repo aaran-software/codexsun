@@ -2,7 +2,8 @@
 
 namespace Aaran\Tenant\Controllers;
 
-use App\Models\Tenant;
+use Aaran\Tenant\Models\Tenant;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;

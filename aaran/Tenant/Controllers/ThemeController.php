@@ -2,6 +2,8 @@
 
 namespace Aaran\Tenant\Controllers;
 
+use Aaran\Tenant\Models\Tenant;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class ThemeController extends Controller
@@ -12,7 +14,7 @@ class ThemeController extends Controller
             'preset_id' => 'required|exists:theme_presets,id',
         ]);
 
-        $tenant = app(\App\Models\Tenant::class);
+        $tenant = app(Tenant::class);
 
         if (! $tenant || ! $tenant->theme) {
             abort(404);

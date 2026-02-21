@@ -2,7 +2,7 @@
 
 namespace Aaran\Tenant\Controllers;
 
-use App\Models\Tenant;
+use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
 class StorefrontController extends Controller

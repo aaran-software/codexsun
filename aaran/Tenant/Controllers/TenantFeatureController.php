@@ -2,8 +2,9 @@
 
 namespace Aaran\Tenant\Controllers;
 
-use App\Models\Feature;
-use App\Models\Tenant;
+use Aaran\Tenant\Models\Feature;
+use Aaran\Tenant\Models\Tenant;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

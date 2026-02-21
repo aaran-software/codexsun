@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use Aaran\Core\Services\TenantContext;
+use Aaran\Tenant\Services\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
