@@ -1,11 +1,8 @@
-// resources/js/pages/Home.tsx
-import { Head, usePage } from '@inertiajs/react';
-import type { HomePageProps  } from '@/types/web';
+import { Head } from '@inertiajs/react';
 import WebLayout from '@/layouts/web-layout';
+import type { HomePageProps } from '@/types/web';
 
-export default function Home() {
-    const { message } = usePage<HomePageProps>().props;
-
+export default function Home({ message }: HomePageProps) {
     return (
         <WebLayout>
             <Head title="Home" />
