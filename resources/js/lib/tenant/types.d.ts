@@ -195,8 +195,49 @@ export interface NewsletterData {
     image?: NewsletterImage;
 }
 
+export interface FooterLink {
+    label: string;
+    href: string;
+}
+
+export interface FooterSection {
+    title: string;
+    links: FooterLink[];
+}
+
+export interface FooterSocial {
+    label: string;
+    href: string;
+    Icon: string;
+}
+
+export interface FooterData {
+    sections: FooterSection[];
+    social: FooterSocial[];
+}
+
+export interface CompanyData {
+    name: string;
+    displayName: string;
+    fullName: string;
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    pinCode: string;
+    email: string;
+    email2: string;
+    mobile1: string;
+    mobile2: string;
+    whatsapp: string;
+    gstin: string;
+    tagline: string;
+    about: string;
+}
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
+    company?: CompanyData;
     abouts?: AboutData | null;
     hero?: HeroData | null;
     stats?: StatsData;
@@ -208,4 +249,5 @@ export interface HomePageProps extends SharedProps {
     callToAction?: CallToActionData;
     location?: LocationData;
     newsletter?: NewsletterData;
+    footer: FooterData;
 }

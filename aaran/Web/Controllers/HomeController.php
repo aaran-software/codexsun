@@ -27,7 +27,26 @@ class HomeController extends Controller
             'callToAction' => $this->callToAction(),
             'location' => $this->location(),
             'newsletter' => $this->newsletter(),
+            'footer' => $this->footer(),
+            'company' => $this->getCompanyData(),
         ]);
+    }
+
+    private function getCompanyData(): array
+    {
+        // fallback values - override with tenant data when available
+        return [
+            'name' => 'Tech Media Retail',
+            'tagline' => 'Your Trusted IT Partner Since 2002',
+            'address1' => '436, Avinashi Road',
+            'address2' => '',
+            'city' => 'Tiruppur',
+            'state' => 'Tamil Nadu',
+            'pinCode' => '641602',
+            'gstin' => '33AABCT1234D1Z5',
+            'mobile1' => '+91 98946 44450',
+            'email' => 'info@techmedia.in',
+        ];
     }
 
     private function getSliderData(): array
@@ -536,6 +555,80 @@ class HomeController extends Controller
             'image' => [
                 'src' => '/assets/techmedia/brands/alienware.avif',
                 'alt' => 'Computer & IT Setup',
+            ],
+        ];
+    }
+
+    private function footer(): ?array
+    {
+        return [
+            'sections' => [
+                [
+                    'title' => 'Company',
+                    'links' => [
+                        ['label' => 'About Us', 'href' => '/about'],
+                        ['label' => 'Our Story', 'href' => '/our-story'],
+                        ['label' => 'Why Choose Us', 'href' => '/why-us'],
+                        ['label' => 'Careers', 'href' => '/careers'],
+                        ['label' => 'Contact Us', 'href' => '/contact'],
+                    ],
+                ],
+                [
+                    'title' => 'Our Services',
+                    'links' => [
+                        ['label' => 'Computer Sales', 'href' => '/shop/computers'],
+                        ['label' => 'Laptop & Repair', 'href' => '/services/repair'],
+                        ['label' => 'Networking Solutions', 'href' => '/services/networking'],
+                        ['label' => 'CCTV Installation', 'href' => '/services/cctv'],
+                        ['label' => 'Cloud & Backup', 'href' => '/services/cloud'],
+                        ['label' => 'ERP and Billing Software', 'href' => '/services/software'],
+                        ['label' => 'Website and Domain Service', 'href' => '/services/domain'],
+                    ],
+                ],
+                [
+                    'title' => 'Legal',
+                    'links' => [
+                        ['label' => 'Privacy Policy', 'href' => '/privacy-policy'],
+                        ['label' => 'Terms & Conditions', 'href' => '/terms'],
+                        ['label' => 'Refund & Warranty', 'href' => '/refund-policy'],
+                    ],
+                ],
+                [
+                    'title' => 'Support',
+                    'links' => [
+                        ['label' => 'Track Service', 'href' => '/track-service'],
+                        ['label' => 'FAQs', 'href' => '/faqs'],
+                        ['label' => 'Service Request', 'href' => '/service-request'],
+                    ],
+                ],
+            ],
+
+            'social' => [
+                [
+                    'label' => 'Facebook',
+                    'href' => 'https://facebook.com/techmediaretail',
+                    'Icon' => 'Facebook',
+                ],
+                [
+                    'label' => 'Instagram',
+                    'href' => 'https://instagram.com/techmediaretail',
+                    'Icon' => 'Instagram',
+                ],
+                [
+                    'label' => 'Twitter',
+                    'href' => 'https://twitter.com/techmediaretail',
+                    'Icon' => 'Twitter',
+                ],
+                [
+                    'label' => 'LinkedIn',
+                    'href' => 'https://linkedin.com/techmediaretail',
+                    'Icon' => 'Linkedin',
+                ],
+                [
+                    'label' => 'YouTube',
+                    'href' => 'https://youtube.com/techmediaretail',
+                    'Icon' => 'Youtube',
+                ],
             ],
         ];
     }

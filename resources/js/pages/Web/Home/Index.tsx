@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import FooterSection from '@/components/blocks/footers/FooterSection';
 import FullScreenSlider from '@/components/blocks/slider/FullScreenSlider';
 import WebLayout from '@/layouts/web-layout';
 import type { HomePageProps } from '@/lib/tenant/types';
@@ -7,12 +8,12 @@ import CallToAction from '@/pages/Web/Home/blocks/CallToAction';
 import CatalogSection from '@/pages/Web/Home/blocks/CatalogSection';
 import FeaturesSection from '@/pages/Web/Home/blocks/Features';
 import HeroSection from '@/pages/Web/Home/blocks/HeroSection';
+import LocationSection from '@/pages/Web/Home/blocks/LocationSection';
+import NewsletterSection from '@/pages/Web/Home/blocks/NewsletterSection';
 import ProductRange from '@/pages/Web/Home/blocks/ProductRange';
 import StatsSection from '@/pages/Web/Home/blocks/StatsSection';
 import WhyChooseUs from '@/pages/Web/Home/blocks/WhyChooseUs';
 import AboutSection from './blocks/AboutSection';
-import LocationSection from '@/pages/Web/Home/blocks/LocationSection';
-import NewsletterSection from '@/pages/Web/Home/blocks/NewsletterSection';
 
 export default function Home({
     abouts,
@@ -26,6 +27,8 @@ export default function Home({
     callToAction,
     location,
     newsletter,
+    footer,
+    company,
 }: HomePageProps) {
     return (
         <WebLayout>
@@ -44,6 +47,7 @@ export default function Home({
             <CallToAction CallToAction={callToAction} />
             <LocationSection location={location} />
             <NewsletterSection newsletter={newsletter} />
+            <FooterSection footer={footer} company={company} />
 
             {/*<div className="py-10">*/}
             {/*    <div className="mx-auto max-w-5xl px-4">*/}
@@ -59,9 +63,9 @@ export default function Home({
             {/*</div>*/}
 
             {/*Optional debug - remove later */}
-            <pre className="mx-auto max-w-5xl overflow-auto rounded-xl bg-gray-900 p-6 text-sm text-green-300">
-                {JSON.stringify({ hero }, null, 2)}
-            </pre>
+            {/*<pre className="mx-auto max-w-5xl overflow-auto rounded-xl bg-gray-900 p-6 text-sm text-green-300">*/}
+            {/*    {JSON.stringify({ hero }, null, 2)}*/}
+            {/*</pre>*/}
         </WebLayout>
     );
 }

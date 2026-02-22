@@ -3,6 +3,7 @@ import React from 'react';
 import { DefaultLogo } from './default-logo';
 import { TmLogo } from './techmedia-logo';
 import { TTTLogo } from './ttt-logo';
+import CodexsunLogo from '@/components/blocks/logo/codexsun-logo';
 
 type LogoProps = React.SVGProps<SVGSVGElement>;
 
@@ -18,7 +19,10 @@ export function TenantLogo(props: LogoProps) {
         case 'ttt':
             return <TTTLogo {...props} />;
 
+        case 'codexsun':
+            return <CodexsunLogo {...props} />;
+
         default:
-            return <DefaultLogo {...props} />;
+            return <CodexsunLogo {...props} />;
     }
 }
