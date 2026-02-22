@@ -37,9 +37,9 @@ class IdentifyTenant
         // 🔥 Fallback to codexsun.com domain + slug codexsun
         if (! $tenant) {
             $fallbackDomain = cache()->remember(
-                'domain:codexsun.test',
+                'domain:project.codexsun.com',
                 3600,
-                fn () => Domain::where('domain', 'codexsun.test')
+                fn () => Domain::where('domain', 'project.codexsun.com')
                     ->where('is_active', true)
                     ->with('tenant')
                     ->first()

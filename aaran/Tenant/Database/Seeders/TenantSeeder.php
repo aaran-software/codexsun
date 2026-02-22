@@ -18,17 +18,17 @@ class TenantSeeder extends Seeder
             [
                 'name' => 'Codexsun',
                 'slug' => 'codexsun',
-                'domain' => 'codexsun.test',
+                'domain' => 'project.codexsun.com',
             ],
             [
                 'name' => 'Techmedia',
                 'slug' => 'techmedia',
-                'domain' => 'techmedia.test',
+                'domain' => 'techmedia.in',
             ],
             [
                 'name' => 'The Tirupur Textile',
                 'slug' => 'the-tirupur-textile',
-                'domain' => 'tirupurtextile.test',
+                'domain' => 'thetirupurtextiles.com',
             ],
         ];
 
