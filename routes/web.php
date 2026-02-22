@@ -1,5 +1,6 @@
 <?php
 
+use Aaran\Blog\Controllers\BlogController;
 use Aaran\Shop\Controllers\CustomController;
 use Aaran\Shop\Controllers\ShopController;
 use Aaran\Web\Controllers\AboutController;
@@ -18,6 +19,10 @@ Route::get('/custom-pc', [CustomController::class, 'builder'])->name('custom-pc'
 Route::get('/custom-pc/builder', [CustomController::class, 'builder'])->name('custom-pc.builder');
 Route::get('/custom-pc/cart', [CustomController::class, 'cart'])->name('custom-pc.cart');
 
+Route::prefix('blog')->name('blog.')->group(function () {
+    Route::get('/', [BlogController::class, 'index'])->name('index');
+    Route::get('/{blog}', [BlogController::class, 'show'])->name('show');
+});
 
 
 

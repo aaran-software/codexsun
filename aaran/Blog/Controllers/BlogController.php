@@ -14,6 +14,7 @@ class BlogController extends Controller
 {
     public function index(Request $request)
     {
+
         $blogs = BlogPost::query()
             ->where('published', true)
             ->with(['category', 'author'])
@@ -37,7 +38,7 @@ class BlogController extends Controller
             $blogs = $this->getFallbackDummyBlogs();
         }
 
-        return Inertia::render('web/blog/index', [
+        return Inertia::render('Web/Blog/index', [
             'blogs'   => $blogs,
             'sidebar' => $this->getSidebarData(),
         ]);
@@ -68,7 +69,7 @@ class BlogController extends Controller
             // Future: 'meta_description' => $blog->meta_description ?? $blog->excerpt,
         ];
 
-        return Inertia::render('web/blog/show', [
+        return Inertia::render('Web/Blog/show', [
             'blog'    => $data,
             'sidebar' => $this->getSidebarData(),
         ]);

@@ -7,6 +7,7 @@ use Aaran\Blog\Database\Seeders\BlogDemoSeeder;
 use Aaran\Blog\Database\Seeders\BlogTagSeeder;
 use Aaran\Blog\Models\BlogCategory;
 use Aaran\Blog\Models\BlogPost;
+use Aaran\Shop\Database\Seeders\ShopSeeder;
 use Aaran\Tenant\Database\Seeders\TenantSeeder;
 use Aaran\Tenant\Database\Seeders\ThemePresetSeeder;
 use Aaran\Tenant\Database\Seeders\ThemeSeeder;
@@ -40,6 +41,7 @@ class DatabaseSeeder extends Seeder
             BlogCategorySeeder::class,
             BlogTagSeeder::class,
             BlogDemoSeeder::class,
+            ShopSeeder::class,
         ]);
     }
 }
