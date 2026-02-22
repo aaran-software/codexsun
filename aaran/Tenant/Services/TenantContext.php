@@ -47,9 +47,9 @@ class TenantContext
         $baseMenu = [
             ['label' => 'Shop', 'href' => '/shop'],
             ['label' => 'About', 'href' => '/about'],
-            ['label' => 'Services', 'href' => '/service'],
+            ['label' => 'Custom Build', 'href' => '/custom-pc'],
             ['label' => 'Blog', 'href' => '/blog'],
-            ['label' => 'Contact', 'href' => '/web-contact'],
+//            ['label' => 'Contact', 'href' => '/web-contact'],
         ];
 
         return $baseMenu;
