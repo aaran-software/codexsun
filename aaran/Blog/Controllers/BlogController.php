@@ -2,13 +2,13 @@
 
 namespace Aaran\Blog\Controllers;
 
-use Aaran\Blog\Models\BlogPost;
 use Aaran\Blog\Models\BlogCategory;
+use Aaran\Blog\Models\BlogPost;
 use Aaran\Blog\Models\BlogTag;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class BlogController extends Controller
 {
@@ -22,13 +22,13 @@ class BlogController extends Controller
             ->get()
             ->map(function ($post) {
                 return [
-                    'id'       => $post->id,
-                    'title'    => $post->title,
-                    'slug'     => $post->slug,
-                    'excerpt'  => $post->excerpt,
-                    'image'    => $post->featured_image ? asset($post->featured_image) : null,
-                    'author'   => $post->author?->name ?? 'Editorial Team',
-                    'date'     => $post->created_at->format('M d, Y'),
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'excerpt' => $post->excerpt,
+                    'image' => $post->featured_image ? asset($post->featured_image) : null,
+                    'author' => $post->author?->name ?? 'Editorial Team',
+                    'date' => $post->created_at->format('M d, Y'),
                     'category' => $post->category?->name ?? 'Uncategorized',
                 ];
             });
@@ -39,7 +39,7 @@ class BlogController extends Controller
         }
 
         return Inertia::render('Web/Blog/index', [
-            'blogs'   => $blogs,
+            'blogs' => $blogs,
             'sidebar' => $this->getSidebarData(),
         ]);
     }
@@ -53,24 +53,24 @@ class BlogController extends Controller
             ->firstOrFail();
 
         $data = [
-            'id'           => $blog->id,
-            'title'        => $blog->title,
-            'slug'         => $blog->slug,
-            'excerpt'      => $blog->excerpt,
-            'content'      => $blog->body,
-            'image'        => $blog->featured_image ? asset($blog->featured_image) : null,
-            'author'       => $blog->author?->name ?? 'Editorial Team',
-            'date'         => $blog->created_at->format('M d, Y'),
-            'category'     => $blog->category?->name ?? 'Uncategorized',
+            'id' => $blog->id,
+            'title' => $blog->title,
+            'slug' => $blog->slug,
+            'excerpt' => $blog->excerpt,
+            'content' => $blog->body,
+            'image' => $blog->featured_image ? asset($blog->featured_image) : null,
+            'author' => $blog->author?->name ?? 'Editorial Team',
+            'date' => $blog->created_at->format('M d, Y'),
+            'category' => $blog->category?->name ?? 'Uncategorized',
             'reading_time' => $blog->reading_time,
-            'tags'         => $blog->meta_keywords
+            'tags' => $blog->meta_keywords
                 ? array_map('trim', explode(',', $blog->meta_keywords))
                 : [],
             // Future: 'meta_description' => $blog->meta_description ?? $blog->excerpt,
         ];
 
         return Inertia::render('Web/Blog/show', [
-            'blog'    => $data,
+            'blog' => $data,
             'sidebar' => $this->getSidebarData(),
         ]);
     }
@@ -85,12 +85,12 @@ class BlogController extends Controller
 
         $categories = BlogCategory::query()
             // ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
-            ->withCount(['posts' => fn($q) => $q->where('published', true)])
+            ->withCount(['posts' => fn ($q) => $q->where('published', true)])
             ->orderBy('name')
             ->get()
-            ->map(fn($cat) => [
-                'name'  => $cat->name,
-                'slug'  => $cat->slug,
+            ->map(fn ($cat) => [
+                'name' => $cat->name,
+                'slug' => $cat->slug,
                 'count' => $cat->posts_count ?? 0,
             ]);
 
@@ -100,7 +100,7 @@ class BlogController extends Controller
             ->orderByDesc('posts_count')
             ->take(12)                  // show more popular tags
             ->get()
-            ->map(fn($tag) => [
+            ->map(fn ($tag) => [
                 'name' => $tag->name,
                 'slug' => $tag->slug ?? Str::slug($tag->name),
             ]);
@@ -112,10 +112,10 @@ class BlogController extends Controller
             ->latest()
             ->take(5)
             ->get()
-            ->map(fn($post) => [
-                'title'   => $post->title,
-                'slug'    => $post->slug,
-                'image'   => $post->featured_image ? asset($post->featured_image) : '/assets/placeholder-blog.jpg',
+            ->map(fn ($post) => [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'image' => $post->featured_image ? asset($post->featured_image) : '/assets/placeholder-blog.jpg',
                 'excerpt' => Str::limit($post->excerpt, 60),
             ]);
 
@@ -127,13 +127,13 @@ class BlogController extends Controller
     {
         return [
             [
-                'id'       => 999,
-                'title'    => 'Sample Post – Database is empty',
-                'slug'     => 'sample-post',
-                'excerpt'  => 'Create your first blog post in the admin panel!',
-                'image'    => asset('assets/ttt/blog/blog.jpg'),
-                'author'   => 'System',
-                'date'     => now()->format('M d, Y'),
+                'id' => 999,
+                'title' => 'Sample Post – Database is empty',
+                'slug' => 'sample-post',
+                'excerpt' => 'Create your first blog post in the admin panel!',
+                'image' => asset('assets/ttt/blog/blog.jpg'),
+                'author' => 'System',
+                'date' => now()->format('M d, Y'),
                 'category' => 'Getting Started',
             ],
         ];

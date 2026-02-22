@@ -8,10 +8,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class TenantController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $query = Tenant::query()
             ->with(['owner'])
