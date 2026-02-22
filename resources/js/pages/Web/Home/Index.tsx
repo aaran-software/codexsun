@@ -11,6 +11,8 @@ import ProductRange from '@/pages/Web/Home/blocks/ProductRange';
 import StatsSection from '@/pages/Web/Home/blocks/StatsSection';
 import WhyChooseUs from '@/pages/Web/Home/blocks/WhyChooseUs';
 import AboutSection from './blocks/AboutSection';
+import LocationSection from '@/pages/Web/Home/blocks/LocationSection';
+import NewsletterSection from '@/pages/Web/Home/blocks/NewsletterSection';
 
 export default function Home({
     abouts,
@@ -21,8 +23,9 @@ export default function Home({
     whyChooseUs,
     brandSlider,
     features,
-    callToAction
-
+    callToAction,
+    location,
+    newsletter,
 }: HomePageProps) {
     return (
         <WebLayout>
@@ -39,6 +42,8 @@ export default function Home({
             <BrandSlider brandSlider={brandSlider} />
             <FeaturesSection features={features} />
             <CallToAction CallToAction={callToAction} />
+            <LocationSection location={location} />
+            <NewsletterSection newsletter={newsletter} />
 
             {/*<div className="py-10">*/}
             {/*    <div className="mx-auto max-w-5xl px-4">*/}

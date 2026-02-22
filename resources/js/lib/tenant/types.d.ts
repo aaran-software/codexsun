@@ -138,6 +138,63 @@ export interface CallToActionData {
     buttonHoverBg?: string;
 }
 
+
+export interface LocationTiming {
+    day: string;
+    hours: string;
+}
+
+export interface LocationContact {
+    phone: string;
+    email: string;
+}
+
+export interface LocationImage {
+    src: string;
+    alt: string;
+    className: string;
+}
+
+export interface LocationMap {
+    embedUrl: string;
+    title: string;
+    placeId?: string;
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
+}
+
+export interface LocationData {
+    'displayName':string;
+    title: string;
+    address: string;
+    timings: LocationTiming[];
+    contact: LocationContact;
+    buttonText: string;
+    buttonHref: string;
+    image: LocationImage;
+    map: LocationMap;
+}
+
+export interface NewsletterImage {
+    src: string;
+    alt: string;
+    widthClass: string;
+}
+export interface NewsletterData {
+    title: string;
+    description: string;
+    placeholderName: string;
+    placeholderEmail: string;
+    buttonText: string;
+    trustNote: string;
+    backgroundColor: string;
+    buttonBg: string;
+    buttonHoverBg: string;
+    image?: NewsletterImage;
+}
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     abouts?: AboutData | null;
@@ -149,4 +206,6 @@ export interface HomePageProps extends SharedProps {
     brandSlider?: BrandSliderData;
     features?: FeaturesData;
     callToAction?: CallToActionData;
+    location?: LocationData;
+    newsletter?: NewsletterData;
 }

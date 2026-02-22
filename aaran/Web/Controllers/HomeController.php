@@ -25,6 +25,8 @@ class HomeController extends Controller
             'brandSlider' => $this->brandSliderData(),
             'features' => $this->features(),
             'callToAction' => $this->callToAction(),
+            'location' => $this->location(),
+            'newsletter' => $this->newsletter(),
         ]);
     }
 
@@ -463,8 +465,8 @@ class HomeController extends Controller
     {
         return ['backgroundColor' => '#0f172a',
             'title' => 'Build Your Perfect Computer Setup Today',
-            'description' => 'Visit our showroom in Tiruppur or contact us for custom PC builds,\n'.
-                'bulk hardware orders, workstation configurations, gaming rigs,\n'.
+            'description' => "Visit our showroom in Tiruppur or contact us for custom PC builds,\n".
+                "bulk hardware orders, workstation configurations, gaming rigs,\n".
                 'CCTV & networking solutions, and exclusive pricing.',
             'buttonText' => 'Get Quote or Visit Us',
             'buttonHref' => '/web-contacts?source=cta',
@@ -472,5 +474,69 @@ class HomeController extends Controller
             'buttonTextColor' => 'text-white',
             'buttonHoverBg' => 'hover:bg-emerald-700', ];
 
+    }
+
+    private function location(): ?array
+    {
+        return [
+            'displayName' => 'Techmedia Retail',
+            'title' => 'Our Shop',
+            'address' => "436, Avinashi Road,\nTiruppur, Tamil Nadu 641602",
+            'timings' => [
+                [
+                    'day' => 'Monday – Friday',
+                    'hours' => '9:00 AM – 8:00 PM',
+                ],
+                [
+                    'day' => 'Saturday',
+                    'hours' => '9:00 AM – 8:00 PM',
+                ],
+                [
+                    'day' => 'Sunday',
+                    'hours' => '10:00 AM – 4:00 PM',
+                ],
+            ],
+            'contact' => [
+                'phone' => '+91 98946 44450',
+                'email' => 'info@techmedia.in',
+            ],
+            'buttonText' => 'CONTACT US',
+            'buttonHref' => '/web-contacts',
+            'image' => [
+                'src' => '/assets/techmedia/images/dell-showroom.jpg',
+                'alt' => 'TechMedia Retail Showroom',
+                'className' => 'w-full h-[500px] md:h-[600px] object-cover',
+            ],
+            'map' => [
+                'embedUrl' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3916.058!2d77.334138!3d11.1133183!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba907abde6b9b0b%3A0x15ed72f683d49e9b!2sTech%20Media%20Retail!5e0!3m2!1sen!2sin!4v1739876543210!5m2!1sen!2sin',
+                'title' => 'Tech Media Retail - Avinashi Road, Tiruppur',
+                'placeId' => '0x3ba907abde6b9b0b:0x15ed72f683d49e9b',
+                'coordinates' => [
+                    'lat' => 11.1133183,
+                    'lng' => 77.3367129,
+                ],
+            ],
+        ];
+    }
+
+    private function newsletter(): ?array
+    {
+        return [
+            'title' => 'Subscribe to Our Newsletter',
+            'description' => "Get the latest updates on new computer arrivals, hardware deals,\n".
+                "service offers, networking solutions, CCTV promotions,\n".
+                'and exclusive bulk purchase discounts in Tirupur.',
+            'placeholderName' => 'Your Name',
+            'placeholderEmail' => 'Your Email',
+            'buttonText' => 'Subscribe Now',
+            'trustNote' => 'We respect your privacy. No spam. Only useful tech updates & offers.',
+            'backgroundColor' => '#F9D75C',
+            'buttonBg' => 'bg-black',
+            'buttonHoverBg' => 'hover:bg-[#1e40af]',
+            'image' => [
+                'src' => '/assets/techmedia/brands/alienware.avif',
+                'alt' => 'Computer & IT Setup',
+            ],
+        ];
     }
 }
