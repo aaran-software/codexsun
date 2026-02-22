@@ -9,13 +9,11 @@ class TenantContext
 {
     public function __construct(
         protected ThemeService $themeService
-    )
-    {
-    }
+    ) {}
 
     public function get(): ?Tenant
     {
-        if (!app()->bound(Tenant::class)) {
+        if (! app()->bound(Tenant::class)) {
             return null;
         }
 
@@ -26,7 +24,7 @@ class TenantContext
     {
         $tenant = $this->get();
 
-        if (!$tenant) {
+        if (! $tenant) {
             return [];
         }
 
@@ -45,8 +43,6 @@ class TenantContext
 
     private function getMenuItems(Tenant $tenant): array
     {
-        // You can make this dynamic later (from DB, tenant settings, etc.)
-        // For now: basic public menu + conditional auth items handled in frontend
 
         $baseMenu = [
             ['label' => 'Home', 'href' => '/'],
@@ -54,9 +50,6 @@ class TenantContext
             ['label' => 'Services', 'href' => '/service'],
             ['label' => 'Contact', 'href' => '/web-contact'],
         ];
-
-        // Optional: tenant can override or add custom menu items
-        // Example: if ($tenant->has_custom_menu) { ... merge ... }
 
         return $baseMenu;
     }
