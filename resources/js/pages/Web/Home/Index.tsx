@@ -8,6 +8,7 @@ import ProductRange from '@/pages/Web/Home/blocks/ProductRange';
 import StatsSection from '@/pages/Web/Home/blocks/StatsSection';
 import WhyChooseUs from '@/pages/Web/Home/blocks/WhyChooseUs';
 import AboutSection from './blocks/AboutSection';
+import BrandSlider from '@/pages/Web/Home/blocks/BrandSlider';
 
 export default function Home({
     abouts,
@@ -16,6 +17,7 @@ export default function Home({
     catalog,
     productRange,
     whyChooseUs,
+    brandSlider,
 }: HomePageProps) {
     return (
         <WebLayout>
@@ -29,6 +31,7 @@ export default function Home({
             <CatalogSection catalog={catalog} />
             <ProductRange productRange={productRange} />
             <WhyChooseUs whyChooseUs={whyChooseUs} />
+            <BrandSlider brandSlider={brandSlider} />
 
             {/*<div className="py-10">*/}
             {/*    <div className="mx-auto max-w-5xl px-4">*/}
@@ -43,10 +46,10 @@ export default function Home({
             {/*    </div>*/}
             {/*</div>*/}
 
-            {/* Optional debug - remove later */}
-            {/*<pre className="mx-auto max-w-5xl overflow-auto rounded-xl bg-gray-900 p-6 text-sm text-green-300">*/}
-            {/*    {JSON.stringify({ hero }, null, 2)}*/}
-            {/*</pre>*/}
+             {/*Optional debug - remove later */}
+            <pre className="mx-auto max-w-5xl overflow-auto rounded-xl bg-gray-900 p-6 text-sm text-green-300">
+                {JSON.stringify({ hero }, null, 2)}
+            </pre>
         </WebLayout>
     );
 }

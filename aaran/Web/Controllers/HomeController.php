@@ -22,6 +22,7 @@ class HomeController extends Controller
             'catalog' => $this->CatalogData(),
             'productRange' => $this->productRangeData(),
             'whyChooseUs' => $this->whyChooseUs(),
+            'brandSlider' => $this->brandSliderData(),
         ]);
     }
 
@@ -407,4 +408,30 @@ class HomeController extends Controller
         ];
     }
 
+    private function brandSliderData(): ?array
+    {
+        return [
+            'heading' => 'Trusted Brands We Work With',
+            'backgroundColor' => '#ffffff',
+            'hoverColor' => '#3b82f6',
+            'animationDuration' => 40,
+            'pauseOnHover' => true,
+            'logos' => [
+                ['name' => 'Lenovo',   'logo' => '/assets/techmedia/brands/lenovo.png'],
+                ['name' => 'Dell',     'logo' => '/assets/techmedia/brands/dell.png'],
+                ['name' => 'HP',       'logo' => '/assets/techmedia/brands/hp.jpg'],
+                ['name' => 'Asus',     'logo' => '/assets/techmedia/brands/asus.png'],
+                ['name' => 'Acer',     'logo' => '/assets/techmedia/brands/acer.png'],
+                ['name' => 'MSI',      'logo' => '/assets/techmedia/brands/msi.png'],
+                ['name' => 'Gigabyte', 'logo' => '/assets/techmedia/brands/gigabyte.png'],
+                ['name' => 'Intel',    'logo' => '/assets/techmedia/brands/intel.png'],
+                ['name' => 'AMD',      'logo' => '/assets/techmedia/brands/amd.png'],
+                ['name' => 'NVIDIA',   'logo' => '/assets/techmedia/brands/nvidia.png'],
+                ['name' => 'Logitech', 'logo' => '/assets/techmedia/brands/logitech.png'],
+                ['name' => 'COCONUT',  'logo' => '/assets/techmedia/brands/coconut.jpg'],
+                ['name' => 'EPSON',    'logo' => '/assets/techmedia/brands/epson.png'],
+                ['name' => 'Brother',  'logo' => '/assets/techmedia/brands/brother.png'],
+            ],
+        ];
+    }
 }

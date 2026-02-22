@@ -102,6 +102,20 @@ export interface WhyChooseUSData {
     features: WhyChooseFeature[];
 }
 
+export interface BrandLogo {
+    name: string;
+    logo: string;
+}
+
+export interface BrandSliderData {
+    heading: string;
+    backgroundColor: string;
+    hoverColor: string;
+    animationDuration?: number;
+    pauseOnHover?: boolean;
+    logos: BrandLogo[];
+}
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     abouts?: AboutData | null;
@@ -110,4 +124,5 @@ export interface HomePageProps extends SharedProps {
     catalog?: CatalogData;
     productRange?: ProductRangeData;
     whyChooseUs?: WhyChooseUSData;
+    brandSlider?: BrandSliderData;
 }
