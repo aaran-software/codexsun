@@ -7,6 +7,14 @@ import {
     Truck,
     ShieldCheck,
     Users,
+    Laptop,
+    Cpu,
+    Network,
+    Keyboard,
+    Wrench,
+    Shield,
+    HardDrive,
+    ClipboardCheck,
 } from 'lucide-react';
 import React from 'react';
 import FadeUp from '@/components/blocks/animate/fade-up';
@@ -28,6 +36,14 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     Truck,
     ShieldCheck,
     Users,
+    Laptop,
+    Cpu,
+    Network,
+    Keyboard,
+    Wrench,
+    Shield,
+    HardDrive,
+    ClipboardCheck,
 };
 export default function WhyChooseUs({ whyChooseUs }: WhyChooseUsProps) {
     if (!whyChooseUs || whyChooseUs.features.length === 0) return null;
