@@ -23,6 +23,7 @@ class HomeController extends Controller
             'productRange' => $this->productRangeData(),
             'whyChooseUs' => $this->whyChooseUs(),
             'brandSlider' => $this->brandSliderData(),
+            'features' => $this->features(),
         ]);
     }
 
@@ -431,6 +432,28 @@ class HomeController extends Controller
                 ['name' => 'COCONUT',  'logo' => '/assets/techmedia/brands/coconut.jpg'],
                 ['name' => 'EPSON',    'logo' => '/assets/techmedia/brands/epson.png'],
                 ['name' => 'Brother',  'logo' => '/assets/techmedia/brands/brother.png'],
+            ],
+        ];
+    }
+
+    private function features(): ?array
+    {
+        return [
+            'title' => 'Workstations • Corporate Laptops • Gaming PCs & Laptops',
+            'description' => "Expert solutions for professionals, businesses and gamers.\n".
+                "Custom-built workstations | Enterprise laptops | High-end gaming rigs\n".
+                'Bulk orders • Corporate pricing • On-site setup & support',
+            'backgroundColor' => 'rgb(203,243,161)',
+            'image' => [
+                'src' => '/assets/techmedia/brands/alienware.avif',
+                'alt' => 'Dual-monitor Workstation Configuration',
+            ],
+            'bullets' => [
+                'ISV-certified workstations (Dell Precision, HP Z, Lenovo ThinkStation, ASUS ProArt)',
+                'Business-class laptops with vPro, long battery, spill-resistant keyboards',
+                'Custom gaming desktops – optimized airflow, RGB, liquid cooling options',
+                'High-refresh-rate gaming laptops up to RTX 4090 & 240 Hz displays',
+                'Dedicated account managers for bulk & repeat corporate orders',
             ],
         ];
     }

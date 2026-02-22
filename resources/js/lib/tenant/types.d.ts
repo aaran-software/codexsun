@@ -116,6 +116,17 @@ export interface BrandSliderData {
     logos: BrandLogo[];
 }
 
+export interface FeaturesData {
+    backgroundColor: string;
+    title: string;
+    description: string;
+    image: {
+        src: string;
+        alt: string;
+    };
+    bullets?: string[];
+}
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     abouts?: AboutData | null;
@@ -125,4 +136,5 @@ export interface HomePageProps extends SharedProps {
     productRange?: ProductRangeData;
     whyChooseUs?: WhyChooseUSData;
     brandSlider?: BrandSliderData;
+    features?: FeaturesData;
 }
