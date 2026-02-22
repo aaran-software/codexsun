@@ -24,6 +24,7 @@ class HomeController extends Controller
             'whyChooseUs' => $this->whyChooseUs(),
             'brandSlider' => $this->brandSliderData(),
             'features' => $this->features(),
+            'callToAction' => $this->callToAction(),
         ]);
     }
 
@@ -418,20 +419,20 @@ class HomeController extends Controller
             'animationDuration' => 40,
             'pauseOnHover' => true,
             'logos' => [
-                ['name' => 'Lenovo',   'logo' => '/assets/techmedia/brands/lenovo.png'],
-                ['name' => 'Dell',     'logo' => '/assets/techmedia/brands/dell.png'],
-                ['name' => 'HP',       'logo' => '/assets/techmedia/brands/hp.jpg'],
-                ['name' => 'Asus',     'logo' => '/assets/techmedia/brands/asus.png'],
-                ['name' => 'Acer',     'logo' => '/assets/techmedia/brands/acer.png'],
-                ['name' => 'MSI',      'logo' => '/assets/techmedia/brands/msi.png'],
+                ['name' => 'Lenovo', 'logo' => '/assets/techmedia/brands/lenovo.png'],
+                ['name' => 'Dell', 'logo' => '/assets/techmedia/brands/dell.png'],
+                ['name' => 'HP', 'logo' => '/assets/techmedia/brands/hp.jpg'],
+                ['name' => 'Asus', 'logo' => '/assets/techmedia/brands/asus.png'],
+                ['name' => 'Acer', 'logo' => '/assets/techmedia/brands/acer.png'],
+                ['name' => 'MSI', 'logo' => '/assets/techmedia/brands/msi.png'],
                 ['name' => 'Gigabyte', 'logo' => '/assets/techmedia/brands/gigabyte.png'],
-                ['name' => 'Intel',    'logo' => '/assets/techmedia/brands/intel.png'],
-                ['name' => 'AMD',      'logo' => '/assets/techmedia/brands/amd.png'],
-                ['name' => 'NVIDIA',   'logo' => '/assets/techmedia/brands/nvidia.png'],
+                ['name' => 'Intel', 'logo' => '/assets/techmedia/brands/intel.png'],
+                ['name' => 'AMD', 'logo' => '/assets/techmedia/brands/amd.png'],
+                ['name' => 'NVIDIA', 'logo' => '/assets/techmedia/brands/nvidia.png'],
                 ['name' => 'Logitech', 'logo' => '/assets/techmedia/brands/logitech.png'],
-                ['name' => 'COCONUT',  'logo' => '/assets/techmedia/brands/coconut.jpg'],
-                ['name' => 'EPSON',    'logo' => '/assets/techmedia/brands/epson.png'],
-                ['name' => 'Brother',  'logo' => '/assets/techmedia/brands/brother.png'],
+                ['name' => 'COCONUT', 'logo' => '/assets/techmedia/brands/coconut.jpg'],
+                ['name' => 'EPSON', 'logo' => '/assets/techmedia/brands/epson.png'],
+                ['name' => 'Brother', 'logo' => '/assets/techmedia/brands/brother.png'],
             ],
         ];
     }
@@ -456,5 +457,20 @@ class HomeController extends Controller
                 'Dedicated account managers for bulk & repeat corporate orders',
             ],
         ];
+    }
+
+    private function callToAction(): ?array
+    {
+        return ['backgroundColor' => '#0f172a',
+            'title' => 'Build Your Perfect Computer Setup Today',
+            'description' => 'Visit our showroom in Tiruppur or contact us for custom PC builds,\n'.
+                'bulk hardware orders, workstation configurations, gaming rigs,\n'.
+                'CCTV & networking solutions, and exclusive pricing.',
+            'buttonText' => 'Get Quote or Visit Us',
+            'buttonHref' => '/web-contacts?source=cta',
+            'buttonBg' => 'bg-emerald-600',
+            'buttonTextColor' => 'text-white',
+            'buttonHoverBg' => 'hover:bg-emerald-700', ];
+
     }
 }

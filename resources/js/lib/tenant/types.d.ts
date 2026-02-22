@@ -127,6 +127,17 @@ export interface FeaturesData {
     bullets?: string[];
 }
 
+export interface CallToActionData {
+    backgroundColor: string;
+    title: string;
+    description: string;
+    buttonText: string;
+    buttonHref: string;
+    buttonBg: string;
+    buttonTextColor: string;
+    buttonHoverBg?: string;
+}
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     abouts?: AboutData | null;
@@ -137,4 +148,5 @@ export interface HomePageProps extends SharedProps {
     whyChooseUs?: WhyChooseUSData;
     brandSlider?: BrandSliderData;
     features?: FeaturesData;
+    callToAction?: CallToActionData;
 }

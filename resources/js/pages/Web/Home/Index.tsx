@@ -2,14 +2,15 @@ import { Head } from '@inertiajs/react';
 import FullScreenSlider from '@/components/blocks/slider/FullScreenSlider';
 import WebLayout from '@/layouts/web-layout';
 import type { HomePageProps } from '@/lib/tenant/types';
+import BrandSlider from '@/pages/Web/Home/blocks/BrandSlider';
+import CallToAction from '@/pages/Web/Home/blocks/CallToAction';
 import CatalogSection from '@/pages/Web/Home/blocks/CatalogSection';
+import FeaturesSection from '@/pages/Web/Home/blocks/Features';
 import HeroSection from '@/pages/Web/Home/blocks/HeroSection';
 import ProductRange from '@/pages/Web/Home/blocks/ProductRange';
 import StatsSection from '@/pages/Web/Home/blocks/StatsSection';
 import WhyChooseUs from '@/pages/Web/Home/blocks/WhyChooseUs';
 import AboutSection from './blocks/AboutSection';
-import BrandSlider from '@/pages/Web/Home/blocks/BrandSlider';
-import FeaturesSection from '@/pages/Web/Home/blocks/Features';
 
 export default function Home({
     abouts,
@@ -19,7 +20,9 @@ export default function Home({
     productRange,
     whyChooseUs,
     brandSlider,
-    features
+    features,
+    callToAction
+
 }: HomePageProps) {
     return (
         <WebLayout>
@@ -34,7 +37,8 @@ export default function Home({
             <ProductRange productRange={productRange} />
             <WhyChooseUs whyChooseUs={whyChooseUs} />
             <BrandSlider brandSlider={brandSlider} />
-            <FeaturesSection features={features}/>
+            <FeaturesSection features={features} />
+            <CallToAction CallToAction={callToAction} />
 
             {/*<div className="py-10">*/}
             {/*    <div className="mx-auto max-w-5xl px-4">*/}
@@ -49,7 +53,7 @@ export default function Home({
             {/*    </div>*/}
             {/*</div>*/}
 
-             {/*Optional debug - remove later */}
+            {/*Optional debug - remove later */}
             <pre className="mx-auto max-w-5xl overflow-auto rounded-xl bg-gray-900 p-6 text-sm text-green-300">
                 {JSON.stringify({ hero }, null, 2)}
             </pre>
