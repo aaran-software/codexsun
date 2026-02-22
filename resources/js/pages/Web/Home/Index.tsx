@@ -6,9 +6,17 @@ import CatalogSection from '@/pages/Web/Home/blocks/CatalogSection';
 import HeroSection from '@/pages/Web/Home/blocks/HeroSection';
 import ProductRange from '@/pages/Web/Home/blocks/ProductRange';
 import StatsSection from '@/pages/Web/Home/blocks/StatsSection';
+import WhyChooseUs from '@/pages/Web/Home/blocks/WhyChooseUs';
 import AboutSection from './blocks/AboutSection';
 
-export default function Home({ abouts, hero, stats, catalog, productRange }: HomePageProps) {
+export default function Home({
+    abouts,
+    hero,
+    stats,
+    catalog,
+    productRange,
+    whyChooseUs,
+}: HomePageProps) {
     return (
         <WebLayout>
             <Head title="Home" />
@@ -20,6 +28,7 @@ export default function Home({ abouts, hero, stats, catalog, productRange }: Hom
             <StatsSection stats={stats} />
             <CatalogSection catalog={catalog} />
             <ProductRange productRange={productRange} />
+            <WhyChooseUs whyChooseUs={whyChooseUs} />
 
             {/*<div className="py-10">*/}
             {/*    <div className="mx-auto max-w-5xl px-4">*/}

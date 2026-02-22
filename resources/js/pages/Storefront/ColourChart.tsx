@@ -34,41 +34,53 @@ export default function Home() {
         <WebLayout>
             <Head title={tenant.name} />
 
-            <div className="min-h-screen bg-background text-foreground p-6">
-                <div className="max-w-5xl mx-auto">
-
+            <div className="min-h-screen bg-background p-6 text-foreground">
+                <div className="mx-auto max-w-5xl">
                     {/* Header */}
-                    <div className="text-center mb-12">
-                        <h1 className="text-4xl font-bold mb-2">{tenant.name}</h1>
-                        <p className="text-muted-foreground">slug: {tenant.slug}</p>
-                        <p className="text-sm mt-1">
-                            Current mode: <strong>{tenant.theme?.mode}</strong> |
-                            Preset: <strong>{tenant.theme?.preset_name || 'None'}</strong>
+                    <div className="mb-12 text-center">
+                        <h1 className="mb-2 text-4xl font-bold">
+                            {tenant.name}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            slug: {tenant.slug}
+                        </p>
+                        <p className="mt-1 text-sm">
+                            Current mode: <strong>{tenant.theme?.mode}</strong>{' '}
+                            | Preset:{' '}
+                            <strong>
+                                {tenant.theme?.preset_name || 'None'}
+                            </strong>
                         </p>
                     </div>
 
                     {/* Preset buttons */}
                     <div className="mb-12">
-                        <h2 className="text-xl font-semibold mb-4">Switch Preset</h2>
+                        <h2 className="mb-4 text-xl font-semibold">
+                            Switch Preset
+                        </h2>
                         <div className="flex flex-wrap gap-3">
-                            {themePresets.map(preset => {
-                                const isActive = tenant.theme?.preset_id === preset.id;
+                            {themePresets.map((preset) => {
+                                const isActive =
+                                    tenant.theme?.preset_id === preset.id;
                                 return (
                                     <button
                                         key={preset.id}
                                         onClick={() => {
-                                            router.post(route('theme.switch'), { preset_id: preset.id }, {
-                                                preserveScroll: true,
-                                                preserveState: true,
-                                            });
+                                            router.post(
+                                                route('theme.switch'),
+                                                { preset_id: preset.id },
+                                                {
+                                                    preserveScroll: true,
+                                                    preserveState: true,
+                                                },
+                                            );
                                         }}
                                         disabled={isActive}
-                                        className={`
-                      px-5 py-2.5 rounded-lg border text-sm font-medium transition
-                      ${isActive
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-muted hover:bg-muted/80 border-border'}
-                    `}
+                                        className={`rounded-lg border px-5 py-2.5 text-sm font-medium transition ${
+                                            isActive
+                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                : 'border-border bg-muted hover:bg-muted/80'
+                                        } `}
                                     >
                                         {preset.name}
                                         {isActive && ' ✓'}
@@ -80,31 +92,37 @@ export default function Home() {
 
                     {/* All variables - simple list */}
                     <div>
-                        <h2 className="text-2xl font-bold mb-6">
+                        <h2 className="mb-6 text-2xl font-bold">
                             All Theme Variables ({variableEntries.length})
                         </h2>
 
                         {variableEntries.length === 0 ? (
-                            <p className="text-muted-foreground">No variables received from backend</p>
+                            <p className="text-muted-foreground">
+                                No variables received from backend
+                            </p>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                                 {variableEntries
                                     .sort((a, b) => a[0].localeCompare(b[0]))
                                     .map(([key, value]) => (
                                         <div
                                             key={key}
-                                            className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
+                                            className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
                                         >
-                                            <div className="font-mono text-sm break-all mb-2 text-primary">
+                                            <div className="mb-2 font-mono text-sm break-all text-primary">
                                                 {key}
                                             </div>
-                                            <div className="text-sm font-mono text-muted-foreground break-all">
+                                            <div className="font-mono text-sm break-all text-muted-foreground">
                                                 {value}
                                             </div>
-                                            {value.startsWith('#') || value.startsWith('oklch') || value.includes('(') ? (
+                                            {value.startsWith('#') ||
+                                            value.startsWith('oklch') ||
+                                            value.includes('(') ? (
                                                 <div
-                                                    className="mt-3 w-full h-10 rounded border"
-                                                    style={{ background: value }}
+                                                    className="mt-3 h-10 w-full rounded border"
+                                                    style={{
+                                                        background: value,
+                                                    }}
                                                 />
                                             ) : null}
                                         </div>
@@ -116,7 +134,6 @@ export default function Home() {
                     <div className="mt-16 text-center text-sm text-muted-foreground">
                         Powered by CODEXSUN Multi-Tenant Engine
                     </div>
-
                 </div>
             </div>
         </WebLayout>

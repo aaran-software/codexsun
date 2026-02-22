@@ -21,6 +21,7 @@ class HomeController extends Controller
             'stats' => $this->getStatsData(),
             'catalog' => $this->CatalogData(),
             'productRange' => $this->productRangeData(),
+            'whyChooseUs' => $this->whyChooseUs(),
         ]);
     }
 
@@ -361,6 +362,46 @@ class HomeController extends Controller
                     'name' => 'UPS & Power Backup Solutions',
                     'image' => '/assets/techmedia/products/ups.jpg',
                     'slug' => 'ups-power-backup',
+                ],
+            ],
+        ];
+    }
+
+    private function whyChooseUs(): ?array
+    {
+        return [
+            'heading' => 'Why Choose Tech Media Retail',
+            'subheading' => 'Your trusted IT partner in Tiruppur — delivering quality hardware, expert service, and reliable solutions since 2002.',
+            'features' => [
+                [
+                    'title' => 'Expert Hardware Selection',
+                    'description' => 'Carefully curated range of desktops, laptops, monitors, servers, and peripherals from top global brands.',
+                    'icon' => 'BadgeCheck',
+                ],
+                [
+                    'title' => 'Competitive Pricing',
+                    'description' => 'Best-in-class prices for retail, bulk, and corporate buyers with transparent no-hidden-cost policy.',
+                    'icon' => 'IndianRupee',
+                ],
+                [
+                    'title' => 'Custom PC Builds',
+                    'description' => 'Tailor-made gaming rigs, workstations, office setups and server configurations to match your exact needs.',
+                    'icon' => 'Factory',
+                ],
+                [
+                    'title' => 'Fast Delivery & Installation',
+                    'description' => 'Quick delivery across Tiruppur and nearby areas with professional on-site setup and configuration support.',
+                    'icon' => 'Truck',
+                ],
+                [
+                    'title' => 'Reliable After-Sales Service',
+                    'description' => 'Dedicated service team for repairs, upgrades, troubleshooting, AMC contracts and warranty support.',
+                    'icon' => 'ShieldCheck',
+                ],
+                [
+                    'title' => 'Business & Bulk Solutions',
+                    'description' => 'Special pricing and support for schools, offices, shops, startups and institutional bulk requirements.',
+                    'icon' => 'Users',
                 ],
             ],
         ];

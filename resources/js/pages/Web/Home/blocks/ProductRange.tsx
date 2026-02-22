@@ -2,17 +2,17 @@
 'use client';
 
 import { Link } from '@inertiajs/react';
-import { type  ProductRangeData } from '@/lib/tenant/types';
-import { cn } from '@/lib/utils';
 import { Marquee } from '@/components/ui/marquee';
-
+import { type ProductRangeData } from '@/lib/tenant/types';
+import { cn } from '@/lib/utils';
 
 interface ProductRangeSectionProps {
     productRange?: ProductRangeData | null;
 }
 
-
-export default function ProductRange({ productRange }: ProductRangeSectionProps) {
+export default function ProductRange({
+    productRange,
+}: ProductRangeSectionProps) {
     if (!productRange || productRange.categories.length === 0) return null;
 
     const { heading, subheading, categories } = productRange;

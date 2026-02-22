@@ -90,6 +90,18 @@ export interface ProductRangeData {
     categories: ProductCategory[];
 }
 
+export interface WhyChooseFeature {
+    title: string;
+    description: string;
+    icon: LucideIcon;
+}
+
+export interface WhyChooseUSData {
+    heading: string;
+    subheading: string;
+    features: WhyChooseFeature[];
+}
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     abouts?: AboutData | null;
@@ -97,4 +109,5 @@ export interface HomePageProps extends SharedProps {
     stats?: StatsData;
     catalog?: CatalogData;
     productRange?: ProductRangeData;
+    whyChooseUs?: WhyChooseUSData;
 }

@@ -68,7 +68,7 @@ export default function CatalogCard({
     return (
         <FadeUp>
             <Link href={`/catalog/${slug}`} className="group block">
-                <div className="relative overflow-hidden rounded-xl border border-primary/30 hover:border-2 bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-white transition-all duration-300 hover:-translate-y-2 hover:border-2 hover:shadow-xl">
                     {/* Bulk Badge */}
                     {showBulkBadge && (
                         <span

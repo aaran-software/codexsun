@@ -9,7 +9,6 @@ interface StatsSectionProps {
     stats?: StatsData | null;
 }
 export default function StatsSection({ stats }: StatsSectionProps) {
-
     if (!stats || stats.stats.length === 0) return null;
 
     const {

@@ -14,7 +14,7 @@ export default function WebLayout({ children }: PropsWithChildren) {
 
     return (
         <ThemeProvider theme={theme}>
-            <WebMenu/>
+            <WebMenu />
             <div className="min-h-screen bg-background text-foreground antialiased">
                 {children}
                 <Toaster />
