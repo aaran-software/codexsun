@@ -13,7 +13,7 @@ export default function WebContactPage() {
                 title="Contact"
                 subtitle="End-to-End Technology."
             />
-            Services
+            contact
         </WebLayout>
     );
 }

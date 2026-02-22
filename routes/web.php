@@ -6,6 +6,20 @@ use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/about', function () {
+    return Inertia::render('Web/abouts/index');
+})->name('about');
+
+Route::get('/service', function () {
+    return Inertia::render('Web/services/index');
+})->name('service');
+
+
+Route::get('/web-contact', function () {
+    return Inertia::render('Web/web-contacts/index');
+})->name('web-contact');
+
+
 Route::get('dashboard', function () {
     return Inertia::render('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

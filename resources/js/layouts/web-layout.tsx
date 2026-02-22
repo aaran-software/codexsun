@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import { Toaster } from 'sonner';
+import WebMenu from '@/components/blocks/menu/web-menu';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 export default function WebLayout({ children }: PropsWithChildren) {
@@ -13,6 +14,7 @@ export default function WebLayout({ children }: PropsWithChildren) {
 
     return (
         <ThemeProvider theme={theme}>
+            <WebMenu/>
             <div className="min-h-screen bg-background text-foreground antialiased">
                 {children}
                 <Toaster />

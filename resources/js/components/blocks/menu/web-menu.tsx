@@ -25,6 +25,7 @@ export default function WebMenu() {
 
     const currentUrl = usePage<never>().url;
 
+
     // Scroll effect
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);

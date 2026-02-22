@@ -13,7 +13,7 @@ export default function AboutPage() {
                 title="About"
                 subtitle="End-to-End Technology."
             />
-            Services
+            about
         </WebLayout>
     );
 }
