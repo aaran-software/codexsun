@@ -16,7 +16,7 @@ class HomeController extends Controller
                 'date' => date('l jS \of F Y h:i:s A'),
             ],
             'slider' => $this->getSliderData(),
-            'abouts' => $this->getTenantAboutData(),
+            'abouts' => $this->getAboutData(),
             'hero' => $this->getHeroData(),
         ]);
     }
@@ -120,24 +120,23 @@ class HomeController extends Controller
     private function getHeroData()
     {
         return [
-            'title' => 'Techmedia',
-            'subtitle' => 'Delivering Quality & Reliability Since Day One',
+            'title' => 'Your Trusted Computer Store & Service Partner in Tiruppur',
+            'subtitle' => 'Complete IT solutions since 2002 — hardware sales, custom builds, repair, networking, CCTV, cloud services & reliable support.',
         ];
     }
-    private function getTenantAboutData(): ?array
+    private function getAboutData(): ?array
     {
         return [
             'backgroundColor' => '#f9fafb',
-            'title' => 'About Us',
-            'subtitle' => 'Delivering Quality & Reliability Since Day One',
+            'title' => 'About Tech Media Retail',
+            'subtitle' => 'Your Trusted IT Partner in Tiruppur Since 2002',
             'content' => [
-                'We are a passionate team dedicated to providing top-quality products and exceptional service to our customers.',
-                'With years of experience and a commitment to excellence, we help businesses and individuals achieve their goals through reliable technology solutions.',
-                'Customer satisfaction is at the heart of everything we do.',
+                'Tech Media Retail is Coimbatore & Tiruppur’s leading computer sales, service, and IT solutions center, established in 2002.',
+                'With 24+ years of expertise, we serve individuals, businesses, schools, offices, and institutions with genuine products and expert technical support.',
             ],
             'image' => [
-                'src' => '/assets/images/fallback-about.jpg',
-                'alt' => 'Our dedicated team and showroom',
+                'src' => '/assets/techmedia/dell.jpg',
+                'alt' => 'Tech Media Retail Showroom',
             ],
         ];
     }
