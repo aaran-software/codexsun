@@ -1,6 +1,6 @@
 // resources/js/types/web.d.ts
 
-export interface Message {
+export interface MessageData {
     greetings: string;
     date: string;
 }
@@ -21,11 +21,19 @@ export interface SharedProps {
     [key: string]: unknown;
 }
 
-export interface HomePageProps extends SharedProps {
-    message?: Message;
+export interface AboutData {
+    backgroundColor?: string;
+    title: string;
+    subtitle?: string;
+    content: string[];
+    image?: {
+        src: string;
+        alt: string;
+    } | null;
 }
 
-// if you have other pages, extend SharedProps too
-// export interface AboutPageProps extends SharedProps {
-//     // page-specific props
-// }
+
+export interface HomePageProps extends SharedProps {
+    message?: MessageData;
+    abouts?: AboutData | null;
+}

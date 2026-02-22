@@ -16,6 +16,7 @@ class HomeController extends Controller
                 'date' => date('l jS \of F Y h:i:s A'),
             ],
             'slider' => $this->getSliderData(),
+            'abouts' => $this->getTenantAboutData(),
         ]);
     }
 
@@ -76,7 +77,6 @@ class HomeController extends Controller
                     'media' => [
                         'type' => 'image',
                         'src' => 'https://news.lenovo.com/wp-content/uploads/2023/03/11_B_Lenovo_LOQ_15IRH8_Closeup_Port.jpg',
-
                     ],
                     'intensity' => 'low',
                     'backgroundMode' => 'cinematic',
@@ -112,6 +112,24 @@ class HomeController extends Controller
                 'defaultIntensity' => 'medium',
                 'defaultDirection' => 'fade',
                 'defaultBackgroundMode' => 'cinematic',
+            ],
+        ];
+    }
+
+    private function getTenantAboutData(): ?array
+    {
+        return [
+            'backgroundColor' => '#f9fafb',
+            'title' => 'About Us',
+            'subtitle' => 'Delivering Quality & Reliability Since Day One',
+            'content' => [
+                'We are a passionate team dedicated to providing top-quality products and exceptional service to our customers.',
+                'With years of experience and a commitment to excellence, we help businesses and individuals achieve their goals through reliable technology solutions.',
+                'Customer satisfaction is at the heart of everything we do.',
+            ],
+            'image' => [
+                'src' => '/assets/images/fallback-about.jpg',
+                'alt' => 'Our dedicated team and showroom',
             ],
         ];
     }
