@@ -14,6 +14,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
+import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -31,6 +32,8 @@ export default function Create() {
 
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        display_name:'',
+        tagline:'',
         slug: '',
         owner_id: '',
         is_active: true,
@@ -80,6 +83,28 @@ export default function Create() {
                             )}
                         </div>
 
+                        {/* display_name */}
+                        <div className="space-y-2">
+                            <Label>Display name</Label>
+                            <Input
+                                value={data.display_name}
+                                onChange={(e) =>
+                                    setData('display_name', e.target.value)
+                                }
+                            />
+                        </div>
+
+                        {/* tagline */}
+                        <div className="space-y-2">
+                            <Label>Tagline</Label>
+                            <Input
+                                value={data.tagline}
+                                onChange={(e) =>
+                                    setData('tagline', e.target.value)
+                                }
+                            />
+                        </div>
+
                         {/* Slug */}
                         <div className="space-y-2">
                             <Label>Slug</Label>
@@ -97,7 +122,7 @@ export default function Create() {
                         </div>
 
                         {/* Owner Lookup */}
-                        <div className="space-y-2">
+                        <div className="w-full space-y-2">
                             <Label>Owner</Label>
                             <Select
                                 value={data.owner_id?.toString()}
@@ -105,7 +130,7 @@ export default function Create() {
                                     setData('owner_id', value)
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="flex w-full">
                                     <SelectValue placeholder="Select owner" />
                                 </SelectTrigger>
 
@@ -128,25 +153,6 @@ export default function Create() {
                             )}
                         </div>
 
-                        {/* Active Status */}
-                        <div className="space-y-2">
-                            <Label>Status</Label>
-                            <Select
-                                value={data.is_active ? '1' : '0'}
-                                onValueChange={(value) =>
-                                    setData('is_active', value === '1')
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1">Active</SelectItem>
-                                    <SelectItem value="0">Inactive</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
                         {/* Suspended */}
                         <div className="space-y-2">
                             <Label>Suspended</Label>
@@ -156,7 +162,7 @@ export default function Create() {
                                     setData('is_suspended', value === '1')
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="flex w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -165,6 +171,44 @@ export default function Create() {
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {/* Active Status */}
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="is_active">Active Status</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    {data.is_active
+                                        ? 'Tenant can be accessed normally'
+                                        : 'Tenant is currently disabled'}
+                                </p>
+                            </div>
+                            <Switch
+                                id="is_active"
+                                checked={data.is_active}
+                                onCheckedChange={(checked) =>
+                                    setData('is_active', checked)
+                                }
+                            />
+                        </div>
+
+                        {/*/!* Active Status *!/*/}
+                        {/*<div className="space-y-2">*/}
+                        {/*    <Label>Status</Label>*/}
+                        {/*    <Select*/}
+                        {/*        value={data.is_active ? '1' : '0'}*/}
+                        {/*        onValueChange={(value) =>*/}
+                        {/*            setData('is_active', value === '1')*/}
+                        {/*        }*/}
+                        {/*    >*/}
+                        {/*        <SelectTrigger className="flex w-full">*/}
+                        {/*            <SelectValue />*/}
+                        {/*        </SelectTrigger>*/}
+                        {/*        <SelectContent>*/}
+                        {/*            <SelectItem value="1">Active</SelectItem>*/}
+                        {/*            <SelectItem value="0">Inactive</SelectItem>*/}
+                        {/*        </SelectContent>*/}
+                        {/*    </Select>*/}
+                        {/*</div>*/}
 
                         {/* Actions */}
                         <div className="flex justify-end gap-3 pt-4">

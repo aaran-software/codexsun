@@ -64,6 +64,7 @@ export default function List() {
 
     const columnConfig = [
         { key: 'name', label: 'Name' },
+        { key: 'display_name', label: 'Display Name' },
         { key: 'slug', label: 'Slug' },
         { key: 'owner', label: 'Owner' },
         { key: 'status', label: 'Status' },
@@ -237,6 +238,9 @@ export default function List() {
                             {visibleColumns.includes('name') && (
                                 <TableHead>Name</TableHead>
                             )}
+                            {visibleColumns.includes('name') && (
+                                <TableHead>Display Name</TableHead>
+                            )}
                             {visibleColumns.includes('slug') && (
                                 <TableHead>Slug</TableHead>
                             )}
@@ -259,6 +263,9 @@ export default function List() {
                                     <TableCell className="font-medium">
                                         {tenant.name}
                                     </TableCell>
+                                )}
+                                {visibleColumns.includes('display_name') && (
+                                    <TableCell>{tenant.display_name}</TableCell>
                                 )}
 
                                 {visibleColumns.includes('slug') && (

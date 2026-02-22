@@ -22,6 +22,8 @@ import type { BreadcrumbItem } from '@/types';
 interface Tenant {
     id: number;
     name: string;
+    display_name: string;
+    tagline: string;
     slug: string;
     owner_id: number | null;
     is_active: boolean;
@@ -88,6 +90,28 @@ export default function Edit() {
                                     {errors.name}
                                 </p>
                             )}
+                        </div>
+
+                        {/* display_name */}
+                        <div className="space-y-2">
+                            <Label>Display name</Label>
+                            <Input
+                                value={data.display_name}
+                                onChange={(e) =>
+                                    setData('display_name', e.target.value)
+                                }
+                            />
+                        </div>
+
+                        {/* tagline */}
+                        <div className="space-y-2">
+                            <Label>Tagline</Label>
+                            <Input
+                                value={data.tagline}
+                                onChange={(e) =>
+                                    setData('tagline', e.target.value)
+                                }
+                            />
                         </div>
 
                         {/* Slug */}

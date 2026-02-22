@@ -16,7 +16,14 @@ class Tenant extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_suspended' => 'boolean',
+        'settings' => 'array',
+        'plan_id' => 'integer',
     ];
+
+    public function getDisplayNameAttribute($value)
+    {
+        return $value ?? $this->name;
+    }
 
     public function domains()
     {

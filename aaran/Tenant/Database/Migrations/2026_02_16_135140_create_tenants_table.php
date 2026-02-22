@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->uuid()->unique();
             $table->string('name');
+            $table->string('display_name');
+            $table->string('tagline')->nullable();
             $table->string('slug')->unique();
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->json('settings')->nullable();
             $table->foreignId('plan_id')->nullable();
-            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_suspended')->default(false);
             $table->timestamps();
