@@ -2,15 +2,17 @@ import { Head } from '@inertiajs/react';
 import FullScreenSlider from '@/components/blocks/slider/FullScreenSlider';
 import WebLayout from '@/layouts/web-layout';
 import type { HomePageProps } from '@/lib/tenant/types';
+import HeroSection from '@/pages/Web/Home/blocks/HeroSection';
 import AboutSection from './blocks/AboutSection';
 
-export default function Home({ message, abouts }: HomePageProps) {
+export default function Home({ message, abouts,hero }: HomePageProps) {
     return (
         <WebLayout>
             <Head title="Home" />
 
             <FullScreenSlider />
 
+            <HeroSection hero={hero} />
             <AboutSection abouts={abouts} />
 
             <div className="py-10">
@@ -27,8 +29,8 @@ export default function Home({ message, abouts }: HomePageProps) {
             </div>
 
             {/* Optional debug - remove later */}
-            <pre className="bg-gray-900 text-green-300 p-6 rounded-xl overflow-auto max-w-5xl mx-auto text-sm">
-                {JSON.stringify({ abouts }, null, 2)}
+            <pre className="mx-auto max-w-5xl overflow-auto rounded-xl bg-gray-900 p-6 text-sm text-green-300">
+                {JSON.stringify({ hero }, null, 2)}
             </pre>
         </WebLayout>
     );

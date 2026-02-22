@@ -32,8 +32,12 @@ export interface AboutData {
     } | null;
 }
 
-
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     abouts?: AboutData | null;
+    hero?: HeroData | null;
+}
+export interface HeroData {
+    title?: string;
+    subtitle?: string;
 }

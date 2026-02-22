@@ -3,7 +3,7 @@
 'use client';
 
 import FadeUp from '@/components/blocks/animate/fade-up';
-import type { AboutData } from '@/lib/tenant/web';
+import type { AboutData } from '@/lib/tenant/types';
 
 interface AboutSectionProps {
     abouts?: AboutData | null;

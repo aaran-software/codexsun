@@ -17,6 +17,7 @@ class HomeController extends Controller
             ],
             'slider' => $this->getSliderData(),
             'abouts' => $this->getTenantAboutData(),
+            'hero' => $this->getHeroData(),
         ]);
     }
 
@@ -116,6 +117,13 @@ class HomeController extends Controller
         ];
     }
 
+    private function getHeroData()
+    {
+        return [
+            'title' => 'Techmedia',
+            'subtitle' => 'Delivering Quality & Reliability Since Day One',
+        ];
+    }
     private function getTenantAboutData(): ?array
     {
         return [
