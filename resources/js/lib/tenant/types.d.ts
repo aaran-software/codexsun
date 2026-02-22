@@ -235,6 +235,25 @@ export interface CompanyData {
     about: string;
 }
 
+export interface BlogPost {
+    id: number;
+    title: string;
+    excerpt?: string;
+    author: string;
+    date: string;
+    image: string;
+    slug: string;
+}
+
+export interface BlogData {
+    heading: string;
+    description: string;
+    buttonText: string;
+    buttonHref: string;
+    featuredPosts: BlogPost[];
+}
+
+
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     company?: CompanyData;
@@ -250,4 +269,5 @@ export interface HomePageProps extends SharedProps {
     location?: LocationData;
     newsletter?: NewsletterData;
     footer: FooterData;
+    blog:BlogData;
 }

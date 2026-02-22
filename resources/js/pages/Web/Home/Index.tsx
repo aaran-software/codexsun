@@ -3,6 +3,7 @@ import FooterSection from '@/components/blocks/footers/FooterSection';
 import FullScreenSlider from '@/components/blocks/slider/FullScreenSlider';
 import WebLayout from '@/layouts/web-layout';
 import type { HomePageProps } from '@/lib/tenant/types';
+import BlogShowcaseSection from '@/pages/Web/Home/blocks/BlogShowcaseSection';
 import BrandSlider from '@/pages/Web/Home/blocks/BrandSlider';
 import CallToAction from '@/pages/Web/Home/blocks/CallToAction';
 import CatalogSection from '@/pages/Web/Home/blocks/CatalogSection';
@@ -29,6 +30,7 @@ export default function Home({
     newsletter,
     footer,
     company,
+    blog
 }: HomePageProps) {
     return (
         <WebLayout>
@@ -44,6 +46,7 @@ export default function Home({
             <WhyChooseUs whyChooseUs={whyChooseUs} />
             <BrandSlider brandSlider={brandSlider} />
             <FeaturesSection features={features} />
+            <BlogShowcaseSection blog={blog} />
             <CallToAction CallToAction={callToAction} />
             <LocationSection location={location} />
             <NewsletterSection newsletter={newsletter} />

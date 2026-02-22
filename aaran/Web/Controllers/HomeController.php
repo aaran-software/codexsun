@@ -2,6 +2,7 @@
 
 namespace Aaran\Web\Controllers;
 
+use Aaran\Blog\Models\BlogPost;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,6 +30,7 @@ class HomeController extends Controller
             'newsletter' => $this->newsletter(),
             'footer' => $this->footer(),
             'company' => $this->getCompanyData(),
+            'blog' => $this->blog(),
         ]);
     }
 
@@ -88,16 +90,16 @@ class HomeController extends Controller
                     'intensity' => 'high',
                     'showOverlay' => false,
                 ],
-                [
-                    'id' => 3,
-                    'title' => '',
-                    'tagline' => '',
-                    'action' => ['text' => 'Build Your PC', 'href' => '/custom-pc'],
-                    'media' => ['type' => 'youtube', 'videoId' => 'GckqQX355iE'],
-                    'duration' => 18000,
-                    'showOverlay' => false,
-                    'overlayColor' => 'bg-green-100/20',
-                ],
+//                [
+//                    'id' => 3,
+//                    'title' => '',
+//                    'tagline' => '',
+//                    'action' => ['text' => 'Build Your PC', 'href' => '/custom-pc'],
+//                    'media' => ['type' => 'youtube', 'videoId' => 'jEiGVbT0wVI'],
+//                    'duration' => 18000,
+//                    'showOverlay' => false,
+//                    'overlayColor' => 'bg-green-100/20',
+//                ],
                 [
                     'id' => 4,
                     'title' => 'Business & Office Solutions',
@@ -122,18 +124,18 @@ class HomeController extends Controller
                     ],
                     'intensity' => 'low',
                 ],
-                [
-                    'id' => 6,
-                    'title' => '',
-                    'tagline' => 'RTX 40-series, Ryzen 7000, liquid cooling — play at ultra settings',
-                    'action' => ['text' => 'Build Your PC', 'href' => '/custom-pc'],
-                    'media' => ['type' => 'youtube', 'videoId' => 'd86ws7mQYIg'],
-                    'duration' => 14000,
-                    'highlights' => [
-                        ['text' => 'RGB Customizable', 'variant' => 'success'],
-                        ['text' => '3-Year Support', 'variant' => 'primary'],
-                    ],
-                ],
+//                [
+//                    'id' => 6,
+//                    'title' => '',
+//                    'tagline' => 'RTX 40-series, Ryzen 7000, liquid cooling — play at ultra settings',
+//                    'action' => ['text' => 'Build Your PC', 'href' => '/custom-pc'],
+//                    'media' => ['type' => 'youtube', 'videoId' => 'd86ws7mQYIg'],
+//                    'duration' => 14000,
+//                    'highlights' => [
+//                        ['text' => 'RGB Customizable', 'variant' => 'success'],
+//                        ['text' => '3-Year Support', 'variant' => 'primary'],
+//                    ],
+//                ],
             ],
             'options' => [
                 'parallax' => true,
@@ -477,6 +479,31 @@ class HomeController extends Controller
                 'High-refresh-rate gaming laptops up to RTX 4090 & 240 Hz displays',
                 'Dedicated account managers for bulk & repeat corporate orders',
             ],
+        ];
+    }
+
+    private function blog(): ?array
+    {
+        $posts = BlogPost::latest()->take(3)->get();
+
+        $featuredPosts = $posts->map(function ($post) {
+            return [
+                'id' => $post->id,
+                'title' => $post->title ?? '(No title)',
+                'excerpt' => $post->excerpt ?? '',
+                'author' => $post->author_name ?? 'TechMedia Team',
+                'date' => $post->published_at?->format('F j, Y') ?? now()->format('F j, Y'),
+                'image' => $post->featured_image ?? '/assets/blog/fallback.jpg',
+                'slug' => $post->slug ?? 'post-'.$post->id,
+            ];
+        })->toArray();
+
+        return [
+            'heading' => 'Check our latest tech insights & updates',
+            'description' => "Latest computer hardware trends, repair tips,\nCCTV & networking guides, and more.",
+            'buttonText' => 'VIEW ALL POSTS',
+            'buttonHref' => '/blog',
+            'featuredPosts' => $featuredPosts,
         ];
     }
 
