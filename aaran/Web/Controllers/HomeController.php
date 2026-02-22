@@ -20,6 +20,7 @@ class HomeController extends Controller
             'hero' => $this->getHeroData(),
             'stats' => $this->getStatsData(),
             'catalog' => $this->CatalogData(),
+            'productRange' => $this->productRangeData(),
         ]);
     }
 
@@ -290,6 +291,76 @@ class HomeController extends Controller
                     'featuredBadge' => '',
                     'badgeVariant' => 'rose',
                     'featuredBadgeVariant' => null,
+                ],
+            ],
+        ];
+    }
+
+    private function productRangeData(): ?array
+    {
+        return [
+            'heading' => 'Explore Our Comprehensive Range of Computer Accessories',
+            'subheading' => 'From essential peripherals to advanced connectivity solutions — everything you need for a complete IT setup',
+            'categories' => [
+                [
+                    'name' => 'USB Flash Drives & Pen Drives',
+                    'image' => '/assets/techmedia/products/usb-drive.jpg',
+                    'slug' => 'usb-flash-drives',
+                ],
+                [
+                    'name' => 'External Hard Disks & SSDs',
+                    'image' => '/assets/techmedia/products/external-hdd.jpg',
+                    'slug' => 'external-storage',
+                ],
+                [
+                    'name' => 'Mouse & Keyboards (Wired & Wireless)',
+                    'image' => '/assets/techmedia/products/mouse-keyboard.jpg',
+                    'slug' => 'mouse-keyboards',
+                ],
+                [
+                    'name' => 'Webcams & Conference Cameras',
+                    'image' => '/assets/techmedia/products/webcam.jpg',
+                    'slug' => 'webcams',
+                ],
+                [
+                    'name' => 'Headphones & Earphones',
+                    'image' => '/assets/techmedia/products/headphones.jpg',
+                    'slug' => 'headphones-earphones',
+                ],
+                [
+                    'name' => 'Speakers & Soundbars',
+                    'image' => '/assets/techmedia/products/speakers.jpg',
+                    'slug' => 'speakers',
+                ],
+                [
+                    'name' => 'Cables, Chargers & Adapters',
+                    'image' => '/assets/techmedia/products/cables-chargers.jpg',
+                    'slug' => 'cables-adapters',
+                ],
+                [
+                    'name' => 'Laptop Bags & Sleeves',
+                    'image' => '/assets/techmedia/products/laptop-bag.jpg',
+                    'slug' => 'laptop-bags',
+                ],
+                [
+                    'name' => 'CCTV Cameras & Accessories',
+                    'image' => '/assets/techmedia/products/cctv-camera.jpg',
+                    'slug' => 'cctv-accessories',
+                ],
+                [
+                    'name' => 'Networking Cables & Routers',
+                    'image' => '/assets/techmedia/products/networking.jpg',
+                    'slug' => 'networking',
+                ],
+                [
+                    'name' => 'Printers, Scanners & Ink',
+                    'image' => '/assets/techmedia/products/printer.jpg',
+                    'slug' => 'printers-scanners',
+                ],
+                [
+                    'name' => 'UPS & Power Backup Solutions',
+                    'image' => '/assets/techmedia/products/ups.jpg',
+                    'slug' => 'ups-power-backup',
                 ],
             ],
         ];

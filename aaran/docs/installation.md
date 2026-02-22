@@ -52,3 +52,6 @@ npm uninstall react-tsparticles tsparticles-engine
 
 npm install @tsparticles/react @tsparticles/engine
 npm install @tsparticles/preset-stars @tsparticles/preset-snow @tsparticles/preset-fire
+
+
+npx shadcn@latest add @magicui/marquee

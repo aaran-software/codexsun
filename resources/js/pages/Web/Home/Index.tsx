@@ -4,10 +4,11 @@ import WebLayout from '@/layouts/web-layout';
 import type { HomePageProps } from '@/lib/tenant/types';
 import CatalogSection from '@/pages/Web/Home/blocks/CatalogSection';
 import HeroSection from '@/pages/Web/Home/blocks/HeroSection';
+import ProductRange from '@/pages/Web/Home/blocks/ProductRange';
 import StatsSection from '@/pages/Web/Home/blocks/StatsSection';
 import AboutSection from './blocks/AboutSection';
 
-export default function Home({ abouts, hero, stats, catalog }: HomePageProps) {
+export default function Home({ abouts, hero, stats, catalog, productRange }: HomePageProps) {
     return (
         <WebLayout>
             <Head title="Home" />
@@ -18,6 +19,7 @@ export default function Home({ abouts, hero, stats, catalog }: HomePageProps) {
             <AboutSection abouts={abouts} />
             <StatsSection stats={stats} />
             <CatalogSection catalog={catalog} />
+            <ProductRange productRange={productRange} />
 
             {/*<div className="py-10">*/}
             {/*    <div className="mx-auto max-w-5xl px-4">*/}

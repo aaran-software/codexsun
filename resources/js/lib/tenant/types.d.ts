@@ -43,10 +43,51 @@ export interface StatsData {
     stats: StatItem[];
 }
 
+export interface CatalogCategory {
+    featuredBadgeVariant:
+        | 'emerald'
+        | 'amber'
+        | 'black'
+        | 'blue'
+        | 'purple'
+        | 'rose'
+        | 'cyan'
+        | 'indigo'
+        | 'teal'
+        | undefined;
+    title: string;
+    slug: string;
+    description: string;
+    image: string;
+    variants: string[];
+    bulkBadge?: string;
+    featuredBadge?: string;
+    badgeVariant?:
+        | 'emerald'
+        | 'amber'
+        | 'blue'
+        | 'purple'
+        | 'rose'
+        | 'cyan'
+        | 'indigo'
+        | 'teal';
+}
+
 export interface CatalogData {
     heading: string;
     subheading: string;
     categories: CatalogCategory[];
+}
+
+export interface ProductCategory {
+    name: string;
+    image: string;
+    slug: string;
+}
+export interface ProductRangeData {
+    heading: string;
+    subheading?: string;
+    categories: ProductCategory[];
 }
 
 export interface HomePageProps extends SharedProps {
@@ -55,5 +96,5 @@ export interface HomePageProps extends SharedProps {
     hero?: HeroData | null;
     stats?: StatsData;
     catalog?: CatalogData;
+    productRange?: ProductRangeData;
 }
-
