@@ -32,12 +32,28 @@ export interface AboutData {
     } | null;
 }
 
-export interface HomePageProps extends SharedProps {
-    message?: MessageData;
-    abouts?: AboutData | null;
-    hero?: HeroData | null;
-}
 export interface HeroData {
     title?: string;
     subtitle?: string;
 }
+
+export interface StatsData {
+    backgroundColor?: string;
+    borderColor?: string;
+    stats: StatItem[];
+}
+
+export interface CatalogData {
+    heading: string;
+    subheading: string;
+    categories: CatalogCategory[];
+}
+
+export interface HomePageProps extends SharedProps {
+    message?: MessageData;
+    abouts?: AboutData | null;
+    hero?: HeroData | null;
+    stats?: StatsData;
+    catalog?: CatalogData;
+}
+

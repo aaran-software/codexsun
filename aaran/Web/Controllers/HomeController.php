@@ -18,6 +18,8 @@ class HomeController extends Controller
             'slider' => $this->getSliderData(),
             'abouts' => $this->getAboutData(),
             'hero' => $this->getHeroData(),
+            'stats' => $this->getStatsData(),
+            'catalog' => $this->CatalogData(),
         ]);
     }
 
@@ -124,6 +126,7 @@ class HomeController extends Controller
             'subtitle' => 'Complete IT solutions since 2002 — hardware sales, custom builds, repair, networking, CCTV, cloud services & reliable support.',
         ];
     }
+
     private function getAboutData(): ?array
     {
         return [
@@ -135,9 +138,161 @@ class HomeController extends Controller
                 'With 24+ years of expertise, we serve individuals, businesses, schools, offices, and institutions with genuine products and expert technical support.',
             ],
             'image' => [
-                'src' => '/assets/techmedia/dell.jpg',
+                'src' => '/assets/techmedia/images/dell-showroom.jpg',
                 'alt' => 'Tech Media Retail Showroom',
             ],
         ];
     }
+
+    private function getStatsData(): ?array
+    {
+        return ['backgroundColor' => '#ffffff',
+            'borderColor' => '#e5e7eb',
+            'stats' => [
+                ['value' => 50, 'suffix' => '+', 'label' => 'Trusted Brands'],
+                ['value' => 12000, 'suffix' => '+', 'label' => 'Products In Stock'],
+                ['value' => 8000, 'suffix' => '+', 'label' => 'Happy Customers'],
+                ['value' => 24, 'suffix' => '', 'label' => 'Years of Expertise'],
+            ],
+        ];
+    }
+
+    private function CatalogData(): ?array
+    {
+        return [
+            'heading' => 'Complete Computer & Accessories Catalog',
+            'subheading' => 'High-quality hardware, peripherals, networking gear, CCTV solutions and IT essentials — perfect for retail, bulk orders, offices, schools and businesses.',
+            'categories' => [
+                [
+                    'title' => 'Laptops & Notebooks',
+                    'slug' => 'laptops',
+                    'description' => 'Latest models from top brands — performance, gaming, business & student series',
+                    'image' => '/assets/techmedia/categories/laptops.jpg',
+                    'variants' => [
+                        'Gaming Laptops',
+                        'Ultrabooks',
+                        'Business Laptops',
+                        'Student Laptops',
+                    ],
+                    'bulkBadge' => 'Ready Stock',
+                    'featuredBadge' => 'Latest Models',
+                    'badgeVariant' => 'emerald',
+                    'featuredBadgeVariant' => 'amber',
+                ],
+                [
+                    'title' => 'Desktops & Workstations',
+                    'slug' => 'desktops',
+                    'description' => 'Custom builds, pre-built systems, office PCs, gaming rigs & professional workstations',
+                    'image' => '/assets/techmedia/categories/desktops.png',
+                    'variants' => [
+                        'Gaming Desktops',
+                        'Office PCs',
+                        'All-in-One',
+                        'Workstations',
+                    ],
+                    'bulkBadge' => 'Custom Builds',
+                    'featuredBadge' => '',
+                    'badgeVariant' => 'blue',
+                    'featuredBadgeVariant' => null,
+                ],
+                [
+                    'title' => 'Monitors & Displays',
+                    'slug' => 'monitors',
+                    'description' => 'Full HD, 4K, curved, ultrawide, gaming & professional color-accurate displays',
+                    'image' => '/assets/techmedia/categories/monitor.avif',
+                    'variants' => [
+                        'Gaming Monitors',
+                        '4K Monitors',
+                        'Office Displays',
+                        'Portable Monitors',
+                    ],
+                    'bulkBadge' => '',
+                    'featuredBadge' => '2026 New Series',
+                    'badgeVariant' => 'amber',
+                    'featuredBadgeVariant' => 'purple',
+                ],
+                [
+                    'title' => 'Networking & Connectivity',
+                    'slug' => 'networking',
+                    'description' => 'Routers, switches, Wi-Fi extenders, cables, access points and complete office networking solutions',
+                    'image' => '/assets/techmedia/categories/networking.webp',
+                    'variants' => [
+                        'Routers',
+                        'Switches',
+                        'Wi-Fi Extenders',
+                        'Cables & Adapters',
+                    ],
+                    'bulkBadge' => 'Enterprise Bulk',
+                    'featuredBadge' => '',
+                    'badgeVariant' => 'purple',
+                    'featuredBadgeVariant' => null,
+                ],
+                [
+                    'title' => 'CCTV & Surveillance',
+                    'slug' => 'cctv',
+                    'description' => 'HD cameras, NVRs, DVRs, complete security systems with mobile monitoring support',
+                    'image' => '/assets/techmedia/categories/cctv-camera.png',
+                    'variants' => [
+                        'Bullet Cameras',
+                        'Dome Cameras',
+                        'PTZ Cameras',
+                        'NVR Systems',
+                    ],
+                    'bulkBadge' => 'Bulk Offers',
+                    'featuredBadge' => 'Latest 4K Series',
+                    'badgeVariant' => 'rose',
+                    'featuredBadgeVariant' => null,
+                ],
+                [
+                    'title' => 'Peripherals & Accessories',
+                    'slug' => 'peripherals',
+                    'description' => 'Keyboards, mice, headsets, webcams, speakers, UPS, laptop bags & much more',
+                    'image' => '/assets/techmedia/categories/peripherals.webp',
+                    'variants' => [
+                        'Keyboard & Mouse Combo',
+                        'Headsets',
+                        'Webcams',
+                        'UPS & Power Backup',
+                    ],
+                    'bulkBadge' => 'Bulk Accessories',
+                    'featuredBadge' => '',
+                    'badgeVariant' => 'cyan',
+                    'featuredBadgeVariant' => null,
+                ],
+                [
+                    'title' => 'Printers & Scanners',
+                    'slug' => 'printers',
+                    'description' => 'Inkjet, laser, all-in-one, multifunction printers, scanners and cartridges',
+                    'image' => '/assets/techmedia/categories/printer-epson.jpg',
+                    'variants' => [
+                        'Laser Printers',
+                        'Inkjet Printers',
+                        'All-in-One',
+                        'Scanners',
+                    ],
+                    'bulkBadge' => 'Office Deals',
+                    'featuredBadge' => 'New Laser Models',
+                    'badgeVariant' => 'indigo',
+                    'featuredBadgeVariant' => null,
+                ],
+                [
+                    'title' => 'Storage Devices',
+                    'slug' => 'storage',
+                    'description' => 'Internal HDD/SSD, external drives, NAS, memory cards, pen drives & cloud solutions',
+                    'image' => '/assets/techmedia/categories/harddisk.jpg',
+                    'variants' => [
+                        'External HDD',
+                        'Portable SSD',
+                        'Pen Drives',
+                        'Memory Cards',
+                    ],
+                    'bulkBadge' => 'Bulk Pricing',
+                    'featuredBadge' => '',
+                    'badgeVariant' => 'rose',
+                    'featuredBadgeVariant' => null,
+                ],
+            ],
+        ];
+    }
+
 }
