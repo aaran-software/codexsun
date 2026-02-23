@@ -4,6 +4,11 @@ import { Highlighter } from '@/components/ui/highlighter';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { WordRotate } from '@/components/ui/word-rotate';
 import Layout from '@/layouts/app-layout';
+import StorefrontHero2 from '@/pages/Templates/blocks/storefront-hero-2';
+import FaqBlock1 from '@/pages/Templates/blocks/faq';
+import ReviewRating2 from '@/pages/Templates/blocks/review-rating';
+import { CommandMenu02 } from '@/pages/Templates/blocks/command-menu';
+import { NavigationMenu } from '@/components/ui/navigation-menu';
 
 export default function Index() {
     return (
@@ -46,6 +51,17 @@ export default function Index() {
                         Shimmer Button
                     </span>
                 </ShimmerButton>
+            </div>
+
+            <div>
+                <StorefrontHero2 />
+                <FaqBlock1 />
+                <ReviewRating2 />
+                <CommandMenu02 />
+            </div>
+
+            <div className={'justify-left flex gap-1.5 p-5'}>
+                <NavigationMenu content={'sdf'} />
             </div>
         </Layout>
     );
