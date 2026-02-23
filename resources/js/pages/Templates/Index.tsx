@@ -1,9 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import { ExternalLink } from 'lucide-react';
 import { Highlighter } from '@/components/ui/highlighter';
+import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { WordRotate } from '@/components/ui/word-rotate';
 import Layout from '@/layouts/app-layout';
-import { ShimmerButton } from '@/components/ui/shimmer-button';
-import { ExternalLink } from 'lucide-react';
 
 export default function Index() {
     return (
