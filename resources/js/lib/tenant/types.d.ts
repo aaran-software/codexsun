@@ -1,5 +1,31 @@
 // resources/js/types/web.d.ts
 
+import type { InertiaSharedProps } from '@inertiajs/react';
+
+declare module '@inertiajs/react' {
+    interface PageProps extends InertiaSharedProps {
+        auth: {
+            user: {
+                id: number;
+                name: string;
+                email: string;
+                avatar?: string | null; // or avatar_url
+                // role?: string
+                // email_verified_at?: string | null
+                // etc...
+            } | null;
+        };
+        currentTenant?: {
+            id:string
+            name: string;
+            display_name?: string
+            tagline?: string
+            slug?: string
+        };
+        // other shared props...
+    }
+}
+
 export interface MessageData {
     greetings: string;
     date: string;
@@ -138,7 +164,6 @@ export interface CallToActionData {
     buttonHoverBg?: string;
 }
 
-
 export interface LocationTiming {
     day: string;
     hours: string;
@@ -166,7 +191,7 @@ export interface LocationMap {
 }
 
 export interface LocationData {
-    'displayName':string;
+    displayName: string;
     title: string;
     address: string;
     timings: LocationTiming[];
@@ -253,7 +278,6 @@ export interface BlogData {
     featuredPosts: BlogPost[];
 }
 
-
 export interface HomePageProps extends SharedProps {
     message?: MessageData;
     company?: CompanyData;
@@ -269,5 +293,5 @@ export interface HomePageProps extends SharedProps {
     location?: LocationData;
     newsletter?: NewsletterData;
     footer: FooterData;
-    blog:BlogData;
+    blog: BlogData;
 }

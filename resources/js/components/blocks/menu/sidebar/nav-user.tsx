@@ -1,4 +1,8 @@
+// resources/js/components/nav-user.tsx
+
 'use client';
+
+import { usePage } from '@inertiajs/react';
 
 import {
     BadgeCheck,
@@ -26,15 +30,23 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 
-export function NavUser({
-    user,
-}: {
-    user: {
-        name: string;
-        email: string;
-        avatar: string;
+export function NavUser() {
+    const { auth } = usePage().props;
+
+    const user = auth?.user ?? {
+        name: 'Guest',
+        email: '',
+        avatar: '/avatars/guest.png',
     };
-}) {
+
+    const fallbackInitials =
+        user.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) || 'GU';
+
     const { isMobile } = useSidebar();
 
     return (
@@ -52,7 +64,7 @@ export function NavUser({
                                     alt={user.name}
                                 />
                                 <AvatarFallback className="rounded-lg">
-                                    CN
+                                    {fallbackInitials}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -66,8 +78,9 @@ export function NavUser({
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent
-                        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+                        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                         side={isMobile ? 'bottom' : 'right'}
                         align="end"
                         sideOffset={4}
@@ -80,7 +93,7 @@ export function NavUser({
                                         alt={user.name}
                                     />
                                     <AvatarFallback className="rounded-lg">
-                                        CN
+                                        {fallbackInitials}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -93,32 +106,44 @@ export function NavUser({
                                 </div>
                             </div>
                         </DropdownMenuLabel>
+
                         <DropdownMenuSeparator />
+
                         <DropdownMenuGroup>
                             <DropdownMenuItem>
-                                <Sparkles />
-                                Upgrade to Pro
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                <span>Upgrade to Pro</span>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
+
                         <DropdownMenuSeparator />
+
                         <DropdownMenuGroup>
                             <DropdownMenuItem>
-                                <BadgeCheck />
-                                Account
+                                <BadgeCheck className="mr-2 h-4 w-4" />
+                                <span>Account</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                                <CreditCard />
-                                Billing
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                <span>Billing</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                                <Bell />
-                                Notifications
+                                <Bell className="mr-2 h-4 w-4" />
+                                <span>Notifications</span>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
+
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                            <LogOut />
-                            Log out
+
+                        <DropdownMenuItem asChild>
+                            <a
+                                href="/logout"
+                                method="post"
+                                className="flex items-center"
+                            >
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Log out</span>
+                            </a>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

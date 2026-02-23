@@ -65,7 +65,7 @@ class TenantController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Tenants/Upsert', [
-            'users' => User::select('id','name','email')->orderBy('name')->get(),
+            'users' => User::select('id', 'name', 'email')->orderBy('name')->get(),
             'isEdit' => false,
         ]);
     }
@@ -73,27 +73,27 @@ class TenantController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'display_name' => ['nullable', 'string', 'max:255'],
-            'tagline'      => ['nullable', 'string', 'max:255'],
-            'slug'         => ['required', 'string', 'max:255', 'unique:tenants,slug'],
-            'owner_id'     => ['nullable', 'exists:users,id'],
-            'plan_id'      => ['nullable', 'integer', 'exists:plans,id'],
-            'settings'     => ['nullable', 'json'],
-            'is_active'    => ['boolean'],
+            'tagline' => ['nullable', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:tenants,slug'],
+            'owner_id' => ['nullable', 'exists:users,id'],
+            'plan_id' => ['nullable', 'integer', 'exists:plans,id'],
+            'settings' => ['nullable', 'json'],
+            'is_active' => ['boolean'],
             'is_suspended' => ['boolean'],
         ]);
 
         Tenant::create([
-            'uuid'         => Str::uuid(),
-            'name'         => $validated['name'],
+            'uuid' => Str::uuid(),
+            'name' => $validated['name'],
             'display_name' => $validated['display_name'] ?? $validated['name'],
-            'tagline'      => $validated['tagline'] ?? null,
-            'slug'         => $validated['slug'],
-            'owner_id'     => $validated['owner_id'] ?? null,
-            'plan_id'      => $validated['plan_id'] ?? null,
-            'settings'     => $validated['settings'] ?? null,
-            'is_active'    => $validated['is_active'] ?? true,
+            'tagline' => $validated['tagline'] ?? null,
+            'slug' => $validated['slug'],
+            'owner_id' => $validated['owner_id'] ?? null,
+            'plan_id' => $validated['plan_id'] ?? null,
+            'settings' => $validated['settings'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
             'is_suspended' => $validated['is_suspended'] ?? false,
         ]);
 
@@ -103,63 +103,41 @@ class TenantController extends Controller
         ]);
     }
 
-
     public function edit(Tenant $tenant)
     {
         return Inertia::render('Admin/Tenants/Upsert', [
             'tenant' => $tenant->only([
-                'id','name','display_name','tagline','slug','owner_id','is_active','is_suspended'
+                'id', 'name', 'display_name', 'tagline', 'slug', 'owner_id', 'is_active', 'is_suspended',
             ]),
-            'users' => User::select('id','name','email')->orderBy('name')->get(),
+            'users' => User::select('id', 'name', 'email')->orderBy('name')->get(),
             'isEdit' => true,
         ]);
     }
 
-//    public function edit(Tenant $tenant)
-//    {
-//        return Inertia::render('Admin/Tenants/Edit', [
-//            'tenant' => $tenant->only([
-//                'id',
-//                'name',
-//                'display_name',
-//                'tagline',
-//                'slug',
-//                'owner_id',
-//                'plan_id',
-//                'settings',
-//                'is_active',
-//                'is_suspended',
-//            ]),
-//            'users' => User::select('id', 'name', 'email')
-//                ->orderBy('name')
-//                ->get(),
-//        ]);
-//    }
-
     public function update(Request $request, Tenant $tenant)
     {
         $validated = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'display_name' => ['nullable', 'string', 'max:255'],
-            'tagline'      => ['nullable', 'string', 'max:255'],
-            'slug'         => ['required', 'string', 'max:255', 'unique:tenants,slug,' . $tenant->id],
-            'owner_id'     => ['nullable', 'exists:users,id'],
-            'plan_id'      => ['nullable', 'integer', 'exists:plans,id'],
-            'settings'     => ['nullable', 'json'],
-            'is_active'    => ['boolean'],
+            'tagline' => ['nullable', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:tenants,slug,'.$tenant->id],
+            'owner_id' => ['nullable', 'exists:users,id'],
+            'plan_id' => ['nullable', 'integer', 'exists:plans,id'],
+            'settings' => ['nullable', 'json'],
+            'is_active' => ['boolean'],
             'is_suspended' => ['boolean'],
         ]);
 
         $tenant->update([
-            'name'         => $validated['name'],
+            'name' => $validated['name'],
             'display_name' => $validated['display_name'] ?? $tenant->name,
-            'tagline'      => $validated['tagline'] ?? $tenant->tagline,
-            'slug'         => $validated['slug'],
-            'owner_id'     => $validated['owner_id'],
-            'plan_id'      => $validated['plan_id'],
-            'settings'     => $validated['settings'],
-            'is_active'    => $validated['is_active'],
-            'is_suspended' => $validated['is_suspended'],
+            'tagline' => $validated['tagline'] ?? $tenant->tagline,
+            'slug' => $validated['slug'] ?? null,
+            'owner_id' => $validated['owner_id'] ?? null,
+            'plan_id' => $validated['plan_id'] ?? null,
+            'settings' => $validated['settings'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
+            'is_suspended' => $validated['is_suspended'] ?? false,
         ]);
 
         return redirect()->route('admin.tenants.index')->with('success', [
