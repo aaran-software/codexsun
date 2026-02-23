@@ -5,12 +5,14 @@ import WebMenu from '@/components/blocks/menu/web-menu';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 export default function WebLayout({ children }: PropsWithChildren) {
-    const { tenant } = usePage().props as any;
+    const { currentTenant } = usePage().props as any;
 
-    const theme = tenant?.theme ?? {
+    const theme = currentTenant?.theme ?? {
         mode: 'light' as const,
         variables: {},
     };
+
+    // console.log(currentTenant);
 
     return (
         <ThemeProvider theme={theme}>

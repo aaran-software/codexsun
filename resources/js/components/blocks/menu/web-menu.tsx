@@ -16,11 +16,15 @@ export default function WebMenu() {
 
     const {
         auth,
-        tenant,
+        currentTenant,
         menu = [],
     } = usePage<{
         menu: { label: string; href: string }[];
-        tenant: { name: string; short_name: string; displayName?: string };
+        currentTenant: {
+            name: string;
+            short_name: string;
+            display_name?: string;
+        };
     }>().props;
 
     const currentUrl = usePage<never>().url;
@@ -72,7 +76,8 @@ export default function WebMenu() {
                                             : 'text-secondary'
                                     }`}
                                 >
-                                    {tenant.displayName ?? tenant.name}
+                                    {currentTenant.display_name ??
+                                        currentTenant.name}
                                 </span>
                             </div>
                         </Link>

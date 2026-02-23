@@ -29,9 +29,11 @@ class TenantContext
         }
 
         return [
-            'tenant' => [
+            'currentTenant' => [
                 'id' => $tenant->id,
                 'name' => $tenant->name,
+                'display_name' => $tenant->display_name,
+                'tagline' => $tenant->tagline,
                 'slug' => $tenant->slug,
                 'theme' => $this->themeService->resolve($tenant),
             ],
