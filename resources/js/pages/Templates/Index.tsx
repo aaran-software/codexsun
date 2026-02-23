@@ -1,14 +1,24 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Highlighter } from '@/components/ui/highlighter';
-import { RippleButton } from '@/components/ui/ripple-button';
 import { WordRotate } from '@/components/ui/word-rotate';
 import Layout from '@/layouts/app-layout';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
+import { ExternalLink } from 'lucide-react';
 
 export default function Index() {
     return (
         <Layout>
             <Head title="Index" />
+
+            <a
+                href="https://magicui.design/docs/components"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
+            >
+                Magic UI
+                <ExternalLink className="h-4 w-4" />
+            </a>
 
             <div className="p-10">
                 <WordRotate
@@ -31,8 +41,7 @@ export default function Index() {
             </div>
 
             <div className={'justify-left flex gap-1.5 p-5'}>
-
-                <ShimmerButton className="shadow-2xl">
+                <ShimmerButton className="shadow-2xl" shimmerSize={'0.2rem'}>
                     <span className="text-center text-sm leading-none font-medium tracking-tight whitespace-pre-wrap text-white lg:text-lg dark:from-white dark:to-slate-900/10">
                         Shimmer Button
                     </span>
