@@ -3,6 +3,7 @@
 use Aaran\Blog\Controllers\BlogController;
 use Aaran\Shop\Controllers\CustomController;
 use Aaran\Shop\Controllers\ShopController;
+use Aaran\Tenant\Controllers\TemplateController;
 use Aaran\Web\Controllers\AboutController;
 use Aaran\Web\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,10 @@ Route::get('/service', function () {
 Route::get('/web-contact', function () {
     return Inertia::render('Web/web-contacts/index');
 })->name('web-contact');
+
+
+Route::get('/template', [TemplateController::class, 'index'])->name('template');
+
 
 
 Route::get('dashboard', function () {

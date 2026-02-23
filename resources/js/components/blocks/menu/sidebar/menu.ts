@@ -99,8 +99,8 @@ export const data = {
     ],
     projects: [
         {
-            name: 'Design Engineering',
-            url: '#',
+            name: 'Templates',
+            url: '/template',
             icon: Frame,
         },
         {
