@@ -123,7 +123,7 @@ export default function FooterSection({
 
                         <p className="text-sm text-gray-500">
                             © {new Date().getFullYear()}{' '}
-                            {name || 'Tech Media Retail'}. All rights reserved.
+                            {name || 'Codexsun'}. All rights reserved.
                         </p>
                     </div>
                 </div>
