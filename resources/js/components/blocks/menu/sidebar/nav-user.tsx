@@ -2,7 +2,7 @@
 
 'use client';
 
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 import {
     BadgeCheck,
@@ -136,14 +136,14 @@ export function NavUser() {
                         <DropdownMenuSeparator />
 
                         <DropdownMenuItem asChild>
-                            <a
+                            <Link
                                 href="/logout"
                                 method="post"
-                                className="flex items-center"
+                                className="flex items-center gap-2 w-full"
                             >
-                                <LogOut className="mr-2 h-4 w-4" />
+                                <LogOut className="h-4 w-4" />
                                 <span>Log out</span>
-                            </a>
+                            </Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
