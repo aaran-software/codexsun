@@ -6,6 +6,7 @@ use Aaran\Shop\Controllers\ShopController;
 use Aaran\Tenant\Controllers\TemplateController;
 use Aaran\Web\Controllers\AboutController;
 use Aaran\Web\Controllers\HomeController;
+use Aaran\Web\Controllers\WebContactController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -32,9 +33,7 @@ Route::get('/service', function () {
 })->name('service');
 
 
-Route::get('/web-contact', function () {
-    return Inertia::render('Web/web-contacts/index');
-})->name('web-contact');
+Route::get('/web-contact', [WebContactController::class, 'index'])->name('web-contact');
 
 
 Route::get('/template', [TemplateController::class, 'index'])->name('template');

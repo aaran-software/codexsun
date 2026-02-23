@@ -30,7 +30,7 @@ class HomeController extends Controller
         ]);
     }
 
-    private function getCompanyData(): array
+    public function getCompanyData(): array
     {
         // fallback values - override with tenant data when available
         return [
@@ -143,7 +143,7 @@ class HomeController extends Controller
         ];
     }
 
-    private function getHeroData()
+    public function getHeroData(): array
     {
         return [
             'title' => 'Your Trusted Computer Store & Service Partner in Tiruppur',
@@ -503,7 +503,7 @@ class HomeController extends Controller
         ];
     }
 
-    private function callToAction(): ?array
+    public function callToAction(): ?array
     {
         return ['backgroundColor' => '#0f172a',
             'title' => 'Build Your Perfect Computer Setup Today',
@@ -511,14 +511,14 @@ class HomeController extends Controller
                 "bulk hardware orders, workstation configurations, gaming rigs,\n".
                 'CCTV & networking solutions, and exclusive pricing.',
             'buttonText' => 'Get Quote or Visit Us',
-            'buttonHref' => '/web-contacts?source=cta',
+            'buttonHref' => '/web-contact',
             'buttonBg' => 'bg-emerald-600',
             'buttonTextColor' => 'text-white',
             'buttonHoverBg' => 'hover:bg-emerald-700', ];
 
     }
 
-    private function location(): ?array
+    public function location(): ?array
     {
         return [
             'displayName' => 'Techmedia Retail',
@@ -582,7 +582,7 @@ class HomeController extends Controller
         ];
     }
 
-    private function footer(): ?array
+    public function footer(): ?array
     {
         return [
             'sections' => [
