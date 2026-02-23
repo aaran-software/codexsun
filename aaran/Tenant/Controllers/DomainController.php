@@ -15,11 +15,7 @@ class DomainController extends Controller
     {
         $query = Domain::query()
             ->with(['tenant'])
-            ->withTrashed(); // allow soft deleted visibility
-
-        /* ---------------------------------------------------------
-           Search
-        ---------------------------------------------------------- */
+            ->withTrashed();
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -27,17 +23,11 @@ class DomainController extends Controller
             });
         }
 
-        /* ---------------------------------------------------------
-           Status Filter
-        ---------------------------------------------------------- */
-
         if ($request->status) {
             match ($request->status) {
                 'active' => $query->where('is_active', true)
                     ->whereNull('deleted_at'),
-
                 'deleted' => $query->onlyTrashed(),
-
                 default => null
             };
         }
@@ -45,25 +35,16 @@ class DomainController extends Controller
         $perPage = $request->per_page ?? 25;
 
         return Inertia::render('Admin/Domains/Index', [
-            'domains' => $query
-                ->latest()
-                ->paginate($perPage)
-                ->withQueryString(),
-
-            'filters' => $request->only([
-                'search',
-                'status',
-                'per_page',
-            ]),
+            'domains' => $query->latest()->paginate($perPage)->withQueryString(),
+            'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Admin/Domains/Create', [
-            'tenants' => Tenant::select('id', 'name')
-                ->orderBy('name')
-                ->get(),
+        return Inertia::render('Admin/Domains/Upsert', [
+            'tenants' => Tenant::select('id', 'name')->orderBy('name')->get(),
+            'isEdit' => false,
         ]);
     }
 
@@ -77,11 +58,20 @@ class DomainController extends Controller
             'is_active' => ['boolean'],
         ]);
 
+        $isPrimary = $validated['is_primary'] ?? false;
+
+        // If setting as primary → remove primary from any existing domain of this tenant
+        if ($isPrimary) {
+            Domain::where('tenant_id', $validated['tenant_id'])
+                ->where('is_primary', true)
+                ->update(['is_primary' => false]);
+        }
+
         Domain::create([
             'tenant_id' => $validated['tenant_id'],
             'domain' => Str::lower($validated['domain']),
             'force_https' => $validated['force_https'] ?? true,
-            'is_primary' => $validated['is_primary'] ?? false,
+            'is_primary' => $isPrimary,
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -93,18 +83,12 @@ class DomainController extends Controller
 
     public function edit(Domain $domain)
     {
-        return Inertia::render('Admin/Domains/Edit', [
+        return Inertia::render('Admin/Domains/Upsert', [
             'domain' => $domain->only([
-                'id',
-                'tenant_id',
-                'domain',
-                'force_https',
-                'is_primary',
-                'is_active',
+                'id', 'tenant_id', 'domain', 'force_https', 'is_primary', 'is_active',
             ]),
-            'tenants' => Tenant::select('id', 'name')
-                ->orderBy('name')
-                ->get(),
+            'tenants' => Tenant::select('id', 'name')->orderBy('name')->get(),
+            'isEdit' => true,
         ]);
     }
 
@@ -116,18 +100,31 @@ class DomainController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:domains,domain,' . $domain->id,
+                'unique:domains,domain,'.$domain->id,
             ],
             'force_https' => ['boolean'],
             'is_primary' => ['boolean'],
             'is_active' => ['boolean'],
         ]);
 
+        $isPrimary = $validated['is_primary'] ?? false;
+
+        // If we're setting this domain as primary AND it wasn't primary before
+        // (or even if it was — we still want to ensure only one primary)
+        if ($isPrimary) {
+            // Remove primary flag from all other domains of the same tenant
+            Domain::where('tenant_id', $validated['tenant_id'])
+                ->where('id', '!=', $domain->id)           // exclude current domain
+                ->update(['is_primary' => false]);
+        }
+        // Note: If is_primary = false and this was the previous primary,
+        // we allow it (tenant can temporarily have no primary domain)
+
         $domain->update([
             'tenant_id' => $validated['tenant_id'],
             'domain' => Str::lower($validated['domain']),
             'force_https' => $validated['force_https'] ?? true,
-            'is_primary' => $validated['is_primary'] ?? false,
+            'is_primary' => $isPrimary,
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -139,6 +136,9 @@ class DomainController extends Controller
 
     public function destroy(Domain $domain)
     {
+        // Optional: if deleting the primary domain, you could add logic here
+        // e.g. promote another domain to primary — but for now we keep it simple
+
         $domain->delete();
 
         return redirect()->back()->with('success', [
@@ -147,11 +147,9 @@ class DomainController extends Controller
         ]);
     }
 
-    // 🔥 Soft Delete Restore
     public function restore($id)
     {
         $domain = Domain::withTrashed()->findOrFail($id);
-
         $domain->restore();
 
         return redirect()->back()->with('success', [
