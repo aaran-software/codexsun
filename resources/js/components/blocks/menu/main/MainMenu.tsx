@@ -6,13 +6,13 @@ import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import ScrollProgress from '@/components/blocks/animate/ScrollProgress';
+import RichNavigationMenu from '@/components/blocks/menu/main/RichNavMenu';
 import LogoSection from './LogoSection';
-import MainNavigation from './MainNavigation';
 import MobileMenu from './MobileMenu';
 import RightSection from './RightSection';
 
 import type { MenuItem } from './types';
-import RichNavigationMenu from '@/components/blocks/menu/main/SimpleMenuItem';
+import { cn } from '@/lib/utils';
 
 export default function WebMenu() {
     const [scrolled, setScrolled] = useState(false);
@@ -124,11 +124,13 @@ export default function WebMenu() {
                     {/*/!* Mobile Toggle *!/*/}
                     <button
                         onClick={() => setMobileMenu(!mobileMenu)}
-                        className={`cursor-pointer p-1 transition-transform duration-200 md:hidden ${
+                        className={cn(
+                            'cursor-pointer rounded-full p-2 transition-all duration-200 md:hidden',
                             scrolled || darkMode
-                                ? 'text-primary'
-                                : 'text-secondary'
-                        } hover:scale-110`}
+                                ? 'text-foreground hover:bg-accent'
+                                : 'text-white hover:bg-white/20',
+                            'hover:scale-105 active:scale-95',
+                        )}
                     >
                         {mobileMenu ? (
                             <X className="h-6 w-6" />

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { dashboard, login, register } from '@/routes';
 
 import type { MenuItem } from './types';
+import { cn } from '@/lib/utils';
 
 interface MobileMenuProps {
     menu: MenuItem[];
@@ -38,8 +39,13 @@ export default function MobileMenu({
 
     return (
         <div className="animate-in duration-300 fade-in-10 slide-in-from-top-2">
-            <nav className="divide-y divide-primary/10 bg-secondary/95 backdrop-blur-lg">
-                <div className="space-y-1 px-4 py-3">
+            <nav
+                className={cn(
+                    'divide-y divide-border/50 bg-background/95 backdrop-blur-lg',
+                    darkMode ? 'dark' : '',
+                )}
+            >
+                <div className="space-y-1 px-5 py-4">
                     {menu.map((item) => {
                         const hasChildren =
                             item.children && item.children.length > 0;
@@ -50,33 +56,34 @@ export default function MobileMenu({
                                 {hasChildren ? (
                                     <button
                                         onClick={() => toggleMenu(item.label)}
-                                        className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-base font-medium text-primary transition-colors hover:bg-primary/10"
+                                        className="flex w-full items-center justify-between rounded-xl px-5 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                     >
                                         <span>{item.label}</span>
                                         <ChevronDown
-                                            className={`h-5 w-5 transition-transform duration-300 ${
-                                                isOpen ? 'rotate-180' : ''
-                                            }`}
+                                            className={cn(
+                                                'h-5 w-5 transition-transform duration-300',
+                                                isOpen && 'rotate-180',
+                                            )}
                                         />
                                     </button>
                                 ) : (
                                     <Link
                                         href={item.href || '#'}
                                         onClick={onClose}
-                                        className="flex items-center rounded-lg px-4 py-3 text-base font-medium text-primary transition-colors hover:bg-primary/10"
+                                        className="flex items-center rounded-xl px-5 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                     >
                                         {item.label}
                                     </Link>
                                 )}
 
                                 {hasChildren && isOpen && (
-                                    <div className="mt-1 animate-in space-y-1 border-l border-primary/20 pl-6 duration-200 fade-in-5 slide-in-from-top-1">
+                                    <div className="mt-1 animate-in space-y-1 border-l border-border/40 pl-6 duration-200 fade-in-5 slide-in-from-top-1">
                                         {item.children!.map((child) => (
                                             <Link
                                                 key={child.label}
                                                 href={child.href}
                                                 onClick={onClose}
-                                                className="block rounded-lg px-4 py-2.5 text-sm text-primary/90 transition-colors hover:bg-primary/5 hover:text-primary"
+                                                className="block rounded-xl px-5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                             >
                                                 {child.label}
                                             </Link>
@@ -88,13 +95,13 @@ export default function MobileMenu({
                     })}
                 </div>
 
-                <div className="border-t border-primary/10 px-4 py-4">
+                <div className="border-t border-border/50 px-5 py-5">
                     <div className="space-y-2">
                         {auth?.user ? (
                             <Link
                                 href={dashboard()}
                                 onClick={onClose}
-                                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-primary transition-colors hover:bg-primary/10"
+                                className="flex items-center gap-3 rounded-xl px-5 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                             >
                                 <LayoutDashboard className="h-5 w-5" />
                                 Dashboard
@@ -104,7 +111,7 @@ export default function MobileMenu({
                                 <Link
                                     href={login()}
                                     onClick={onClose}
-                                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-primary transition-colors hover:bg-primary/10"
+                                    className="flex items-center gap-3 rounded-xl px-5 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                 >
                                     <LogIn className="h-5 w-5" />
                                     Log in
@@ -113,7 +120,7 @@ export default function MobileMenu({
                                 <Link
                                     href={register()}
                                     onClick={onClose}
-                                    className="block rounded-lg px-4 py-3 text-base font-medium text-primary transition-colors hover:bg-primary/10"
+                                    className="block rounded-xl px-5 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                 >
                                     Register
                                 </Link>
@@ -125,7 +132,7 @@ export default function MobileMenu({
                                 setDarkMode(!darkMode);
                                 onClose();
                             }}
-                            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-primary transition-colors hover:bg-primary/10"
+                            className="flex w-full items-center gap-3 rounded-xl px-5 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                         >
                             {darkMode ? (
                                 <Sun className="h-5 w-5" />

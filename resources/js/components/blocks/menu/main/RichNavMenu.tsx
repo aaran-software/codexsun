@@ -1,3 +1,4 @@
+// resources/js/components/blocks/menu/main/RichNavMenu.tsx
 'use client';
 
 import { Link, usePage } from '@inertiajs/react';
@@ -10,6 +11,11 @@ import {
     NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
+
+interface RichNavMenuProps {
+    scrolled: boolean;
+    darkMode: boolean;
+}
 
 const menuItems = [
     { title: 'About', href: '/about' },
@@ -90,7 +96,7 @@ const quickLinks = [
     { title: 'Help Center', href: '/help' },
 ];
 
-export default function RichNavMenu() {
+export default function RichNavMenu({ scrolled, darkMode }: RichNavMenuProps) {
     const { url } = usePage();
     const currentPath = (url.split('?')[0] || '/').replace(/\/$/, '');
 
@@ -103,6 +109,8 @@ export default function RichNavMenu() {
         );
     };
 
+    const isLight = !darkMode;
+
     return (
         <NavigationMenu className="max-w-none justify-center">
             <NavigationMenuList className="gap-8">
@@ -113,7 +121,10 @@ export default function RichNavMenu() {
                                 <NavigationMenuTrigger
                                     className={cn(
                                         'group relative inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-base font-medium transition-colors select-none',
-                                        'bg-transparent text-foreground hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-foreground',
+                                        scrolled || darkMode
+                                            ? 'text-foreground hover:text-foreground'
+                                            : 'text-white/90 hover:text-white',
+                                        'bg-transparent hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-foreground',
                                         'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-primary after:transition-transform after:duration-250',
                                         'after:origin-right after:scale-x-0 hover:after:origin-left hover:after:scale-x-100 data-[state=open]:after:scale-x-100',
                                         isActive(item.href) &&
@@ -125,7 +136,7 @@ export default function RichNavMenu() {
                                 </NavigationMenuTrigger>
 
                                 <NavigationMenuContent className="overflow-hidden border-0 bg-transparent p-0 shadow-none">
-                                    <div className="w-[920px] rounded-lg border bg-popover p-6 shadow-xl">
+                                    <div className="w-[920px] rounded-lg border bg-white p-6 shadow-xl">
                                         <div className="grid grid-cols-12 gap-8">
                                             <div className="col-span-8">
                                                 <div className="grid grid-cols-3 gap-6">
@@ -140,7 +151,7 @@ export default function RichNavMenu() {
                                                             key={mod.title}
                                                             href={mod.href}
                                                             className={cn(
-                                                                'group relative flex h-64 flex-col overflow-hidden rounded-xl border bg-background shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md',
+                                                                'group relative flex h-64 flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md',
                                                                 isActive(
                                                                     mod.href,
                                                                 ) &&
@@ -165,8 +176,11 @@ export default function RichNavMenu() {
                                                                         'text-base leading-tight font-semibold tracking-tight',
                                                                         isActive(
                                                                             mod.href,
-                                                                        ) &&
-                                                                            'text-primary',
+                                                                        )
+                                                                            ? 'text-primary'
+                                                                            : isLight
+                                                                              ? 'text-foreground'
+                                                                              : 'text-gray-900',
                                                                     )}
                                                                 >
                                                                     {mod.title}
@@ -182,7 +196,7 @@ export default function RichNavMenu() {
                                                 </div>
                                             </div>
 
-                                            <div className="col-span-4 border-l pl-8">
+                                            <div className="col-span-4 border-l border-border pl-8">
                                                 <div className="space-y-5">
                                                     <h6 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                                         Quick Access
@@ -201,7 +215,7 @@ export default function RichNavMenu() {
                                                                             link.href
                                                                         }
                                                                         className={cn(
-                                                                            'block rounded-md px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-transparent hover:text-foreground',
+                                                                            'block rounded-md px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 hover:text-foreground',
                                                                             isActive(
                                                                                 link.href,
                                                                             ) &&
@@ -221,7 +235,7 @@ export default function RichNavMenu() {
                                                         <Link
                                                             href="/modules"
                                                             className={cn(
-                                                                'inline-flex items-center gap-2 rounded-md border bg-background px-5 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-transparent hover:text-foreground',
+                                                                'inline-flex items-center gap-2 rounded-md border bg-white px-5 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50 hover:text-foreground',
                                                                 isActive(
                                                                     '/modules',
                                                                 ) &&
@@ -242,7 +256,9 @@ export default function RichNavMenu() {
                                 <div
                                     className={cn(
                                         'inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-base font-medium transition-colors select-none',
-                                        'bg-transparent text-foreground hover:bg-transparent hover:text-foreground',
+                                        scrolled || darkMode
+                                            ? 'text-foreground hover:text-foreground'
+                                            : 'text-white/90 hover:text-white',
                                         isActive(item.href) && 'text-primary',
                                         'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-primary after:transition-transform after:duration-250',
                                         'after:origin-right after:scale-x-0',
