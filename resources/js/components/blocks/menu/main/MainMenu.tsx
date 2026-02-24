@@ -1,4 +1,3 @@
-// resources/js/components/blocks/menu/web-menu.tsx
 'use client';
 
 import { usePage } from '@inertiajs/react';
@@ -7,68 +6,19 @@ import { useEffect, useState } from 'react';
 
 import ScrollProgress from '@/components/blocks/animate/ScrollProgress';
 import RichNavigationMenu from '@/components/blocks/menu/main/RichNavMenu';
+import { cn } from '@/lib/utils';
 import LogoSection from './LogoSection';
+
 import MobileMenu from './MobileMenu';
 import RightSection from './RightSection';
 
-import type { MenuItem } from './types';
-import { cn } from '@/lib/utils';
 
-export default function WebMenu() {
+export default function MainMenu() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenu, setMobileMenu] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
 
     const { auth, currentTenant } = usePage().props as any;
-
-    // Dummy rich data (replace with real backend later)
-    const menu: MenuItem[] = [
-        {
-            label: 'Products',
-            description: 'Powerful tools for modern businesses',
-            children: [
-                {
-                    label: 'E-Commerce',
-                    href: '/products/ecommerce',
-                    description:
-                        'Complete online store with payments & inventory',
-                    icon: 'ShoppingCart',
-                },
-                {
-                    label: 'Blog Platform',
-                    href: '/products/blog',
-                    description: 'SEO optimized blogging system',
-                    icon: 'Newspaper',
-                },
-                {
-                    label: 'CRM System',
-                    href: '/products/crm',
-                    description: 'Manage leads and customers effortlessly',
-                    icon: 'Users',
-                },
-            ],
-        },
-        {
-            label: 'Solutions',
-            description: 'Tailored for every business size',
-            children: [
-                {
-                    label: 'For Startups',
-                    href: '/solutions/startups',
-                    description: 'Launch fast with minimal cost',
-                    icon: 'Rocket',
-                },
-                {
-                    label: 'For Enterprises',
-                    href: '/solutions/enterprise',
-                    description: 'Enterprise-grade security & scale',
-                    icon: 'Building2',
-                },
-            ],
-        },
-        { label: 'Blog', href: '/blog' },
-        { label: 'Contact', href: '/web-contact' },
-    ];
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -111,7 +61,7 @@ export default function WebMenu() {
                         />
                     </div>
 
-                    {/*Right - Auth + Theme*/}
+                    {/* Right - Auth + Theme */}
                     <div className="hidden md:block">
                         <RightSection
                             auth={auth}
@@ -121,7 +71,7 @@ export default function WebMenu() {
                         />
                     </div>
 
-                    {/*/!* Mobile Toggle *!/*/}
+                    {/* Mobile Toggle */}
                     <button
                         onClick={() => setMobileMenu(!mobileMenu)}
                         className={cn(
@@ -142,10 +92,8 @@ export default function WebMenu() {
             </div>
 
             <div className="block md:hidden">
-                {/* Mobile Menu */}
                 {mobileMenu && (
                     <MobileMenu
-                        menu={menu}
                         auth={auth}
                         darkMode={darkMode}
                         setDarkMode={setDarkMode}

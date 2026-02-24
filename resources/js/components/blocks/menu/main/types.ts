@@ -12,4 +12,5 @@ export interface MenuItemChild {
     href: string;
     description?: string;
     icon?: string;
+    image?:string;
 }

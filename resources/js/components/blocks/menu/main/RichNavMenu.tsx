@@ -1,4 +1,3 @@
-// resources/js/components/blocks/menu/main/RichNavMenu.tsx
 'use client';
 
 import { Link, usePage } from '@inertiajs/react';

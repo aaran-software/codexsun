@@ -1,17 +1,14 @@
-// resources/js/components/blocks/menu/MobileMenu.tsx
 'use client';
 
 import { Link } from '@inertiajs/react';
 import { ChevronDown, LayoutDashboard, LogIn, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 
-import { dashboard, login, register } from '@/routes';
-
-import type { MenuItem } from './types';
 import { cn } from '@/lib/utils';
+import { dashboard, login, register } from '@/routes';
+import { mainMenuItems } from './menu.data';
 
 interface MobileMenuProps {
-    menu: MenuItem[];
     auth: any;
     darkMode: boolean;
     setDarkMode: (value: boolean) => void;
@@ -19,7 +16,6 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({
-    menu,
     auth,
     darkMode,
     setDarkMode,
@@ -46,7 +42,7 @@ export default function MobileMenu({
                 )}
             >
                 <div className="space-y-1 px-5 py-4">
-                    {menu.map((item) => {
+                    {mainMenuItems.map((item) => {
                         const hasChildren =
                             item.children && item.children.length > 0;
                         const isOpen = openMenus.has(item.label);
