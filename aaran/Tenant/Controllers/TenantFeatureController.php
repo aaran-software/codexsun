@@ -4,100 +4,111 @@ namespace Aaran\Tenant\Controllers;
 
 use Aaran\Tenant\Models\Feature;
 use Aaran\Tenant\Models\Tenant;
+use Aaran\Tenant\Models\TenantFeature;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class TenantFeatureController extends Controller
 {
-    public function index(Tenant $tenant)
+    public function index(Request $request): Response
     {
-        $tenant->load([
-            'features' => fn ($q) => $q->withTrashed(),
-        ]);
+        $query = TenantFeature::query()
+            ->with(['tenant', 'feature']);
 
-        $allFeatures = Feature::query()
-            ->select('id', 'key', 'name', 'description', 'is_active')
-            ->orderBy('name')
-            ->get();
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('tenant', function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('feature', function ($sub) use ($search) {
+                        $sub->where('name', 'like', "%{$search}%")
+                            ->orWhere('key', 'like', "%{$search}%");
+                    });
+            });
+        }
 
-        return Inertia::render('Admin/Tenants/Features', [
-            'tenant' => $tenant->only([
-                'id', 'name', 'slug', 'uuid',
-            ]),
-            'tenantFeatures' => $tenant->features->map(fn ($f) => [
-                'id' => $f->id,
-                'key' => $f->key,
-                'name' => $f->name,
-                'pivot' => $f->pivot ? $f->pivot->only([
-                    'is_enabled',
-                    'expires_at',
-                    'limit',
-                    'created_at',
-                    'updated_at',
-                ]) : null,
-                'deleted_at' => $f->deleted_at,
-            ]),
-            'availableFeatures' => $allFeatures->map(fn ($f) => [
-                'id' => $f->id,
-                'key' => $f->key,
-                'name' => $f->name,
-                'description' => $f->description,
-                'is_active' => $f->is_active,
-            ]),
+        // Status filter (now only active/inactive)
+        if ($request->status === 'active') {
+            $query->where('is_enabled', true);
+        } elseif ($request->status === 'inactive') {
+            $query->where('is_enabled', false);
+        }
+
+        $perPage = $request->input('per_page', 25);
+
+        return Inertia::render('Admin/TenantFeatures/Index', [
+            'tenant_features' => $query
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString(),
+
+            'filters' => $request->only(['search', 'status', 'per_page']),
+
+            'tenants' => Tenant::select('id', 'name', 'slug')->get(),
+            'features' => Feature::select('id', 'key', 'name')->get(),
         ]);
     }
 
-    public function store(Request $request, Tenant $tenant)
+    public function store(Request $request)
     {
         $validated = $request->validate([
+            'tenant_id' => ['required', 'exists:tenants,id'],
             'feature_id' => ['required', 'exists:features,id'],
+            'expires_at' => ['nullable', 'date', 'after:today'],
+            'limit' => ['nullable', 'integer', 'min:1'],
             'is_enabled' => ['boolean'],
-            'expires_at' => ['nullable', 'date', 'after:now'],
-            'limit' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $tenant->features()->syncWithoutDetaching([
-            $validated['feature_id'] => [
-                'is_enabled' => $validated['is_enabled'] ?? true,
-                'expires_at' => $validated['expires_at'] ?? null,
-                'limit' => $validated['limit'] ?? null,
-            ],
-        ]);
+        // Prevent duplicate assignment
+        $exists = TenantFeature::where('tenant_id', $validated['tenant_id'])
+            ->where('feature_id', $validated['feature_id'])
+            ->exists();
 
-        return redirect()->back()->with('success', [
-            'title' => 'Feature assigned!',
-            'description' => 'The feature has been added to this tenant.',
-        ]);
-    }
+        if ($exists) {
+            return back()->withErrors([
+                'feature_id' => 'This feature is already assigned to this tenant.',
+            ]);
+        }
 
-    public function update(Request $request, Tenant $tenant, Feature $feature)
-    {
-        $validated = $request->validate([
-            'is_enabled' => ['boolean'],
-            'expires_at' => ['nullable', 'date', 'after_or_equal:now'],
-            'limit' => ['nullable', 'integer', 'min:0'],
-        ]);
-
-        $tenant->features()->updateExistingPivot($feature->id, [
-            'is_enabled' => $validated['is_enabled'] ?? true,
+        TenantFeature::create([
+            'tenant_id' => $validated['tenant_id'],
+            'feature_id' => $validated['feature_id'],
             'expires_at' => $validated['expires_at'] ?? null,
             'limit' => $validated['limit'] ?? null,
+            'is_enabled' => $validated['is_enabled'] ?? true,
         ]);
 
-        return redirect()->back()->with('success', [
-            'title' => 'Feature updated!',
-            'description' => 'Feature settings for this tenant have been saved.',
-        ]);
+        return redirect()->route('admin.tenant-features.index')
+            ->with('success', 'Feature assigned to tenant successfully.');
     }
 
-    public function destroy(Tenant $tenant, Feature $feature)
+    public function update(Request $request, TenantFeature $tenantFeature)
     {
-        $tenant->features()->detach($feature->id);
-
-        return redirect()->back()->with('success', [
-            'title' => 'Feature removed!',
-            'description' => 'The feature is no longer available for this tenant.',
+        $validated = $request->validate([
+            'expires_at' => ['nullable', 'date', 'after:today'],
+            'limit' => ['nullable', 'integer', 'min:1'],
+            'is_enabled' => ['boolean'],
         ]);
+
+        $tenantFeature->update([
+            'expires_at' => $validated['expires_at'] ?? null,
+            'limit' => $validated['limit'] ?? null,
+            'is_enabled' => $validated['is_enabled'] ?? $tenantFeature->is_enabled,
+        ]);
+
+        return redirect()->route('admin.tenant-features.index')
+            ->with('success', 'Tenant feature assignment updated successfully.');
+    }
+
+    public function destroy(TenantFeature $tenantFeature)
+    {
+        $tenantFeature->delete();
+
+        return back()->with('success', 'Tenant feature assignment removed.');
     }
 }

@@ -10,6 +10,7 @@ interface ListLayoutProps {
     description?: string;
     createRoute?: string;
     children: ReactNode;
+    onCreate?: () => void;
 }
 
 export default function ListLayout({

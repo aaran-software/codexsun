@@ -1,8 +1,10 @@
 <?php
 
 use Aaran\Tenant\Controllers\DomainController;
+use Aaran\Tenant\Controllers\FeatureController;
 use Aaran\Tenant\Controllers\StorefrontController;
 use Aaran\Tenant\Controllers\TenantController;
+use Aaran\Tenant\Controllers\TenantFeatureController;
 use Aaran\Tenant\Controllers\ThemeController;
 
 Route::get('/storefront', [StorefrontController::class, 'index'])->name('storefront');
@@ -20,5 +22,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     Route::resource('domains', DomainController::class);
     Route::patch('domains/{id}/restore', [DomainController::class, 'restore'])->name('domains.restore');
+
+
+    Route::resource('features', FeatureController::class);
+    Route::resource('tenant-features', TenantFeatureController::class);
 
 });
