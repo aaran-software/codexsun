@@ -1,6 +1,5 @@
 <?php
 
-// app/Models/Menu.php
 namespace Aaran\Tenant\Models;
 
 use Illuminate\Database\Eloquent\Model;

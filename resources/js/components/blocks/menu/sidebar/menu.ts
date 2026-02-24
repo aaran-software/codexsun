@@ -87,12 +87,20 @@ export const data = {
                     url: '/admin/domains',
                 },
                 {
-                    title: 'Billing',
-                    url: '#',
+                    title: 'Features',
+                    url: '/admin/features',
                 },
                 {
-                    title: 'Limits',
-                    url: '#',
+                    title: 'Tenant Features',
+                    url: '/admin/tenant-features',
+                },
+                {
+                    title: 'Menu Group',
+                    url: '/admin/menu-groups',
+                },
+                {
+                    title: 'Menu',
+                    url: '/admin/menus',
                 },
             ],
         },

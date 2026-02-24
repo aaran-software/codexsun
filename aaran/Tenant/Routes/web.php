@@ -2,6 +2,8 @@
 
 use Aaran\Tenant\Controllers\DomainController;
 use Aaran\Tenant\Controllers\FeatureController;
+use Aaran\Tenant\Controllers\MenuController;
+use Aaran\Tenant\Controllers\MenuGroupController;
 use Aaran\Tenant\Controllers\StorefrontController;
 use Aaran\Tenant\Controllers\TenantController;
 use Aaran\Tenant\Controllers\TenantFeatureController;
@@ -26,5 +28,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     Route::resource('features', FeatureController::class);
     Route::resource('tenant-features', TenantFeatureController::class);
+    Route::resource('menu-groups', MenuGroupController::class);
+    Route::resource('menus', MenuController::class);
 
 });

@@ -55,3 +55,6 @@ npm install @tsparticles/preset-stars @tsparticles/preset-snow @tsparticles/pres
 
 
 npx shadcn@latest add @magicui/marquee
+
+npm install @dnd-kit/react
+npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
