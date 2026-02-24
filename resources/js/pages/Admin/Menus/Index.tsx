@@ -28,7 +28,7 @@ import {
     Search,
     X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { JSX, useEffect, useMemo, useState } from 'react';
 import { useRoute } from 'ziggy-js';
 
 
