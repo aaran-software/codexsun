@@ -5,6 +5,7 @@ use Aaran\Tenant\Controllers\FeatureController;
 use Aaran\Tenant\Controllers\MenuController;
 use Aaran\Tenant\Controllers\MenuGroupController;
 use Aaran\Tenant\Controllers\StorefrontController;
+use Aaran\Tenant\Controllers\SubMenuController;
 use Aaran\Tenant\Controllers\TenantController;
 use Aaran\Tenant\Controllers\TenantFeatureController;
 use Aaran\Tenant\Controllers\ThemeController;
@@ -30,5 +31,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('tenant-features', TenantFeatureController::class);
     Route::resource('menu-groups', MenuGroupController::class);
     Route::resource('menus', MenuController::class);
+    Route::resource('sub-menus', SubMenuController::class);
+    Route::post('menus/reorder', [MenuController::class, 'reorder'])->name('menus.reorder');
+    Route::post('sub-menus/reorder', [SubMenuController::class, 'reorder'])->name('sub-menus.reorder');
 
 });
