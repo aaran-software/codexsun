@@ -102,6 +102,10 @@ export const data = {
                     title: 'Menu',
                     url: '/admin/menus',
                 },
+                {
+                    title: 'Sub Menu',
+                    url: '/admin/sub-menus',
+                },
             ],
         },
     ],
