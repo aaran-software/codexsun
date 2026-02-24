@@ -3,6 +3,7 @@
 namespace Aaran\Tenant\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Menu extends Model
 {
@@ -18,7 +19,7 @@ class Menu extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'position'  => 'integer',
+        'position' => 'integer',
     ];
 
     public function group()
@@ -41,5 +42,14 @@ class Menu extends Model
     public function isTopLevel(): bool
     {
         return is_null($this->parent_id);
+    }
+
+    /**
+     * Get the sub-menus belonging to this menu
+     */
+    public function subMenus(): HasMany
+    {
+        return $this->hasMany(SubMenu::class, 'menu_id')
+            ->orderBy('position');
     }
 }

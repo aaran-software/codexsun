@@ -5,6 +5,8 @@ namespace Aaran\Tenant\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tenant extends Model
@@ -38,5 +40,20 @@ class Tenant extends Model
     public function theme()
     {
         return $this->hasOne(Theme::class);
+    }
+
+    /**
+     * Features enabled for this tenant
+     */
+    public function features(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Feature::class,
+            'tenant_features',     // pivot table
+            'tenant_id',           // foreign key on pivot → Tenant
+            'feature_id'           // foreign key on pivot → Feature
+        )
+            ->withPivot('is_enabled', 'expires_at', 'limit')
+            ->withTimestamps();
     }
 }

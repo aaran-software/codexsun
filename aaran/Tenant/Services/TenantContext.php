@@ -2,6 +2,7 @@
 
 namespace Aaran\Tenant\Services;
 
+use Aaran\Tenant\Models\Menu;
 use Aaran\Tenant\Models\Tenant;
 use Aaran\Tenant\Models\ThemePreset;
 
@@ -45,15 +46,103 @@ class TenantContext
 
     private function getMenuItems(Tenant $tenant): array
     {
-
         $baseMenu = [
-            ['label' => 'Shop', 'href' => '/shop'],
-            ['label' => 'About', 'href' => '/about'],
-            ['label' => 'Custom Build', 'href' => '/custom-pc'],
-            ['label' => 'Blog', 'href' => '/blog'],
-            ['label' => 'Contact', 'href' => '/web-contact'],
+            [
+                'label' => 'Shop',
+                'href' => '/shop',
+                'children' => [],
+                'is_active' => true,
+                'feature_key' => null,
+            ],
+            [
+                'label' => 'About',
+                'href' => '/about',
+                'children' => [],
+                'is_active' => true,
+                'feature_key' => null,
+            ],
+            [
+                'label' => 'Custom Build',
+                'href' => '/custom-pc',
+                'children' => [],
+                'is_active' => true,
+                'feature_key' => null,
+            ],
+            [
+                'label' => 'Blog',
+                'href' => '/blog',
+                'children' => [],
+                'is_active' => true,
+                'feature_key' => 'blog',
+            ],
+            [
+                'label' => 'Contact',
+                'href' => '/web-contact',
+                'children' => [],
+                'is_active' => true,
+                'feature_key' => null,
+            ],
         ];
 
-        return $baseMenu;
+        $mainMenus = Menu::query()
+            ->where('is_active', true)
+            ->with([
+                'subMenus' => fn ($q) => $q->where('is_active', true)->orderBy('position'),
+            ])
+            ->orderBy('position')
+            ->get();
+
+        $dynamicMenu = $mainMenus->map(function ($menu) {
+            $children = $menu->subMenus->map(fn ($sub) => [
+                'label' => $sub->title,
+                'href' => $sub->url ?? '#',
+                'feature_key' => $sub->feature_key,
+                'is_active' => $sub->is_active,
+            ])->toArray();
+
+            return [
+                'label' => $menu->title,
+                'href' => $menu->url ?? '#',
+                'children' => $children,
+                'is_active' => $menu->is_active,
+                'feature_key' => $menu->feature_key,
+            ];
+        })->toArray();
+
+        $finalMenu = ! empty($dynamicMenu) ? $dynamicMenu : $baseMenu;
+
+        $enabledFeatures = $tenant
+            ? $tenant->features()
+                ->wherePivot('is_enabled', true)
+                ->pluck('key')
+                ->toArray()
+            : [];
+
+        $result = [];
+
+        foreach ($finalMenu as $item) {
+            $topVisible = empty($item['feature_key']) || in_array($item['feature_key'], $enabledFeatures);
+
+            if (! $topVisible) {
+                continue;
+            }
+
+            $filteredChildren = [];
+
+            if (! empty($item['children'])) {
+                foreach ($item['children'] as $child) {
+                    if (empty($child['feature_key']) || in_array($child['feature_key'], $enabledFeatures)) {
+                        $filteredChildren[] = $child;
+                    }
+                }
+            }
+
+            $result[] = [
+                ...$item,
+                'children' => $filteredChildren,
+            ];
+        }
+
+        return $result;
     }
 }
