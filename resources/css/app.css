@@ -193,3 +193,23 @@
     transform: translateZ(0) rotate(360deg);
         }
     }}
+
+@layer base {
+    [data-radix-popper-content-wrapper] {
+        z-index: 50 !important;
+    }
+
+    /* Prevent any unexpected height change on list when viewport/content appears */
+    .navigation-menu-viewport {
+        position: absolute !important;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.15s ease;
+    }
+
+    /* If you still see shift - force list to fixed height behavior */
+    nav [role="navigation"] > ul {
+        min-height: 3.5rem; /* adjust to your trigger height */
+    }
+}

@@ -109,18 +109,28 @@ class TenantContext
             ];
         })->toArray();
 
-        $finalMenu = ! empty($dynamicMenu) ? $dynamicMenu : $baseMenu;
+        // Use dynamic if exists, otherwise base
+        $menuItems = ! empty($dynamicMenu) ? $dynamicMenu : $baseMenu;
 
-        $enabledFeatures = $tenant
-            ? $tenant->features()
-                ->wherePivot('is_enabled', true)
-                ->pluck('key')
-                ->toArray()
-            : [];
+        // Get enabled feature keys (safe handling)
+        $enabledFeatures = [];
+        if ($tenant) {
+            try {
+                $enabledFeatures = $tenant->features()
+                    ->wherePivot('is_enabled', true)
+                    ->pluck('key')
+                    ->toArray() ?? [];
+            } catch (\Exception $e) {
+                // Log error in production - for now return empty
+                \Log::warning('Failed to load tenant features: '.$e->getMessage());
+            }
+        }
 
+        // Build final result - base items always pass if no feature_key
         $result = [];
 
-        foreach ($finalMenu as $item) {
+        foreach ($menuItems as $item) {
+            // Always show if no feature required
             $topVisible = empty($item['feature_key']) || in_array($item['feature_key'], $enabledFeatures);
 
             if (! $topVisible) {
@@ -142,6 +152,15 @@ class TenantContext
                 'children' => $filteredChildren,
             ];
         }
+
+        // Fallback: if result is completely empty → force return base menu
+        if (empty($result)) {
+            return $baseMenu;
+        }
+
+        \Log::info('Enabled features count: '.count($enabledFeatures));
+        \Log::info('Menu items before filter: '.count($menuItems));
+        \Log::info('Menu items after filter: '.count($result));
 
         return $result;
     }
