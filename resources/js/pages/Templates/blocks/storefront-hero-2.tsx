@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
 import { Search, ArrowRight, Star, TrendingUp, ShoppingBag, Flame } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel'
+import { Input } from '@/components/ui/input'
 
 interface Product {
     id: number

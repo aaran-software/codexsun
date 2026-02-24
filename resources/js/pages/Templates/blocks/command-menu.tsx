@@ -23,13 +23,6 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
     Command,
     CommandEmpty,
     CommandGroup,
@@ -37,6 +30,13 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 export function CommandMenu02() {

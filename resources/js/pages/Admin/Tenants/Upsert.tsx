@@ -2,6 +2,7 @@
 'use client';
 
 import { Head, useForm, usePage } from '@inertiajs/react';
+import React from 'react';
 import { useRoute } from 'ziggy-js';
 
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import React from 'react';
 
 interface User {
     id: number;

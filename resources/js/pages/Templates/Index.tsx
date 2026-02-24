@@ -1,14 +1,14 @@
 import { Head } from '@inertiajs/react';
 import { ExternalLink } from 'lucide-react';
 import { Highlighter } from '@/components/ui/highlighter';
+import { NavigationMenu } from '@/components/ui/navigation-menu';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { WordRotate } from '@/components/ui/word-rotate';
 import Layout from '@/layouts/app-layout';
-import StorefrontHero2 from '@/pages/Templates/blocks/storefront-hero-2';
+import { CommandMenu02 } from '@/pages/Templates/blocks/command-menu';
 import FaqBlock1 from '@/pages/Templates/blocks/faq';
 import ReviewRating2 from '@/pages/Templates/blocks/review-rating';
-import { CommandMenu02 } from '@/pages/Templates/blocks/command-menu';
-import { NavigationMenu } from '@/components/ui/navigation-menu';
+import StorefrontHero2 from '@/pages/Templates/blocks/storefront-hero-2';
 
 export default function Index() {
     return (
