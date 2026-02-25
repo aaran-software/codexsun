@@ -12,8 +12,7 @@ class DespatcheSeeder extends Seeder
         Despatch::create([
             'name' => '-',
             'vdate' => '-',
-            'active_id' => '1'
+            'active_id' => '1',
         ]);
     }
 }
-

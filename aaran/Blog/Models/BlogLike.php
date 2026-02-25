@@ -13,7 +13,9 @@ class BlogLike extends Model
     protected $table = 'blog_likes';
 
     public $incrementing = false;   // composite key
+
     protected $primaryKey = null;   // 👈 VERY IMPORTANT
+
     protected $keyType = 'int';
 
     protected $fillable = [

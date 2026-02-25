@@ -14,5 +14,4 @@ class ShopRouteProvider extends RouteServiceProvider
                 ->group(__DIR__.'/../Routes/web.php');
         });
     }
-
 }

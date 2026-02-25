@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class GstPercent extends Model
 {
-
     protected $table = 'gst_percents';
 
     protected $guarded = [];

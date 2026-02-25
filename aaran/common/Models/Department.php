@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Department extends Model
 {
-
     protected $table = 'departments';
 
     protected $guarded = [];
@@ -23,5 +22,4 @@ class Department extends Model
     {
         return $query->where('name', 'like', "%$search%");
     }
-
 }

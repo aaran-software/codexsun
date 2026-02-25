@@ -42,9 +42,8 @@ class SizeSeeder extends Seeder
             Size::create([
                 'name' => $name,
                 'description' => $description,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }
-
 }

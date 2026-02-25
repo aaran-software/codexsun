@@ -11,13 +11,12 @@ class DepartmentSeeder extends Seeder
     {
         Department::create([
             'name' => '-',
-            'active_id' => '1'
+            'active_id' => '1',
         ]);
 
         Department::create([
             'name' => 'cs',
-            'active_id' => '1'
+            'active_id' => '1',
         ]);
     }
 }
-

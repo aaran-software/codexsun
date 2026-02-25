@@ -47,14 +47,14 @@ class StateSeeder extends Seeder
             ['Jammu and Kashmir', '01'],
             ['Ladakh', '38'],
             ['Lakshadweep', '31'],
-            ['Puducherry', '34']
+            ['Puducherry', '34'],
         ];
 
         foreach ($states as [$name, $state_code]) {
             State::create([
                 'name' => $name,
                 'state_code' => $state_code,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
 

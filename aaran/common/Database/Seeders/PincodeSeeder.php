@@ -32,7 +32,7 @@ class PincodeSeeder extends Seeder
         foreach ($pincodes as $pincode) {
             Pincode::create([
                 'name' => $pincode,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }

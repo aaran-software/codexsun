@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Colour extends Model
 {
-
     protected $table = 'colours';
 
     protected $guarded = [];
@@ -23,5 +22,4 @@ class Colour extends Model
     {
         return $query->where('name', 'like', "%$search%");
     }
-
 }

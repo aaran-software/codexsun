@@ -43,7 +43,7 @@ class HsncodeSeeder extends Seeder
             Hsncode::create([
                 'name' => $code,
                 'description' => $description,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }

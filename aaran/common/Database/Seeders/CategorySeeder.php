@@ -11,8 +11,7 @@ class CategorySeeder extends Seeder
     {
         Category::create([
             'name' => '-',
-            'active_id' => '1'
+            'active_id' => '1',
         ]);
     }
 }
-

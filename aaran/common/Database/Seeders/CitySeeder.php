@@ -15,13 +15,13 @@ class CitySeeder extends Seeder
             'Udhagamandalam', 'Hosur', 'Nagercoil', 'Kancheepuram', 'Kumbakonam', 'Rajapalayam',
             'Pudukkottai', 'Ariyalur', 'Nagapattinam', 'Perambalur', 'Tiruvarur', 'Karaikudi',
             'Ambur', 'Tenkasi', 'Kallakurichi', 'Namakkal', 'Tiruvannamalai', 'Krishnagiri',
-            'Thiruvallur', 'Cuddalore', 'Pollachi', 'Avadi', 'Ambattur', 'Pallavaram', 'Tambaram'
+            'Thiruvallur', 'Cuddalore', 'Pollachi', 'Avadi', 'Ambattur', 'Pallavaram', 'Tambaram',
         ];
 
         foreach ($cities as $city) {
             City::create([
                 'name' => $city,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }

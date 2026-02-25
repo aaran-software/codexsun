@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class TransactionType extends Model
 {
-
     protected $table = 'transaction_types'; // Ensure this is correct
 
     protected $guarded = [];

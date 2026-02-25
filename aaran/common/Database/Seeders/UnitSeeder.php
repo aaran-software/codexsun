@@ -51,9 +51,8 @@ class UnitSeeder extends Seeder
             Unit::create([
                 'name' => $name,
                 'description' => $description,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }
-
 }

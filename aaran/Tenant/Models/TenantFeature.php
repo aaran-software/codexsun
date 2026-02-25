@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenantFeature extends Model
 {
-//    use SoftDeletes;
+    //    use SoftDeletes;
 
     protected $table = 'tenant_features';
 

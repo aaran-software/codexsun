@@ -17,7 +17,7 @@ class Theme extends Model
 
     protected $casts = [
         'custom_variables' => 'array',
-        'mode'             => 'string',
+        'mode' => 'string',
     ];
 
     public function preset(): BelongsTo

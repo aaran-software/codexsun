@@ -6,8 +6,8 @@ use Aaran\Blog\Models\BlogCategory;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
@@ -16,15 +16,15 @@ class CategoryController extends Controller
         // Optional: Add policy authorization like ServiceInward
         // $this->authorize('viewAny', BlogCategory::class);
 
-        $perPage = (int)$request->input('per_page', 50);
+        $perPage = (int) $request->input('per_page', 50);
         $perPage = in_array($perPage, [25, 50, 100]) ? $perPage : 50;
 
         $query = BlogCategory::query();
 
         // Search filter
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('slug', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('slug', 'like', '%'.$request->search.'%');
         }
 
         // Active status filter
@@ -80,7 +80,7 @@ class CategoryController extends Controller
         // $this->authorize('update', $category);
 
         return Inertia::render('Blog/Categories/Edit', [
-            'category' => $category
+            'category' => $category,
         ]);
     }
 
@@ -89,7 +89,7 @@ class CategoryController extends Controller
         // $this->authorize('update', $category);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:blog_categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:blog_categories,name,'.$category->id,
             'active_id' => 'required|integer|in:0,1',
         ]);
 

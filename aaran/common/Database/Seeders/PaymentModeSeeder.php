@@ -11,12 +11,12 @@ class PaymentModeSeeder extends Seeder
     {
         PaymentMode::create([
             'name' => 'Payment',
-            'active_id' => '1'
+            'active_id' => '1',
         ]);
 
         PaymentMode::create([
             'name' => 'Receipt',
-            'active_id' => '1'
+            'active_id' => '1',
         ]);
 
     }

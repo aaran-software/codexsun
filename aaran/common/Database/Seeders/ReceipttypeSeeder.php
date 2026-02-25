@@ -25,13 +25,13 @@ class ReceipttypeSeeder extends Seeder
             'Credit Card',
             'Debit Card',
             'Net Banking',
-            'Wallet Payment'
+            'Wallet Payment',
         ];
 
         foreach ($receiptTypes as $type) {
             ReceiptType::create([
                 'name' => $type,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }

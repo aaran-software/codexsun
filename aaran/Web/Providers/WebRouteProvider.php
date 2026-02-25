@@ -14,5 +14,4 @@ class WebRouteProvider extends RouteServiceProvider
                 ->group(__DIR__.'/../Routes/web.php');
         });
     }
-
 }

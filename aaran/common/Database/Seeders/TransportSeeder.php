@@ -7,7 +7,6 @@ use Illuminate\Database\Seeder;
 
 class TransportSeeder extends Seeder
 {
-
     public static function run(): void
     {
 

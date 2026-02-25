@@ -36,7 +36,6 @@ class CommonServiceProvider extends ServiceProvider
         Livewire::component('common::contact-type-list', Class\ContactTypeList::class);
         Livewire::component('common::account-type-list', Class\AccountTypeList::class);
 
-
         Livewire::component('common::lookup.city', Class\Lookup\CityLookup::class);
         Livewire::component('common::lookup.state', Class\Lookup\StateLookup::class);
         Livewire::component('common::lookup.pincode', Class\Lookup\PinCodeLookup::class);
@@ -52,6 +51,6 @@ class CommonServiceProvider extends ServiceProvider
 
     protected function loadViews(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../Livewire/Views', 'common');
+        $this->loadViewsFrom(__DIR__.'/../Livewire/Views', 'common');
     }
 }

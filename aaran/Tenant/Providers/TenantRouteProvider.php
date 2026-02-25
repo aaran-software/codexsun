@@ -14,5 +14,4 @@ class TenantRouteProvider extends RouteServiceProvider
                 ->group(__DIR__.'/../Routes/web.php');
         });
     }
-
 }

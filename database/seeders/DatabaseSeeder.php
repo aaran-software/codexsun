@@ -5,8 +5,6 @@ namespace Database\Seeders;
 use Aaran\Blog\Database\Seeders\BlogCategorySeeder;
 use Aaran\Blog\Database\Seeders\BlogDemoSeeder;
 use Aaran\Blog\Database\Seeders\BlogTagSeeder;
-use Aaran\Blog\Models\BlogCategory;
-use Aaran\Blog\Models\BlogPost;
 use Aaran\Shop\Database\Seeders\ShopSeeder;
 use Aaran\Tenant\Database\Seeders\TenantSeeder;
 use Aaran\Tenant\Database\Seeders\ThemePresetSeeder;
@@ -32,7 +30,6 @@ class DatabaseSeeder extends Seeder
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ]);
-
 
         $this->call([
             TenantSeeder::class,

@@ -8,10 +8,9 @@ use Aaran\Blog\Models\BlogTag;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class PostController extends Controller
@@ -23,7 +22,7 @@ class PostController extends Controller
 
         // 🔍 Search
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%');
         }
 
         // ✅ Active / Inactive (Published / Draft)
@@ -45,8 +44,6 @@ class PostController extends Controller
             'trashedCount' => BlogPost::onlyTrashed()->count(),
         ]);
     }
-
-
 
     public function create(): Response
     {
@@ -72,7 +69,6 @@ class PostController extends Controller
 
         return $slug;
     }
-
 
     public function store(Request $request): RedirectResponse
     {
@@ -127,7 +123,7 @@ class PostController extends Controller
         }
 
         // 🔖 Attach tags
-        if (!empty($data['tags'])) {
+        if (! empty($data['tags'])) {
             $post->tags()->sync($data['tags']);
         }
 
@@ -135,7 +131,6 @@ class PostController extends Controller
             ->route('blog.posts.index')
             ->with('success', 'Blog post created successfully.');
     }
-
 
     public function edit(BlogPost $post): Response
     {
@@ -193,7 +188,7 @@ class PostController extends Controller
                 $path = $image->store('blog/images', 'public');
 
                 // ⭐ If no featured image, set first uploaded
-                if (!$post->featured_image) {
+                if (! $post->featured_image) {
                     $post->update(['featured_image' => $path]);
                 }
 
@@ -212,15 +207,12 @@ class PostController extends Controller
             ->with('success', 'Blog post updated successfully.');
     }
 
-
-
     public function destroy(BlogPost $post): RedirectResponse
     {
         $post->delete();
 
         return redirect()->route('blog.posts.index')->with('success', 'Blog post deleted successfully.');
     }
-
 
     public function articles(Request $request): Response
     {
@@ -229,7 +221,7 @@ class PostController extends Controller
 
         // 🔍 Search
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%');
         }
 
         // ✅ Active / Inactive (Published / Draft)
@@ -284,5 +276,4 @@ class PostController extends Controller
             'recentPosts' => $recentPosts,
         ]);
     }
-
 }

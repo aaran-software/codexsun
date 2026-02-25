@@ -14,7 +14,6 @@ class Customise
         };
     }
 
-
     public static function hasCommon(): bool
     {
         return static::enabled(static::common());
@@ -24,7 +23,6 @@ class Customise
     {
         return 'common';
     }
-
 
     public static function hasTemp(): bool
     {
@@ -36,7 +34,6 @@ class Customise
         return 'temp';
     }
 
-
     public static function hasMAster(): bool
     {
         return static::enabled(static::master());
@@ -46,7 +43,6 @@ class Customise
     {
         return 'company';
     }
-
 
     public static function hasEntries(): bool
     {
@@ -58,7 +54,6 @@ class Customise
         return 'entries';
     }
 
-
     public static function hasBlog(): bool
     {
         return static::enabled(static::blog());
@@ -69,7 +64,6 @@ class Customise
         return 'blog';
     }
 
-
     public static function hasTaskManager(): bool
     {
         return static::enabled(static::taskManager());
@@ -79,7 +73,6 @@ class Customise
     {
         return 'taskManager';
     }
-
 
     public static function hasCore(): bool
     {
@@ -170,5 +163,4 @@ class Customise
     {
         return 'sales';
     }
-
 }

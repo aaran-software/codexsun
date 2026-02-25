@@ -1,5 +1,1 @@
 <?php
-
-use Inertia\Inertia;
-
-

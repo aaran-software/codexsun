@@ -6,8 +6,8 @@ use Aaran\Blog\Models\BlogTag;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class TagController extends Controller
@@ -26,7 +26,6 @@ class TagController extends Controller
             'filters' => request()->only(['search', 'active_filter', 'per_page']),
         ]);
     }
-
 
     public function create(): Response
     {
@@ -51,17 +50,16 @@ class TagController extends Controller
     public function edit(BlogTag $tag): Response
     {
         return Inertia::render('Blog/Tags/Edit', [
-            'tag' => $tag
+            'tag' => $tag,
         ]);
     }
 
     public function update(Request $request, BlogTag $tag): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:blog_tags,name,' . $tag->id,
+            'name' => 'required|string|max:255|unique:blog_tags,name,'.$tag->id,
             'active_id' => 'required|integer|in:0,1',
         ]);
-
 
         $tag->update([
             'name' => $request->name,

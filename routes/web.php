@@ -26,19 +26,13 @@ Route::prefix('blog')->name('blog.')->group(function () {
     Route::get('/{blog}', [BlogController::class, 'show'])->name('show');
 });
 
-
-
 Route::get('/service', function () {
     return Inertia::render('Web/services/index');
 })->name('service');
 
-
 Route::get('/web-contact', [WebContactController::class, 'index'])->name('web-contact');
 
-
 Route::get('/template', [TemplateController::class, 'index'])->name('template');
-
-
 
 Route::get('dashboard', function () {
     return Inertia::render('dashboard');

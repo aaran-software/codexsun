@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 
 class PostImageController extends Controller
 {
@@ -25,8 +24,8 @@ class PostImageController extends Controller
             BlogPostImage::create([
                 'blog_post_id' => $post->id,
                 'image_path' => $path,
-                'alt_text' => $request->input('alt_texts.' . $index),
-                'caption' => $request->input('captions.' . $index),
+                'alt_text' => $request->input('alt_texts.'.$index),
+                'caption' => $request->input('captions.'.$index),
                 'sort_order' => $index,
             ]);
         }

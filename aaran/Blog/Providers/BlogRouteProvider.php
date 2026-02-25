@@ -14,5 +14,4 @@ class BlogRouteProvider extends RouteServiceProvider
                 ->group(__DIR__.'/../Routes/web.php');
         });
     }
-
 }

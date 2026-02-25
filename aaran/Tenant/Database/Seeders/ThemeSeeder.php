@@ -2,10 +2,10 @@
 
 namespace Aaran\Tenant\Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use Aaran\Tenant\Models\Tenant;
 use Aaran\Tenant\Models\Theme;
 use Aaran\Tenant\Models\ThemePreset;
+use Illuminate\Database\Seeder;
 
 class ThemeSeeder extends Seeder
 {
@@ -19,6 +19,7 @@ class ThemeSeeder extends Seeder
 
         if (! $defaultPreset) {
             $this->command->error('No theme presets found. Run ThemePresetSeeder first.');
+
             return;
         }
 

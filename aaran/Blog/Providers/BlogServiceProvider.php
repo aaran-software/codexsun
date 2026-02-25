@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 class BlogServiceProvider extends ServiceProvider
 {
     protected string $moduleName = 'Blog';
+
     protected string $moduleNameLower = 'blog';
 
     public function register(): void
@@ -22,7 +23,6 @@ class BlogServiceProvider extends ServiceProvider
 
     private function registerMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
     }
-
 }

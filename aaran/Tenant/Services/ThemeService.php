@@ -12,16 +12,16 @@ class ThemeService
 
         $preset = $tenant->theme?->preset;
 
-        $presetVariables  = $preset?->variables ?? [];
-        $customVariables  = $tenant->theme?->custom_variables ?? [];
+        $presetVariables = $preset?->variables ?? [];
+        $customVariables = $tenant->theme?->custom_variables ?? [];
 
         $merged = array_merge($presetVariables, $customVariables);
 
         return [
-            'mode'        => $tenant->theme?->mode ?? 'light',
-            'preset_id'   => $preset?->id,
+            'mode' => $tenant->theme?->mode ?? 'light',
+            'preset_id' => $preset?->id,
             'preset_name' => $preset?->name,
-            'variables'   => $merged,
+            'variables' => $merged,
         ];
     }
 }

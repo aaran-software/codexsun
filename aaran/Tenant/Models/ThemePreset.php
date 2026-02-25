@@ -14,7 +14,7 @@ class ThemePreset extends Model
     ];
 
     protected $casts = [
-        'variables'   => 'array',
-        'is_premium'  => 'boolean',
+        'variables' => 'array',
+        'is_premium' => 'boolean',
     ];
 }

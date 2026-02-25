@@ -19,12 +19,11 @@ class CommonRouteProvider extends RouteServiceProvider
         $this->routes(function () {
 
             Route::middleware('web')
-                ->group(__DIR__ . '/../Routes/web.php');
+                ->group(__DIR__.'/../Routes/web.php');
 
             Route::middleware('api')
                 ->prefix('api')
-                ->group(__DIR__ . '/../Routes/api.php');
+                ->group(__DIR__.'/../Routes/api.php');
         });
     }
-
 }

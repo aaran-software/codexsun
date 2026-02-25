@@ -10,8 +10,8 @@ class TransactionTypeSeeder extends Seeder
     public static function run(): void
     {
         TransactionType::create([
-           'name' => 'CASH',
-           'active_id' => 1,
+            'name' => 'CASH',
+            'active_id' => 1,
         ]);
 
         TransactionType::create([

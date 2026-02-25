@@ -63,7 +63,7 @@ class BankSeeder extends Seeder
         foreach ($banks as $bank) {
             Bank::create([
                 'name' => $bank,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }

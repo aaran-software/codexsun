@@ -35,7 +35,7 @@ class CountrySeeder extends Seeder
             ['Sweden', 'SE', 'kr'],
             ['Netherlands', 'NL', '€'],
             ['Switzerland', 'CH', 'CHF'],
-            ['Singapore', 'SG', 'S$']
+            ['Singapore', 'SG', 'S$'],
         ];
 
         foreach ($countries as [$name, $code, $currency]) {
@@ -43,7 +43,7 @@ class CountrySeeder extends Seeder
                 'name' => $name,
                 'country_code' => $code,
                 'currency_symbol' => $currency,
-                'active_id' => '1'
+                'active_id' => '1',
             ]);
         }
     }

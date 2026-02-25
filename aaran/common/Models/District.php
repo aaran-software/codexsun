@@ -22,5 +22,4 @@ class District extends Model
     {
         return $query->where('name', 'like', "%$search%");
     }
-
 }

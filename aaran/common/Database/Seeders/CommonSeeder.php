@@ -2,7 +2,6 @@
 
 namespace Aaran\Common\Database\Seeders;
 
-use Aaran\Common\Database\Seeders\AccountTypeSeeder;
 use Illuminate\Database\Seeder;
 
 class CommonSeeder extends Seeder
