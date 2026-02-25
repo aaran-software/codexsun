@@ -3,7 +3,7 @@
 
 import { Head, router, usePage } from '@inertiajs/react';
 import { MoreHorizontal, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRoute } from 'ziggy-js';
 
 import CrudTable from '@/components/table/CrudTable';
