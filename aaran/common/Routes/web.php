@@ -46,13 +46,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('/payment-modes', PaymentModeController::class);
     Route::resource('/transaction-type', TransactionTypeController::class);
 
-    Route::put('cities/bulk-activate', [CityController::class, 'bulkActivate'])->name('cities.bulk-activate');
-    Route::put('cities/bulk-deactivate', [CityController::class, 'bulkDeactivate'])->name('cities.bulk-deactivate');
-    Route::delete('cities/bulk-destroy', [CityController::class, 'bulkDestroy'])->name('cities.bulk-destroy');
+    // Bulk actions - using POST + _method spoofing (most reliable with Inertia)
+    Route::post('/cities/bulk-activate',   [CityController::class, 'bulkActivate'])->name('cities.bulk-activate');
+    Route::post('/cities/bulk-deactivate', [CityController::class, 'bulkDeactivate'])->name('cities.bulk-deactivate');
+    Route::post('/cities/bulk-destroy',    [CityController::class, 'bulkDestroy'])->name('cities.bulk-destroy');
 
-    Route::put('districts/bulk-activate', [DistrictController::class, 'bulkActivate'])->name('districts.bulk-activate');
-    Route::put('districts/bulk-deactivate', [DistrictController::class, 'bulkDeactivate'])->name('districts.bulk-deactivate');
-    Route::delete('districts/bulk-destroy', [DistrictController::class, 'bulkDestroy'])->name('districts.bulk-destroy');
+    Route::post('/districts/bulk-activate',   [DistrictController::class, 'bulkActivate'])->name('districts.bulk-activate');
+    Route::post('/districts/bulk-deactivate', [DistrictController::class, 'bulkDeactivate'])->name('districts.bulk-deactivate');
+    Route::post('/districts/bulk-destroy',    [DistrictController::class, 'bulkDestroy'])->name('districts.bulk-destroy');
 
 
 });

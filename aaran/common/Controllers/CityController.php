@@ -113,24 +113,47 @@ class CityController extends Controller
 
     // In CityController / DistrictController
 
+// CityController.php → update bulk methods to safely read ids (works with both JSON & form data)
+
     public function bulkActivate(Request $request): RedirectResponse
     {
-        $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:cities,id']); // adjust table name
-        City::whereIn('id', $request->ids)->update(['active_id' => 1]);
-        return back()->with('success', 'Selected items activated.');
+        $ids = $request->input('ids', $request->json('ids', []));
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cities,id',
+        ]);
+
+        City::whereIn('id', $ids)->update(['active_id' => 1]);
+
+        return back()->with('success', 'Selected cities activated.');
     }
 
     public function bulkDeactivate(Request $request): RedirectResponse
     {
-        $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:cities,id']);
-        City::whereIn('id', $request->ids)->update(['active_id' => 0]);
-        return back()->with('success', 'Selected items deactivated.');
+        $ids = $request->input('ids', $request->json('ids', []));
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cities,id',
+        ]);
+
+        City::whereIn('id', $ids)->update(['active_id' => 0]);
+
+        return back()->with('success', 'Selected cities deactivated.');
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
     {
-        $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:cities,id']);
-        City::whereIn('id', $request->ids)->delete();
-        return back()->with('success', 'Selected items deleted.');
+        $ids = $request->input('ids', $request->json('ids', []));
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cities,id',
+        ]);
+
+        City::whereIn('id', $ids)->delete();
+
+        return back()->with('success', 'Selected cities deleted.');
     }
 }
