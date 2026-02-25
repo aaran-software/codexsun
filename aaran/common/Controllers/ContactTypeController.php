@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class ContactTypeController {}
+class ContactTypeController
+{
+    public function index() {}
+}

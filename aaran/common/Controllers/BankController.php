@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class BankController {}
+class BankController
+{
+    public function index() {}
+}

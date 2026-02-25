@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class CountryController {}
+class CountryController
+{
+    public function index() {}
+}

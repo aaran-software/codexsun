@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class ReceiptTypeController {}
+class ReceiptTypeController
+{
+    public function index() {}
+}

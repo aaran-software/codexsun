@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class UnitController {}
+class UnitController
+{
+    public function index() {}
+}

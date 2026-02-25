@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class TransactionTypeController {}
+class TransactionTypeController
+{
+    public function index() {}
+}

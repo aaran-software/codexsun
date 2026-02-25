@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class TransportController {}
+class TransportController
+{
+    public function index() {}
+}

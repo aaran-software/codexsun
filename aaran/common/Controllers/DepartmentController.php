@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class DepartmentController {}
+class DepartmentController
+{
+    public function index() {}
+}

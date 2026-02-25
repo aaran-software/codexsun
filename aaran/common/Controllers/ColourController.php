@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class ColourController {}
+class ColourController
+{
+    public function index() {}
+}

@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class SizeController {}
+class SizeController
+{
+    public function index() {}
+}

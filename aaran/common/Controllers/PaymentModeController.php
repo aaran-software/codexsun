@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class PaymentModeController {}
+class PaymentModeController
+{
+    public function index() {}
+}

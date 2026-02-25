@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class HsncodeController {}
+class HsncodeController
+{
+    public function index() {}
+}

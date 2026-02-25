@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class DespatchController {}
+class DespatchController
+{
+    public function index() {}
+}

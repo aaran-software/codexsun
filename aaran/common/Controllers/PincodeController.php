@@ -2,4 +2,7 @@
 
 namespace Aaran\Common\Controllers;
 
-class PincodeController {}
+class PincodeController
+{
+    public function index() {}
+}
