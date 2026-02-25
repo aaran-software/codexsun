@@ -10,7 +10,7 @@ return new class extends Migration
     {
         if (Aaran\Core\Features\Customise::hasCommon()) {
 
-            Schema::create('categories', function (Blueprint $table) {
+            Schema::create('common_categories', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->unique();
                 $table->tinyInteger('active_id')->nullable();
@@ -20,6 +20,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('common_categories');
     }
 };

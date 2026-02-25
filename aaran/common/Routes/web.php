@@ -23,27 +23,36 @@ use Aaran\Common\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
 // Common
-Route::middleware(['auth', 'tenant'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    Route::get('/cities', [CityController::class, 'index'])->name('cities');
-    Route::get('/districts', [DistrictController::class, 'index'])->name('districts');
-    Route::get('/states', [StateController::class, 'index'])->name('states');
-    Route::get('/pin-codes', [PincodeController::class, 'index'])->name('pin-codes');
-    Route::get('/countries', [CountryController::class, 'index'])->name('countries');
-    Route::get('/hsn-codes', [HsncodeController::class, 'index'])->name('hsn-codes');
-    Route::get('/units', [UnitController::class, 'index'])->name('units');
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
-    Route::get('/colours', [ColourController::class, 'index'])->name('colours');
-    Route::get('/sizes', [SizeController::class, 'index'])->name('sizes');
-    Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
-    Route::get('/transports', [TransportController::class, 'index'])->name('transports');
-    Route::get('/banks', [BankController::class, 'index'])->name('banks');
-    Route::get('/receipt-types', [ReceiptTypeController::class, 'index'])->name('receipt-types');
-    Route::get('/despatches', [DespatchController::class, 'index'])->name('despatches');
-    Route::get('/gst-percents', [GstPercentController::class, 'index'])->name('gst-percents');
-    Route::get('/contact-types', [ContactTypeController::class, 'index'])->name('contact-types');
-    Route::get('/accountTypes', [AccountTypeController::class, 'index'])->name('accountTypes');
-    Route::get('/payment-modes', [PaymentModeController::class, 'index'])->name('payment-modes');
-    Route::get('/transaction-type', [TransactionTypeController::class, 'index'])->name('transaction-type-list');
+    Route::resource('/cities', CityController::class);
+    Route::resource('/districts', DistrictController::class);
+    Route::resource('/states', StateController::class);
+    Route::resource('/pin-codes', PincodeController::class);
+    Route::resource('/countries', CountryController::class);
+    Route::resource('/hsn-codes', HsncodeController::class);
+    Route::resource('/units', UnitController::class);
+    Route::resource('/categories', CategoryController::class);
+    Route::resource('/colours', ColourController::class);
+    Route::resource('/sizes', SizeController::class);
+    Route::resource('/departments', DepartmentController::class);
+    Route::resource('/transports', TransportController::class);
+    Route::resource('/banks', BankController::class);
+    Route::resource('/receipt-types', ReceiptTypeController::class);
+    Route::resource('/despatches', DespatchController::class);
+    Route::resource('/gst-percents', GstPercentController::class);
+    Route::resource('/contact-types', ContactTypeController::class);
+    Route::resource('/accountTypes', AccountTypeController::class);
+    Route::resource('/payment-modes', PaymentModeController::class);
+    Route::resource('/transaction-type', TransactionTypeController::class);
+
+    Route::put('cities/bulk-activate', [CityController::class, 'bulkActivate'])->name('cities.bulk-activate');
+    Route::put('cities/bulk-deactivate', [CityController::class, 'bulkDeactivate'])->name('cities.bulk-deactivate');
+    Route::delete('cities/bulk-destroy', [CityController::class, 'bulkDestroy'])->name('cities.bulk-destroy');
+
+    Route::put('districts/bulk-activate', [DistrictController::class, 'bulkActivate'])->name('districts.bulk-activate');
+    Route::put('districts/bulk-deactivate', [DistrictController::class, 'bulkDeactivate'])->name('districts.bulk-deactivate');
+    Route::delete('districts/bulk-destroy', [DistrictController::class, 'bulkDestroy'])->name('districts.bulk-destroy');
+
 
 });

@@ -3,6 +3,7 @@
 namespace Aaran;
 
 use Aaran\Blog\Providers\BlogServiceProvider;
+use Aaran\Common\Providers\CommonServiceProvider;
 use Aaran\Core\Providers\CoreServiceProvider;
 use Aaran\Shop\Providers\ShopServiceProvider;
 use Aaran\Tenant\Providers\TenantServiceProvider;
@@ -15,6 +16,7 @@ class AaranServiceProvider extends ServiceProvider
     {
         $this->app->register(CoreServiceProvider::class);
         $this->app->register(TenantServiceProvider::class);
+        $this->app->register(CommonServiceProvider::class);
         $this->app->register(WebServiceProvider::class);
         $this->app->register(BlogServiceProvider::class);
         $this->app->register(ShopServiceProvider::class);

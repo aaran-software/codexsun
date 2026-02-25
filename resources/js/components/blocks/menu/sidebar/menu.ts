@@ -108,6 +108,41 @@ export const data = {
                 },
             ],
         },
+        {
+            title: 'Common',
+            url: '#',
+            icon: Settings2,
+            items: [
+                {
+                    title: 'City',
+                    url: '/cities',
+                },
+                {
+                    title: 'District',
+                    url: '/districts',
+                },
+                {
+                    title: 'States',
+                    url: '/states',
+                },
+                {
+                    title: 'Pincode',
+                    url: '/pincodes',
+                },
+                {
+                    title: 'Country',
+                    url: '/countries',
+                },
+                {
+                    title: 'Menu',
+                    url: '/admin/menus',
+                },
+                {
+                    title: 'Sub Menu',
+                    url: '/admin/sub-menus',
+                },
+            ],
+        },
     ],
     projects: [
         {
