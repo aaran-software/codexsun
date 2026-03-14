@@ -7,6 +7,9 @@
 - JWT bearer middleware is enabled in the backend pipeline
 - Refresh token rotation is enforced on refresh and logout
 - Portal-based login checks are enforced for customer, vendor, and admin roles
+- Passwords are stored only as BCrypt password hashes
+- JWT access tokens include `UserId`, `Username`, `Role`, and `Permissions` claims
+- Frontend session restore exchanges the stored refresh token for a fresh access token during app startup
 
 ## Security Headers
 
@@ -18,8 +21,17 @@
 ## CORS
 
 - Controlled through `Cors:AllowedOrigins`
-- Default local frontend origin is `http://localhost:7002`
+- Default local frontend origin is `http://localhost:7023`
 - Credentials are allowed where required by auth flows
+
+## Frontend Session Handling
+
+- `cxstore` manages session state centrally in `src/state/authStore.ts`
+- Authenticated frontend requests attach `Authorization: Bearer {token}`
+- Frontend request handling retries a `401` once after refresh-token exchange
+- Failed refresh attempts clear local auth state and return the user to login
+- The auth screen now supports both sign-in and self-service signup against the existing backend auth endpoints
+- Google sign-in on the frontend is configuration-driven via `VITE_GOOGLE_AUTH_URL`; without that provider URL the button remains a non-authenticating entry point and does not bypass local auth
 
 ## Rate Limiting
 
@@ -30,7 +42,15 @@
 ## Audit Logging
 
 - `AuditLog` tracks login, failed login, password change, and admin actions
-- Captures user, IP, user agent, entity type, and entity id where available
+- Captures user, IP, entity type, and entity id where available
+- Auth module currently records register, login, failed login, refresh, and logout actions
+
+## Authorization Policies
+
+- `AdminAccess` requires role `Admin`
+- `VendorAccess` requires role `Vendor`
+- `CustomerAccess` requires role `Customer`
+- Frontend route guards support authenticated and role-based route restriction
 
 ## Error Monitoring
 
@@ -42,3 +62,6 @@
 
 - Separate development, staging, and production configuration
 - Sensitive values must not be committed in source
+- Local infrastructure credentials are fixed for development bootstrap only and must be rotated outside development
+- Local development also seeds a bootstrap admin account for initial access; that credential must be changed or disabled outside development
+- External identity provider URLs such as `VITE_GOOGLE_AUTH_URL` must be environment-specific and should point only to trusted OAuth entry points

@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: codexion:v6
+    build:
+      context: ..
+      dockerfile: .container/postgres/Dockerfile
+    container_name: codexsun-postgres
+    env_file:
+      - ./env/dev.env
+    ports:
+      - "7025:5432"
+    volumes:
+      - codexsun-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: codexsun-redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "7024:6379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - codexsun-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  codexsun-postgres-data:
+  codexsun-redis-data:

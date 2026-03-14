@@ -45,16 +45,23 @@ and shared domain libraries.
 ## Solution Structure
 
 ```text
-Codexsun.slnx
-|-- Cx.AppHost    -> .NET Aspire host
+codexsun.slnx
+|-- cx.AppHost   -> .NET Aspire host
 |-- cxserver     -> Backend API
 |-- cxstore      -> React frontend
-|-- cxcore       -> Shared domain entities
-|-- cxlib        -> Shared contracts and utilities
-|-- cxbilling    -> Billing domain
-|-- cxmarketing  -> Marketing domain
-`-- cxanalytics  -> Analytics domain
+`-- cxtest       -> Infrastructure validation tests
 ```
+
+## Local Runtime Ports
+
+| Service | Port |
+|---------|------|
+| Aspire host | 7020 |
+| cxserver HTTP | 7021 |
+| cxserver HTTPS | 7022 |
+| cxstore | 7023 |
+| Redis | 7024 |
+| PostgreSQL | 7025 |
 
 ## Architecture Principles
 

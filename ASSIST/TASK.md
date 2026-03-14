@@ -2,23 +2,28 @@
 
 ## Prompt
 
-001_INITIAL_INFRASTRUCTURE_SETUP
+Read AI_rules and commit all and push all and log all
 
 ## Objective
 
-Implement the initial infrastructure setup for Codexsun with Docker, PostgreSQL, Redis, Aspire alignment, a database connectivity test project, naming corrections, and standardized ports.
+Record the current repository work in the project log, then commit and push the full accumulated worktree.
 
 ## Constraints
 
-- Preserve the existing `cx.AppHost`, `cxserver`, and `cxstore` service roles.
-- Keep module boundaries intact.
-- Do not modify unrelated modules.
-- Follow Clean Architecture and repository documentation rules.
+- Follow `AI_RULES.md` commit discipline.
+- Use the latest project log serial in the commit message.
+- Commit the full current worktree as requested.
+- Verify the repository builds successfully before committing.
+
+## Observed Repository State
+
+- The repository contains accumulated infrastructure, auth, frontend, admin, and documentation changes.
+- The latest project log serial is `CX-008`.
+- The current branch is `main`.
 
 ## Plan
 
-1. Audit current ports, naming, and infrastructure references.
-2. Add root `.container` assets for PostgreSQL and Redis.
-3. Align Aspire, backend, and frontend configuration with ports `7020` through `7025`.
-4. Add `cxtest` and validate PostgreSQL connectivity with `SELECT 1`.
-5. Update solution and documentation, then verify build, containers, and tests.
+1. Record this request in the prompt/task tracking files and append a new project log entry.
+2. Run build verification for the current repository state.
+3. Stage and commit the full worktree using the latest project log serial.
+4. Push the commit to the configured remote branch.

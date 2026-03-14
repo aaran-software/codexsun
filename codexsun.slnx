@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="cx.AppHost/cx.AppHost.csproj" />
   <Project Path="cxserver/cxserver.csproj" />
+  <Project Path="cxtest/cxtest.csproj" />
   <Project Path="cxstore/cxstore.esproj">
     <BuildType Project="Debug" />
     <Build />
