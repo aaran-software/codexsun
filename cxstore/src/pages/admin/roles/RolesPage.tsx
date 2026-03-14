@@ -3,7 +3,7 @@ import { EditIcon, MoreHorizontalIcon, ShieldCheckIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import { getRoles } from "@/api/roleApi"
-import { ListCommon, type ListCommonActiveFilter, type ListCommonColumn } from "@/components/admin/ListCommon"
+import { CommonList, type CommonListActiveFilter, type CommonListColumn } from "@/components/forms/CommonList"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -54,7 +54,7 @@ export default function RolesPage() {
   const safeCurrentPage = Math.min(currentPage, totalPages)
   const paginatedRoles = filteredRoles.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
 
-  const activeFilters: ListCommonActiveFilter[] = assignmentFilter === "all"
+  const activeFilters: CommonListActiveFilter[] = assignmentFilter === "all"
     ? []
     : [{
         key: "assignment",
@@ -62,7 +62,7 @@ export default function RolesPage() {
         value: assignmentFilter === "assigned" ? "Assigned roles" : "Unassigned roles",
       }]
 
-  const columns: ListCommonColumn<RoleSummary>[] = [
+  const columns: CommonListColumn<RoleSummary>[] = [
     {
       id: "serialNumber",
       header: "SL No",
@@ -129,7 +129,7 @@ export default function RolesPage() {
     <div className="space-y-6">
       {error ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div> : null}
 
-      <ListCommon
+      <CommonList
         header={{
           pageTitle: "Role Management",
           pageDescription: "Manage roles and permissions",

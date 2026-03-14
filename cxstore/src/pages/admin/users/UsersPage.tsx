@@ -3,7 +3,7 @@ import { EditIcon, MoreHorizontalIcon, RotateCcwIcon, Trash2Icon } from "lucide-
 import { useNavigate } from "react-router-dom"
 
 import { deleteUser, getUsers, restoreUser } from "@/api/userApi"
-import { ListCommon, type ListCommonActiveFilter, type ListCommonColumn } from "@/components/admin/ListCommon"
+import { CommonList, type CommonListActiveFilter, type CommonListColumn } from "@/components/forms/CommonList"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -90,11 +90,11 @@ export default function UsersPage() {
   const safeCurrentPage = Math.min(currentPage, totalPages)
   const paginatedUsers = filteredUsers.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
 
-  const activeFilters: ListCommonActiveFilter[] = statusFilter === "all"
+  const activeFilters: CommonListActiveFilter[] = statusFilter === "all"
     ? []
     : [{ key: "status", label: "Status", value: statusFilter === "active" ? "Active" : "Deleted" }]
 
-  const columns: ListCommonColumn<AdminUserSummary>[] = [
+  const columns: CommonListColumn<AdminUserSummary>[] = [
     {
       id: "serialNumber",
       header: "SL No",
@@ -183,7 +183,7 @@ export default function UsersPage() {
       {message ? <div className="rounded-lg bg-secondary px-3 py-2 text-sm">{message}</div> : null}
       {error ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div> : null}
 
-      <ListCommon
+      <CommonList
         header={{
           pageTitle: "User Management",
           pageDescription: "Manage platform users and roles",

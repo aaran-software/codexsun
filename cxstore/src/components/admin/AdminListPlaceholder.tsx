@@ -1,4 +1,4 @@
-import { ListCommon } from "@/components/admin/ListCommon"
+import { CommonList } from "@/components/forms/CommonList"
 
 type AdminListPlaceholderProps = {
   pageTitle: string
@@ -16,7 +16,7 @@ export function AdminListPlaceholder({
   message,
 }: AdminListPlaceholderProps) {
   return (
-    <ListCommon
+    <CommonList
       header={{
         pageTitle,
         pageDescription,

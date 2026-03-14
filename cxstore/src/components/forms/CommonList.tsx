@@ -52,20 +52,20 @@ import { cn } from "@/lib/utils"
 type SortDirection = "asc" | "desc"
 type PrimitiveSortValue = string | number | boolean | Date | null | undefined
 
-export type ListCommonActiveFilter = {
+export type CommonListActiveFilter = {
   key: string
   label: string
   value: string
 }
 
-export type ListCommonFilterOption = {
+export type CommonListFilterOption = {
   key: string
   label: string
   isActive?: boolean
   onSelect: () => void
 }
 
-export type ListCommonColumn<TData> = {
+export type CommonListColumn<TData> = {
   id: string
   header: string
   cell: (row: TData) => ReactNode
@@ -77,7 +77,7 @@ export type ListCommonColumn<TData> = {
   sticky?: "left" | "right"
 }
 
-export type ListCommonHeaderConfig = {
+export type CommonListHeaderConfig = {
   pageTitle: string
   pageDescription: string
   addLabel?: string
@@ -85,22 +85,22 @@ export type ListCommonHeaderConfig = {
   addDisabled?: boolean
 }
 
-export type ListCommonSearchConfig = {
+export type CommonListSearchConfig = {
   value: string
   onChange: (value: string) => void
   placeholder?: string
 }
 
-export type ListCommonFiltersConfig = {
+export type CommonListFiltersConfig = {
   buttonLabel?: string
-  options?: ListCommonFilterOption[]
-  activeFilters?: ListCommonActiveFilter[]
+  options?: CommonListFilterOption[]
+  activeFilters?: CommonListActiveFilter[]
   onRemoveFilter?: (key: string) => void
   onClearAllFilters?: () => void
 }
 
-export type ListCommonTableConfig<TData> = {
-  columns: ListCommonColumn<TData>[]
+export type CommonListTableConfig<TData> = {
+  columns: CommonListColumn<TData>[]
   data: TData[]
   loading?: boolean
   loadingMessage?: string
@@ -108,11 +108,11 @@ export type ListCommonTableConfig<TData> = {
   rowKey?: (row: TData, index: number) => string | number
 }
 
-export type ListCommonFooterConfig = {
+export type CommonListFooterConfig = {
   content?: ReactNode
 }
 
-export type ListCommonPaginationConfig = {
+export type CommonListPaginationConfig = {
   currentPage: number
   pageSize: number
   totalRecords: number
@@ -121,13 +121,13 @@ export type ListCommonPaginationConfig = {
   pageSizeOptions?: number[]
 }
 
-export type ListCommonProps<TData> = {
-  header: ListCommonHeaderConfig
-  search?: ListCommonSearchConfig
-  filters?: ListCommonFiltersConfig
-  table: ListCommonTableConfig<TData>
-  footer?: ListCommonFooterConfig
-  pagination?: ListCommonPaginationConfig
+export type CommonListProps<TData> = {
+  header: CommonListHeaderConfig
+  search?: CommonListSearchConfig
+  filters?: CommonListFiltersConfig
+  table: CommonListTableConfig<TData>
+  footer?: CommonListFooterConfig
+  pagination?: CommonListPaginationConfig
 }
 
 type SortState = {
@@ -199,14 +199,14 @@ function getPageNumbers(currentPage: number, totalPages: number) {
   return [1, currentPage - 1, currentPage, currentPage + 1, totalPages]
 }
 
-export function ListCommon<TData>({
+export function CommonList<TData>({
   header,
   search,
   filters,
   table,
   footer,
   pagination,
-}: ListCommonProps<TData>) {
+}: CommonListProps<TData>) {
   const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>(
     () => table.columns.filter((column) => column.defaultVisible !== false).map((column) => column.id)
   )
@@ -249,7 +249,7 @@ export function ListCommon<TData>({
       })
     : table.data
 
-  const derivedActiveFilters: ListCommonActiveFilter[] = search?.value.trim()
+  const derivedActiveFilters: CommonListActiveFilter[] = search?.value.trim()
     ? [{ key: "__search__", label: "Search", value: search.value.trim() }]
     : []
   const activeFilters = [...derivedActiveFilters, ...(filters?.activeFilters ?? [])]
@@ -267,7 +267,7 @@ export function ListCommon<TData>({
   const showSearchSection = Boolean(search || (filters?.options && filters.options.length > 0) || table.columns.length > 1)
   const showActiveFilters = activeFilters.length > 0
 
-  const handleSort = (column: ListCommonColumn<TData>) => {
+  const handleSort = (column: CommonListColumn<TData>) => {
     if (!column.sortable) {
       return
     }

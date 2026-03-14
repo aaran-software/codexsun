@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -8,14 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 
-export type CommonMasterValue = string | number | boolean
+export type CommonUpsertValue = string | number | boolean
 
-export type CommonMasterFieldDefinition = {
+export type CommonUpsertFieldDefinition = {
   key: string
   label: string
   type?: "text" | "number"
@@ -23,19 +23,19 @@ export type CommonMasterFieldDefinition = {
   required?: boolean
 }
 
-export type CommonMasterFormValues = Record<string, CommonMasterValue>
+export type CommonUpsertFormValues = Record<string, CommonUpsertValue>
 
-type CommonMasterUpsertDialogProps = {
+type CommonUpsertDialogProps = {
   open: boolean
   mode: "create" | "edit"
   entityLabel: string
-  fields: CommonMasterFieldDefinition[]
-  initialValues: CommonMasterFormValues
+  fields: CommonUpsertFieldDefinition[]
+  initialValues: CommonUpsertFormValues
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: CommonMasterFormValues) => void
+  onSubmit: (values: CommonUpsertFormValues) => void
 }
 
-function normalizeValue(field: CommonMasterFieldDefinition, value: CommonMasterValue | undefined) {
+function normalizeValue(field: CommonUpsertFieldDefinition, value: CommonUpsertValue | undefined) {
   if (field.type === "number") {
     return typeof value === "number" ? String(value) : ""
   }
@@ -43,7 +43,7 @@ function normalizeValue(field: CommonMasterFieldDefinition, value: CommonMasterV
   return typeof value === "string" ? value : ""
 }
 
-export function CommonMasterUpsertDialog({
+export function CommonUpsertDialog({
   open,
   mode,
   entityLabel,
@@ -51,7 +51,7 @@ export function CommonMasterUpsertDialog({
   initialValues,
   onOpenChange,
   onSubmit,
-}: CommonMasterUpsertDialogProps) {
+}: CommonUpsertDialogProps) {
   const [formValues, setFormValues] = useState<Record<string, string>>({})
   const [isActive, setIsActive] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -88,7 +88,7 @@ export function CommonMasterUpsertDialog({
       return
     }
 
-    const submittedValues: CommonMasterFormValues = {
+    const submittedValues: CommonUpsertFormValues = {
       ...Object.fromEntries(fields.map((field) => {
         const rawValue = formValues[field.key] ?? ""
         return [

@@ -1,16 +1,11 @@
 import { useMemo, useState } from "react"
 import { EditIcon, MoreHorizontalIcon, PowerIcon } from "lucide-react"
 
-import {
-  ListCommon,
-  type ListCommonActiveFilter,
-  type ListCommonColumn,
-} from "@/components/admin/ListCommon"
-import {
-  CommonMasterUpsertDialog,
-  type CommonMasterFieldDefinition,
-  type CommonMasterFormValues,
-} from "@/components/admin/CommonMasterUpsertDialog"
+import type { CommonListActiveFilter, CommonListColumn } from "@/components/forms/CommonList"
+import type {
+  CommonUpsertFieldDefinition,
+  CommonUpsertFormValues,
+} from "@/components/forms/CommonUpsertDialog"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -19,28 +14,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-type CommonMasterRecord = {
+export type CommonListRecord = {
   id: number
   isActive: boolean
 } & Record<string, string | number | boolean>
 
-type CommonMasterListPageProps<TItem extends CommonMasterRecord> = {
+type UseCommonListStateOptions<TItem extends CommonListRecord> = {
   entityLabel: string
-  pageTitle: string
-  pageDescription: string
-  searchPlaceholder: string
-  fields: CommonMasterFieldDefinition[]
+  fields: CommonUpsertFieldDefinition[]
   initialItems: TItem[]
+  searchPlaceholder: string
 }
 
-export function CommonMasterListPage<TItem extends CommonMasterRecord>({
+export function useCommonListState<TItem extends CommonListRecord>({
   entityLabel,
-  pageTitle,
-  pageDescription,
-  searchPlaceholder,
   fields,
   initialItems,
-}: CommonMasterListPageProps<TItem>) {
+  searchPlaceholder,
+}: UseCommonListStateOptions<TItem>) {
   const [items, setItems] = useState<TItem[]>(initialItems)
   const [searchValue, setSearchValue] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all")
@@ -74,7 +65,7 @@ export function CommonMasterListPage<TItem extends CommonMasterRecord>({
   const safeCurrentPage = Math.min(currentPage, totalPages)
   const paginatedItems = filteredItems.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
 
-  const activeFilters: ListCommonActiveFilter[] = statusFilter === "all"
+  const activeFilters: CommonListActiveFilter[] = statusFilter === "all"
     ? []
     : [{ key: "status", label: "Status", value: statusFilter === "active" ? "Active" : "Inactive" }]
 
@@ -96,7 +87,7 @@ export function CommonMasterListPage<TItem extends CommonMasterRecord>({
     )) as TItem[])
   }
 
-  const handleSubmit = (values: CommonMasterFormValues) => {
+  const handleSubmit = (values: CommonUpsertFormValues) => {
     if (dialogMode === "edit" && editingItem) {
       setItems((current) => current.map((entry) => (
         entry.id === editingItem.id
@@ -113,11 +104,11 @@ export function CommonMasterListPage<TItem extends CommonMasterRecord>({
     ])
   }
 
-  const initialValues: CommonMasterFormValues = editingItem
+  const initialValues: CommonUpsertFormValues = editingItem
     ? editingItem
     : { isActive: true, ...Object.fromEntries(fields.map((field) => [field.key, field.type === "number" ? 0 : ""])) }
 
-  const columns: ListCommonColumn<TItem>[] = [
+  const columns: CommonListColumn<TItem>[] = [
     {
       id: "serialNumber",
       header: "SL No",
@@ -173,80 +164,67 @@ export function CommonMasterListPage<TItem extends CommonMasterRecord>({
     },
   ]
 
-  return (
-    <>
-      <ListCommon
-        header={{
-          pageTitle,
-          pageDescription,
-          addLabel: `New ${entityLabel}`,
-          onAddClick: openCreateDialog,
-        }}
-        search={{
-          value: searchValue,
-          onChange: (value) => {
-            setSearchValue(value)
-            setCurrentPage(1)
-          },
-          placeholder: searchPlaceholder,
-        }}
-        filters={{
-          buttonLabel: `${entityLabel} filters`,
-          options: [
-            { key: "all", label: "All records", isActive: statusFilter === "all", onSelect: () => setStatusFilter("all") },
-            { key: "active", label: "Active only", isActive: statusFilter === "active", onSelect: () => setStatusFilter("active") },
-            { key: "inactive", label: "Inactive only", isActive: statusFilter === "inactive", onSelect: () => setStatusFilter("inactive") },
-          ],
-          activeFilters,
-          onRemoveFilter: () => setStatusFilter("all"),
-          onClearAllFilters: () => {
-            setStatusFilter("all")
-            setCurrentPage(1)
-          },
-        }}
-        table={{
-          columns,
-          data: paginatedItems,
-          emptyMessage: `No ${entityLabel.toLowerCase()} records found.`,
-          rowKey: (item) => item.id,
-        }}
-        footer={{
-          content: (
-            <div className="flex flex-wrap items-center gap-4">
-              <span>
-                Total records: <span className="font-medium text-foreground">{totalRecords}</span>
-              </span>
-              <span>
-                Active records: <span className="font-medium text-foreground">{filteredItems.filter((item) => item.isActive).length}</span>
-              </span>
-            </div>
-          ),
-        }}
-        pagination={{
-          currentPage: safeCurrentPage,
-          pageSize,
-          totalRecords,
-          onPageChange: setCurrentPage,
-          onPageSizeChange: (value) => {
-            setPageSize(value)
-            setCurrentPage(1)
-          },
-        }}
-      />
-
-      <CommonMasterUpsertDialog
-        open={isDialogOpen}
-        mode={dialogMode}
-        entityLabel={entityLabel}
-        fields={fields}
-        initialValues={initialValues}
-        onOpenChange={setIsDialogOpen}
-        onSubmit={handleSubmit}
-      />
-    </>
-  )
+  return {
+    addLabel: `New ${entityLabel}`,
+    openCreateDialog,
+    search: {
+      value: searchValue,
+      onChange: (value: string) => {
+        setSearchValue(value)
+        setCurrentPage(1)
+      },
+      placeholder: searchPlaceholder,
+    },
+    filters: {
+      buttonLabel: `${entityLabel} filters`,
+      options: [
+        { key: "all", label: "All records", isActive: statusFilter === "all", onSelect: () => setStatusFilter("all") },
+        { key: "active", label: "Active only", isActive: statusFilter === "active", onSelect: () => setStatusFilter("active") },
+        { key: "inactive", label: "Inactive only", isActive: statusFilter === "inactive", onSelect: () => setStatusFilter("inactive") },
+      ],
+      activeFilters,
+      onRemoveFilter: () => setStatusFilter("all"),
+      onClearAllFilters: () => {
+        setStatusFilter("all")
+        setCurrentPage(1)
+      },
+    },
+    table: {
+      columns,
+      data: paginatedItems,
+      emptyMessage: `No ${entityLabel.toLowerCase()} records found.`,
+      rowKey: (item: TItem) => item.id,
+    },
+    footerContent: (
+      <div className="flex flex-wrap items-center gap-4">
+        <span>
+          Total records: <span className="font-medium text-foreground">{totalRecords}</span>
+        </span>
+        <span>
+          Active records: <span className="font-medium text-foreground">{filteredItems.filter((item) => item.isActive).length}</span>
+        </span>
+      </div>
+    ),
+    pagination: {
+      currentPage: safeCurrentPage,
+      pageSize,
+      totalRecords,
+      onPageChange: setCurrentPage,
+      onPageSizeChange: (value: number) => {
+        setPageSize(value)
+        setCurrentPage(1)
+      },
+    },
+    dialog: {
+      open: isDialogOpen,
+      mode: dialogMode,
+      initialValues,
+      onOpenChange: setIsDialogOpen,
+      onSubmit: handleSubmit,
+    },
+  }
 }
 
-function currentMaxId<TItem extends CommonMasterRecord>(items: TItem[]) {
+function currentMaxId<TItem extends CommonListRecord>(items: TItem[]) {
   return items.reduce((maxId, item) => Math.max(maxId, item.id), 0)
 }

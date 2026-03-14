@@ -2,27 +2,27 @@
 
 ## Prompt
 
-Refactor the Common master database naming convention so all `common_*` tables are renamed to direct snake_case entity table names without the `common_` prefix.
+Consolidate the backend migrations into a single clean `BaselineSchema` migration, reorganize the schema by module, and add default `"-"` seed data across all common tables.
 
 ## Objective
 
-Update the Common module EF mappings, migration history, and documentation so the database uses concise table names like `cities`, `brands`, and `contact_types` while keeping the existing Common APIs unchanged.
+Assess whether the current Codexsun backend and database can be safely reset into one baseline migration, then implement the baseline only for the schema that actually exists in code without inventing undocumented domains.
 
 ## Constraints
 
 - Follow `ASSIST/AI_RULES.md` and `ASSIST/STANDARDS.md`.
-- Do not change Common entity class names or API routes.
-- Preserve foreign keys, indexes, seed data behavior, and existing endpoint functionality.
-- Use a dedicated EF Core migration named `RenameCommonTables` to rename existing tables cleanly.
+- Do not invent missing ERP domains that are not implemented in the repository without explicit approval.
+- Verify the actual PostgreSQL tables and current EF model before deleting or regenerating migrations.
+- Keep the application buildable and the live development database recoverable.
 
 ## Observed Repository State
 
-- The Common table names are defined in `cxserver/Modules/Common/Configurations` and currently use `common_*` prefixes.
-- The generated `CommonMasterData` migration and EF snapshot also embed the old `common_*` table names.
-- There are no other backend hardcoded table-name usages outside the Common EF metadata and related documentation.
+- `CodexsunDbContext` currently models only `Auth` and `Common` entities.
+- The prompt references many additional domains and tables such as `address_books`, `contact_groups`, `tax_categories`, product variants, finance ledgers, and system settings that do not exist in the current backend code.
+- The current database and migration set therefore cannot be consolidated into the requested full target schema without first implementing a large number of missing modules.
 
 ## Plan
 
-1. Capture the prompt and update task tracking for the Common table naming cleanup.
-2. Rename the Common EF table mappings, generate and verify the `RenameCommonTables` migration, and ensure snapshots/imports/build remain healthy.
-3. Revalidate build/tests/database state, then update the database documentation and project log with the new naming convention.
+1. Capture the prompt, update task tracking, and scan the current EF model plus live PostgreSQL schema.
+2. Compare the requested baseline against the implemented repository scope and identify blockers or missing modules.
+3. If the requested scope exceeds the implemented system, stop and get user direction before making destructive migration-history changes.
