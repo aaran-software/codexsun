@@ -2,6 +2,26 @@
 
 ---
 
+CX-023
+- Added route-aware app breadcrumbs with a `Home` entry, home icon, and parent navigation back to dashboard and admin list pages from the shared `AppLayout`.
+- Refined the shared admin list shell styling with tighter rounded corners, a borderless search section, a compact breadcrumb header, and sticky left/right table columns for serial numbers and action controls.
+- Revalidated the frontend production build after the breadcrumb and list-shell usability updates.
+
+CX-022
+- Rebuilt `cxstore/src/components/admin/ListCommon.tsx` into a generic list-page skeleton with structured props for header, search, filters, active filter chips, table rendering, footer summaries, column visibility, sorting, and pagination.
+- Refactored the existing user and role admin pages to drive the shared skeleton with page-level search, filter, and pagination state instead of duplicating list layout markup.
+- Added and aligned placeholder admin list pages for permissions and selected common masters with the shared skeleton, then revalidated the frontend production build.
+
+CX-021
+- Added a reusable frontend admin header template in `cxstore/src/components/admin/ListCommon.tsx` to standardize list-page titles, descriptions, and right-aligned primary add actions.
+- Updated the existing user and role admin list pages to use the shared template and added placeholder admin pages plus route wiring for permissions and selected common masters under `AppLayout`.
+- Centralized admin sidebar links in `cxstore/src/components/admin/menu/admin-menu.ts` and revalidated the frontend production build after the template rollout.
+
+CX-020
+- Added `cxserver/Modules/Common` with reusable entities, EF configurations, validators, grouped controllers, and service logic for location, contact, product, order, transport, and operational master data.
+- Registered the Common module in `CodexsunDbContext`, generated/applied the `CommonMasterData` migration, and seeded baseline countries, states, contact types, GST percentages, and units.
+- Added `cxtest/CommonMasterDataTests.cs`, verified the Common APIs through integration tests, and revalidated the full solution build after the master-data module rollout.
+
 CX-019
 - Read `ASSIST/AI_RULES.md` and aligned the repository handoff with its prompt-capture, logging, and commit-message requirements.
 - Captured the source-control request in `prompts/018.md` and updated task tracking for the full-worktree handoff.

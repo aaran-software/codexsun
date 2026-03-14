@@ -1,0 +1,600 @@
+import { useEffect, useState, type ReactNode } from "react"
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  FunnelIcon,
+  PlusIcon,
+  SearchIcon,
+  SlidersHorizontalIcon,
+  XIcon,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { cn } from "@/lib/utils"
+
+type SortDirection = "asc" | "desc"
+type PrimitiveSortValue = string | number | boolean | Date | null | undefined
+
+export type ListCommonActiveFilter = {
+  key: string
+  label: string
+  value: string
+}
+
+export type ListCommonFilterOption = {
+  key: string
+  label: string
+  isActive?: boolean
+  onSelect: () => void
+}
+
+export type ListCommonColumn<TData> = {
+  id: string
+  header: string
+  cell: (row: TData) => ReactNode
+  accessor?: (row: TData) => PrimitiveSortValue
+  sortable?: boolean
+  className?: string
+  headerClassName?: string
+  defaultVisible?: boolean
+  sticky?: "left" | "right"
+}
+
+export type ListCommonHeaderConfig = {
+  pageTitle: string
+  pageDescription: string
+  addLabel?: string
+  onAddClick?: () => void
+  addDisabled?: boolean
+}
+
+export type ListCommonSearchConfig = {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}
+
+export type ListCommonFiltersConfig = {
+  buttonLabel?: string
+  options?: ListCommonFilterOption[]
+  activeFilters?: ListCommonActiveFilter[]
+  onRemoveFilter?: (key: string) => void
+  onClearAllFilters?: () => void
+}
+
+export type ListCommonTableConfig<TData> = {
+  columns: ListCommonColumn<TData>[]
+  data: TData[]
+  loading?: boolean
+  loadingMessage?: string
+  emptyMessage?: string
+  rowKey?: (row: TData, index: number) => string | number
+}
+
+export type ListCommonFooterConfig = {
+  content?: ReactNode
+}
+
+export type ListCommonPaginationConfig = {
+  currentPage: number
+  pageSize: number
+  totalRecords: number
+  onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
+  pageSizeOptions?: number[]
+}
+
+export type ListCommonProps<TData> = {
+  header: ListCommonHeaderConfig
+  search?: ListCommonSearchConfig
+  filters?: ListCommonFiltersConfig
+  table: ListCommonTableConfig<TData>
+  footer?: ListCommonFooterConfig
+  pagination?: ListCommonPaginationConfig
+}
+
+type SortState = {
+  columnId: string
+  direction: SortDirection
+}
+
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50]
+
+function getStickyClass(sticky?: "left" | "right") {
+  if (sticky === "left") {
+    return "sticky left-0 z-20 bg-card"
+  }
+
+  if (sticky === "right") {
+    return "sticky right-0 z-20 bg-card"
+  }
+
+  return ""
+}
+
+function arraysEqual(left: string[], right: string[]) {
+  return left.length === right.length && left.every((value, index) => value === right[index])
+}
+
+function compareSortValues(left: PrimitiveSortValue, right: PrimitiveSortValue) {
+  if (left == null && right == null) {
+    return 0
+  }
+
+  if (left == null) {
+    return -1
+  }
+
+  if (right == null) {
+    return 1
+  }
+
+  if (left instanceof Date && right instanceof Date) {
+    return left.getTime() - right.getTime()
+  }
+
+  if (typeof left === "number" && typeof right === "number") {
+    return left - right
+  }
+
+  if (typeof left === "boolean" && typeof right === "boolean") {
+    return Number(left) - Number(right)
+  }
+
+  return String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: "base" })
+}
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, 4, totalPages]
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+  }
+
+  return [1, currentPage - 1, currentPage, currentPage + 1, totalPages]
+}
+
+export function ListCommon<TData>({
+  header,
+  search,
+  filters,
+  table,
+  footer,
+  pagination,
+}: ListCommonProps<TData>) {
+  const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>(
+    () => table.columns.filter((column) => column.defaultVisible !== false).map((column) => column.id)
+  )
+  const [sortState, setSortState] = useState<SortState | null>(null)
+
+  const columnSignature = table.columns.map((column) => column.id).join("|")
+
+  useEffect(() => {
+    const defaultVisibleColumnIds = table.columns
+      .filter((column) => column.defaultVisible !== false)
+      .map((column) => column.id)
+
+    setVisibleColumnIds((current) => {
+      const normalized = current.filter((id) => table.columns.some((column) => column.id === id))
+      const next = normalized.length > 0 ? normalized : defaultVisibleColumnIds
+      return arraysEqual(current, next) ? current : next
+    })
+  }, [columnSignature, table.columns])
+
+  useEffect(() => {
+    setSortState((current) => {
+      if (!current) {
+        return current
+      }
+
+      return table.columns.some((column) => column.id === current.columnId) ? current : null
+    })
+  }, [columnSignature, table.columns])
+
+  const visibleColumns = table.columns.filter((column) => visibleColumnIds.includes(column.id))
+  const fallbackColumns = visibleColumns.length > 0 ? visibleColumns : table.columns.slice(0, 1)
+  const sortColumn = sortState ? table.columns.find((column) => column.id === sortState.columnId) : undefined
+
+  const sortedData = sortColumn && sortColumn.sortable
+    ? [...table.data].sort((left, right) => {
+        const leftValue = sortColumn.accessor ? sortColumn.accessor(left) : undefined
+        const rightValue = sortColumn.accessor ? sortColumn.accessor(right) : undefined
+        const comparison = compareSortValues(leftValue, rightValue)
+        return sortState?.direction === "asc" ? comparison : -comparison
+      })
+    : table.data
+
+  const derivedActiveFilters: ListCommonActiveFilter[] = search?.value.trim()
+    ? [{ key: "__search__", label: "Search", value: search.value.trim() }]
+    : []
+  const activeFilters = [...derivedActiveFilters, ...(filters?.activeFilters ?? [])]
+
+  const pageSizeOptions = pagination?.pageSizeOptions?.length ? pagination.pageSizeOptions : DEFAULT_PAGE_SIZE_OPTIONS
+  const totalPages = pagination ? Math.max(1, Math.ceil(pagination.totalRecords / pagination.pageSize)) : 1
+  const pageNumbers = pagination ? getPageNumbers(pagination.currentPage, totalPages) : []
+  const paginationStart = pagination && pagination.totalRecords > 0
+    ? (pagination.currentPage - 1) * pagination.pageSize + 1
+    : 0
+  const paginationEnd = pagination
+    ? Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords)
+    : sortedData.length
+
+  const showSearchSection = Boolean(search || (filters?.options && filters.options.length > 0) || table.columns.length > 1)
+  const showActiveFilters = activeFilters.length > 0
+
+  const handleSort = (column: ListCommonColumn<TData>) => {
+    if (!column.sortable) {
+      return
+    }
+
+    setSortState((current) => {
+      if (!current || current.columnId !== column.id) {
+        return { columnId: column.id, direction: "asc" }
+      }
+
+      if (current.direction === "asc") {
+        return { columnId: column.id, direction: "desc" }
+      }
+
+      return null
+    })
+  }
+
+  const handleRemoveFilter = (key: string) => {
+    if (key === "__search__") {
+      search?.onChange("")
+      return
+    }
+
+    filters?.onRemoveFilter?.(key)
+  }
+
+  const handleClearAllFilters = () => {
+    if (search?.value) {
+      search.onChange("")
+    }
+
+    filters?.onClearAllFilters?.()
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{header.pageTitle}</h1>
+          <p className="max-w-3xl text-sm text-muted-foreground">{header.pageDescription}</p>
+        </div>
+        {header.addLabel && header.onAddClick ? (
+          <Button
+            type="button"
+            className="shrink-0 gap-2 self-start rounded-md"
+            onClick={header.onAddClick}
+            disabled={header.addDisabled}
+          >
+            <PlusIcon className="size-4" />
+            <span>{header.addLabel}</span>
+          </Button>
+        ) : null}
+      </section>
+
+      {showSearchSection ? (
+        <section className="rounded-md bg-card p-4 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full lg:max-w-md">
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search?.value ?? ""}
+                onChange={(event) => search?.onChange(event.target.value)}
+                placeholder={search?.placeholder ?? "Search records"}
+                className="h-10 rounded-md pr-3 pl-9"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {filters?.options && filters.options.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button type="button" variant="outline" className="gap-2 rounded-md">
+                        <FunnelIcon className="size-4" />
+                        <span>{filters.buttonLabel ?? "Filters"}</span>
+                      </Button>
+                    }
+                  />
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Filter options</DropdownMenuLabel>
+                      {filters.options.map((option) => (
+                        <DropdownMenuItem key={option.key} onClick={option.onSelect}>
+                          <span>{option.label}</span>
+                          {option.isActive ? <span className="ml-auto text-xs text-primary">Active</span> : null}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+
+              {table.columns.length > 1 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button type="button" variant="outline" className="gap-2 rounded-md">
+                        <SlidersHorizontalIcon className="size-4" />
+                        <span>Columns</span>
+                      </Button>
+                    }
+                  />
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {table.columns.map((column) => {
+                        const isVisible = visibleColumnIds.includes(column.id)
+                        const disableToggle = isVisible && visibleColumnIds.length === 1
+
+                        return (
+                          <DropdownMenuCheckboxItem
+                            key={column.id}
+                            checked={isVisible}
+                            disabled={disableToggle}
+                            onCheckedChange={(checked) => {
+                              setVisibleColumnIds((current) => {
+                                if (checked) {
+                                  return current.includes(column.id) ? current : [...current, column.id]
+                                }
+
+                                if (current.length === 1) {
+                                  return current
+                                }
+
+                                return current.filter((id) => id !== column.id)
+                              })
+                            }}
+                          >
+                            {column.header}
+                          </DropdownMenuCheckboxItem>
+                        )
+                      })}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {showActiveFilters ? (
+        <section className="rounded-md border bg-card p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {activeFilters.map((filter) => (
+                <Badge key={filter.key} variant="secondary" className="h-auto gap-2 rounded-md px-3 py-1 text-xs">
+                  <span>{filter.label}: {filter.value}</span>
+                  <button
+                    type="button"
+                    className="rounded-full text-muted-foreground transition hover:text-foreground"
+                    onClick={() => handleRemoveFilter(filter.key)}
+                    aria-label={`Remove filter ${filter.label}`}
+                  >
+                    <XIcon className="size-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <Button type="button" variant="ghost" className="h-8 justify-start rounded-md px-0 text-sm sm:px-3" onClick={handleClearAllFilters}>
+              Clear all filters
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="overflow-hidden rounded-md border bg-card shadow-sm">
+        <Table className="min-w-full">
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-muted/40">
+              {fallbackColumns.map((column) => {
+                const isSorted = sortState?.columnId === column.id
+
+                return (
+                  <TableHead key={column.id} className={cn("px-4 py-3", getStickyClass(column.sticky), column.headerClassName)}>
+                    {column.sortable ? (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 text-left font-medium text-foreground transition hover:text-primary"
+                        onClick={() => handleSort(column)}
+                      >
+                        <span>{column.header}</span>
+                        {isSorted ? (
+                          sortState?.direction === "asc" ? <ArrowUpIcon className="size-4" /> : <ArrowDownIcon className="size-4" />
+                        ) : (
+                          <ArrowUpDownIcon className="size-4 text-muted-foreground" />
+                        )}
+                      </button>
+                    ) : (
+                      <span className="font-medium text-foreground">{column.header}</span>
+                    )}
+                  </TableHead>
+                )
+              })}
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {table.loading ? (
+              <TableRow>
+                <TableCell colSpan={fallbackColumns.length} className="px-4 py-10 text-center text-muted-foreground">
+                  {table.loadingMessage ?? "Loading records..."}
+                </TableCell>
+              </TableRow>
+            ) : sortedData.length > 0 ? (
+              sortedData.map((row, index) => (
+                <TableRow key={table.rowKey ? table.rowKey(row, index) : index}>
+                  {fallbackColumns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      className={cn("px-4 py-3 align-top text-muted-foreground", getStickyClass(column.sticky), column.className)}
+                    >
+                      {column.cell(row)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={fallbackColumns.length} className="px-4 py-10 text-center text-muted-foreground">
+                  {table.emptyMessage ?? "No records found."}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </section>
+
+      <section className="rounded-md border bg-card px-4 py-3 shadow-sm">
+        <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            {footer?.content ?? (
+              <span>
+                Total records: <span className="font-medium text-foreground">{pagination?.totalRecords ?? sortedData.length}</span>
+              </span>
+            )}
+          </div>
+          {pagination ? (
+            <span>
+              Showing <span className="font-medium text-foreground">{paginationStart}</span> to{" "}
+              <span className="font-medium text-foreground">{paginationEnd}</span> of{" "}
+              <span className="font-medium text-foreground">{pagination.totalRecords}</span>
+            </span>
+          ) : null}
+        </div>
+      </section>
+
+      {pagination ? (
+        <section className="rounded-md border bg-card px-4 py-3 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>Rows per page</span>
+              <Select
+                value={String(pagination.pageSize)}
+                onValueChange={(value) => pagination.onPageSizeChange(Number(value))}
+              >
+                <SelectTrigger className="min-w-20 rounded-md">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {pageSizeOptions.map((option) => (
+                    <SelectItem key={option} value={String(option)}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Pagination className="mx-0 w-full justify-start lg:w-auto lg:justify-end">
+              <PaginationContent className="flex-wrap justify-start">
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    className={cn(pagination.currentPage <= 1 && "pointer-events-none opacity-50")}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      if (pagination.currentPage > 1) {
+                        pagination.onPageChange(pagination.currentPage - 1)
+                      }
+                    }}
+                  />
+                </PaginationItem>
+
+                {pageNumbers.map((pageNumber, index) => {
+                  const previousPage = pageNumbers[index - 1]
+                  const showGap = previousPage && pageNumber - previousPage > 1
+
+                  return (
+                    <div key={pageNumber} className="flex items-center">
+                      {showGap ? (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : null}
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          isActive={pageNumber === pagination.currentPage}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            pagination.onPageChange(pageNumber)
+                          }}
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </div>
+                  )
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    className={cn(pagination.currentPage >= totalPages && "pointer-events-none opacity-50")}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      if (pagination.currentPage < totalPages) {
+                        pagination.onPageChange(pagination.currentPage + 1)
+                      }
+                    }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </section>
+      ) : null}
+    </div>
+  )
+}

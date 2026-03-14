@@ -19,7 +19,13 @@ import UserEditPage from './pages/admin/users/UserEditPage'
 import RolesPage from './pages/admin/roles/RolesPage'
 import RoleCreatePage from './pages/admin/roles/RoleCreatePage'
 import RoleEditPage from './pages/admin/roles/RoleEditPage'
+import PermissionsPage from './pages/admin/permissions/PermissionsPage'
 import RolePermissionEditor from './pages/admin/permissions/RolePermissionEditor'
+import CitiesPage from './pages/admin/common/CitiesPage'
+import StatesPage from './pages/admin/common/StatesPage'
+import ProductTypesPage from './pages/admin/common/ProductTypesPage'
+import UnitsPage from './pages/admin/common/UnitsPage'
+import BrandsPage from './pages/admin/common/BrandsPage'
 import { useAuth } from './state/authStore'
 
 import './css/app.css'
@@ -66,7 +72,13 @@ function App() {
                 <Route path="/admin/roles" element={<RolesPage />} />
                 <Route path="/admin/roles/create" element={<RoleCreatePage />} />
                 <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
+                <Route path="/admin/permissions" element={<PermissionsPage />} />
                 <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
+                <Route path="/admin/common/cities" element={<CitiesPage />} />
+                <Route path="/admin/common/states" element={<StatesPage />} />
+                <Route path="/admin/common/product-types" element={<ProductTypesPage />} />
+                <Route path="/admin/common/units" element={<UnitsPage />} />
+                <Route path="/admin/common/brands" element={<BrandsPage />} />
               </Route>
             </Route>
 

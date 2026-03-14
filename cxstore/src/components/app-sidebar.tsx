@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
+import { getAdminMenuItems } from "@/components/admin/menu/admin-menu"
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -19,6 +20,7 @@ import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon,
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const auth = useAuth()
+  const adminItems = getAdminMenuItems(auth.user?.role)
 
   const navMain = [
     {
@@ -67,34 +69,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Administration",
       url: auth.user?.role === "Admin" ? "/admin" : "/dashboard",
       icon: <Settings2Icon />,
-      items: auth.user?.role === "Admin"
-        ? [
-            {
-              title: "Admin Console",
-              url: "/admin",
-            },
-            {
-              title: "Users",
-              url: "/admin/users",
-            },
-            {
-              title: "Roles",
-              url: "/admin/roles",
-            },
-          ]
-        : auth.user?.role === "Vendor"
-          ? [
-              {
-                title: "Vendor Console",
-                url: "/vendor",
-              },
-            ]
-        : [
-            {
-              title: "Preferences",
-              url: "/dashboard",
-            },
-          ],
+      items: adminItems,
     },
   ]
 
