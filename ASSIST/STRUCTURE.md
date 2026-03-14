@@ -53,16 +53,8 @@ codexsun/
 |   |   |-- CodexsunDbContext.cs
 |   |   `-- CodexsunDbContextFactory.cs
 |   |-- Migrations/
-|   |   |-- 20260314032724_IdentityAuthSystem.cs
-|   |   |-- 20260314032724_IdentityAuthSystem.Designer.cs
-|   |   |-- 20260314041852_RolePermissionUserManagement.cs
-|   |   |-- 20260314041852_RolePermissionUserManagement.Designer.cs
-|   |   |-- 20260314044451_SuperAdminSeed.cs
-|   |   |-- 20260314044451_SuperAdminSeed.Designer.cs
-|   |   |-- 20260314085639_CommonMasterData.cs
-|   |   |-- 20260314085639_CommonMasterData.Designer.cs
-|   |   |-- 20260314122531_RenameCommonTables.cs
-|   |   |-- 20260314122531_RenameCommonTables.Designer.cs
+|   |   |-- 20260314133756_ProductionBaseline.cs
+|   |   |-- 20260314133756_ProductionBaseline.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -110,6 +102,12 @@ codexsun/
 |           |-- Entities/
 |           |-- Services/
 |           `-- Validators/
+|       |-- Finance/
+|       |   |-- Configurations/
+|       |   `-- Entities/
+|       |-- System/
+|       |   |-- Configurations/
+|       |   `-- Entities/
 |       |-- Admin/
 |       |-- VendorDashboard/
 |       `-- CXCore/
@@ -122,20 +120,30 @@ codexsun/
 |   `-- src/
 |       |-- api/
 |       |   |-- authApi.ts
+|       |   |-- brandApi.ts
+|       |   |-- colourApi.ts
+|       |   |-- commonApi.ts
+|       |   |-- hsnApi.ts
 |       |   |-- httpClient.ts
+|       |   |-- locationApi.ts
 |       |   |-- roleApi.ts
+|       |   |-- sizeApi.ts
+|       |   |-- unitApi.ts
 |       |   `-- userApi.ts
 |       |-- components/
-|       |   |-- ProtectedRoute.tsx
 |       |   |-- admin/
-|       |   |   |-- CommonMasterListPage.tsx
-|       |   |   |-- CommonMasterUpsertDialog.tsx
 |       |   |   |-- AdminListPlaceholder.tsx
-|       |   |   |-- ListCommon.tsx
 |       |   |   `-- menu/
 |       |   |       `-- admin-menu.ts
+|       |   |-- blocks/
+|       |   |-- forms/
+|       |   |   |-- CommonList.tsx
+|       |   |   |-- CommonUpsertDialog.tsx
+|       |   |   |-- ProtectedRoute.tsx
+|       |   |   |-- commonMasterTypes.ts
+|       |   |   |-- useCommonListState.tsx
+|       |   |   `-- useCommonMasterState.tsx
 |       |   |-- layout/
-|       |   |-- login-form.tsx
 |       |   `-- table/
 |       |       `-- AdminTable.tsx
 |       |-- css/
@@ -143,11 +151,7 @@ codexsun/
 |       |-- pages/
 |       |   `-- admin/
 |       |       |-- common/
-|       |       |   |-- BrandsPage.tsx
-|       |       |   |-- CitiesPage.tsx
-|       |       |   |-- ProductTypesPage.tsx
-|       |       |   |-- StatesPage.tsx
-|       |       |   `-- UnitsPage.tsx
+|       |       |   `-- CommonMasterPage.tsx
 |       |       |-- permissions/
 |       |       |   |-- PermissionsPage.tsx
 |       |       |   `-- RolePermissionEditor.tsx
@@ -160,6 +164,10 @@ codexsun/
 |       |           |-- UserEditPage.tsx
 |       |           `-- UsersPage.tsx
 |       |-- state/
+|       |-- types/
+|       |   |-- admin.ts
+|       |   |-- auth.ts
+|       |   `-- common.ts
 |       |   `-- authStore.ts
 |       |-- hooks/
 |       `-- types/

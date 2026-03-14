@@ -25,20 +25,24 @@ Connection string:
 | EF Core | Entity persistence, transactional writes, migrations |
 | Dapper | Analytics, reporting, dashboards, search |
 
+## Production Baseline
+
+The database now uses a consolidated `ProductionBaseline` migration as the clean schema baseline for local and production-oriented deployments.
+
 ## Auth Schema
 
-The `IdentityAuthSystem` migration creates the security tables below in PostgreSQL:
+The baseline creates the security tables below in PostgreSQL:
 
-- `auth_users`
-- `auth_roles`
-- `auth_permissions`
-- `auth_role_permissions`
-- `auth_refresh_tokens`
-- `auth_audit_logs`
+- `users`
+- `roles`
+- `permissions`
+- `role_permissions`
+- `refresh_tokens`
+- `audit_logs`
 
 ## Common Master Data Schema
 
-The `CommonMasterData` migration creates reusable master tables, and the `RenameCommonTables` migration normalizes them to direct snake_case entity names without a `common_` prefix.
+The baseline creates reusable Common master tables directly with snake_case names and default `"-"` records where appropriate.
 
 Naming rule:
 
@@ -54,7 +58,7 @@ Current Common master tables:
 - `contact_types`
 - `product_types`
 - `product_groups`
-- `hsn_codes`
+- `hsncodes`
 - `units`
 - `gst_percents`
 - `colours`
@@ -68,6 +72,17 @@ Current Common master tables:
 - `warehouses`
 - `payment_terms`
 
+The current frontend Common admin area is aligned only to these existing baseline-backed Common tables. It does not assume Prompt 013 tables that are not yet present in the live schema.
+
+Additional baseline tables:
+
+- `banks`
+- `payment_modes`
+- `ledger_groups`
+- `transactions`
+- `system_settings`
+- `number_series`
+
 All Common tables use integer identities plus `IsActive`, `CreatedAt`, and `UpdatedAt`.
 
 ## Common Indexes
@@ -75,12 +90,13 @@ All Common tables use integer identities plus `IsActive`, `CreatedAt`, and `Upda
 Representative indexes and uniqueness rules:
 
 - `countries.Name` unique
+- `countries.CountryCode` unique
 - `states(CountryId, Name)` unique
 - `states(CountryId, StateCode)` unique
 - `districts(StateId, Name)` unique
 - `cities(DistrictId, Name)` unique
 - `pincodes.Code` unique
-- `hsn_codes.Code` unique
+- `hsncodes.Code` unique
 - `units.Name` unique
 - `units.ShortName` unique
 - `gst_percents.Percentage` unique
@@ -88,6 +104,12 @@ Representative indexes and uniqueness rules:
 - `currencies.Name` unique
 - `currencies.Code` unique
 - `payment_terms.Name` unique
+- `banks.Name` unique
+- `payment_modes.Name` unique
+- `ledger_groups.Name` unique
+- `transactions.ReferenceNo` unique
+- `system_settings.Key` unique
+- `number_series.Name` unique
 
 Search-oriented indexes are also present on common master names and active flags to support autocomplete-style queries.
 
@@ -95,17 +117,17 @@ Search-oriented indexes are also present on common master names and active flags
 
 Unique indexes:
 
-- `auth_users.Email`
-- `auth_users.Username`
-- `auth_roles.Name`
-- `auth_permissions.Code`
+- `users.Email`
+- `users.Username`
+- `roles.Name`
+- `permissions.Code`
 
 Additional indexes:
 
-- `auth_refresh_tokens.Token`
-- `auth_refresh_tokens(UserId, ExpiresAt)`
-- `auth_audit_logs.Action`
-- `auth_audit_logs.CreatedAt`
+- `refresh_tokens.Token`
+- `refresh_tokens(UserId, ExpiresAt)`
+- `audit_logs.Action`
+- `audit_logs.CreatedAt`
 
 ## Seed Data
 
@@ -129,10 +151,14 @@ Bootstrap user:
 
 Common master seeds:
 
-- Countries: `India`, `United States`
-- States: `Tamil Nadu`, `Karnataka`, `California`
-- Contact types: `Customer`, `Vendor`, `Supplier`, `Employee`
+- Countries: `- (-- )`, `India (IN)`, `United States (US)`
+- States: `-`, `Tamil Nadu`, `Karnataka`, `California`
+- Contact types: `-`, `Customer`, `Vendor`, `Supplier`, `Employee`
 - GST percentages: `0`, `5`, `12`, `18`, `28`
-- Units: `Nos`, `Kg`, `Mtr`
+- Units: `-`, `PCS`, `KG`, `MTR`, `LTR`
+- Banks: `-`, `State Bank of India`, `Bank of America`
+- Payment modes: `-`, `Cash`, `Bank Transfer`, `Card`
+- Ledger groups: `-`, `Sales`, `Purchases`, `Expenses`
+- Number series: `-`, `Sales Order`
 
 Dynamic SQL from user input is forbidden.

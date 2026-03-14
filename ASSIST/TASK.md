@@ -2,27 +2,31 @@
 
 ## Prompt
 
-Consolidate the backend migrations into a single clean `BaselineSchema` migration, reorganize the schema by module, and add default `"-"` seed data across all common tables.
+Implement only the frontend/backend alignment that matches the existing real schema and current repository structure, without breaking any working modules or rewriting the baseline again.
 
 ## Objective
 
-Assess whether the current Codexsun backend and database can be safely reset into one baseline migration, then implement the baseline only for the schema that actually exists in code without inventing undocumented domains.
+Extend the current Common module and admin UI only where the real `ProductionBaseline` and existing Common controllers already support it, replacing placeholder frontend common pages with API-backed list screens and a dedicated Admin Common navigation path.
 
 ## Constraints
 
 - Follow `ASSIST/AI_RULES.md` and `ASSIST/STANDARDS.md`.
-- Do not invent missing ERP domains that are not implemented in the repository without explicit approval.
-- Verify the actual PostgreSQL tables and current EF model before deleting or regenerating migrations.
-- Keep the application buildable and the live development database recoverable.
+- Do not break the current production baseline schema or the working GUID-based Auth module.
+- Keep backend, frontend, and documentation changes consistent with the real migration history in the repository.
+- Use the existing `Common` backend module and current `CommonList` / `CommonUpsertDialog` frontend building blocks rather than introducing a conflicting parallel structure.
 
 ## Observed Repository State
 
-- `CodexsunDbContext` currently models only `Auth` and `Common` entities.
-- The prompt references many additional domains and tables such as `address_books`, `contact_groups`, `tax_categories`, product variants, finance ledgers, and system settings that do not exist in the current backend code.
-- The current database and migration set therefore cannot be consolidated into the requested full target schema without first implementing a large number of missing modules.
+- The active migration in `cxserver/Migrations` is `20260314133756_ProductionBaseline`, not `DatabaseStructureAuthToVendor`.
+- The backend currently exposes `Auth`, `Common`, `Finance`, and `System` modules; separate `Location`, `Product`, `Contact`, and `Vendor` modules do not yet exist.
+- The frontend already uses `CommonList` and `CommonUpsertDialog`, while the prompt still references the older `ListCommon` naming.
+- The current schema does not include the full Prompt 013 target set for `user_roles`, `contacts`, `contact_addresses`, `companies`, `vendors`, `vendor_users`, `vendor_addresses`, or `product_categories`.
+- The backend Common controllers already cover the real reusable masters that exist now: location, catalog, and operations masters.
+- The frontend Common pages are still local mock screens and are not yet wired to the backend APIs.
 
 ## Plan
 
-1. Capture the prompt, update task tracking, and scan the current EF model plus live PostgreSQL schema.
-2. Compare the requested baseline against the implemented repository scope and identify blockers or missing modules.
-3. If the requested scope exceeds the implemented system, stop and get user direction before making destructive migration-history changes.
+1. Capture the new instruction and update the task record for a non-breaking implementation against the current real schema.
+2. Add API-backed frontend Common master clients, a registry-driven Common page, and Admin Common navigation for the masters already exposed by the backend.
+3. Reuse the existing backend Common module surface and only add lightweight backend improvements if needed for the current frontend flow.
+4. Rebuild frontend and backend, then update repository documentation and the project log.

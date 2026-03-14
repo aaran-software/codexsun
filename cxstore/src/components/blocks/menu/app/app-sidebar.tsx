@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
-import { getAdminMenuItems } from "@/components/admin/menu/admin-menu"
+import { getAdminMenuItems, getCommonMenuItems } from "@/components/admin/menu/admin-menu"
 import { NavMain } from "./nav-main"
 import { NavProjects } from "./nav-projects"
 import { NavSecondary } from "./nav-secondary"
@@ -16,11 +16,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, FrameIcon, PieChartIcon, MapIcon, TerminalIcon } from "lucide-react"
+import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, FrameIcon, PieChartIcon, MapIcon, TerminalIcon, DatabaseIcon } from "lucide-react"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const auth = useAuth()
   const adminItems = getAdminMenuItems(auth.user?.role)
+  const commonItems = getCommonMenuItems(auth.user?.role)
 
   const navMain = [
     {
@@ -71,6 +72,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: <Settings2Icon />,
       items: adminItems,
     },
+    ...(commonItems.length > 0
+      ? [
+          {
+            title: "Common",
+            url: "/admin/common/brands",
+            icon: <DatabaseIcon />,
+            items: commonItems,
+          },
+        ]
+      : []),
   ]
 
   const navSecondary = [

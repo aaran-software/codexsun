@@ -2,6 +2,16 @@
 
 ---
 
+CX-027
+- Reworked the frontend Common admin area to align with the actual `ProductionBaseline` schema by replacing the local placeholder Common pages with a registry-driven `CommonMasterPage` backed by live Common API clients.
+- Added dedicated Common admin navigation, reusable Common API wrappers, dynamic form option loading for location-linked masters, and API-backed popup upsert flows using the existing `CommonList` and `CommonUpsertDialog` components.
+- Revalidated the frontend production build and backend API project build without changing the current database baseline or breaking the existing Auth/Common module structure.
+
+CX-026
+- Deleted the previous incremental EF migration files and regenerated the backend schema as a single `ProductionBaseline` migration.
+- Expanded the backend model with `banks`, `payment_modes`, `ledger_groups`, `transactions`, `system_settings`, and `number_series`, while also renaming the Auth tables to `users`, `roles`, `permissions`, `role_permissions`, `refresh_tokens`, and `audit_logs`.
+- Added `country_code`, refreshed `"-"` default seed data across the shared master tables, and revalidated PostgreSQL migration application, backend tests, and full solution builds against the new baseline.
+
 CX-025
 - Renamed all Common master EF table mappings from `common_*` names to direct snake_case entity table names such as `cities`, `brands`, and `contact_types`.
 - Generated and applied the `RenameCommonTables` migration so PostgreSQL tables, primary keys, foreign keys, and indexes were renamed without changing Common API routes or entity class names.

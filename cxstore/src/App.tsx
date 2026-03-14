@@ -26,11 +26,7 @@ const RoleCreatePage = lazy(() => import("./pages/admin/roles/RoleCreatePage"))
 const RoleEditPage = lazy(() => import("./pages/admin/roles/RoleEditPage"))
 const PermissionsPage = lazy(() => import("./pages/admin/permissions/PermissionsPage"))
 const RolePermissionEditor = lazy(() => import("./pages/admin/permissions/RolePermissionEditor"))
-const CitiesPage = lazy(() => import("./pages/admin/common/CitiesPage"))
-const StatesPage = lazy(() => import("./pages/admin/common/StatesPage"))
-const ProductTypesPage = lazy(() => import("./pages/admin/common/ProductTypesPage"))
-const UnitsPage = lazy(() => import("./pages/admin/common/UnitsPage"))
-const BrandsPage = lazy(() => import("./pages/admin/common/BrandsPage"))
+const CommonMasterPage = lazy(() => import("./pages/admin/common/CommonMasterPage"))
 
 function App() {
   const auth = useAuth()
@@ -74,11 +70,8 @@ function App() {
                   <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
                   <Route path="/admin/permissions" element={<PermissionsPage />} />
                   <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
-                  <Route path="/admin/common/cities" element={<CitiesPage />} />
-                  <Route path="/admin/common/states" element={<StatesPage />} />
-                  <Route path="/admin/common/product-types" element={<ProductTypesPage />} />
-                  <Route path="/admin/common/units" element={<UnitsPage />} />
-                  <Route path="/admin/common/brands" element={<BrandsPage />} />
+                  <Route path="/admin/common" element={<Navigate to="/admin/common/brands" replace />} />
+                  <Route path="/admin/common/:masterKey" element={<CommonMasterPage />} />
                 </Route>
               </Route>
 

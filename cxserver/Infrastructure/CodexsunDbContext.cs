@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Common.Entities;
+using cxserver.Modules.Finance.Entities;
+using cxserver.Modules.System.Entities;
 
 namespace cxserver.Infrastructure;
 
@@ -33,6 +35,12 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
+    public DbSet<Bank> Banks => Set<Bank>();
+    public DbSet<PaymentMode> PaymentModes => Set<PaymentMode>();
+    public DbSet<LedgerGroup> LedgerGroups => Set<LedgerGroup>();
+    public DbSet<LedgerTransaction> Transactions => Set<LedgerTransaction>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+    public DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,7 +61,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.ToTable("auth_users");
+            entity.ToTable("users");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Username).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
@@ -84,7 +92,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.ToTable("auth_roles");
+            entity.ToTable("roles");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
@@ -99,7 +107,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
 
         modelBuilder.Entity<Permission>(entity =>
         {
-            entity.ToTable("auth_permissions");
+            entity.ToTable("permissions");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Code).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
@@ -114,7 +122,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
 
         modelBuilder.Entity<RolePermission>(entity =>
         {
-            entity.ToTable("auth_role_permissions");
+            entity.ToTable("role_permissions");
             entity.HasKey(x => new { x.RoleId, x.PermissionId });
             entity.HasOne(x => x.Role)
                 .WithMany(x => x.RolePermissions)
@@ -136,7 +144,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {
-            entity.ToTable("auth_refresh_tokens");
+            entity.ToTable("refresh_tokens");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Token).HasMaxLength(512).IsRequired();
             entity.Property(x => x.IpAddress).HasMaxLength(128).IsRequired();
@@ -150,7 +158,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
 
         modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.ToTable("auth_audit_logs");
+            entity.ToTable("audit_logs");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Action).HasMaxLength(128).IsRequired();
             entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();

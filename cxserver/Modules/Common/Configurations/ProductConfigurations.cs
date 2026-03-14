@@ -12,10 +12,11 @@ public sealed class ContactTypeConfiguration : IEntityTypeConfiguration<ContactT
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
         builder.HasData(
-            new ContactType { Id = 1, Name = "Customer", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
-            new ContactType { Id = 2, Name = "Vendor", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
-            new ContactType { Id = 3, Name = "Supplier", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
-            new ContactType { Id = 4, Name = "Employee", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
+            new ContactType { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new ContactType { Id = 2, Name = "Customer", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new ContactType { Id = 3, Name = "Vendor", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new ContactType { Id = 4, Name = "Supplier", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new ContactType { Id = 5, Name = "Employee", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -26,6 +27,8 @@ public sealed class ProductTypeConfiguration : IEntityTypeConfiguration<ProductT
         builder.ToTable("product_types");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new ProductType { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -36,6 +39,8 @@ public sealed class ProductGroupConfiguration : IEntityTypeConfiguration<Product
         builder.ToTable("product_groups");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new ProductGroup { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -43,11 +48,13 @@ public sealed class HsnCodeConfiguration : IEntityTypeConfiguration<HsnCode>
 {
     public void Configure(EntityTypeBuilder<HsnCode> builder)
     {
-        builder.ToTable("hsn_codes");
+        builder.ToTable("hsncodes");
         builder.ConfigureCommon();
         builder.Property(x => x.Code).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(256).IsRequired();
         builder.HasIndex(x => x.Code).IsUnique();
+        builder.HasData(
+            new HsnCode { Id = 1, Code = "-", Description = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -61,9 +68,11 @@ public sealed class UnitConfiguration : IEntityTypeConfiguration<Unit>
         builder.HasIndex(x => x.Name).IsUnique();
         builder.HasIndex(x => x.ShortName).IsUnique();
         builder.HasData(
-            new Unit { Id = 1, Name = "Numbers", ShortName = "Nos", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
-            new Unit { Id = 2, Name = "Kilogram", ShortName = "Kg", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
-            new Unit { Id = 3, Name = "Meter", ShortName = "Mtr", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
+            new Unit { Id = 1, Name = "-", ShortName = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new Unit { Id = 2, Name = "Pieces", ShortName = "PCS", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new Unit { Id = 3, Name = "Kilogram", ShortName = "KG", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new Unit { Id = 4, Name = "Meter", ShortName = "MTR", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new Unit { Id = 5, Name = "Litre", ShortName = "LTR", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -91,6 +100,8 @@ public sealed class ColourConfiguration : IEntityTypeConfiguration<Colour>
         builder.ToTable("colours");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new Colour { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -101,6 +112,8 @@ public sealed class SizeConfiguration : IEntityTypeConfiguration<Size>
         builder.ToTable("sizes");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new Size { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -111,6 +124,8 @@ public sealed class OrderTypeConfiguration : IEntityTypeConfiguration<OrderType>
         builder.ToTable("order_types");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new OrderType { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -121,6 +136,8 @@ public sealed class StyleConfiguration : IEntityTypeConfiguration<Style>
         builder.ToTable("styles");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new Style { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }
 
@@ -131,5 +148,7 @@ public sealed class BrandConfiguration : IEntityTypeConfiguration<Brand>
         builder.ToTable("brands");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasData(
+            new Brand { Id = 1, Name = "-", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
     }
 }

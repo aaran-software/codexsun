@@ -2,6 +2,7 @@ namespace cxserver.Modules.Common.Entities;
 
 public sealed class Country : NamedCommonMasterEntity
 {
+    public string CountryCode { get; set; } = string.Empty;
     public ICollection<State> States { get; set; } = [];
     public ICollection<Destination> Destinations { get; set; } = [];
 }
