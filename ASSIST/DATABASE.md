@@ -148,14 +148,31 @@ Permissions:
 Bootstrap user:
 
 - `sundar@sundar.com` mapped to role `Admin`
+- `management@codexsun.com` mapped to role `Admin`
+- `backoffice@codexsun.com` mapped to role `Staff`
+- `storefront@codexsun.com` mapped to role `Customer`
 
 Common master seeds:
 
 - Countries: `- (-- )`, `India (IN)`, `United States (US)`
-- States: `-`, `Tamil Nadu`, `Karnataka`, `California`
-- Contact types: `-`, `Customer`, `Vendor`, `Supplier`, `Employee`
+- States: `-`, all states and union territories of India, plus `California`
+- Districts: `-`, all Tamil Nadu districts, plus major metro districts used by seeded cities
+- Cities: `-`, major Tamil Nadu cities plus key Indian metros such as `Bengaluru`, `Mumbai`, `Delhi`, `Hyderabad`, `Kolkata`, and `Kochi`
+- Pincodes: `-`, seeded known pincodes for the major seeded cities
+- Contact types: `-`, `Customer`, `Vendor`, `Supplier`, `Employee`, `Distributor`, `Retailer`
+- Product groups: `-`, `Apparel`, `Accessories`
+- Product types: `-`, `T-Shirt`, `Shirt`, `Hoodie`, `Polo`
+- HSN codes: `-`, plus seeded apparel/tee-shirt codes including `61091000`
 - GST percentages: `0`, `5`, `12`, `18`, `28`
-- Units: `-`, `PCS`, `KG`, `MTR`, `LTR`
+- Units: `-`, `PCS`, `KG`, `MTR`, `LTR`, `BOX`, `PAIR`
+- Colours: `-`, `Black`, `White`, `Blue`, `Navy`, `Grey`, `Red`, `Maroon`, `Olive`, `Green`, `Yellow`
+- Sizes: `-`, `Free Size`, `XS`, `S`, `M`, `L`, `XL`, `XXL`, `3XL`
+- Brands: `-`, `Codexsun`, `Nike`, `Adidas`, `Puma`
+- Transports: `-`, `Road Transport`, `Air Cargo`, `Courier`, `Self Pickup`
+- Destinations: `-`, seeded hub destinations for `Chennai`, `Coimbatore`, `Bengaluru`, `Mumbai`, and `Delhi`
+- Currencies: `-`, `INR`, `USD`
+- Warehouses: `-`, seeded Chennai, Coimbatore, and Bengaluru warehouse records
+- Payment terms: `-`, `Advance`, `Net 15`, `Net 30`, `Net 45`
 - Banks: `-`, `State Bank of India`, `Bank of America`
 - Payment modes: `-`, `Cash`, `Bank Transfer`, `Card`
 - Ledger groups: `-`, `Sales`, `Purchases`, `Expenses`

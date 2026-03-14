@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react"
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom"
 
 import ProtectedRoute from "./components/forms/ProtectedRoute"
+import GlobalLoader from "@/components/global/GlobalLoader"
 import { ThemeProvider } from "@/components/blocks/theme/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAuth } from "./state/authStore"
@@ -40,7 +41,7 @@ function App() {
     >
       <Router>
         <TooltipProvider>
-          <Suspense fallback={<div className="min-h-screen bg-background" />}>
+          <Suspense fallback={<GlobalLoader className="bg-background" />}>
             <Routes>
               <Route element={<WebLayout />}>
                 <Route path="/" element={<Home />} />

@@ -2,6 +2,16 @@
 
 ---
 
+CX-029
+- Refactored Auth and Common seed data into cleaner reusable seed definition files, keeping `sundar@sundar.com` as the super admin while adding seeded `management`, `backoffice`, and `storefront` users mapped to the existing role model.
+- Expanded the Common master seed dataset with all Indian states and union territories, all Tamil Nadu districts, major Tamil Nadu and India cities, known pincodes, richer contact/product masters, apparel-focused HSN codes, and more practical operational master defaults.
+- Generated and applied the incremental `ExpandedAuthAndCommonSeedData` migration, recreated the PostgreSQL database from scratch, and revalidated backend builds, solution builds, and the full test suite.
+
+CX-028
+- Verified the frontend Common registry and Common side menu against the live backend Common controller endpoints and confirmed coverage for all currently exposed Common masters in the `ProductionBaseline` schema.
+- Confirmed the Admin Common area already routes every current Common master through the shared `CommonMasterPage` instead of requiring duplicate per-master page files.
+- Revalidated the frontend production build after the coverage check.
+
 CX-027
 - Reworked the frontend Common admin area to align with the actual `ProductionBaseline` schema by replacing the local placeholder Common pages with a registry-driven `CommonMasterPage` backed by live Common API clients.
 - Added dedicated Common admin navigation, reusable Common API wrappers, dynamic form option loading for location-linked masters, and API-backed popup upsert flows using the existing `CommonList` and `CommonUpsertDialog` components.

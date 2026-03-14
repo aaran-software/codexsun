@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import type { ChangeEvent, FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
+import GlobalLoader from "@/components/global/GlobalLoader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,7 +9,7 @@ import { getRoles } from "@/api/roleApi"
 import { getUserById, updateUser } from "@/api/userApi"
 import type { RoleSummary } from "@/types/admin"
 
-const selectClassName = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
+const selectClassName = "h-8 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-sm"
 
 export default function UserEditPage() {
   const navigate = useNavigate()
@@ -73,7 +74,7 @@ export default function UserEditPage() {
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
-          <div className="text-sm text-muted-foreground">Loading user...</div>
+          <GlobalLoader size="sm" className="min-h-56 py-6" />
         ) : (
           <>
             {error ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div> : null}

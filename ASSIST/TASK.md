@@ -2,11 +2,11 @@
 
 ## Prompt
 
-Implement only the frontend/backend alignment that matches the existing real schema and current repository structure, without breaking any working modules or rewriting the baseline again.
+Expand the current seed data cleanly for Auth and Common so a fresh database contains practical default masters, major India/Tamil Nadu location data, and multiple seeded users mapped to the existing role model.
 
 ## Objective
 
-Extend the current Common module and admin UI only where the real `ProductionBaseline` and existing Common controllers already support it, replacing placeholder frontend common pages with API-backed list screens and a dedicated Admin Common navigation path.
+Refactor the seed definitions into cleaner reusable seed data sources, add richer default records for the existing Common masters, preserve `sundar@sundar.com` as the super admin, add three additional seeded users for storefront, back office, and management, then recreate the database from scratch and validate the result.
 
 ## Constraints
 
@@ -14,6 +14,8 @@ Extend the current Common module and admin UI only where the real `ProductionBas
 - Do not break the current production baseline schema or the working GUID-based Auth module.
 - Keep backend, frontend, and documentation changes consistent with the real migration history in the repository.
 - Use the existing `Common` backend module and current `CommonList` / `CommonUpsertDialog` frontend building blocks rather than introducing a conflicting parallel structure.
+- Do not modify the consolidated `ProductionBaseline`; use an incremental migration for the seed refresh.
+- Keep `"-"` as the default first seed row for name/code-based unknown master values where the schema allows it.
 
 ## Observed Repository State
 
@@ -22,11 +24,12 @@ Extend the current Common module and admin UI only where the real `ProductionBas
 - The frontend already uses `CommonList` and `CommonUpsertDialog`, while the prompt still references the older `ListCommon` naming.
 - The current schema does not include the full Prompt 013 target set for `user_roles`, `contacts`, `contact_addresses`, `companies`, `vendors`, `vendor_users`, `vendor_addresses`, or `product_categories`.
 - The backend Common controllers already cover the real reusable masters that exist now: location, catalog, and operations masters.
-- The frontend Common pages are still local mock screens and are not yet wired to the backend APIs.
+- Auth seeding is currently embedded inline in `CodexsunDbContext.OnModelCreating`.
+- Common master seed data is currently embedded directly inside the Common configuration classes with only minimal default records.
 
 ## Plan
 
-1. Capture the new instruction and update the task record for a non-breaking implementation against the current real schema.
-2. Add API-backed frontend Common master clients, a registry-driven Common page, and Admin Common navigation for the masters already exposed by the backend.
-3. Reuse the existing backend Common module surface and only add lightweight backend improvements if needed for the current frontend flow.
-4. Rebuild frontend and backend, then update repository documentation and the project log.
+1. Capture the prompt and move Auth/Common seed values into cleaner reusable seed definitions.
+2. Expand the current seed dataset for countries, Indian states, Tamil Nadu districts, major cities, known pincodes, contact types, sizes, colours, HSN codes, and related common masters.
+3. Seed additional users for management, back office, and storefront using the existing role model and keep `sundar@sundar.com` as the super admin.
+4. Generate an incremental migration, drop and recreate the database, then run builds/tests and update documentation.

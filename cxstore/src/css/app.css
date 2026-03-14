@@ -901,10 +901,10 @@
   }
 }
 
-/* Focus visible support for better keyboard navigation */
+/* Keep a fallback focus outline for non-shadcn elements without overpowering component-level rings. */
 *:focus-visible {
-  outline: 3px solid var(--accent-gradient-end);
-  outline-offset: 2px;
+  outline: 1px solid color-mix(in oklab, var(--ring) 35%, transparent);
+  outline-offset: 1px;
 }
 
 .dark {

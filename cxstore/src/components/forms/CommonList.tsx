@@ -12,6 +12,7 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import GlobalLoader from "@/components/global/GlobalLoader"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -151,10 +152,6 @@ function getStickyClass(sticky?: "left" | "right", surface: "header" | "body" = 
   return ""
 }
 
-function arraysEqual(left: string[], right: string[]) {
-  return left.length === right.length && left.every((value, index) => value === right[index])
-}
-
 function compareSortValues(left: PrimitiveSortValue, right: PrimitiveSortValue) {
   if (left == null && right == null) {
     return 0
@@ -215,16 +212,12 @@ export function CommonList<TData>({
   const columnSignature = table.columns.map((column) => column.id).join("|")
 
   useEffect(() => {
-    const defaultVisibleColumnIds = table.columns
-      .filter((column) => column.defaultVisible !== false)
-      .map((column) => column.id)
-
-    setVisibleColumnIds((current) => {
-      const normalized = current.filter((id) => table.columns.some((column) => column.id === id))
-      const next = normalized.length > 0 ? normalized : defaultVisibleColumnIds
-      return arraysEqual(current, next) ? current : next
-    })
-  }, [columnSignature, table.columns])
+    setVisibleColumnIds(
+      table.columns
+        .filter((column) => column.defaultVisible !== false)
+        .map((column) => column.id),
+    )
+  }, [columnSignature])
 
   useEffect(() => {
     setSortState((current) => {
@@ -491,7 +484,10 @@ export function CommonList<TData>({
             {table.loading ? (
               <TableRow>
                 <TableCell colSpan={fallbackColumns.length} className="px-4 py-10 text-center text-muted-foreground">
-                  {table.loadingMessage ?? "Loading records..."}
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <GlobalLoader size="sm" className="min-h-32 p-0" />
+                    <span>{table.loadingMessage ?? "Loading records..."}</span>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : sortedData.length > 0 ? (

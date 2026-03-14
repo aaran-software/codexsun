@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
+import GlobalLoader from "@/components/global/GlobalLoader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getPermissions, getRoleById, getRolePermissions, updateRolePermissions } from "@/api/roleApi"
@@ -73,7 +74,7 @@ export default function RolePermissionEditor() {
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
-          <div className="text-sm text-muted-foreground">Loading permissions...</div>
+          <GlobalLoader size="sm" className="min-h-56 py-6" />
         ) : (
           <>
             {error ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div> : null}

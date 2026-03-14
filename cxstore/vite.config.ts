@@ -49,6 +49,10 @@ export default defineConfig({
       '/auth': {
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true
+      },
+      '/common': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
       }
     }
   }

@@ -46,19 +46,6 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CodexsunDbContext).Assembly);
 
-        var adminRoleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        var vendorRoleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-        var customerRoleId = Guid.Parse("33333333-3333-3333-3333-333333333333");
-        var staffRoleId = Guid.Parse("44444444-4444-4444-4444-444444444444");
-        var superAdminUserId = Guid.Parse("55555555-5555-5555-5555-555555555555");
-        var superAdminCreatedAt = new DateTimeOffset(2026, 03, 14, 0, 0, 0, TimeSpan.Zero);
-        const string superAdminPasswordHash = "$2a$11$7EqJtq98hPqEX7fNZaFWo.btro5BXkJEfY8NxIfDUBBYwyCXY7bjW";
-
-        var userCreatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
-        var userReadPermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
-        var userUpdatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3");
-        var userDeletePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4");
-
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("users");
@@ -74,20 +61,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
                 .WithMany(x => x.Users)
                 .HasForeignKey(x => x.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasData(
-                new User
-                {
-                    Id = superAdminUserId,
-                    Username = "sundar",
-                    Email = "sundar@sundar.com",
-                    PasswordHash = superAdminPasswordHash,
-                    RoleId = adminRoleId,
-                    Status = "Active",
-                    IsDeleted = false,
-                    CreatedAt = superAdminCreatedAt,
-                    UpdatedAt = superAdminCreatedAt
-                });
+            entity.HasData(AuthSeedData.Users);
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -97,12 +71,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
             entity.Property(x => x.Name).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
             entity.HasIndex(x => x.Name).IsUnique();
-
-            entity.HasData(
-                new Role { Id = adminRoleId, Name = "Admin", Description = "Platform administrators" },
-                new Role { Id = vendorRoleId, Name = "Vendor", Description = "Vendor portal users" },
-                new Role { Id = customerRoleId, Name = "Customer", Description = "Storefront customers" },
-                new Role { Id = staffRoleId, Name = "Staff", Description = "Internal staff users" });
+            entity.HasData(AuthSeedData.Roles);
         });
 
         modelBuilder.Entity<Permission>(entity =>
@@ -112,12 +81,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
             entity.Property(x => x.Code).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
             entity.HasIndex(x => x.Code).IsUnique();
-
-            entity.HasData(
-                new Permission { Id = userCreatePermissionId, Code = "User.Create", Description = "Create users" },
-                new Permission { Id = userReadPermissionId, Code = "User.Read", Description = "Read users" },
-                new Permission { Id = userUpdatePermissionId, Code = "User.Update", Description = "Update users" },
-                new Permission { Id = userDeletePermissionId, Code = "User.Delete", Description = "Delete users" });
+            entity.HasData(AuthSeedData.Permissions);
         });
 
         modelBuilder.Entity<RolePermission>(entity =>
@@ -130,16 +94,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
             entity.HasOne(x => x.Permission)
                 .WithMany(x => x.RolePermissions)
                 .HasForeignKey(x => x.PermissionId);
-
-            entity.HasData(
-                new RolePermission { RoleId = adminRoleId, PermissionId = userCreatePermissionId },
-                new RolePermission { RoleId = adminRoleId, PermissionId = userReadPermissionId },
-                new RolePermission { RoleId = adminRoleId, PermissionId = userUpdatePermissionId },
-                new RolePermission { RoleId = adminRoleId, PermissionId = userDeletePermissionId },
-                new RolePermission { RoleId = vendorRoleId, PermissionId = userReadPermissionId },
-                new RolePermission { RoleId = customerRoleId, PermissionId = userReadPermissionId },
-                new RolePermission { RoleId = staffRoleId, PermissionId = userReadPermissionId },
-                new RolePermission { RoleId = staffRoleId, PermissionId = userUpdatePermissionId });
+            entity.HasData(AuthSeedData.RolePermissions);
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>

@@ -50,11 +50,14 @@ codexsun/
 |-- cxserver/                            <- API layer
 |   |-- Middleware/
 |   |-- Infrastructure/
+|   |   |-- AuthSeedData.cs
 |   |   |-- CodexsunDbContext.cs
 |   |   `-- CodexsunDbContextFactory.cs
 |   |-- Migrations/
 |   |   |-- 20260314133756_ProductionBaseline.cs
 |   |   |-- 20260314133756_ProductionBaseline.Designer.cs
+|   |   |-- 20260314143943_ExpandedAuthAndCommonSeedData.cs
+|   |   |-- 20260314143943_ExpandedAuthAndCommonSeedData.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -97,6 +100,9 @@ codexsun/
 |       |       `-- RegisterValidator.cs
 |       `-- Common/
 |           |-- Configurations/
+|           |   |-- LocationSeedData.cs
+|           |   |-- OperationalSeedData.cs
+|           |   `-- ProductSeedData.cs
 |           |-- Controllers/
 |           |-- DTOs/
 |           |-- Entities/
@@ -163,16 +169,13 @@ codexsun/
 |       |           |-- UserCreatePage.tsx
 |       |           |-- UserEditPage.tsx
 |       |           `-- UsersPage.tsx
-|       |-- state/
-|       |-- types/
-|       |   |-- admin.ts
-|       |   |-- auth.ts
-|       |   `-- common.ts
-|       |   `-- authStore.ts
 |       |-- hooks/
+|       |-- state/
+|       |   `-- authStore.ts
 |       `-- types/
 |           |-- admin.ts
-|           `-- auth.ts
+|           |-- auth.ts
+|           `-- common.ts
 |
 |-- cxtest/                              <- xUnit infrastructure validation tests
 |   |-- AuthSecurityTests/

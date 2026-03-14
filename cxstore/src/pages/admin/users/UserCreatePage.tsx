@@ -8,7 +8,7 @@ import { createUser } from "@/api/userApi"
 import { getRoles } from "@/api/roleApi"
 import type { RoleSummary } from "@/types/admin"
 
-const selectClassName = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
+const selectClassName = "h-8 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-sm"
 
 export default function UserCreatePage() {
   const navigate = useNavigate()
