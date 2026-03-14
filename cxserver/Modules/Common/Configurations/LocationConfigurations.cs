@@ -1,0 +1,71 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using cxserver.Modules.Common.Entities;
+
+namespace cxserver.Modules.Common.Configurations;
+
+public sealed class CountryConfiguration : IEntityTypeConfiguration<Country>
+{
+    public void Configure(EntityTypeBuilder<Country> builder)
+    {
+        builder.ToTable("common_countries");
+        builder.ConfigureNamed();
+        builder.HasIndex(x => x.Name).IsUnique();
+
+        builder.HasData(
+            new Country { Id = 1, Name = "India", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new Country { Id = 2, Name = "United States", IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
+    }
+}
+
+public sealed class StateConfiguration : IEntityTypeConfiguration<State>
+{
+    public void Configure(EntityTypeBuilder<State> builder)
+    {
+        builder.ToTable("common_states");
+        builder.ConfigureNamed();
+        builder.Property(x => x.StateCode).HasMaxLength(16).IsRequired();
+        builder.HasIndex(x => new { x.CountryId, x.Name }).IsUnique();
+        builder.HasIndex(x => new { x.CountryId, x.StateCode }).IsUnique();
+        builder.HasOne(x => x.Country).WithMany(x => x.States).HasForeignKey(x => x.CountryId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasData(
+            new State { Id = 1, Name = "Tamil Nadu", StateCode = "TN", CountryId = 1, IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new State { Id = 2, Name = "Karnataka", StateCode = "KA", CountryId = 1, IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc },
+            new State { Id = 3, Name = "California", StateCode = "CA", CountryId = 2, IsActive = true, CreatedAt = Seed.Utc, UpdatedAt = Seed.Utc });
+    }
+}
+
+public sealed class DistrictConfiguration : IEntityTypeConfiguration<District>
+{
+    public void Configure(EntityTypeBuilder<District> builder)
+    {
+        builder.ToTable("common_districts");
+        builder.ConfigureNamed();
+        builder.HasIndex(x => new { x.StateId, x.Name }).IsUnique();
+        builder.HasOne(x => x.State).WithMany(x => x.Districts).HasForeignKey(x => x.StateId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class CityConfiguration : IEntityTypeConfiguration<City>
+{
+    public void Configure(EntityTypeBuilder<City> builder)
+    {
+        builder.ToTable("common_cities");
+        builder.ConfigureNamed();
+        builder.HasIndex(x => new { x.DistrictId, x.Name }).IsUnique();
+        builder.HasOne(x => x.District).WithMany(x => x.Cities).HasForeignKey(x => x.DistrictId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class PincodeConfiguration : IEntityTypeConfiguration<Pincode>
+{
+    public void Configure(EntityTypeBuilder<Pincode> builder)
+    {
+        builder.ToTable("common_pincodes");
+        builder.ConfigureCommon();
+        builder.Property(x => x.Code).HasMaxLength(16).IsRequired();
+        builder.HasIndex(x => x.Code).IsUnique();
+        builder.HasOne(x => x.City).WithMany(x => x.Pincodes).HasForeignKey(x => x.CityId).OnDelete(DeleteBehavior.Restrict);
+    }
+}

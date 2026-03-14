@@ -59,6 +59,14 @@
 - `VendorAccess` requires role `Vendor`
 - `CustomerAccess` requires role `Customer`
 - Frontend route guards support authenticated and role-based route restriction
+- All `/common/*` master-data mutation and lookup endpoints are currently protected with `AdminAccess`
+
+## Common Master Data Validation
+
+- Common master requests are validated with FluentValidation before controller actions continue
+- Duplicate names/codes are rejected at both service level and database index level
+- Hierarchical foreign keys such as Country/State/District/City relationships are verified before create or update operations succeed
+- Destination records require at least one location reference (`CountryId` or `CityId`)
 
 ## Error Monitoring
 

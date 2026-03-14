@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using cxserver.Modules.Auth.Entities;
+using cxserver.Modules.Common.Entities;
 
 namespace cxserver.Infrastructure;
 
@@ -11,9 +12,32 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Country> Countries => Set<Country>();
+    public DbSet<State> States => Set<State>();
+    public DbSet<District> Districts => Set<District>();
+    public DbSet<City> Cities => Set<City>();
+    public DbSet<Pincode> Pincodes => Set<Pincode>();
+    public DbSet<ContactType> ContactTypes => Set<ContactType>();
+    public DbSet<ProductType> ProductTypes => Set<ProductType>();
+    public DbSet<ProductGroup> ProductGroups => Set<ProductGroup>();
+    public DbSet<HsnCode> HsnCodes => Set<HsnCode>();
+    public DbSet<Unit> Units => Set<Unit>();
+    public DbSet<GstPercent> GstPercents => Set<GstPercent>();
+    public DbSet<Colour> Colours => Set<Colour>();
+    public DbSet<Size> Sizes => Set<Size>();
+    public DbSet<OrderType> OrderTypes => Set<OrderType>();
+    public DbSet<Style> Styles => Set<Style>();
+    public DbSet<Brand> Brands => Set<Brand>();
+    public DbSet<Transport> Transports => Set<Transport>();
+    public DbSet<Destination> Destinations => Set<Destination>();
+    public DbSet<Currency> Currencies => Set<Currency>();
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CodexsunDbContext).Assembly);
+
         var adminRoleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var vendorRoleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
         var customerRoleId = Guid.Parse("33333333-3333-3333-3333-333333333333");

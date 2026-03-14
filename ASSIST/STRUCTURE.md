@@ -17,17 +17,8 @@ codexsun/
 |
 |-- prompts/                             <- Captured user prompts
 |   |-- 006.md
-|   |-- 007.md
-|   |-- 008.md
-|   |-- 009.md
-|   |-- 010.md
-|   |-- 011.md
-|   |-- 012.md
-|   |-- 013.md
-|   |-- 014.md
-|   |-- 015.md
-|   |-- 016.md
-|   `-- 017.md
+|   |-- 019.md
+|   `-- ...
 |
 |-- cx.AppHost/                          <- .NET Aspire orchestrator
 |
@@ -108,6 +99,13 @@ codexsun/
 |       |   `-- Validators/
 |       |       |-- LoginValidator.cs
 |       |       `-- RegisterValidator.cs
+|       `-- Common/
+|           |-- Configurations/
+|           |-- Controllers/
+|           |-- DTOs/
+|           |-- Entities/
+|           |-- Services/
+|           `-- Validators/
 |       |-- Admin/
 |       |-- VendorDashboard/
 |       `-- CXCore/
@@ -126,6 +124,10 @@ codexsun/
 |       |-- components/
 |       |   |-- ProtectedRoute.tsx
 |       |   |-- admin/
+|       |   |   |-- AdminListPlaceholder.tsx
+|       |   |   |-- ListCommon.tsx
+|       |   |   `-- menu/
+|       |   |       `-- admin-menu.ts
 |       |   |-- layout/
 |       |   |-- login-form.tsx
 |       |   `-- table/
@@ -134,7 +136,14 @@ codexsun/
 |       |-- lib/
 |       |-- pages/
 |       |   `-- admin/
+|       |       |-- common/
+|       |       |   |-- BrandsPage.tsx
+|       |       |   |-- CitiesPage.tsx
+|       |       |   |-- ProductTypesPage.tsx
+|       |       |   |-- StatesPage.tsx
+|       |       |   `-- UnitsPage.tsx
 |       |       |-- permissions/
+|       |       |   |-- PermissionsPage.tsx
 |       |       |   `-- RolePermissionEditor.tsx
 |       |       |-- roles/
 |       |       |   |-- RoleCreatePage.tsx
@@ -161,6 +170,7 @@ codexsun/
 |   |   |-- PasswordSecurityTests.cs
 |   |   |-- RateLimitTests.cs
 |   |   `-- RefreshTokenTests.cs
+|   |-- CommonMasterDataTests.cs
 |   `-- TestAssembly.cs
 |
 `-- codexsun.slnx
