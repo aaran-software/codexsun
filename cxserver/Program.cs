@@ -15,6 +15,8 @@ using cxserver.Modules.Auth.Security;
 using cxserver.Modules.Auth.Services;
 using cxserver.Modules.Auth.Validators;
 using cxserver.Modules.Common.Services;
+using cxserver.Modules.Contacts.Services;
+using cxserver.Modules.Products.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,6 +113,8 @@ builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CommonMasterDataService>();
+builder.Services.AddScoped<ContactService>();
+builder.Services.AddScoped<ProductService>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
 
 var app = builder.Build();

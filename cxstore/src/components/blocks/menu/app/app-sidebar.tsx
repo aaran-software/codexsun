@@ -1,9 +1,8 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
-import { getAdminMenuItems, getCommonMenuItems } from "@/components/admin/menu/admin-menu"
+import { getAdminMenuItems, getCommonMenuItems, getMasterMenuItems } from "@/components/admin/menu/admin-menu"
 import { NavMain } from "./nav-main"
-import { NavProjects } from "./nav-projects"
 import { NavSecondary } from "./nav-secondary"
 import { NavUser } from "./nav-user"
 import { useAuth } from "@/state/authStore"
@@ -16,11 +15,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, FrameIcon, PieChartIcon, MapIcon, TerminalIcon, DatabaseIcon } from "lucide-react"
+import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, TerminalIcon, DatabaseIcon } from "lucide-react"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const auth = useAuth()
   const adminItems = getAdminMenuItems(auth.user?.role)
+  const masterItems = getMasterMenuItems(auth.user?.role)
   const commonItems = getCommonMenuItems(auth.user?.role)
 
   const navMain = [
@@ -72,6 +72,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: <Settings2Icon />,
       items: adminItems,
     },
+    ...(masterItems.length > 0
+      ? [
+          {
+            title: "Master",
+            url: masterItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: masterItems,
+          },
+        ]
+      : []),
     ...(commonItems.length > 0
       ? [
           {
@@ -97,24 +107,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ]
 
-  const projects = [
-    {
-      name: "Identity",
-      url: "/dashboard",
-      icon: <FrameIcon />,
-    },
-    {
-      name: "Analytics",
-      url: "/dashboard",
-      icon: <PieChartIcon />,
-    },
-    {
-      name: "Routing",
-      url: "/dashboard",
-      icon: <MapIcon />,
-    },
-  ]
-
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -134,7 +126,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavProjects projects={projects} />
+        {/*<NavProjects projects={projects} />*/}
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

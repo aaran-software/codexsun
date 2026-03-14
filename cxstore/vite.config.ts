@@ -53,6 +53,14 @@ export default defineConfig({
       '/common': {
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true
+      },
+      '/contacts': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/products': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
       }
     }
   }

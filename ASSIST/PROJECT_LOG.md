@@ -2,6 +2,16 @@
 
 ---
 
+CX-032
+- Extracted a reusable frontend lookup layer under `cxstore/src/components/lookups`, including a shared `AutocompleteLookup` primitive plus common-master wrappers for country, state, district, city, and other create-capable master selections.
+- Refactored `CommonUpsertDialog`, `ContactForm`, and `ProductForm` to use the same autocomplete pattern so master popups and page forms share selection, filtering, and create-on-no-results behavior.
+- Kept create-on-no-results limited to common-master-backed lookups, retained non-common selectors like vendor and contact group in the same UI pattern without inline create, and revalidated the frontend production build.
+
+CX-031
+- Added `cxserver/Modules/Contacts` and `cxserver/Modules/Products` with EF entities, configurations, CRUD services, REST controllers, expanded auth permission seeds, and the `AddContactsAndProductsModules` migration.
+- Reused the existing Common masters instead of duplicating them, wiring Contacts to `contact_types` and shared location masters, and wiring Products to `product_groups`, `product_types`, `units`, `currencies`, `gst_percents`, `brands`, `hsn_codes`, and `warehouses`.
+- Added frontend contact/product APIs, shared editor forms, admin and vendor pages, product-category management, and sidebar/route integration, then revalidated both `cxserver` and `cxstore` builds.
+
 CX-030
 - Reworked the frontend admin UX across shared form primitives and common popup dialogs by standardizing `rounded-md` inputs, thinner dimmed focus styling, blue focus fills, keyboard submit behavior, popup spacing, and title-only modal headers.
 - Updated admin list behavior with consistent sticky-row hover states, `Sl.No` naming, brighter filled status badges, single global suspense loading, and collapsible sidebar section headers that expand and collapse in place instead of navigating.

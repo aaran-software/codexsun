@@ -2,30 +2,32 @@
 
 ## Prompt
 
-read ai_rules and commit all and update all assists and update log and push all
+036_COMMERCE_TRANSACTION_SYSTEM
 
 ## Objective
 
-Review `ASSIST/AI_RULES.md`, capture the exact prompt, document the current frontend/admin UX work across the ASSIST files, then commit the full worktree using the next project-log serial and push the branch to `origin/main`.
+Implement cart, order, billing, payment, and vendor-payout capabilities in the repository’s existing backend/frontend architecture without creating the prompt’s requested but nonexistent `cxstore/src/modules` feature layout.
 
 ## Constraints
 
 - Follow `ASSIST/AI_RULES.md` and `ASSIST/STANDARDS.md`.
-- Do not rewrite the source prompt text during prompt capture.
-- Keep the current backend schema and API surface intact while documenting the frontend/admin UX work accurately.
-- Use the next `CX-` serial in both `ASSIST/PROJECT_LOG.md` and the commit message.
-- Build must remain green before the source control handoff.
+- Capture the prompt exactly in `prompts/036.md` before implementation.
+- Reuse existing module conventions in `cxserver/Modules/*` and current frontend organization under `cxstore/src/{api,components,pages,types}`.
+- Do not introduce a parallel company or vendor domain if the current Auth role model and existing product/contact ownership are the active isolation mechanism.
+- Preserve existing Auth, Common, Contacts, Products, and admin UX behavior.
+- Ensure backend and frontend builds pass before closeout.
 
 ## Observed Repository State
 
-- `cxstore` now contains extensive admin UX updates across shared form primitives, popup dialogs, list tables, status badges, animated app loader, and sidebar behavior.
-- `framer-motion` was added to `cxstore` for the shared global loader animation.
-- Common master popup selects now use shared autocomplete behavior, and selected option labels are rendered instead of raw IDs.
-- The City popup now includes state context so district creation can be offered safely from the district autocomplete.
+- The backend currently uses transactional modules such as `Contacts` and `Products` with entities, configurations, DTOs, services, and controllers under `cxserver/Modules/*`.
+- Common master coverage already includes reusable `currencies`, `warehouses`, and related operational masters that the commerce transaction system should reuse.
+- The prompt references frontend folders under `cxstore/src/modules`, but the real frontend is built around shared `api`, `components`, `pages`, `types`, and `state` folders.
+- Vendor isolation today is implemented through Auth users plus optional `VendorUserId` ownership on transactional records rather than separate `companies` or `vendors` tables.
 
 ## Plan
 
-1. Capture the exact prompt in `prompts/032.md`.
-2. Update all ASSIST documentation files to reflect the current frontend/admin UX state and source-control handoff.
-3. Add a new `CX-030` project log entry summarizing the completed worktree.
-4. Build `cxstore`, commit the worktree with the `CX-030` serial, and push `main` to `origin`.
+1. Analyze current backend module patterns, database model registration, auth permissions, and frontend page/routing/menu conventions relevant to transactional commerce features.
+2. Design an adapted commerce transaction scope that fits the current repository, including carts, orders, invoices, payments, vendor earnings, and vendor payouts tied to existing contacts/products/common masters.
+3. Implement backend entities, configurations, DTOs, validators, services, controllers, permission seeding, and migrations for the missing commerce transaction capabilities.
+4. Implement frontend API clients, types, pages, shared UI pieces, route wiring, and menu updates using the repo’s current structure rather than a new module folder pattern.
+5. Run builds, then update ASSIST documentation and the project log to reflect the new transaction architecture.

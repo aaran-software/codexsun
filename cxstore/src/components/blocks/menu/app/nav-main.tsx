@@ -46,14 +46,14 @@ export function NavMain({
             {item.items?.length ? (
               <>
                 <CollapsibleTrigger
-                  render={<SidebarMenuButton tooltip={item.title} />}
+                  render={<SidebarMenuButton tooltip={item.title} className="group/collapsible-trigger" />}
                   onClick={(event: MouseEvent) => {
                     event.preventDefault()
                   }}
                 >
                   {item.icon}
-                  <span>{item.title}</span>
-                  <ChevronRightIcon className="ml-auto cursor-pointer transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  <span className="cursor-pointer">{item.title}</span>
+                  <ChevronRightIcon className="ml-auto cursor-pointer transition-transform duration-200 group-aria-expanded/collapsible-trigger:rotate-90" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>

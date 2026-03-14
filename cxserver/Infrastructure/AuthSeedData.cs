@@ -18,6 +18,14 @@ internal static class AuthSeedData
     internal static readonly Guid UserReadPermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
     internal static readonly Guid UserUpdatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3");
     internal static readonly Guid UserDeletePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4");
+    internal static readonly Guid ContactCreatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5");
+    internal static readonly Guid ContactReadPermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6");
+    internal static readonly Guid ContactUpdatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa7");
+    internal static readonly Guid ContactDeletePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa8");
+    internal static readonly Guid ProductCreatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa9");
+    internal static readonly Guid ProductReadPermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaab0");
+    internal static readonly Guid ProductUpdatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaab1");
+    internal static readonly Guid ProductDeletePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaab2");
 
     internal static readonly DateTimeOffset CreatedAt = new(2026, 03, 14, 0, 0, 0, TimeSpan.Zero);
 
@@ -37,7 +45,15 @@ internal static class AuthSeedData
         new Permission { Id = UserCreatePermissionId, Code = "User.Create", Description = "Create users" },
         new Permission { Id = UserReadPermissionId, Code = "User.Read", Description = "Read users" },
         new Permission { Id = UserUpdatePermissionId, Code = "User.Update", Description = "Update users" },
-        new Permission { Id = UserDeletePermissionId, Code = "User.Delete", Description = "Delete users" }
+        new Permission { Id = UserDeletePermissionId, Code = "User.Delete", Description = "Delete users" },
+        new Permission { Id = ContactCreatePermissionId, Code = "Contact.Create", Description = "Create contacts" },
+        new Permission { Id = ContactReadPermissionId, Code = "Contact.Read", Description = "Read contacts" },
+        new Permission { Id = ContactUpdatePermissionId, Code = "Contact.Update", Description = "Update contacts" },
+        new Permission { Id = ContactDeletePermissionId, Code = "Contact.Delete", Description = "Delete contacts" },
+        new Permission { Id = ProductCreatePermissionId, Code = "Product.Create", Description = "Create products" },
+        new Permission { Id = ProductReadPermissionId, Code = "Product.Read", Description = "Read products" },
+        new Permission { Id = ProductUpdatePermissionId, Code = "Product.Update", Description = "Update products" },
+        new Permission { Id = ProductDeletePermissionId, Code = "Product.Delete", Description = "Delete products" }
     ];
 
     internal static readonly RolePermission[] RolePermissions =
@@ -46,10 +62,30 @@ internal static class AuthSeedData
         new RolePermission { RoleId = AdminRoleId, PermissionId = UserReadPermissionId },
         new RolePermission { RoleId = AdminRoleId, PermissionId = UserUpdatePermissionId },
         new RolePermission { RoleId = AdminRoleId, PermissionId = UserDeletePermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ContactCreatePermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ContactReadPermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ContactUpdatePermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ContactDeletePermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ProductCreatePermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ProductReadPermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ProductUpdatePermissionId },
+        new RolePermission { RoleId = AdminRoleId, PermissionId = ProductDeletePermissionId },
         new RolePermission { RoleId = VendorRoleId, PermissionId = UserReadPermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ContactCreatePermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ContactReadPermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ContactUpdatePermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ContactDeletePermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ProductCreatePermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ProductReadPermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ProductUpdatePermissionId },
+        new RolePermission { RoleId = VendorRoleId, PermissionId = ProductDeletePermissionId },
         new RolePermission { RoleId = CustomerRoleId, PermissionId = UserReadPermissionId },
         new RolePermission { RoleId = StaffRoleId, PermissionId = UserReadPermissionId },
-        new RolePermission { RoleId = StaffRoleId, PermissionId = UserUpdatePermissionId }
+        new RolePermission { RoleId = StaffRoleId, PermissionId = UserUpdatePermissionId },
+        new RolePermission { RoleId = StaffRoleId, PermissionId = ContactReadPermissionId },
+        new RolePermission { RoleId = StaffRoleId, PermissionId = ContactUpdatePermissionId },
+        new RolePermission { RoleId = StaffRoleId, PermissionId = ProductReadPermissionId },
+        new RolePermission { RoleId = StaffRoleId, PermissionId = ProductUpdatePermissionId }
     ];
 
     internal static readonly User[] Users =

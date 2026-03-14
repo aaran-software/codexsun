@@ -106,3 +106,16 @@ codexsun.slnx
 - The application uses a single app-level `GlobalLoader` fallback, while page and table fetches use in-place skeleton states to avoid multi-loader flicker.
 - The app sidebar now treats grouped headers such as `Common` as in-place expand/collapse toggles instead of navigational links.
 - Common master popup selects now provide shared autocomplete behavior, render option labels instead of IDs, and support inline option creation where the backing API can safely create related records.
+
+## Shared Lookup Architecture Update (2026-03-14)
+
+- `cxstore/src/components/lookups` now holds the reusable autocomplete primitive and common-master lookup wrappers instead of keeping create-capable select logic duplicated inside individual forms.
+- `AutocompleteLookup` is the single UI behavior for filterable dropdowns, while `CommonMasterLookup`, `CountryLookup`, `StateLookup`, `DistrictLookup`, and `CityLookup` add common-module create rules and parent-context defaults.
+- `CommonUpsertDialog`, `ContactForm`, and `ProductForm` now consume the same lookup pattern so popup forms and page forms stay behaviorally aligned.
+
+## Contacts And Products Module Update (2026-03-14)
+
+- `cxserver/Modules/Contacts` and `cxserver/Modules/Products` were added as transactional modules on top of the existing Auth and Common foundations instead of introducing a separate company or vendor domain.
+- Vendor isolation is implemented with user ownership and optional `VendorUserId` scoping tied to the current Auth role model, allowing Admin to see everything while Vendor users only see their own contact and product data.
+- Contacts reuse existing Common contact and location masters, while Products reuse Common catalog, pricing, and warehouse masters and add their own transactional tables for categories, variants, prices, images, inventory, vendor links, and attributes.
+- `cxstore` integrates these modules through dedicated admin and vendor pages plus shared editor forms rather than a separate `src/modules` folder, which keeps the implementation aligned with the current frontend architecture.

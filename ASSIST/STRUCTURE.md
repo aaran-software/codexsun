@@ -19,6 +19,7 @@ codexsun/
 |   |-- 006.md
 |   |-- 019.md
 |   |-- 032.md
+|   |-- 033.md
 |   `-- ...
 |
 |-- cx.AppHost/                          <- .NET Aspire orchestrator
@@ -59,6 +60,8 @@ codexsun/
 |   |   |-- 20260314133756_ProductionBaseline.Designer.cs
 |   |   |-- 20260314143943_ExpandedAuthAndCommonSeedData.cs
 |   |   |-- 20260314143943_ExpandedAuthAndCommonSeedData.Designer.cs
+|   |   |-- 20260314165636_AddContactsAndProductsModules.cs
+|   |   |-- 20260314165636_AddContactsAndProductsModules.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -109,6 +112,30 @@ codexsun/
 |           |-- Entities/
 |           |-- Services/
 |           `-- Validators/
+|       |-- Contacts/
+|       |   |-- Configurations/
+|       |   |   `-- ContactConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   `-- ContactsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- ContactRequests.cs
+|       |   |   `-- ContactResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- ContactEntities.cs
+|       |   `-- Services/
+|       |       `-- ContactService.cs
+|       |-- Products/
+|       |   |-- Configurations/
+|       |   |   `-- ProductConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   `-- ProductsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- ProductRequests.cs
+|       |   |   `-- ProductResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- ProductEntities.cs
+|       |   `-- Services/
+|       |       `-- ProductService.cs
 |       |-- Finance/
 |       |   |-- Configurations/
 |       |   `-- Entities/
@@ -131,9 +158,11 @@ codexsun/
 |       |   |-- brandApi.ts
 |       |   |-- colourApi.ts
 |       |   |-- commonApi.ts
+|       |   |-- contactApi.ts
 |       |   |-- hsnApi.ts
 |       |   |-- httpClient.ts
 |       |   |-- locationApi.ts
+|       |   |-- productApi.ts
 |       |   |-- roleApi.ts
 |       |   |-- sizeApi.ts
 |       |   |-- unitApi.ts
@@ -141,8 +170,12 @@ codexsun/
 |       |-- components/
 |       |   |-- admin/
 |       |   |   |-- AdminListPlaceholder.tsx
+|       |   |   |-- contacts/
+|       |   |   |   `-- ContactForm.tsx
 |       |   |   `-- menu/
 |       |   |       `-- admin-menu.ts
+|       |   |   `-- products/
+|       |   |       `-- ProductForm.tsx
 |       |   |-- blocks/
 |       |   |-- forms/
 |       |   |   |-- CommonList.tsx
@@ -154,6 +187,9 @@ codexsun/
 |       |   |-- global/
 |       |   |   `-- GlobalLoader.tsx
 |       |   |-- layout/
+|       |   |-- lookups/
+|       |   |   |-- AutocompleteLookup.tsx
+|       |   |   `-- commonLookups.tsx
 |       |   |-- ui/
 |       |   |   |-- combobox.tsx
 |       |   |   |-- input.tsx
@@ -167,11 +203,22 @@ codexsun/
 |       |-- lib/
 |       |-- pages/
 |       |   `-- admin/
+|       |       |-- contacts/
+|       |       |   |-- ContactCreatePage.tsx
+|       |       |   |-- ContactDetailPage.tsx
+|       |       |   |-- ContactEditPage.tsx
+|       |       |   `-- ContactsPage.tsx
 |       |       |-- common/
 |       |       |   `-- CommonMasterPage.tsx
 |       |       |-- permissions/
 |       |       |   |-- PermissionsPage.tsx
 |       |       |   `-- RolePermissionEditor.tsx
+|       |       |-- products/
+|       |       |   |-- ProductCategoriesPage.tsx
+|       |       |   |-- ProductCreatePage.tsx
+|       |       |   |-- ProductDetailPage.tsx
+|       |       |   |-- ProductEditPage.tsx
+|       |       |   `-- ProductsPage.tsx
 |       |       |-- roles/
 |       |       |   |-- RoleCreatePage.tsx
 |       |       |   |-- RoleEditPage.tsx
@@ -186,7 +233,9 @@ codexsun/
 |       `-- types/
 |           |-- admin.ts
 |           |-- auth.ts
-|           `-- common.ts
+|           |-- common.ts
+|           |-- contact.ts
+|           `-- product.ts
 |
 |-- cxtest/                              <- xUnit infrastructure validation tests
 |   |-- AuthSecurityTests/

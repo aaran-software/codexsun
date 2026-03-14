@@ -27,6 +27,15 @@ const RoleEditPage = lazy(() => import("./pages/admin/roles/RoleEditPage"))
 const PermissionsPage = lazy(() => import("./pages/admin/permissions/PermissionsPage"))
 const RolePermissionEditor = lazy(() => import("./pages/admin/permissions/RolePermissionEditor"))
 const CommonMasterPage = lazy(() => import("./pages/admin/common/CommonMasterPage"))
+const ContactsPage = lazy(() => import("./pages/admin/contacts/ContactsPage"))
+const ContactCreatePage = lazy(() => import("./pages/admin/contacts/ContactCreatePage"))
+const ContactEditPage = lazy(() => import("./pages/admin/contacts/ContactEditPage"))
+const ContactDetailPage = lazy(() => import("./pages/admin/contacts/ContactDetailPage"))
+const ProductsPage = lazy(() => import("./pages/admin/products/ProductsPage"))
+const ProductCreatePage = lazy(() => import("./pages/admin/products/ProductCreatePage"))
+const ProductEditPage = lazy(() => import("./pages/admin/products/ProductEditPage"))
+const ProductDetailPage = lazy(() => import("./pages/admin/products/ProductDetailPage"))
+const ProductCategoriesPage = lazy(() => import("./pages/admin/products/ProductCategoriesPage"))
 
 function App() {
   const auth = useAuth()
@@ -70,7 +79,16 @@ function App() {
                   <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
                   <Route path="/admin/permissions" element={<PermissionsPage />} />
                   <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
+                  <Route path="/admin/contacts" element={<ContactsPage />} />
+                  <Route path="/admin/contacts/create" element={<ContactCreatePage />} />
+                  <Route path="/admin/contacts/edit/:id" element={<ContactEditPage />} />
+                  <Route path="/admin/contacts/:id" element={<ContactDetailPage />} />
+                  <Route path="/admin/products" element={<ProductsPage />} />
+                  <Route path="/admin/products/create" element={<ProductCreatePage />} />
+                  <Route path="/admin/products/edit/:id" element={<ProductEditPage />} />
+                  <Route path="/admin/products/:id" element={<ProductDetailPage />} />
                   <Route path="/admin/common" element={<Navigate to="/admin/common/brands" replace />} />
+                  <Route path="/admin/common/product-categories" element={<ProductCategoriesPage />} />
                   <Route path="/admin/common/:masterKey" element={<CommonMasterPage />} />
                 </Route>
               </Route>
@@ -78,6 +96,14 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={["Vendor"]} />}>
                 <Route element={<AppLayout />}>
                   <Route path="/vendor" element={<Dashboard />} />
+                  <Route path="/vendor/contacts" element={<ContactsPage />} />
+                  <Route path="/vendor/contacts/create" element={<ContactCreatePage />} />
+                  <Route path="/vendor/contacts/edit/:id" element={<ContactEditPage />} />
+                  <Route path="/vendor/contacts/:id" element={<ContactDetailPage />} />
+                  <Route path="/vendor/products" element={<ProductsPage />} />
+                  <Route path="/vendor/products/create" element={<ProductCreatePage />} />
+                  <Route path="/vendor/products/edit/:id" element={<ProductEditPage />} />
+                  <Route path="/vendor/products/:id" element={<ProductDetailPage />} />
                 </Route>
               </Route>
 

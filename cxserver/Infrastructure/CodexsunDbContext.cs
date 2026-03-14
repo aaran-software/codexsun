@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Common.Entities;
+using cxserver.Modules.Contacts.Entities;
 using cxserver.Modules.Finance.Entities;
+using cxserver.Modules.Products.Entities;
 using cxserver.Modules.System.Entities;
 
 namespace cxserver.Infrastructure;
@@ -35,6 +37,21 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
+    public DbSet<ContactGroup> ContactGroups => Set<ContactGroup>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<ContactAddress> ContactAddresses => Set<ContactAddress>();
+    public DbSet<ContactEmail> ContactEmails => Set<ContactEmail>();
+    public DbSet<ContactPhone> ContactPhones => Set<ContactPhone>();
+    public DbSet<ContactNote> ContactNotes => Set<ContactNote>();
+    public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
+    public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<ProductInventory> ProductInventory => Set<ProductInventory>();
+    public DbSet<ProductVendorLink> ProductVendorLinks => Set<ProductVendorLink>();
+    public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
+    public DbSet<ProductAttributeValue> ProductAttributeValues => Set<ProductAttributeValue>();
     public DbSet<Bank> Banks => Set<Bank>();
     public DbSet<PaymentMode> PaymentModes => Set<PaymentMode>();
     public DbSet<LedgerGroup> LedgerGroups => Set<LedgerGroup>();
