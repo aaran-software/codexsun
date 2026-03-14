@@ -1,7 +1,7 @@
 import { HomeIcon } from "lucide-react"
 import { Link, Outlet, useLocation } from "react-router-dom"
 
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar } from "@/components/blocks/menu/app/app-sidebar"
 import {
   Breadcrumb,
   BreadcrumbItem,

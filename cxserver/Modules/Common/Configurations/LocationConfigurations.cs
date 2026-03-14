@@ -8,7 +8,7 @@ public sealed class CountryConfiguration : IEntityTypeConfiguration<Country>
 {
     public void Configure(EntityTypeBuilder<Country> builder)
     {
-        builder.ToTable("common_countries");
+        builder.ToTable("countries");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
 
@@ -22,7 +22,7 @@ public sealed class StateConfiguration : IEntityTypeConfiguration<State>
 {
     public void Configure(EntityTypeBuilder<State> builder)
     {
-        builder.ToTable("common_states");
+        builder.ToTable("states");
         builder.ConfigureNamed();
         builder.Property(x => x.StateCode).HasMaxLength(16).IsRequired();
         builder.HasIndex(x => new { x.CountryId, x.Name }).IsUnique();
@@ -40,7 +40,7 @@ public sealed class DistrictConfiguration : IEntityTypeConfiguration<District>
 {
     public void Configure(EntityTypeBuilder<District> builder)
     {
-        builder.ToTable("common_districts");
+        builder.ToTable("districts");
         builder.ConfigureNamed();
         builder.HasIndex(x => new { x.StateId, x.Name }).IsUnique();
         builder.HasOne(x => x.State).WithMany(x => x.Districts).HasForeignKey(x => x.StateId).OnDelete(DeleteBehavior.Restrict);
@@ -51,7 +51,7 @@ public sealed class CityConfiguration : IEntityTypeConfiguration<City>
 {
     public void Configure(EntityTypeBuilder<City> builder)
     {
-        builder.ToTable("common_cities");
+        builder.ToTable("cities");
         builder.ConfigureNamed();
         builder.HasIndex(x => new { x.DistrictId, x.Name }).IsUnique();
         builder.HasOne(x => x.District).WithMany(x => x.Cities).HasForeignKey(x => x.DistrictId).OnDelete(DeleteBehavior.Restrict);
@@ -62,7 +62,7 @@ public sealed class PincodeConfiguration : IEntityTypeConfiguration<Pincode>
 {
     public void Configure(EntityTypeBuilder<Pincode> builder)
     {
-        builder.ToTable("common_pincodes");
+        builder.ToTable("pincodes");
         builder.ConfigureCommon();
         builder.Property(x => x.Code).HasMaxLength(16).IsRequired();
         builder.HasIndex(x => x.Code).IsUnique();

@@ -8,7 +8,7 @@ public sealed class TransportConfiguration : IEntityTypeConfiguration<Transport>
 {
     public void Configure(EntityTypeBuilder<Transport> builder)
     {
-        builder.ToTable("common_transports");
+        builder.ToTable("transports");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -18,7 +18,7 @@ public sealed class DestinationConfiguration : IEntityTypeConfiguration<Destinat
 {
     public void Configure(EntityTypeBuilder<Destination> builder)
     {
-        builder.ToTable("common_destinations");
+        builder.ToTable("destinations");
         builder.ConfigureNamed();
         builder.HasIndex(x => new { x.Name, x.CountryId, x.CityId }).IsUnique();
         builder.HasOne(x => x.Country).WithMany(x => x.Destinations).HasForeignKey(x => x.CountryId).OnDelete(DeleteBehavior.Restrict);
@@ -30,7 +30,7 @@ public sealed class CurrencyConfiguration : IEntityTypeConfiguration<Currency>
 {
     public void Configure(EntityTypeBuilder<Currency> builder)
     {
-        builder.ToTable("common_currencies");
+        builder.ToTable("currencies");
         builder.ConfigureNamed();
         builder.Property(x => x.Code).HasMaxLength(16).IsRequired();
         builder.Property(x => x.Symbol).HasMaxLength(16).IsRequired();
@@ -43,7 +43,7 @@ public sealed class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
 {
     public void Configure(EntityTypeBuilder<Warehouse> builder)
     {
-        builder.ToTable("common_warehouses");
+        builder.ToTable("warehouses");
         builder.ConfigureNamed();
         builder.Property(x => x.Location).HasMaxLength(256).IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();
@@ -54,7 +54,7 @@ public sealed class PaymentTermConfiguration : IEntityTypeConfiguration<PaymentT
 {
     public void Configure(EntityTypeBuilder<PaymentTerm> builder)
     {
-        builder.ToTable("common_payment_terms");
+        builder.ToTable("payment_terms");
         builder.ConfigureNamed();
         builder.Property(x => x.Days).IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();

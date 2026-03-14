@@ -38,29 +38,35 @@ The `IdentityAuthSystem` migration creates the security tables below in PostgreS
 
 ## Common Master Data Schema
 
-The `CommonMasterData` migration creates reusable master tables:
+The `CommonMasterData` migration creates reusable master tables, and the `RenameCommonTables` migration normalizes them to direct snake_case entity names without a `common_` prefix.
 
-- `common_countries`
-- `common_states`
-- `common_districts`
-- `common_cities`
-- `common_pincodes`
-- `common_contact_types`
-- `common_product_types`
-- `common_product_groups`
-- `common_hsn_codes`
-- `common_units`
-- `common_gst_percents`
-- `common_colours`
-- `common_sizes`
-- `common_order_types`
-- `common_styles`
-- `common_brands`
-- `common_transports`
-- `common_destinations`
-- `common_currencies`
-- `common_warehouses`
-- `common_payment_terms`
+Naming rule:
+
+- Common master tables must not use the `common_` prefix.
+
+Current Common master tables:
+
+- `countries`
+- `states`
+- `districts`
+- `cities`
+- `pincodes`
+- `contact_types`
+- `product_types`
+- `product_groups`
+- `hsn_codes`
+- `units`
+- `gst_percents`
+- `colours`
+- `sizes`
+- `order_types`
+- `styles`
+- `brands`
+- `transports`
+- `destinations`
+- `currencies`
+- `warehouses`
+- `payment_terms`
 
 All Common tables use integer identities plus `IsActive`, `CreatedAt`, and `UpdatedAt`.
 
@@ -68,20 +74,20 @@ All Common tables use integer identities plus `IsActive`, `CreatedAt`, and `Upda
 
 Representative indexes and uniqueness rules:
 
-- `common_countries.Name` unique
-- `common_states(CountryId, Name)` unique
-- `common_states(CountryId, StateCode)` unique
-- `common_districts(StateId, Name)` unique
-- `common_cities(DistrictId, Name)` unique
-- `common_pincodes.Code` unique
-- `common_hsn_codes.Code` unique
-- `common_units.Name` unique
-- `common_units.ShortName` unique
-- `common_gst_percents.Percentage` unique
-- `common_destinations(Name, CountryId, CityId)` unique
-- `common_currencies.Name` unique
-- `common_currencies.Code` unique
-- `common_payment_terms.Name` unique
+- `countries.Name` unique
+- `states(CountryId, Name)` unique
+- `states(CountryId, StateCode)` unique
+- `districts(StateId, Name)` unique
+- `cities(DistrictId, Name)` unique
+- `pincodes.Code` unique
+- `hsn_codes.Code` unique
+- `units.Name` unique
+- `units.ShortName` unique
+- `gst_percents.Percentage` unique
+- `destinations(Name, CountryId, CityId)` unique
+- `currencies.Name` unique
+- `currencies.Code` unique
+- `payment_terms.Name` unique
 
 Search-oriented indexes are also present on common master names and active flags to support autocomplete-style queries.
 

@@ -2,6 +2,16 @@
 
 ---
 
+CX-025
+- Renamed all Common master EF table mappings from `common_*` names to direct snake_case entity table names such as `cities`, `brands`, and `contact_types`.
+- Generated and applied the `RenameCommonTables` migration so PostgreSQL tables, primary keys, foreign keys, and indexes were renamed without changing Common API routes or entity class names.
+- Revalidated the backend build, Common integration tests, full solution build, and direct database table presence after the naming convention cleanup.
+
+CX-024
+- Added reusable frontend common-master management components in `cxstore/src/components/admin/CommonMasterListPage.tsx` and `cxstore/src/components/admin/CommonMasterUpsertDialog.tsx` on top of the shared `ListCommon` layout.
+- Replaced the placeholder common master pages for cities, states, product types, units, and brands with shared list screens that support local search, filters, activate/deactivate actions, and popup upsert forms.
+- Revalidated the frontend production build after the common-master list and modal upsert workflow rollout.
+
 CX-023
 - Added route-aware app breadcrumbs with a `Home` entry, home icon, and parent navigation back to dashboard and admin list pages from the shared `AppLayout`.
 - Refined the shared admin list shell styling with tighter rounded corners, a borderless search section, a compact breadcrumb header, and sticky left/right table columns for serial numbers and action controls.

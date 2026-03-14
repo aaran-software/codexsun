@@ -8,7 +8,7 @@ public sealed class ContactTypeConfiguration : IEntityTypeConfiguration<ContactT
 {
     public void Configure(EntityTypeBuilder<ContactType> builder)
     {
-        builder.ToTable("common_contact_types");
+        builder.ToTable("contact_types");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
         builder.HasData(
@@ -23,7 +23,7 @@ public sealed class ProductTypeConfiguration : IEntityTypeConfiguration<ProductT
 {
     public void Configure(EntityTypeBuilder<ProductType> builder)
     {
-        builder.ToTable("common_product_types");
+        builder.ToTable("product_types");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -33,7 +33,7 @@ public sealed class ProductGroupConfiguration : IEntityTypeConfiguration<Product
 {
     public void Configure(EntityTypeBuilder<ProductGroup> builder)
     {
-        builder.ToTable("common_product_groups");
+        builder.ToTable("product_groups");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -43,7 +43,7 @@ public sealed class HsnCodeConfiguration : IEntityTypeConfiguration<HsnCode>
 {
     public void Configure(EntityTypeBuilder<HsnCode> builder)
     {
-        builder.ToTable("common_hsn_codes");
+        builder.ToTable("hsn_codes");
         builder.ConfigureCommon();
         builder.Property(x => x.Code).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(256).IsRequired();
@@ -55,7 +55,7 @@ public sealed class UnitConfiguration : IEntityTypeConfiguration<Unit>
 {
     public void Configure(EntityTypeBuilder<Unit> builder)
     {
-        builder.ToTable("common_units");
+        builder.ToTable("units");
         builder.ConfigureNamed();
         builder.Property(x => x.ShortName).HasMaxLength(32).IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();
@@ -71,7 +71,7 @@ public sealed class GstPercentConfiguration : IEntityTypeConfiguration<GstPercen
 {
     public void Configure(EntityTypeBuilder<GstPercent> builder)
     {
-        builder.ToTable("common_gst_percents");
+        builder.ToTable("gst_percents");
         builder.ConfigureCommon();
         builder.Property(x => x.Percentage).HasColumnType("numeric(5,2)").IsRequired();
         builder.HasIndex(x => x.Percentage).IsUnique();
@@ -88,7 +88,7 @@ public sealed class ColourConfiguration : IEntityTypeConfiguration<Colour>
 {
     public void Configure(EntityTypeBuilder<Colour> builder)
     {
-        builder.ToTable("common_colours");
+        builder.ToTable("colours");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -98,7 +98,7 @@ public sealed class SizeConfiguration : IEntityTypeConfiguration<Size>
 {
     public void Configure(EntityTypeBuilder<Size> builder)
     {
-        builder.ToTable("common_sizes");
+        builder.ToTable("sizes");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -108,7 +108,7 @@ public sealed class OrderTypeConfiguration : IEntityTypeConfiguration<OrderType>
 {
     public void Configure(EntityTypeBuilder<OrderType> builder)
     {
-        builder.ToTable("common_order_types");
+        builder.ToTable("order_types");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -118,7 +118,7 @@ public sealed class StyleConfiguration : IEntityTypeConfiguration<Style>
 {
     public void Configure(EntityTypeBuilder<Style> builder)
     {
-        builder.ToTable("common_styles");
+        builder.ToTable("styles");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }
@@ -128,7 +128,7 @@ public sealed class BrandConfiguration : IEntityTypeConfiguration<Brand>
 {
     public void Configure(EntityTypeBuilder<Brand> builder)
     {
-        builder.ToTable("common_brands");
+        builder.ToTable("brands");
         builder.ConfigureNamed();
         builder.HasIndex(x => x.Name).IsUnique();
     }

@@ -2,10 +2,10 @@ import * as React from "react"
 import { Link } from "react-router-dom"
 
 import { getAdminMenuItems } from "@/components/admin/menu/admin-menu"
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "./nav-main"
+import { NavProjects } from "./nav-projects"
+import { NavSecondary } from "./nav-secondary"
+import { NavUser } from "./nav-user"
 import { useAuth } from "@/state/authStore"
 import {
   Sidebar,

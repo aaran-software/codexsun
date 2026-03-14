@@ -2,27 +2,27 @@
 
 ## Prompt
 
-PROMPT NAME: 009_FRONTEND_LISTCOMMON_SKELETON
+Refactor the Common master database naming convention so all `common_*` tables are renamed to direct snake_case entity table names without the `common_` prefix.
 
 ## Objective
 
-Expand `ListCommon` into a reusable generic list-page skeleton for the React frontend with standardized header, search/filter controls, active filter chips, generic table rendering, footer, and pagination, then apply it to the existing admin list pages.
+Update the Common module EF mappings, migration history, and documentation so the database uses concise table names like `cities`, `brands`, and `contact_types` while keeping the existing Common APIs unchanged.
 
 ## Constraints
 
 - Follow `ASSIST/AI_RULES.md` and `ASSIST/STANDARDS.md`.
-- Preserve the existing `AppLayout` and current admin route structure.
-- Keep `ListCommon` generic, strongly typed, and free of module-specific fetching or business logic.
-- Use existing frontend primitives where possible and keep the layout theme-aware and responsive.
+- Do not change Common entity class names or API routes.
+- Preserve foreign keys, indexes, seed data behavior, and existing endpoint functionality.
+- Use a dedicated EF Core migration named `RenameCommonTables` to rename existing tables cleanly.
 
 ## Observed Repository State
 
-- `ListCommon` currently renders only a page header with an add button.
-- `UsersPage` and `RolesPage` still wrap search, loading, and table concerns outside the shared component.
-- `AdminTable` is generic enough to inform the new structure, but it does not provide the full skeleton sections required by the prompt.
+- The Common table names are defined in `cxserver/Modules/Common/Configurations` and currently use `common_*` prefixes.
+- The generated `CommonMasterData` migration and EF snapshot also embed the old `common_*` table names.
+- There are no other backend hardcoded table-name usages outside the Common EF metadata and related documentation.
 
 ## Plan
 
-1. Capture the prompt and update planning docs for the generic `ListCommon` skeleton.
-2. Rebuild `ListCommon` with structured props for header, search/filter controls, active filters, generic table rendering, footer, and pagination.
-3. Refactor existing admin list pages to use the new skeleton shape, then verify the frontend build and update repo documentation/logs.
+1. Capture the prompt and update task tracking for the Common table naming cleanup.
+2. Rename the Common EF table mappings, generate and verify the `RenameCommonTables` migration, and ensure snapshots/imports/build remain healthy.
+3. Revalidate build/tests/database state, then update the database documentation and project log with the new naming convention.

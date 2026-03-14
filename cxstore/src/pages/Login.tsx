@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom"
-import { LoginForm } from "../components/login-form"
+import { LoginForm } from "../components/forms/login-form"
 import { useAuth } from "../state/authStore"
 
 export default function Login() {

@@ -346,9 +346,19 @@ export function ListCommon<TData>({
                       </Button>
                     }
                   />
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel>Filter options</DropdownMenuLabel>
+                      <div className="flex items-center justify-between px-1.5 py-1">
+                        <DropdownMenuLabel className="p-0">Filter options</DropdownMenuLabel>
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-primary transition hover:text-primary/80"
+                          onClick={handleClearAllFilters}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      <DropdownMenuSeparator />
                       {filters.options.map((option) => (
                         <DropdownMenuItem key={option.key} onClick={option.onSelect}>
                           <span>{option.label}</span>
@@ -370,9 +380,20 @@ export function ListCommon<TData>({
                       </Button>
                     }
                   />
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+                      <div className="flex items-center justify-between px-1.5 py-1">
+                        <DropdownMenuLabel className="p-0">Visible columns</DropdownMenuLabel>
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-primary transition hover:text-primary/80"
+                          onClick={() => {
+                            setVisibleColumnIds(table.columns.map((column) => column.id))
+                          }}
+                        >
+                          Show all
+                        </button>
+                      </div>
                       <DropdownMenuSeparator />
                       {table.columns.map((column) => {
                         const isVisible = visibleColumnIds.includes(column.id)

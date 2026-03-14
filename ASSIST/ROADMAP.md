@@ -4,6 +4,7 @@
 
 - Establish a reusable Common Master Data module in `cxserver` for location, product, order, transport, and shared operational masters so future product, vendor, logistics, and address workflows can consume the same datasets.
 - Standardize frontend admin list screens with a full reusable list skeleton covering header, filters, table, footer, and pagination so future master-data and operational pages ship with consistent UX by default.
+- Add a reusable frontend common-master management pattern with shared list and modal upsert flows so future master pages plug into a consistent admin interaction model.
 
 ## Near Term
 

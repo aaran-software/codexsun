@@ -59,6 +59,10 @@ codexsun/
 |   |   |-- 20260314041852_RolePermissionUserManagement.Designer.cs
 |   |   |-- 20260314044451_SuperAdminSeed.cs
 |   |   |-- 20260314044451_SuperAdminSeed.Designer.cs
+|   |   |-- 20260314085639_CommonMasterData.cs
+|   |   |-- 20260314085639_CommonMasterData.Designer.cs
+|   |   |-- 20260314122531_RenameCommonTables.cs
+|   |   |-- 20260314122531_RenameCommonTables.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -124,6 +128,8 @@ codexsun/
 |       |-- components/
 |       |   |-- ProtectedRoute.tsx
 |       |   |-- admin/
+|       |   |   |-- CommonMasterListPage.tsx
+|       |   |   |-- CommonMasterUpsertDialog.tsx
 |       |   |   |-- AdminListPlaceholder.tsx
 |       |   |   |-- ListCommon.tsx
 |       |   |   `-- menu/

@@ -1,8 +1,8 @@
 import { Suspense, lazy } from "react"
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom"
 
-import ProtectedRoute from "./components/ProtectedRoute"
-import { ThemeProvider } from "@/components/theme-provider"
+import ProtectedRoute from "./components/forms/ProtectedRoute"
+import { ThemeProvider } from "@/components/blocks/theme/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAuth } from "./state/authStore"
 
