@@ -1,6 +1,7 @@
 "use client"
 
 import { Link } from "react-router-dom"
+import type { MouseEvent } from "react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,7 +11,6 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -43,23 +43,17 @@ export function NavMain({
             defaultOpen={item.isActive}
             render={<SidebarMenuItem />}
           >
-            <SidebarMenuButton
-              tooltip={item.title}
-              render={<Link to={item.url} />}
-            >
-              {item.icon}
-              <span>{item.title}</span>
-            </SidebarMenuButton>
             {item.items?.length ? (
               <>
                 <CollapsibleTrigger
-                  render={
-                    <SidebarMenuAction className="aria-expanded:rotate-90" />
-                  }
+                  render={<SidebarMenuButton tooltip={item.title} />}
+                  onClick={(event: MouseEvent) => {
+                    event.preventDefault()
+                  }}
                 >
-                  <ChevronRightIcon
-                  />
-                  <span className="sr-only">Toggle</span>
+                  {item.icon}
+                  <span>{item.title}</span>
+                  <ChevronRightIcon className="ml-auto cursor-pointer transition-transform group-data-[state=open]/collapsible:rotate-90" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
@@ -73,7 +67,15 @@ export function NavMain({
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </>
-            ) : null}
+            ) : (
+              <SidebarMenuButton
+                tooltip={item.title}
+                render={<Link to={item.url} />}
+              >
+                {item.icon}
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            )}
           </Collapsible>
         ))}
       </SidebarMenu>

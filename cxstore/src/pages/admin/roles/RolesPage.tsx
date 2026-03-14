@@ -65,7 +65,7 @@ export default function RolesPage() {
   const columns: CommonListColumn<RoleSummary>[] = [
     {
       id: "serialNumber",
-      header: "SL No",
+      header: "Sl.No",
       cell: (role) => ((safeCurrentPage - 1) * pageSize) + paginatedRoles.findIndex((entry) => entry.id === role.id) + 1,
       className: "w-12 min-w-12 px-2 text-center text-foreground",
       headerClassName: "w-12 min-w-12 px-2 text-center",

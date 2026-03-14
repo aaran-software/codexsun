@@ -32,6 +32,7 @@ and shared domain libraries.
 | Vite | Build tool |
 | Tailwind CSS | Styling |
 | shadcn-style components | UI primitives |
+| Framer Motion | Shared loader animation |
 
 ### Infrastructure
 
@@ -98,3 +99,10 @@ codexsun.slnx
 - The Common module uses integer identity keys, EF Core `IEntityTypeConfiguration` mappings, seed data, FluentValidation request validation, and admin-protected CRUD/search/activate/deactivate endpoints.
 - Hierarchical address flows are supported through Country -> State -> District -> City -> Pincode with filterable list/search APIs for autocomplete-driven forms.
 - Recommended shared masters were added for `Currency`, `Warehouse`, and `PaymentTerm` so future billing, logistics, and vendor workflows can consume the same backend datasets.
+
+## Frontend Admin UX Update (2026-03-14)
+
+- `cxstore` now centralizes admin list and popup workflows through `CommonList` and `CommonUpsertDialog`, with shared rounded input primitives, dim focus rings, and consistent status-badge rendering.
+- The application uses a single app-level `GlobalLoader` fallback, while page and table fetches use in-place skeleton states to avoid multi-loader flicker.
+- The app sidebar now treats grouped headers such as `Common` as in-place expand/collapse toggles instead of navigational links.
+- Common master popup selects now provide shared autocomplete behavior, render option labels instead of IDs, and support inline option creation where the backing API can safely create related records.

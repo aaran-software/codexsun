@@ -263,6 +263,13 @@ export const commonMasterDefinitions = {
         required: true,
         placeholder: "Select country",
         loadOptions: mapOptions(countriesApi.list),
+        createOption: async (label) => {
+          const created = await countriesApi.create({ name: label.trim() })
+          return {
+            value: created.id,
+            label: created.name,
+          }
+        },
       },
     ],
     columns: [
@@ -341,6 +348,15 @@ export const commonMasterDefinitions = {
     fields: [
       { key: "name", label: "City Name", required: true, placeholder: "Enter city name" },
       {
+        key: "stateId",
+        label: "State",
+        type: "select",
+        parseAs: "number",
+        required: true,
+        placeholder: "Select state",
+        loadOptions: mapOptions(statesApi.list, (item) => item.name),
+      },
+      {
         key: "districtId",
         label: "District",
         type: "select",
@@ -348,6 +364,23 @@ export const commonMasterDefinitions = {
         required: true,
         placeholder: "Select district",
         loadOptions: mapOptions(districtsApi.list),
+        createOption: async (label, values) => {
+          const stateId = Number(values.stateId ?? 0)
+
+          if (!stateId) {
+            throw new Error("Select a state before creating a district.")
+          }
+
+          const created = await districtsApi.create({
+            name: label.trim(),
+            stateId,
+          })
+
+          return {
+            value: created.id,
+            label: created.name,
+          }
+        },
       },
     ],
     columns: [
@@ -369,6 +402,7 @@ export const commonMasterDefinitions = {
     }),
     toFormValues: (item) => ({
       name: item.name,
+      stateId: item.stateId ?? 0,
       districtId: item.districtId ?? 0,
       isActive: item.isActive,
     }),
@@ -452,6 +486,13 @@ export const commonMasterDefinitions = {
         parseAs: "number",
         placeholder: "Select country",
         loadOptions: mapOptions(countriesApi.list),
+        createOption: async (label) => {
+          const created = await countriesApi.create({ name: label.trim() })
+          return {
+            value: created.id,
+            label: created.name,
+          }
+        },
       },
       {
         key: "cityId",

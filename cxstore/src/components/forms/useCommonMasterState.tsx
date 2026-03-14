@@ -4,6 +4,7 @@ import { EditIcon, MoreHorizontalIcon, PowerIcon } from "lucide-react"
 import type { CommonListActiveFilter, CommonListColumn } from "@/components/forms/CommonList"
 import type { CommonUpsertFormValues } from "@/components/forms/CommonUpsertDialog"
 import type { CommonMasterDefinition, CommonMasterFieldDefinition } from "@/components/forms/commonMasterTypes"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -203,7 +204,7 @@ export function useCommonMasterState(definition: CommonMasterDefinition) {
   const columns: CommonListColumn<CommonMasterItem>[] = [
     {
       id: "serialNumber",
-      header: "SL No",
+      header: "Sl.No",
       cell: (item) => ((safeCurrentPage - 1) * pageSize) + paginatedItems.findIndex((entry) => entry.id === item.id) + 1,
       className: "w-12 min-w-12 px-2 text-center text-foreground",
       headerClassName: "w-12 min-w-12 px-2 text-center",
@@ -226,7 +227,14 @@ export function useCommonMasterState(definition: CommonMasterDefinition) {
       header: "Status",
       sortable: true,
       accessor: (item) => item.isActive,
-      cell: (item) => item.isActive ? "Active" : "Inactive",
+      cell: (item) => (
+        <Badge
+          variant={item.isActive ? "default" : "secondary"}
+          className={item.isActive ? "bg-emerald-500 text-white hover:bg-emerald-500/90" : "bg-slate-100 text-slate-700 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100"}
+        >
+          {item.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
     },
     {
       id: "actions",

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import type { ChangeEvent, FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import GlobalLoader from "@/components/global/GlobalLoader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -63,7 +62,14 @@ export default function RoleEditPage() {
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
-          <GlobalLoader size="sm" className="min-h-56 py-6" />
+          <div className="space-y-4 py-2">
+            <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+            <div className="h-10 animate-pulse rounded-md bg-muted/70" />
+            <div className="flex gap-2">
+              <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
+              <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
+            </div>
+          </div>
         ) : (
           <>
             {error ? <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div> : null}

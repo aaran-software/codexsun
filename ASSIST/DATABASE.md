@@ -113,6 +113,10 @@ Representative indexes and uniqueness rules:
 
 Search-oriented indexes are also present on common master names and active flags to support autocomplete-style queries.
 
+Frontend note:
+
+- Shared popup autocomplete selects rely on the existing `/search` endpoints and the current uniqueness/foreign-key rules; no schema change was required for the inline create-and-select UX.
+
 ## Auth Indexes
 
 Unique indexes:

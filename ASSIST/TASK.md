@@ -2,34 +2,30 @@
 
 ## Prompt
 
-Expand the current seed data cleanly for Auth and Common so a fresh database contains practical default masters, major India/Tamil Nadu location data, and multiple seeded users mapped to the existing role model.
+read ai_rules and commit all and update all assists and update log and push all
 
 ## Objective
 
-Refactor the seed definitions into cleaner reusable seed data sources, add richer default records for the existing Common masters, preserve `sundar@sundar.com` as the super admin, add three additional seeded users for storefront, back office, and management, then recreate the database from scratch and validate the result.
+Review `ASSIST/AI_RULES.md`, capture the exact prompt, document the current frontend/admin UX work across the ASSIST files, then commit the full worktree using the next project-log serial and push the branch to `origin/main`.
 
 ## Constraints
 
 - Follow `ASSIST/AI_RULES.md` and `ASSIST/STANDARDS.md`.
-- Do not break the current production baseline schema or the working GUID-based Auth module.
-- Keep backend, frontend, and documentation changes consistent with the real migration history in the repository.
-- Use the existing `Common` backend module and current `CommonList` / `CommonUpsertDialog` frontend building blocks rather than introducing a conflicting parallel structure.
-- Do not modify the consolidated `ProductionBaseline`; use an incremental migration for the seed refresh.
-- Keep `"-"` as the default first seed row for name/code-based unknown master values where the schema allows it.
+- Do not rewrite the source prompt text during prompt capture.
+- Keep the current backend schema and API surface intact while documenting the frontend/admin UX work accurately.
+- Use the next `CX-` serial in both `ASSIST/PROJECT_LOG.md` and the commit message.
+- Build must remain green before the source control handoff.
 
 ## Observed Repository State
 
-- The active migration in `cxserver/Migrations` is `20260314133756_ProductionBaseline`, not `DatabaseStructureAuthToVendor`.
-- The backend currently exposes `Auth`, `Common`, `Finance`, and `System` modules; separate `Location`, `Product`, `Contact`, and `Vendor` modules do not yet exist.
-- The frontend already uses `CommonList` and `CommonUpsertDialog`, while the prompt still references the older `ListCommon` naming.
-- The current schema does not include the full Prompt 013 target set for `user_roles`, `contacts`, `contact_addresses`, `companies`, `vendors`, `vendor_users`, `vendor_addresses`, or `product_categories`.
-- The backend Common controllers already cover the real reusable masters that exist now: location, catalog, and operations masters.
-- Auth seeding is currently embedded inline in `CodexsunDbContext.OnModelCreating`.
-- Common master seed data is currently embedded directly inside the Common configuration classes with only minimal default records.
+- `cxstore` now contains extensive admin UX updates across shared form primitives, popup dialogs, list tables, status badges, animated app loader, and sidebar behavior.
+- `framer-motion` was added to `cxstore` for the shared global loader animation.
+- Common master popup selects now use shared autocomplete behavior, and selected option labels are rendered instead of raw IDs.
+- The City popup now includes state context so district creation can be offered safely from the district autocomplete.
 
 ## Plan
 
-1. Capture the prompt and move Auth/Common seed values into cleaner reusable seed definitions.
-2. Expand the current seed dataset for countries, Indian states, Tamil Nadu districts, major cities, known pincodes, contact types, sizes, colours, HSN codes, and related common masters.
-3. Seed additional users for management, back office, and storefront using the existing role model and keep `sundar@sundar.com` as the super admin.
-4. Generate an incremental migration, drop and recreate the database, then run builds/tests and update documentation.
+1. Capture the exact prompt in `prompts/032.md`.
+2. Update all ASSIST documentation files to reflect the current frontend/admin UX state and source-control handoff.
+3. Add a new `CX-030` project log entry summarizing the completed worktree.
+4. Build `cxstore`, commit the worktree with the `CX-030` serial, and push `main` to `origin`.

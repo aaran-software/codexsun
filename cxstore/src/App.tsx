@@ -6,12 +6,11 @@ import GlobalLoader from "@/components/global/GlobalLoader"
 import { ThemeProvider } from "@/components/blocks/theme/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAuth } from "./state/authStore"
+import WebLayout from "./components/layout/WebLayout"
+import AuthLayout from "./components/layout/AuthLayout"
+import AppLayout from "./components/layout/AppLayout"
 
 import "./css/app.css"
-
-const WebLayout = lazy(() => import("./components/layout/WebLayout"))
-const AuthLayout = lazy(() => import("./components/layout/AuthLayout"))
-const AppLayout = lazy(() => import("./components/layout/AppLayout"))
 
 const Home = lazy(() => import("./pages/Home"))
 const About = lazy(() => import("./pages/About"))

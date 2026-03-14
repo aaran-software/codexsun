@@ -12,7 +12,6 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import GlobalLoader from "@/components/global/GlobalLoader"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -139,7 +138,7 @@ type SortState = {
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 function getStickyClass(sticky?: "left" | "right", surface: "header" | "body" = "body") {
-  const backgroundClass = surface === "header" ? "bg-muted" : "bg-card"
+  const backgroundClass = surface === "header" ? "bg-muted" : "bg-card group-hover/table-row:bg-muted/50"
 
   if (sticky === "left") {
     return `sticky left-0 z-20 ${backgroundClass}`
@@ -259,6 +258,7 @@ export function CommonList<TData>({
 
   const showSearchSection = Boolean(search || (filters?.options && filters.options.length > 0) || table.columns.length > 1)
   const showActiveFilters = activeFilters.length > 0
+  const hasRows = sortedData.length > 0
 
   const handleSort = (column: CommonListColumn<TData>) => {
     if (!column.sortable) {
@@ -481,16 +481,21 @@ export function CommonList<TData>({
           </TableHeader>
 
           <TableBody>
-            {table.loading ? (
+            {table.loading && !hasRows ? (
               <TableRow>
                 <TableCell colSpan={fallbackColumns.length} className="px-4 py-10 text-center text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <GlobalLoader size="sm" className="min-h-32 p-0" />
-                    <span>{table.loadingMessage ?? "Loading records..."}</span>
+                  <div className="space-y-3">
+                    <div className="mx-auto h-3 w-40 animate-pulse rounded-full bg-muted" />
+                    <div className="space-y-2">
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <div key={index} className="h-10 animate-pulse rounded-md bg-muted/70" />
+                      ))}
+                    </div>
+                    <span className="block text-sm">{table.loadingMessage ?? "Loading records..."}</span>
                   </div>
                 </TableCell>
               </TableRow>
-            ) : sortedData.length > 0 ? (
+            ) : hasRows ? (
               sortedData.map((row, index) => (
                 <TableRow key={table.rowKey ? table.rowKey(row, index) : index}>
                   {fallbackColumns.map((column) => (

@@ -67,6 +67,7 @@
 - Duplicate names/codes are rejected at both service level and database index level
 - Hierarchical foreign keys such as Country/State/District/City relationships are verified before create or update operations succeed
 - Destination records require at least one location reference (`CountryId` or `CityId`)
+- Inline related-record creation from popup autocompletes still goes through the existing validated backend create endpoints; client-side autocomplete does not bypass server-side foreign-key or uniqueness rules
 
 ## Error Monitoring
 

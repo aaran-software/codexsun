@@ -2,6 +2,11 @@
 
 ---
 
+CX-030
+- Reworked the frontend admin UX across shared form primitives and common popup dialogs by standardizing `rounded-md` inputs, thinner dimmed focus styling, blue focus fills, keyboard submit behavior, popup spacing, and title-only modal headers.
+- Updated admin list behavior with consistent sticky-row hover states, `Sl.No` naming, brighter filled status badges, single global suspense loading, and collapsible sidebar section headers that expand and collapse in place instead of navigating.
+- Added `framer-motion`-powered global loader animation plus shared popup autocomplete selects that render option labels instead of IDs and support safe inline creation flows, including country creation and city-form district creation using selected state context.
+
 CX-029
 - Refactored Auth and Common seed data into cleaner reusable seed definition files, keeping `sundar@sundar.com` as the super admin while adding seeded `management`, `backoffice`, and `storefront` users mapped to the existing role model.
 - Expanded the Common master seed dataset with all Indian states and union territories, all Tamil Nadu districts, major Tamil Nadu and India cities, known pincodes, richer contact/product masters, apparel-focused HSN codes, and more practical operational master defaults.

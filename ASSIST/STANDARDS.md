@@ -24,3 +24,5 @@
 - Ensure the solution builds successfully.
 - Add automated tests for new infrastructure-critical behavior.
 - Update repository documentation when structure or runtime dependencies change.
+- Keep shared admin UX behavior inside reusable primitives (`CommonList`, `CommonUpsertDialog`, shared input/select components) instead of scattering page-specific variants.
+- Prefer in-place skeleton or placeholder states for page/table fetching; reserve the global loader for application-level suspense only.

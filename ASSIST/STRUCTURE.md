@@ -18,6 +18,7 @@ codexsun/
 |-- prompts/                             <- Captured user prompts
 |   |-- 006.md
 |   |-- 019.md
+|   |-- 032.md
 |   `-- ...
 |
 |-- cx.AppHost/                          <- .NET Aspire orchestrator
@@ -123,6 +124,7 @@ codexsun/
 |           `-- Master/
 |
 |-- cxstore/                             <- React frontend
+|   |-- package.json                     <- Frontend dependencies including `framer-motion`
 |   `-- src/
 |       |-- api/
 |       |   |-- authApi.ts
@@ -149,7 +151,16 @@ codexsun/
 |       |   |   |-- commonMasterTypes.ts
 |       |   |   |-- useCommonListState.tsx
 |       |   |   `-- useCommonMasterState.tsx
+|       |   |-- global/
+|       |   |   `-- GlobalLoader.tsx
 |       |   |-- layout/
+|       |   |-- ui/
+|       |   |   |-- combobox.tsx
+|       |   |   |-- input.tsx
+|       |   |   |-- input-group.tsx
+|       |   |   |-- select.tsx
+|       |   |   |-- table.tsx
+|       |   |   `-- textarea.tsx
 |       |   `-- table/
 |       |       `-- AdminTable.tsx
 |       |-- css/

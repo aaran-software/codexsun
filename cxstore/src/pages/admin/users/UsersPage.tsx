@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 
 import { deleteUser, getUsers, restoreUser } from "@/api/userApi"
 import { CommonList, type CommonListActiveFilter, type CommonListColumn } from "@/components/forms/CommonList"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -97,7 +98,7 @@ export default function UsersPage() {
   const columns: CommonListColumn<AdminUserSummary>[] = [
     {
       id: "serialNumber",
-      header: "SL No",
+      header: "Sl.No",
       cell: (user) => ((safeCurrentPage - 1) * pageSize) + paginatedUsers.findIndex((entry) => entry.id === user.id) + 1,
       className: "w-12 min-w-12 px-2 text-center text-foreground",
       headerClassName: "w-12 min-w-12 px-2 text-center",
@@ -129,7 +130,18 @@ export default function UsersPage() {
       header: "Status",
       sortable: true,
       accessor: (user) => `${user.status}${user.isDeleted ? "Deleted" : "Active"}`,
-      cell: (user) => `${user.status}${user.isDeleted ? " (Deleted)" : ""}`,
+      cell: (user) => (
+        <Badge
+          variant={user.isDeleted ? "destructive" : "default"}
+          className={
+            user.isDeleted
+              ? "bg-rose-500 text-white hover:bg-rose-500/90"
+              : "bg-emerald-500 text-white hover:bg-emerald-500/90"
+          }
+        >
+          {user.isDeleted ? `${user.status} (Deleted)` : user.status}
+        </Badge>
+      ),
     },
     {
       id: "createdAt",
