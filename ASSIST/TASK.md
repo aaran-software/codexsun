@@ -2,28 +2,26 @@
 
 ## Prompt
 
-Read AI_rules and commit all and push all and log all
+read AI_RULES and commit all and push all and log all
 
 ## Objective
 
-Record the current repository work in the project log, then commit and push the full accumulated worktree.
+Read the repository AI operating rules, record the current work in the project log, and deliver the full repository state through a commit and push.
 
 ## Constraints
 
-- Follow `AI_RULES.md` commit discipline.
-- Use the latest project log serial in the commit message.
-- Commit the full current worktree as requested.
-- Verify the repository builds successfully before committing.
+- Follow `ASSIST/AI_RULES.md` for prompt capture, logging, and commit-message serial usage.
+- Commit the entire current worktree, including user changes already present in the repository.
+- Avoid rewriting existing implementation details while preparing the source-control handoff.
 
 ## Observed Repository State
 
-- The repository contains accumulated infrastructure, auth, frontend, admin, and documentation changes.
-- The latest project log serial is `CX-008`.
-- The current branch is `main`.
+- `ASSIST/AI_RULES.md` requires a project-log entry before any commit and requires the latest `CX-###` serial in the commit message.
+- The repository is on `main` with local modifications across backend, frontend, tests, docs, prompt files, and prompt deletions.
+- `ASSIST/PROJECT_LOG.md` currently ends at `CX-018`, so the next compliant serial is `CX-019`.
 
 ## Plan
 
-1. Record this request in the prompt/task tracking files and append a new project log entry.
-2. Run build verification for the current repository state.
-3. Stage and commit the full worktree using the latest project log serial.
-4. Push the commit to the configured remote branch.
+1. Capture this prompt in `prompts/018.md`.
+2. Append a `CX-019` entry to `ASSIST/PROJECT_LOG.md` describing the current handoff and source-control action.
+3. Stage all repository changes, create a commit using the `CX-019` serial, and push `main` to `origin`.

@@ -18,7 +18,16 @@ codexsun/
 |-- prompts/                             <- Captured user prompts
 |   |-- 006.md
 |   |-- 007.md
-|   `-- 008.md
+|   |-- 008.md
+|   |-- 009.md
+|   |-- 010.md
+|   |-- 011.md
+|   |-- 012.md
+|   |-- 013.md
+|   |-- 014.md
+|   |-- 015.md
+|   |-- 016.md
+|   `-- 017.md
 |
 |-- cx.AppHost/                          <- .NET Aspire orchestrator
 |
@@ -143,6 +152,16 @@ codexsun/
 |           `-- auth.ts
 |
 |-- cxtest/                              <- xUnit infrastructure validation tests
+|   |-- AuthSecurityTests/
+|   |   |-- AuditLogTests.cs
+|   |   |-- AuthorizationTests.cs
+|   |   |-- AuthSecurityTestSupport.cs
+|   |   |-- JwtSecurityTests.cs
+|   |   |-- LoginAttackTests.cs
+|   |   |-- PasswordSecurityTests.cs
+|   |   |-- RateLimitTests.cs
+|   |   `-- RefreshTokenTests.cs
+|   `-- TestAssembly.cs
 |
 `-- codexsun.slnx
 ```

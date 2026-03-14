@@ -115,6 +115,15 @@ function persistSession(tokens: Pick<TokenResponse, "accessToken" | "refreshToke
   })
 }
 
+async function hydrateAuthenticatedSession(tokens: Pick<TokenResponse, "accessToken" | "refreshToken" | "expiresAt">) {
+  const authApi = await import("@/api/authApi")
+
+  // Store the access token first so the follow-up /auth/me request carries Authorization.
+  persistSession(tokens, null)
+  const user = await authApi.getCurrentUser()
+  updateStoredUser(user)
+}
+
 export function updateStoredUser(user: AuthUser | null) {
   writeStorage(USER_KEY, user ? JSON.stringify(user) : null)
   setState({
@@ -181,15 +190,13 @@ export async function initializeAuth() {
 export async function login(credentials: LoginRequest) {
   const authApi = await import("@/api/authApi")
   const tokens = await authApi.login(credentials)
-  const user = await authApi.getCurrentUser()
-  persistSession(tokens, user)
+  await hydrateAuthenticatedSession(tokens)
 }
 
 export async function register(account: RegisterRequest) {
   const authApi = await import("@/api/authApi")
   const tokens = await authApi.register(account)
-  const user = await authApi.getCurrentUser()
-  persistSession(tokens, user)
+  await hydrateAuthenticatedSession(tokens)
 }
 
 export async function refreshSession() {

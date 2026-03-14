@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,19 +62,30 @@ builder.Services.AddAuthorization(options => AuthorizationPolicies.Configure(opt
 
 builder.Services.AddRateLimiter(options =>
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("PerIp", limiter =>
-    {
-        limiter.PermitLimit = 100;
-        limiter.Window = TimeSpan.FromSeconds(60);
-        limiter.QueueLimit = 0;
-    });
+    var perIpPermitLimit = builder.Configuration.GetValue("RateLimiting:PerIp:PermitLimit", 100);
+    var perIpWindowSeconds = builder.Configuration.GetValue("RateLimiting:PerIp:WindowSeconds", 60);
+    var perUserPermitLimit = builder.Configuration.GetValue("RateLimiting:PerUser:PermitLimit", 50);
+    var perUserWindowSeconds = builder.Configuration.GetValue("RateLimiting:PerUser:WindowSeconds", 60);
 
-    options.AddFixedWindowLimiter("PerUser", limiter =>
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
-        limiter.PermitLimit = 50;
-        limiter.Window = TimeSpan.FromSeconds(60);
-        limiter.QueueLimit = 0;
+        var isAuthenticated = context.User.Identity?.IsAuthenticated == true;
+        var partitionKey = isAuthenticated
+            ? $"user:{context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous"}"
+            : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+        var permitLimit = isAuthenticated ? perUserPermitLimit : perIpPermitLimit;
+        var windowSeconds = isAuthenticated ? perUserWindowSeconds : perIpWindowSeconds;
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromSeconds(windowSeconds),
+                QueueLimit = 0
+            });
     });
 });
 
@@ -132,8 +144,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("DefaultCors");
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.UseOutputCache();
 

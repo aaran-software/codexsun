@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom'
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ThemeProvider } from "@/components/theme-provider"
 
 import WebLayout from './components/layout/WebLayout'
 import AuthLayout from './components/layout/AuthLayout'
@@ -27,52 +28,59 @@ function App() {
   const auth = useAuth()
 
   return (
-    <Router>
-      <TooltipProvider>
-        <Routes>
-          {/* Public Pages */}
-          <Route element={<WebLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/services" element={<Services />} />
-          </Route>
-
-          {/* Authentication Pages */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-          </Route>
-
-          {/* Application Pages */}
-          <Route element={<ProtectedRoute allowedRoles={["Admin", "Vendor", "Customer", "Staff"]} />}>
-            <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+    <ThemeProvider
+      defaultTheme="dark"
+      defaultColorTheme="neutral"
+      themeStorageKey="vite-ui-theme"
+      colorStorageKey="vite-ui-color-theme"
+    >
+      <Router>
+        <TooltipProvider>
+          <Routes>
+            {/* Public Pages */}
+            <Route element={<WebLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/services" element={<Services />} />
             </Route>
-          </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
-            <Route element={<AppLayout />}>
-              <Route path="/admin" element={<Dashboard />} />
-              <Route path="/admin/users" element={<UsersPage />} />
-              <Route path="/admin/users/create" element={<UserCreatePage />} />
-              <Route path="/admin/users/edit/:id" element={<UserEditPage />} />
-              <Route path="/admin/roles" element={<RolesPage />} />
-              <Route path="/admin/roles/create" element={<RoleCreatePage />} />
-              <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
-              <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
+            {/* Authentication Pages */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
             </Route>
-          </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={["Vendor"]} />}>
-            <Route element={<AppLayout />}>
-              <Route path="/vendor" element={<Dashboard />} />
+            {/* Application Pages */}
+            <Route element={<ProtectedRoute allowedRoles={["Admin", "Vendor", "Customer", "Staff"]} />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to={auth.isAuthenticated ? "/dashboard" : "/"} replace />} />
-        </Routes>
-      </TooltipProvider>
-    </Router>
+            <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
+              <Route element={<AppLayout />}>
+                <Route path="/admin" element={<Dashboard />} />
+                <Route path="/admin/users" element={<UsersPage />} />
+                <Route path="/admin/users/create" element={<UserCreatePage />} />
+                <Route path="/admin/users/edit/:id" element={<UserEditPage />} />
+                <Route path="/admin/roles" element={<RolesPage />} />
+                <Route path="/admin/roles/create" element={<RoleCreatePage />} />
+                <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
+                <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
+              </Route>
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={["Vendor"]} />}>
+              <Route element={<AppLayout />}>
+                <Route path="/vendor" element={<Dashboard />} />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<Navigate to={auth.isAuthenticated ? "/dashboard" : "/"} replace />} />
+          </Routes>
+        </TooltipProvider>
+      </Router>
+    </ThemeProvider>
   )
 }
 

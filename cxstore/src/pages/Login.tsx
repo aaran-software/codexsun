@@ -10,7 +10,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex w-full items-center justify-center py-6 md:py-10">
+    <div className="flex h-full w-full items-center justify-center py-1 md:py-2">
       <div className="w-full max-w-3xl">
         <LoginForm />
       </div>

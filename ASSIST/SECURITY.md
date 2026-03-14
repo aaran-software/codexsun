@@ -35,8 +35,9 @@
 
 ## Rate Limiting
 
-- `PerIp`: 100 requests per 60 seconds
-- `PerUser`: 50 requests per 60 seconds
+- Global rate limiting is enforced for all requests
+- Anonymous traffic is partitioned per IP and defaults to `100` requests per `60` seconds
+- Authenticated traffic is partitioned per user and defaults to `50` requests per `60` seconds
 - HTTP 429 is returned on limit exceed
 
 ## Audit Logging
@@ -44,6 +45,13 @@
 - `AuditLog` tracks login, failed login, password change, and admin actions
 - Captures user, IP, entity type, and entity id where available
 - Auth module currently records register, login, failed login, refresh, and logout actions
+- Auth audit IP capture honors `X-Forwarded-For` before falling back to the direct connection address
+
+## Security Validation
+
+- `cxtest/AuthSecurityTests` covers password hashing, JWT validation, login attack resistance, refresh-token rotation, authorization, rate limiting, and audit logging
+- Security tests validate SQL injection rejection, XSS rejection, token tampering rejection, expired-token rejection, and brute-force throttling
+- The current security regression suite passes with `30` tests
 
 ## Authorization Policies
 
