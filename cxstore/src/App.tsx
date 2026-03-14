@@ -1,34 +1,36 @@
-import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom'
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { Suspense, lazy } from "react"
+import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom"
+
+import ProtectedRoute from "./components/ProtectedRoute"
 import { ThemeProvider } from "@/components/theme-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { useAuth } from "./state/authStore"
 
-import WebLayout from './components/layout/WebLayout'
-import AuthLayout from './components/layout/AuthLayout'
-import AppLayout from './components/layout/AppLayout'
-import ProtectedRoute from './components/ProtectedRoute'
+import "./css/app.css"
 
-import Home from './pages/Home'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import Services from './pages/Services'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import UsersPage from './pages/admin/users/UsersPage'
-import UserCreatePage from './pages/admin/users/UserCreatePage'
-import UserEditPage from './pages/admin/users/UserEditPage'
-import RolesPage from './pages/admin/roles/RolesPage'
-import RoleCreatePage from './pages/admin/roles/RoleCreatePage'
-import RoleEditPage from './pages/admin/roles/RoleEditPage'
-import PermissionsPage from './pages/admin/permissions/PermissionsPage'
-import RolePermissionEditor from './pages/admin/permissions/RolePermissionEditor'
-import CitiesPage from './pages/admin/common/CitiesPage'
-import StatesPage from './pages/admin/common/StatesPage'
-import ProductTypesPage from './pages/admin/common/ProductTypesPage'
-import UnitsPage from './pages/admin/common/UnitsPage'
-import BrandsPage from './pages/admin/common/BrandsPage'
-import { useAuth } from './state/authStore'
+const WebLayout = lazy(() => import("./components/layout/WebLayout"))
+const AuthLayout = lazy(() => import("./components/layout/AuthLayout"))
+const AppLayout = lazy(() => import("./components/layout/AppLayout"))
 
-import './css/app.css'
+const Home = lazy(() => import("./pages/Home"))
+const About = lazy(() => import("./pages/About"))
+const Contact = lazy(() => import("./pages/Contact"))
+const Services = lazy(() => import("./pages/Services"))
+const Login = lazy(() => import("./pages/Login"))
+const Dashboard = lazy(() => import("./pages/Dashboard"))
+const UsersPage = lazy(() => import("./pages/admin/users/UsersPage"))
+const UserCreatePage = lazy(() => import("./pages/admin/users/UserCreatePage"))
+const UserEditPage = lazy(() => import("./pages/admin/users/UserEditPage"))
+const RolesPage = lazy(() => import("./pages/admin/roles/RolesPage"))
+const RoleCreatePage = lazy(() => import("./pages/admin/roles/RoleCreatePage"))
+const RoleEditPage = lazy(() => import("./pages/admin/roles/RoleEditPage"))
+const PermissionsPage = lazy(() => import("./pages/admin/permissions/PermissionsPage"))
+const RolePermissionEditor = lazy(() => import("./pages/admin/permissions/RolePermissionEditor"))
+const CitiesPage = lazy(() => import("./pages/admin/common/CitiesPage"))
+const StatesPage = lazy(() => import("./pages/admin/common/StatesPage"))
+const ProductTypesPage = lazy(() => import("./pages/admin/common/ProductTypesPage"))
+const UnitsPage = lazy(() => import("./pages/admin/common/UnitsPage"))
+const BrandsPage = lazy(() => import("./pages/admin/common/BrandsPage"))
 
 function App() {
   const auth = useAuth()
@@ -42,54 +44,53 @@ function App() {
     >
       <Router>
         <TooltipProvider>
-          <Routes>
-            {/* Public Pages */}
-            <Route element={<WebLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/services" element={<Services />} />
-            </Route>
-
-            {/* Authentication Pages */}
-            <Route element={<AuthLayout />}>
-              <Route path="/login" element={<Login />} />
-            </Route>
-
-            {/* Application Pages */}
-            <Route element={<ProtectedRoute allowedRoles={["Admin", "Vendor", "Customer", "Staff"]} />}>
-              <Route element={<AppLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
+          <Suspense fallback={<div className="min-h-screen bg-background" />}>
+            <Routes>
+              <Route element={<WebLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/services" element={<Services />} />
               </Route>
-            </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
-              <Route element={<AppLayout />}>
-                <Route path="/admin" element={<Dashboard />} />
-                <Route path="/admin/users" element={<UsersPage />} />
-                <Route path="/admin/users/create" element={<UserCreatePage />} />
-                <Route path="/admin/users/edit/:id" element={<UserEditPage />} />
-                <Route path="/admin/roles" element={<RolesPage />} />
-                <Route path="/admin/roles/create" element={<RoleCreatePage />} />
-                <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
-                <Route path="/admin/permissions" element={<PermissionsPage />} />
-                <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
-                <Route path="/admin/common/cities" element={<CitiesPage />} />
-                <Route path="/admin/common/states" element={<StatesPage />} />
-                <Route path="/admin/common/product-types" element={<ProductTypesPage />} />
-                <Route path="/admin/common/units" element={<UnitsPage />} />
-                <Route path="/admin/common/brands" element={<BrandsPage />} />
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
               </Route>
-            </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["Vendor"]} />}>
-              <Route element={<AppLayout />}>
-                <Route path="/vendor" element={<Dashboard />} />
+              <Route element={<ProtectedRoute allowedRoles={["Admin", "Vendor", "Customer", "Staff"]} />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                </Route>
               </Route>
-            </Route>
 
-            <Route path="*" element={<Navigate to={auth.isAuthenticated ? "/dashboard" : "/"} replace />} />
-          </Routes>
+              <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/admin" element={<Dashboard />} />
+                  <Route path="/admin/users" element={<UsersPage />} />
+                  <Route path="/admin/users/create" element={<UserCreatePage />} />
+                  <Route path="/admin/users/edit/:id" element={<UserEditPage />} />
+                  <Route path="/admin/roles" element={<RolesPage />} />
+                  <Route path="/admin/roles/create" element={<RoleCreatePage />} />
+                  <Route path="/admin/roles/edit/:id" element={<RoleEditPage />} />
+                  <Route path="/admin/permissions" element={<PermissionsPage />} />
+                  <Route path="/admin/roles/:id/permissions" element={<RolePermissionEditor />} />
+                  <Route path="/admin/common/cities" element={<CitiesPage />} />
+                  <Route path="/admin/common/states" element={<StatesPage />} />
+                  <Route path="/admin/common/product-types" element={<ProductTypesPage />} />
+                  <Route path="/admin/common/units" element={<UnitsPage />} />
+                  <Route path="/admin/common/brands" element={<BrandsPage />} />
+                </Route>
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={["Vendor"]} />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/vendor" element={<Dashboard />} />
+                </Route>
+              </Route>
+
+              <Route path="*" element={<Navigate to={auth.isAuthenticated ? "/dashboard" : "/"} replace />} />
+            </Routes>
+          </Suspense>
         </TooltipProvider>
       </Router>
     </ThemeProvider>

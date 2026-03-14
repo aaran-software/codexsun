@@ -137,13 +137,15 @@ type SortState = {
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50]
 
-function getStickyClass(sticky?: "left" | "right") {
+function getStickyClass(sticky?: "left" | "right", surface: "header" | "body" = "body") {
+  const backgroundClass = surface === "header" ? "bg-muted" : "bg-card"
+
   if (sticky === "left") {
-    return "sticky left-0 z-20 bg-card"
+    return `sticky left-0 z-20 ${backgroundClass}`
   }
 
   if (sticky === "right") {
-    return "sticky right-0 z-20 bg-card"
+    return `sticky right-0 z-20 ${backgroundClass}`
   }
 
   return ""
@@ -301,7 +303,7 @@ export function ListCommon<TData>({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 ">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{header.pageTitle}</h1>
@@ -310,7 +312,7 @@ export function ListCommon<TData>({
         {header.addLabel && header.onAddClick ? (
           <Button
             type="button"
-            className="shrink-0 gap-2 self-start rounded-md"
+            className="h-9 shrink-0 cursor-pointer gap-2 self-start rounded-md px-3 lg:mt-1 lg:mr-2"
             onClick={header.onAddClick}
             disabled={header.addDisabled}
           >
@@ -435,13 +437,13 @@ export function ListCommon<TData>({
 
       <section className="overflow-hidden rounded-md border bg-card shadow-sm">
         <Table className="min-w-full">
-          <TableHeader className="bg-muted/40">
-            <TableRow className="hover:bg-muted/40">
+          <TableHeader className="bg-muted">
+            <TableRow className="sticky top-0 z-10 hover:bg-muted">
               {fallbackColumns.map((column) => {
                 const isSorted = sortState?.columnId === column.id
 
                 return (
-                  <TableHead key={column.id} className={cn("px-4 py-3", getStickyClass(column.sticky), column.headerClassName)}>
+                  <TableHead key={column.id} className={cn("px-4 py-3", getStickyClass(column.sticky, "header"), column.headerClassName)}>
                     {column.sortable ? (
                       <button
                         type="button"

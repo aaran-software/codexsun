@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { EditIcon, MoreHorizontalIcon, RotateCcwIcon, Trash2Icon } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import { deleteUser, getUsers, restoreUser } from "@/api/userApi"
 import { ListCommon, type ListCommonActiveFilter, type ListCommonColumn } from "@/components/admin/ListCommon"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { AdminUserSummary } from "@/types/admin"
 
 export default function UsersPage() {
@@ -92,8 +99,8 @@ export default function UsersPage() {
       id: "serialNumber",
       header: "SL No",
       cell: (user) => ((safeCurrentPage - 1) * pageSize) + paginatedUsers.findIndex((entry) => entry.id === user.id) + 1,
-      className: "min-w-20 text-foreground",
-      headerClassName: "min-w-20",
+      className: "w-12 min-w-12 px-2 text-center text-foreground",
+      headerClassName: "w-12 min-w-12 px-2 text-center",
       sticky: "left",
     },
     {
@@ -134,23 +141,38 @@ export default function UsersPage() {
     {
       id: "actions",
       header: "Actions",
-      className: "min-w-52 text-right",
-      headerClassName: "min-w-52 text-right",
+      className: "w-12 min-w-12 px-2 text-center",
+      headerClassName: "w-12 min-w-12 px-2 text-center",
       sticky: "right",
       cell: (user) => (
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button size="sm" variant="outline" render={<Link to={`/admin/users/edit/${user.id}`} />}>
-            Edit
-          </Button>
-          {user.isDeleted ? (
-            <Button size="sm" onClick={() => void handleRestore(user.id)}>
-              Restore
-            </Button>
-          ) : (
-            <Button size="sm" variant="destructive" onClick={() => void handleDelete(user.id)}>
-              Delete
-            </Button>
-          )}
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button type="button" size="icon-sm" variant="ghost" className="rounded-md font-semibold">
+                  <MoreHorizontalIcon className="size-4 stroke-[2.5]" />
+                  <span className="sr-only">Open user actions</span>
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="min-w-0 w-auto whitespace-nowrap">
+              <DropdownMenuItem onClick={() => navigate(`/admin/users/edit/${user.id}`)}>
+                <EditIcon className="size-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              {user.isDeleted ? (
+                <DropdownMenuItem onClick={() => void handleRestore(user.id)}>
+                  <RotateCcwIcon className="size-4" />
+                  <span>Restore</span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem variant="destructive" onClick={() => void handleDelete(user.id)}>
+                  <Trash2Icon className="size-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },

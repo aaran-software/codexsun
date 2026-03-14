@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { EditIcon, MoreHorizontalIcon, ShieldCheckIcon } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import { getRoles } from "@/api/roleApi"
 import { ListCommon, type ListCommonActiveFilter, type ListCommonColumn } from "@/components/admin/ListCommon"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { RoleSummary } from "@/types/admin"
 
 export default function RolesPage() {
@@ -60,8 +67,8 @@ export default function RolesPage() {
       id: "serialNumber",
       header: "SL No",
       cell: (role) => ((safeCurrentPage - 1) * pageSize) + paginatedRoles.findIndex((entry) => entry.id === role.id) + 1,
-      className: "min-w-20 text-foreground",
-      headerClassName: "min-w-20",
+      className: "w-12 min-w-12 px-2 text-center text-foreground",
+      headerClassName: "w-12 min-w-12 px-2 text-center",
       sticky: "left",
     },
     {
@@ -88,17 +95,31 @@ export default function RolesPage() {
     {
       id: "actions",
       header: "Actions",
-      className: "min-w-52 text-right",
-      headerClassName: "min-w-52 text-right",
+      className: "w-12 min-w-12 px-2 text-center",
+      headerClassName: "w-12 min-w-12 px-2 text-center",
       sticky: "right",
       cell: (role) => (
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button size="sm" variant="outline" render={<Link to={`/admin/roles/edit/${role.id}`} />}>
-            Edit
-          </Button>
-          <Button size="sm" render={<Link to={`/admin/roles/${role.id}/permissions`} />}>
-            Permissions
-          </Button>
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button type="button" size="icon-sm" variant="ghost" className="rounded-md font-semibold">
+                  <MoreHorizontalIcon className="size-4 stroke-[2.5]" />
+                  <span className="sr-only">Open role actions</span>
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="min-w-0 w-auto whitespace-nowrap">
+              <DropdownMenuItem onClick={() => navigate(`/admin/roles/edit/${role.id}`)}>
+                <EditIcon className="size-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/admin/roles/${role.id}/permissions`)}>
+                <ShieldCheckIcon className="size-4" />
+                <span>Permissions</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },
