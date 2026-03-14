@@ -304,10 +304,10 @@ export function ListCommon<TData>({
 
   return (
     <div className="space-y-4 ">
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between px-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{header.pageTitle}</h1>
-          <p className="max-w-3xl text-sm text-muted-foreground">{header.pageDescription}</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground/80">{header.pageTitle}</h1>
+          <p className="max-w-3xl text-sm text-muted-foreground/80">{header.pageDescription}</p>
         </div>
         {header.addLabel && header.onAddClick ? (
           <Button
@@ -323,7 +323,7 @@ export function ListCommon<TData>({
       </section>
 
       {showSearchSection ? (
-        <section className="rounded-md bg-card p-4 shadow-sm">
+        <section className="bg-card">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-md">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -497,30 +497,32 @@ export function ListCommon<TData>({
         </Table>
       </section>
 
-      <section className="rounded-md border bg-card px-4 py-3 shadow-sm">
-        <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            {footer?.content ?? (
-              <span>
-                Total records: <span className="font-medium text-foreground">{pagination?.totalRecords ?? sortedData.length}</span>
-              </span>
-            )}
+      {!pagination ? (
+        <section className="rounded-md border bg-card px-4 py-3 shadow-sm">
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <div>
+              {footer?.content ?? (
+                <span>
+                  Total records: <span className="font-medium text-foreground">{sortedData.length}</span>
+                </span>
+              )}
+            </div>
           </div>
-          {pagination ? (
-            <span>
-              Showing <span className="font-medium text-foreground">{paginationStart}</span> to{" "}
-              <span className="font-medium text-foreground">{paginationEnd}</span> of{" "}
-              <span className="font-medium text-foreground">{pagination.totalRecords}</span>
-            </span>
-          ) : null}
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {pagination ? (
         <section className="rounded-md border bg-card px-4 py-3 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span>Rows per page</span>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground md:gap-4">
+              <div className="hidden shrink-0 md:block">
+                {footer?.content ?? (
+                  <span>
+                    Total records: <span className="font-medium text-foreground">{pagination.totalRecords}</span>
+                  </span>
+                )}
+              </div>
+              <span className="shrink-0">Rows per page</span>
               <Select
                 value={String(pagination.pageSize)}
                 onValueChange={(value) => pagination.onPageSizeChange(Number(value))}
@@ -538,8 +540,14 @@ export function ListCommon<TData>({
               </Select>
             </div>
 
-            <Pagination className="mx-0 w-full justify-start lg:w-auto lg:justify-end">
-              <PaginationContent className="flex-wrap justify-start">
+            <div className="flex items-center justify-start gap-4 md:justify-end">
+              <span className="hidden shrink-0 text-sm text-muted-foreground md:block">
+                  Showing <span className="font-medium text-foreground">{paginationStart}</span> to{" "}
+                  <span className="font-medium text-foreground">{paginationEnd}</span> of{" "}
+                  <span className="font-medium text-foreground">{pagination.totalRecords}</span>
+              </span>
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent className="flex-nowrap items-center justify-end gap-1">
                 <PaginationItem>
                   <PaginationPrevious
                     href="#"
@@ -592,8 +600,9 @@ export function ListCommon<TData>({
                     }}
                   />
                 </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         </section>
       ) : null}
