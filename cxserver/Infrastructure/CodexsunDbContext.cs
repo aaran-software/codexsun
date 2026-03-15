@@ -2,11 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using cxserver.Modules.AfterSales.Entities;
 using cxserver.Modules.Analytics.Entities;
 using cxserver.Modules.Auth.Entities;
+using cxserver.Modules.Company.Entities;
 using cxserver.Modules.Common.Entities;
 using cxserver.Modules.Contacts.Entities;
 using cxserver.Modules.Finance.Entities;
 using cxserver.Modules.Inventory.Entities;
 using cxserver.Modules.Media.Entities;
+using cxserver.Modules.Monitoring.Entities;
 using cxserver.Modules.Notifications.Entities;
 using cxserver.Modules.Promotions.Entities;
 using cxserver.Modules.Products.Entities;
@@ -46,6 +48,9 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<PaymentTerm> PaymentTerms => Set<PaymentTerm>();
+    public DbSet<Company> Companies => Set<Company>();
+    public DbSet<CompanyAddress> CompanyAddresses => Set<CompanyAddress>();
+    public DbSet<CompanySetting> CompanySettings => Set<CompanySetting>();
     public DbSet<ContactGroup> ContactGroups => Set<ContactGroup>();
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<ContactAddress> ContactAddresses => Set<ContactAddress>();
@@ -91,6 +96,9 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<MediaFolder> MediaFolders => Set<MediaFolder>();
     public DbSet<MediaFile> MediaFiles => Set<MediaFile>();
     public DbSet<MediaUsage> MediaUsage => Set<MediaUsage>();
+    public DbSet<SystemLog> SystemLogs => Set<SystemLog>();
+    public DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
+    public DbSet<LoginHistory> LoginHistory => Set<LoginHistory>();
     public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
@@ -194,9 +202,14 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
             entity.Property(x => x.Action).HasMaxLength(128).IsRequired();
             entity.Property(x => x.EntityType).HasMaxLength(128).IsRequired();
             entity.Property(x => x.EntityId).HasMaxLength(128);
+            entity.Property(x => x.Module).HasMaxLength(100).HasDefaultValue(string.Empty);
+            entity.Property(x => x.OldValues).HasColumnType("text").HasDefaultValue(string.Empty);
+            entity.Property(x => x.NewValues).HasColumnType("text").HasDefaultValue(string.Empty);
             entity.Property(x => x.IpAddress).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.UserAgent).HasMaxLength(500).HasDefaultValue(string.Empty);
             entity.HasIndex(x => x.CreatedAt);
             entity.HasIndex(x => x.Action);
+            entity.HasIndex(x => x.Module);
             entity.HasOne(x => x.User)
                 .WithMany(x => x.AuditLogs)
                 .HasForeignKey(x => x.UserId)

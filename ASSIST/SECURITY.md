@@ -109,11 +109,33 @@
 - Queue processing is centralized in the backend and does not expose provider credentials or delivery logic to the client.
 - The current provider implementations are simulated transport adapters, which keeps the notification architecture in place without introducing hardcoded external credentials into the repository.
 
+## Media Security
+
+- Media uploads are validated server-side for maximum size, allowed extension, and MIME type before storage; the frontend media picker is only a client convenience layer.
+- Uploaded file names are replaced with GUID-based safe names, while the original name is preserved in metadata, reducing path-collision and unsafe-name risks.
+- Media deletion is soft-delete based through `media_files.is_deleted`, so admin actions do not immediately destroy the underlying content reference.
+- Media access remains behind authenticated admin APIs for listing, upload, delete, restore, folder creation, move, and usage tracking, while static `/uploads` serving is limited to files that the application has already accepted into managed storage.
+
+## Company Settings Security
+
+- Public `GET /company` is intentionally read-only and limited to platform branding/profile data needed by the frontend shell; write operations stay behind `AdminAccess`.
+- `PUT /company` and `PUT /company/settings` are admin-only and validate referenced currency, media, and geography records before persistence.
+- Company audit logs record profile updates, address updates, and application-setting changes so branding and billing mutations stay traceable through the existing auth audit model.
+- Moving branding into the backend company module removes the previous hardcoded frontend display-name, contact, and logo values from the runtime path, reducing drift between deployed clients and persisted platform configuration.
+
+## Monitoring Security
+
+- `MonitoringController` is restricted with `AdminAccess`, so audit logs, system logs, error logs, and login history remain visible only to admin users.
+- `AuditMiddleware` automatically captures successful `POST`, `PUT`, `PATCH`, and `DELETE` requests with actor id, endpoint, IP address, user-agent, and request payload.
+- `ErrorLoggingMiddleware` captures unhandled exceptions with stack trace, request path, IP address, and optional user id, then returns a generic error response to the client.
+- Suspicious-IP alerts are emitted when repeated failed or blocked login attempts occur from the same IP inside a rolling time window.
+- Admin permission changes emit system-log alerts, and repeated `Product.Delete` audit activity emits a mass-deletion security signal for future SIEM or alert integrations.
+
 ## Error Monitoring
 
-- `ErrorMonitoringMiddleware` captures unhandled exceptions
-- Slow requests are logged as warnings
-- `SystemError` stores exception details for later review
+- `ErrorLoggingMiddleware` captures unhandled exceptions into `error_logs`
+- `system_logs` stores operational and security events for later review
+- The admin monitoring dashboard surfaces audit, system, error, and login-history data through centralized APIs
 
 ## Environment Security
 

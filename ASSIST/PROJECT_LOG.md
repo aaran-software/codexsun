@@ -2,6 +2,11 @@
 
 ---
 
+CX-042
+- Added `cxserver/Modules/Company` with centralized company profile, billing address, application-setting persistence, public branding retrieval, admin update APIs, audit logging, and the `AddCompanyModule` EF migration under the existing backend module pattern.
+- Wired company branding to Media-backed logo and favicon references, registered the new entities in `CodexsunDbContext`, and exposed `/company` plus `/company/settings` as the platform source of truth for display name, contact details, billing identity, currency, timezone, and document prefixes.
+- Added `cxstore` company APIs, types, `CompanySettingsPage`, admin menu and route wiring, runtime company provider integration for public/admin branding, and integration coverage in `cxtest/CompanyModuleTests.cs`, then revalidated backend build, frontend build, solution build, and the full test suite with 46 passing tests.
+
 CX-041
 - Added `cxserver/Modules/Media` with media folders, media files, usage tracking, local file storage, checksum generation, soft delete/restore, upload validation, and media/folder APIs under the existing backend module pattern.
 - Wired static serving for `/uploads`, generated the `AddMediaModule` EF migration, added raster thumbnail generation for local image uploads, and logged media upload/delete/restore/folder-create actions through the existing audit log model.
@@ -146,6 +151,11 @@ CX-012
 - Fixed a frontend auth-state bug where `/auth/me` was called before newly issued tokens were persisted, causing a `401` after login or registration.
 - Updated `authStore` to store the access token first, then hydrate the authenticated user profile in a second step.
 - Revalidated the frontend production build after the auth-session fix.
+
+CX-047
+- Added `Modules/Monitoring` with centralized `system_logs`, `error_logs`, and `login_history` entities plus admin monitoring APIs for audit logs, system logs, error logs, and login history.
+- Extended the existing auth `audit_logs` model with module, before/after values, and user-agent capture; added global audit/error middleware and wired login-history plus security-event logging into Auth and cross-module audit flows.
+- Added `cxstore` monitoring API/types, four admin monitoring pages, sidebar/menu/routes, updated architecture documentation, and verified backend/frontend builds plus 47 passing tests.
 
 CX-011
 - Resolved a local build failure caused by a running `cx.AppHost` process locking the generated executable.

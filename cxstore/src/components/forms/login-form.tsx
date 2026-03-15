@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HttpError } from "@/api/httpClient"
+import { useCompanyConfig } from "@/config/company"
 import { login, register } from "@/state/authStore"
 
 export function LoginForm({
@@ -23,6 +24,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const navigate = useNavigate()
   const location = useLocation()
+  const { company } = useCompanyConfig()
   const googleAuthUrl = import.meta.env.VITE_GOOGLE_AUTH_URL?.trim() ?? ""
   const [mode, setMode] = useState<"login" | "signup" | "google">("login")
   const [usernameOrEmail, setUsernameOrEmail] = useState("")
@@ -104,7 +106,7 @@ export function LoginForm({
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Codexsun
+            {company.displayName}
           </h1>
           <p className="mx-auto max-w-2xl text-sm leading-5 text-muted-foreground sm:text-base">
             The next big thing is the one that makes the last big thing usable.
@@ -144,7 +146,7 @@ export function LoginForm({
                     <Input
                       id="usernameOrEmail"
                       type="text"
-                      placeholder="mail@codexsun.com"
+                      placeholder={company.supportEmail || company.email || "mail@example.com"}
                       value={usernameOrEmail}
                       onChange={(event) => setUsernameOrEmail(event.target.value)}
                       required
@@ -206,7 +208,7 @@ export function LoginForm({
                     <Input
                       id="registerEmail"
                       type="email"
-                      placeholder="sundar@sundar.com"
+                      placeholder={company.supportEmail || company.email || "mail@example.com"}
                       value={registerEmail}
                       onChange={(event) => setRegisterEmail(event.target.value)}
                       required
@@ -292,7 +294,7 @@ export function LoginForm({
           </Tabs>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
-            <span>Protected by Codexsun security</span>
+            <span>Protected by {company.displayName} security</span>
             <span className="hidden sm:inline">&bull;</span>
             <Link to="/" className="font-medium text-primary underline-offset-4 hover:underline">
               Return to storefront

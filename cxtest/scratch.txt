@@ -1,539 +1,734 @@
-﻿# Prompt 050 — Audit Logs & System Monitoring
+﻿# Prompt — Storefront Frontend (Customer Ecommerce UI)
 
-Implement a **complete Audit Logs and System Monitoring module** for the Codexsun platform.
+Build the **complete customer storefront frontend** for the Codexsun multi-vendor ecommerce platform.
 
-The goal is to **track all system activities, user actions, security events, and application errors** across the platform.
-
-This module must work **centrally across all modules** including:
-
-* Authentication
-* Vendors
-* Orders
-* Inventory
-* Payments
-* Settings
-* Admin actions
-
-The system must support **audit trails, system logs, error logs, and login history tracking**.
-
----
-
-# 1 Backend Architecture
-
-Follow existing architecture:
+Stack:
 
 ```
-/Backend
- ├── Modules
- │     └── Monitoring
- │           ├── Domain
- │           ├── Infrastructure
- │           ├── Application
- │           ├── API
- │           └── DTOs
+React
+TypeScript
+React Router
+Axios
+React Query
+TailwindCSS
+Redux Toolkit (or Zustand)
 ```
 
----
+The storefront must connect to the **existing ASP.NET Core backend APIs**.
 
-# 2 Database Tables
-
-Create tables **only if they do not exist**.
-
----
-
-## audit_logs
-
-Tracks **user actions across the platform**.
+The storefront should support:
 
 ```
-audit_logs
------------
-Id (Guid, PK)
-UserId (Guid, nullable)
-Action (nvarchar 200)
-EntityType (nvarchar 100)
-EntityId (nvarchar 100)
-Module (nvarchar 100)
-OldValues (nvarchar(max))
-NewValues (nvarchar(max))
-IPAddress (nvarchar 100)
-UserAgent (nvarchar 500)
-CreatedAt (datetime)
-```
-
-Examples:
-
-```
-User updated product
-Admin deleted vendor
-Vendor changed order status
-Admin updated settings
+Home
+Product browsing
+Search
+Category pages
+Product page
+Cart
+Checkout
+Orders
+User account
+Wishlist
+Reviews
+Vendor stores
 ```
 
 ---
 
-## system_logs
+# 1 Frontend Folder Structure
 
-Tracks **system events and internal operations**.
-
-```
-system_logs
-------------
-Id (Guid, PK)
-Service (nvarchar 100)
-EventType (nvarchar 100)
-Message (nvarchar(max))
-Details (nvarchar(max))
-Severity (nvarchar 50)
-CreatedAt (datetime)
-```
-
-Severity values:
+Create structure
 
 ```
-Info
-Warning
-Critical
-Debug
-```
-
-Examples:
-
-```
-Inventory recalculation started
-Scheduled job executed
-Shipping API triggered
-Background worker started
-```
-
----
-
-## error_logs
-
-Tracks **application errors and exceptions**.
-
-```
-error_logs
------------
-Id (Guid, PK)
-Service (nvarchar 100)
-ExceptionMessage (nvarchar(max))
-StackTrace (nvarchar(max))
-Source (nvarchar 200)
-Path (nvarchar 300)
-UserId (Guid, nullable)
-IPAddress (nvarchar 100)
-CreatedAt (datetime)
-```
-
-Examples:
-
-```
-NullReferenceException
-Database timeout
-Payment gateway failure
+/frontend
+ ├── src
+ │
+ ├── api
+ │    apiClient.ts
+ │    authApi.ts
+ │    productApi.ts
+ │    cartApi.ts
+ │    orderApi.ts
+ │
+ ├── store
+ │    authStore.ts
+ │    cartStore.ts
+ │
+ ├── components
+ │    layout
+ │    product
+ │    cart
+ │    checkout
+ │    ui
+ │
+ ├── pages
+ │    Home
+ │    Product
+ │    Category
+ │    Search
+ │    Cart
+ │    Checkout
+ │    Orders
+ │    Account
+ │    VendorStore
+ │
+ ├── routes
+ │    router.tsx
+ │
+ ├── hooks
+ │
+ └── utils
 ```
 
 ---
 
-## login_history
+# 2 API Client
 
-Tracks **user authentication activity**.
-
-```
-login_history
---------------
-Id (Guid, PK)
-UserId (Guid)
-Email (nvarchar 200)
-IPAddress (nvarchar 100)
-Device (nvarchar 200)
-Browser (nvarchar 200)
-OS (nvarchar 200)
-LoginStatus (nvarchar 50)
-LoginTime (datetime)
-LogoutTime (datetime, nullable)
-```
-
-LoginStatus values
+Create Axios client.
 
 ```
-Success
-Failed
-Blocked
+apiClient.ts
+```
+
+```
+baseURL = /api
+attach JWT token
+handle errors
 ```
 
 ---
 
-# 3 Entity Models
+# 3 Store (State Management)
 
-Create entities:
-
-```
-AuditLog
-SystemLog
-ErrorLog
-LoginHistory
-```
-
-Each entity must include
+Create stores
 
 ```
-Id
-CreatedAt
+authStore
+cartStore
+wishlistStore
 ```
 
-Use **BaseEntity if available**.
-
----
-
-# 4 Services
-
-Create services:
+Cart store example
 
 ```
-IAuditLogService
-AuditLogService
+addItem
+removeItem
+updateQty
+clearCart
+getTotal
+```
 
-ISystemLogService
-SystemLogService
+Cart must persist in
 
-IErrorLogService
-ErrorLogService
-
-ILoginHistoryService
-LoginHistoryService
+```
+localStorage
 ```
 
 ---
 
-## AuditLogService Responsibilities
+# 4 Layout Components
 
-* log user actions
-* capture entity changes
-* store before/after values
-* attach user and request metadata
-
-Example usage
+Create reusable layout components.
 
 ```
-AuditLogService.Log(
-  userId,
-  "Update Product",
-  "Product",
-  productId,
-  "Catalog",
-  oldValues,
-  newValues
-)
+MainLayout
+Header
+Footer
+Navbar
+MobileMenu
+SearchBar
 ```
 
----
-
-## ErrorLogService Responsibilities
-
-Capture exceptions globally.
-
-Integrate with **ASP.NET middleware**.
-
-Example:
+Header includes
 
 ```
-app.UseMiddleware<ErrorLoggingMiddleware>()
+logo
+search
+cart icon
+account
+wishlist
 ```
 
-Middleware responsibilities
+Cart icon shows
 
 ```
-capture exception
-log stacktrace
-store request path
-store user id
+item count badge
 ```
 
 ---
 
-## SystemLogService Responsibilities
+# 5 Home Page (Storefront)
 
-Used for internal operations.
-
-Example:
+Page:
 
 ```
-SystemLogService.Log(
-   "InventoryService",
-   "RecalculateStock",
-   "Stock recalculation started",
-   "Info"
-)
+/pages/Home/HomePage.tsx
 ```
 
----
-
-## LoginHistoryService Responsibilities
-
-Track
+Sections
 
 ```
-login success
-login failure
-logout
-account lock
+Hero banner
+Featured products
+Popular categories
+Best sellers
+Top vendors
+Latest deals
+Trending products
+Newsletter signup
 ```
 
-Used inside **Auth module**.
-
----
-
-# 5 Global Audit Middleware
-
-Create middleware:
+API calls
 
 ```
-AuditMiddleware
+GET /api/products/featured
+GET /api/categories
+GET /api/vendors/top
 ```
 
-Responsibilities:
-
-Automatically log
+Components
 
 ```
-POST
-PUT
-DELETE
-PATCH
-```
-
-Capture:
-
-```
-user id
-endpoint
-ip address
-request body
+HeroSlider
+ProductGrid
+CategoryGrid
+VendorCarousel
+DealBanner
 ```
 
 ---
 
-# 6 API Endpoints
+# 6 Category Page
 
-Create controller
-
-```
-/api/admin/monitoring
-```
-
-Endpoints
-
----
-
-## Get Audit Logs
+Route
 
 ```
-GET /api/admin/monitoring/audit-logs
-```
-
-Filters
-
-```
-user
-module
-date
-action
-```
-
----
-
-## Get System Logs
-
-```
-GET /api/admin/monitoring/system-logs
-```
-
-Filters
-
-```
-service
-severity
-date
-```
-
----
-
-## Get Error Logs
-
-```
-GET /api/admin/monitoring/error-logs
-```
-
-Filters
-
-```
-service
-date
-user
-```
-
----
-
-## Get Login History
-
-```
-GET /api/admin/monitoring/login-history
-```
-
-Filters
-
-```
-user
-status
-date
-ip
-```
-
----
-
-# 7 Frontend (React)
-
-Create new module
-
-```
-/frontend/src/modules/monitoring
-```
-
-Pages
-
-```
-AuditLogsPage
-SystemLogsPage
-ErrorLogsPage
-LoginHistoryPage
-```
-
----
-
-## Audit Logs Page
-
-Columns
-
-```
-Date
-User
-Module
-Action
-Entity
-IP
+/category/:slug
 ```
 
 Features
 
 ```
-search
-filter
-view changes
+product grid
+filters
+sorting
 pagination
 ```
 
----
-
-## Error Logs Page
-
-Columns
+Filters
 
 ```
-Date
-Service
-Message
-Path
-User
+price
+brand
+rating
+vendor
+availability
+```
+
+API
+
+```
+GET /api/products
+```
+
+Query params
+
+```
+category
+minPrice
+maxPrice
+sort
+page
+```
+
+Components
+
+```
+FilterSidebar
+SortDropdown
+ProductCard
+Pagination
+```
+
+---
+
+# 7 Search Page
+
+Route
+
+```
+/search?q=
 ```
 
 Features
 
 ```
-view stack trace modal
-severity filter
+live search
+filters
+sorting
+```
+
+API
+
+```
+GET /api/products/search?q=
+```
+
+Components
+
+```
+SearchResults
+SearchFilters
+ProductGrid
 ```
 
 ---
 
-## System Logs Page
+# 8 Product Details Page
 
-Columns
-
-```
-Date
-Service
-Event
-Severity
-Message
-```
-
----
-
-## Login History Page
-
-Columns
+Route
 
 ```
-User
-Email
-IP
-Device
-Browser
-Status
-Login Time
-Logout Time
+/product/:slug
 ```
 
----
-
-# 8 Security Features
-
-Add monitoring alerts for
+Display
 
 ```
-multiple login failures
-admin permission changes
-mass product deletion
-suspicious IP activity
+product images
+price
+stock
+vendor
+rating
+description
+specifications
+reviews
+related products
 ```
 
-Future integration ready for
+Components
 
 ```
-SIEM
-Security dashboards
-Alert systems
+ProductGallery
+ProductInfo
+AddToCart
+QuantitySelector
+ReviewList
+RelatedProducts
+```
+
+API
+
+```
+GET /api/products/{id}
+GET /api/products/{id}/reviews
+```
+
+Actions
+
+```
+add to cart
+add to wishlist
+write review
 ```
 
 ---
 
-# 9 Performance
+# 9 Vendor Store Page
 
-Add indexes
+Route
 
 ```
-audit_logs(UserId)
-audit_logs(Module)
-audit_logs(CreatedAt)
+/store/:vendorSlug
+```
 
-error_logs(CreatedAt)
-system_logs(Service)
+Sections
 
-login_history(UserId)
-login_history(LoginTime)
+```
+vendor banner
+vendor profile
+vendor rating
+vendor products
+```
+
+API
+
+```
+GET /api/vendors/{id}
+GET /api/vendors/{id}/products
 ```
 
 ---
 
-# 10 Expected Result
+# 10 Cart Page
 
-After implementation the system must support:
+Route
 
-✓ full audit trail
-✓ login tracking
-✓ error monitoring
-✓ admin monitoring dashboard
-✓ security activity tracking
-✓ system diagnostics
+```
+/cart
+```
+
+Display
+
+```
+product
+price
+quantity
+subtotal
+remove item
+```
+
+Features
+
+```
+update quantity
+remove item
+clear cart
+apply coupon
+```
+
+Components
+
+```
+CartItem
+CartSummary
+CouponInput
+```
+
+API
+
+```
+POST /api/cart
+PUT /api/cart/update
+DELETE /api/cart/remove
+```
+
+Cart summary
+
+```
+subtotal
+discount
+shipping
+total
+```
+
+---
+
+# 11 Checkout Page
+
+Route
+
+```
+/checkout
+```
+
+Steps
+
+```
+1 Address
+2 Shipping
+3 Payment
+4 Review
+```
+
+Components
+
+```
+AddressForm
+ShippingOptions
+PaymentMethods
+OrderSummary
+```
+
+API
+
+```
+POST /api/orders
+```
+
+Payload
+
+```
+cart items
+address
+shipping method
+payment method
+coupon
+```
+
+---
+
+# 12 Payment Integration UI
+
+Support
+
+```
+Stripe
+Razorpay
+PayPal
+Cash on Delivery
+```
+
+Components
+
+```
+PaymentSelector
+PaymentForm
+```
+
+After payment
+
+```
+redirect to order success
+```
+
+---
+
+# 13 Order Success Page
+
+Route
+
+```
+/order-success/:orderId
+```
+
+Display
+
+```
+order summary
+items
+shipping info
+payment status
+tracking link
+```
+
+---
+
+# 14 Orders Page (User)
+
+Route
+
+```
+/account/orders
+```
+
+Display
+
+```
+order history
+status
+order details
+```
+
+API
+
+```
+GET /api/orders/my
+```
+
+Actions
+
+```
+view order
+cancel order
+request return
+```
+
+---
+
+# 15 User Account Pages
+
+Routes
+
+```
+/account
+/account/profile
+/account/addresses
+/account/orders
+/account/wishlist
+/account/reviews
+```
+
+Sections
+
+```
+profile info
+password change
+address book
+order history
+wishlist
+```
+
+---
+
+# 16 Wishlist Page
+
+Route
+
+```
+/wishlist
+```
+
+Features
+
+```
+add/remove wishlist
+move to cart
+```
+
+API
+
+```
+GET /api/wishlist
+POST /api/wishlist
+DELETE /api/wishlist/{id}
+```
+
+---
+
+# 17 Review System
+
+Components
+
+```
+ReviewForm
+ReviewList
+RatingStars
+```
+
+API
+
+```
+POST /api/reviews
+GET /api/products/{id}/reviews
+```
+
+---
+
+# 18 Global UI Components
+
+Create reusable components
+
+```
+Button
+Modal
+Input
+Select
+Badge
+Tabs
+Loader
+Toast
+Pagination
+```
+
+---
+
+# 19 Routing
+
+Create routes
+
+```
+/
+ /category/:slug
+ /product/:slug
+ /search
+ /cart
+ /checkout
+ /order-success/:id
+ /account
+ /account/orders
+ /account/profile
+ /wishlist
+ /store/:vendor
+```
+
+Use
+
+```
+React Router
+```
+
+---
+
+# 20 Responsive Design
+
+Support
+
+```
+mobile
+tablet
+desktop
+```
+
+Mobile features
+
+```
+mobile menu
+sticky cart button
+bottom navigation
+```
+
+---
+
+# 21 Performance
+
+Use
+
+```
+lazy loading
+image optimization
+react-query caching
+```
+
+---
+
+# 22 SEO
+
+Add
+
+```
+meta tags
+product schema
+canonical URLs
+```
+
+---
+
+# 23 Expected Result
+
+After implementation the storefront must support:
+
+```
+✓ modern ecommerce homepage
+✓ product browsing
+✓ search
+✓ category filtering
+✓ product details
+✓ vendor stores
+✓ cart management
+✓ checkout
+✓ payments
+✓ order history
+✓ user accounts
+✓ wishlist
+✓ reviews
+```
+
+---
+
+💡 **Next Best Prompt After This**
+
+You should then generate:
+
+```
+Storefront UI Design System
+```
+
+which creates
+
+```
+design tokens
+component library
+theme
+dark mode
+```

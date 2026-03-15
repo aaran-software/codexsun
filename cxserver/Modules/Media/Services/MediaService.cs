@@ -407,6 +407,7 @@ public sealed class MediaService(CodexsunDbContext dbContext, IFileStorageProvid
         {
             "products" => "products",
             "vendors" => "vendors",
+            "company" => "cms",
             "cms" => "cms",
             "users" => "users",
             "shipping" or "documents" => "documents",
@@ -494,7 +495,11 @@ public sealed class MediaService(CodexsunDbContext dbContext, IFileStorageProvid
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Media",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

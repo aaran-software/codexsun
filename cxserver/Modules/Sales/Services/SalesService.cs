@@ -1130,7 +1130,11 @@ public sealed partial class SalesService(CodexsunDbContext dbContext, Notificati
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Sales",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

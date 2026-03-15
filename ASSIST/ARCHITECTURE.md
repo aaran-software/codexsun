@@ -166,3 +166,27 @@ codexsun.slnx
 - `NotificationQueueProcessor` runs as a hosted background worker and processes pending notifications in configurable batches stored through existing `system_settings`.
 - Existing domain services now enqueue notifications for user registration, password update/reset, order creation, payment success, shipment shipped, shipment delivered, return approval, vendor payout creation, and low-inventory alerts.
 - `cxstore` integrates the module with `notificationApi.ts`, `types/notification.ts`, and admin pages for templates, logs, and settings under the existing route and sidebar structure.
+
+## Media Library Update (2026-03-15)
+
+- `cxserver/Modules/Media` adds a centralized media library under the existing modular-monolith pattern with entities, EF configurations, DTOs, services, and controllers only; storage providers stay behind a service abstraction without changing the module folder convention.
+- The module persists folder hierarchy, uploaded file metadata, soft-delete state, checksum hashes, and cross-module usage references through `media_folders`, `media_files`, and `media_usage`.
+- `LocalFileStorageProvider` is the initial file backend and stores content under `uploads/media`, uses GUID-based safe file names, preserves the original file name separately, and generates thumbnail, medium, and large derivatives for supported raster images.
+- The backend now serves `/uploads` as static content, validates upload size, extension, and MIME type, and records media upload, delete, restore, and folder-create actions through the existing audit-log model.
+- `cxstore` integrates the module with `mediaApi.ts`, `types/media.ts`, `pages/admin/media/MediaLibraryPage.tsx`, and a reusable `components/media/MediaPicker.tsx` that is already wired into product image rows and vendor logo management.
+
+## Company And Application Settings Update (2026-03-15)
+
+- `cxserver/Modules/Company` adds a centralized platform-configuration layer for display name, legal and billing identity, support contacts, tax fields, branding media, billing address, and global key-value settings without changing the existing modular structure.
+- The module persists company profile data in `companies`, billing/location data in `company_addresses`, and cross-cutting configuration values such as order and invoice prefixes in `company_settings`.
+- Branding assets are linked through `logo_media_id` and `favicon_media_id` into the existing Media module, which keeps company visuals inside the same managed media lifecycle as other platform assets.
+- `CompanyService` provides public profile retrieval plus admin-only update flows and acts as the runtime source for frontend branding instead of the previous hardcoded frontend company constants.
+- `cxstore` now uses a shared company provider backed by `companyApi.ts` so layouts, loaders, login branding, contact shortcuts, sidebar branding, and the new admin settings page all consume runtime company data from the backend.
+
+## Monitoring And Audit Update (2026-03-15)
+
+- `cxserver/Modules/Monitoring` adds centralized monitoring using the existing repository pattern: entities, EF configurations, DTOs, services, controllers, and middleware instead of a separate backend architecture tree.
+- The implementation extends the existing `audit_logs` table rather than duplicating it, and adds dedicated `system_logs`, `error_logs`, and `login_history` tables for platform diagnostics and security tracking.
+- `ErrorLoggingMiddleware` captures unhandled exceptions globally, while `AuditMiddleware` records successful mutating HTTP requests with request metadata and payload snapshots.
+- `AuthService` now records login success, login failure, blocked attempts, and logout events into `login_history`, and emits monitoring-oriented system logs for suspicious IP activity and admin permission changes.
+- `cxstore` integrates monitoring through `monitoringApi.ts`, `types/monitoring.ts`, and four admin pages under `pages/admin/monitoring`, all wired into the existing `AppLayout` and sidebar grouping model.

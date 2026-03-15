@@ -1,1 +1,1 @@
-PROMPT 044 - Implement centralized Media/File Manager module with backend storage, upload APIs, media library UI, picker integration, migration, tests, and documentation updates.
+PROMPT 048 - Build the customer storefront frontend in the existing `cxstore` app with authenticated product browsing, search, category/product/vendor pages, persisted cart and wishlist state, checkout/account flows, storefront layout/components, and documentation updates aligned to the current backend API surface.

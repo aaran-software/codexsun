@@ -195,7 +195,11 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Shipping",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

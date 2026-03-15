@@ -377,6 +377,49 @@ Not currently active:
   - manage templates and channel settings
   - record provider outcomes in `notification_logs`
 
+## Media
+
+- Purpose: centralized file and image management shared by products, vendors, CMS-style assets, user-profile media, shipping documents, and marketing banners
+- Domain entities:
+  - `MediaFolder`
+  - `MediaFile`
+  - `MediaUsage`
+- Application service: `MediaService`
+- Infrastructure components:
+  - `IFileStorageProvider`
+  - `LocalFileStorageProvider`
+  - image-derivative generation for `thumbnail`, `medium`, and `large`
+- API controllers:
+  - `MediaController`
+  - `FoldersController`
+- Key responsibilities:
+  - upload files and images with server-side validation
+  - store metadata, checksums, and soft-delete state
+  - manage hierarchical folders and file moves
+  - track cross-module media usage references
+  - keep storage-provider integration ready for future cloud backends
+
+## Company
+
+- Purpose: centralized company profile, branding, billing identity, and mutable application settings used across the platform
+- Domain entities:
+  - `Company`
+  - `CompanyAddress`
+  - `CompanySetting`
+- Application service: `CompanyService`
+- Infrastructure components:
+  - media-backed `logo_media_id` and `favicon_media_id`
+  - currency and geography references from `Common`
+  - public branding read endpoint plus admin-only mutation endpoints
+- API controllers:
+  - `CompanyController`
+  - `CompanySettingsController`
+- Key responsibilities:
+  - expose the platform display name, legal and billing names, contacts, and tax metadata
+  - manage billing address and branding assets
+  - store application-wide values such as order and invoice prefixes
+  - provide a single source of truth for frontend branding and future document/email/report configuration
+
 # Frontend Architecture
 
 ## Application Root
@@ -443,6 +486,8 @@ Main frontend module areas are represented by:
 - `productApi.ts`
 - `salesApi.ts`
 - `inventoryApi.ts`
+- `companyApi.ts`
+- `mediaApi.ts`
 - `vendorApi.ts`
 - `analyticsApi.ts`
 - `promotionApi.ts`
@@ -568,6 +613,26 @@ Main frontend module areas are represented by:
 - Types: `types/notification.ts`
 - Purpose: admin management of templates, queue settings, and delivery logs
 
+## Media
+
+- Pages:
+  - `pages/admin/media/MediaLibraryPage.tsx`
+- API: `mediaApi.ts`
+- Types: `types/media.ts`
+- Shared component:
+  - `components/media/MediaPicker.tsx`
+- Purpose: admin media browsing, upload, folder management, soft delete/restore, and reusable asset selection for product and vendor forms
+
+## Company Settings
+
+- Pages:
+  - `pages/admin/settings/company/CompanySettingsPage.tsx`
+- API: `companyApi.ts`
+- Types: `types/company.ts`
+- Shared runtime config:
+  - `config/company.tsx`
+- Purpose: admin management of company profile, branding assets, billing address, and mutable application defaults while also feeding frontend runtime branding
+
 ## Lookups and Reusable Form Infrastructure
 
 - `components/lookups/*` -> autocomplete lookup primitives
@@ -612,6 +677,8 @@ Routes using `AppLayout`:
   - `/admin/contacts*`
   - `/admin/products*`
   - `/admin/sales/*`
+  - `/admin/settings/company`
+  - `/admin/media`
   - `/admin/promotions`
   - `/admin/shipping`
   - `/admin/returns`
@@ -657,8 +724,11 @@ The active database structure is defined by:
   - `20260315143615_AddVendorCompanySupport`
   - `20260315151649_AddVendorWarehouseOwnership`
   - `20260315153639_AddEnterpriseModules`
+  - `20260315160147_AddNotificationsModule`
+  - `20260315161557_AddMediaModule`
+  - `20260315163720_AddCompanyModule`
 
-The active schema currently contains 91 mapped tables.
+The active schema currently contains 94 mapped tables.
 
 ## Identity Tables
 
@@ -692,6 +762,24 @@ Key relationships:
 - `destinations.country_id -> countries.id`
 - `destinations.city_id -> cities.id`
 - `warehouses.vendor_id -> vendors.id` (nullable ownership link)
+
+## Company Tables
+
+- `companies`
+- `company_addresses`
+- `company_settings`
+
+Key relationships:
+
+- `companies.logo_media_id -> media_files.id`
+- `companies.favicon_media_id -> media_files.id`
+- `companies.currency_id -> currencies.id`
+- `company_addresses.company_id -> companies.id`
+- `company_addresses.country_id -> countries.id`
+- `company_addresses.state_id -> states.id`
+- `company_addresses.city_id -> cities.id`
+- `company_addresses.pincode_id -> pincodes.id`
+- `company_settings.company_id -> companies.id`
 
 ## Contact Tables
 
@@ -1058,6 +1146,14 @@ Key relationships:
 - Tables: `system_settings`, `number_series`
 - Relationships: standalone configuration tables
 
+## Company module
+
+- Tables: `companies`, `company_addresses`, `company_settings`
+- Relationships:
+  - company profile links to optional Media assets for logo and favicon
+  - address bridges the company record to Common geography masters
+  - settings store mutable application configuration values under one company record
+
 ## AfterSales module
 
 - Tables: `returns`, `return_items`, `return_status_history`, `return_inspections`, `restock_events`, `inventory_ledger`, `refunds`, `refund_items`, `refund_transactions`
@@ -1143,6 +1239,18 @@ Key relationships:
 - `NotificationSettingsController` -> `/notifications/settings`, `/notifications/settings/process`
 - Responsible module: `Notifications`
 
+## Media API
+
+- `MediaController` -> `/media/upload`, `/media/files`, `/media/files/{id}`, `/media/files/{id}/restore`, `/media/files/{id}/move`, `/media/files/{id}/usage`
+- `FoldersController` -> `/media/folders`, `/media/folders/{id}`
+- Responsible module: `Media`
+
+## Company API
+
+- `CompanyController` -> `/company`
+- `CompanySettingsController` -> `/company/settings`
+- Responsible module: `Company`
+
 ## Vendors API
 
 - `VendorsController` -> `/vendors`, `/vendors/{id}`, `/vendors/warehouses`
@@ -1208,6 +1316,9 @@ Key relationships:
 - EF migrations also extend the shared `warehouses` master with nullable `vendor_id` ownership instead of introducing a parallel vendor warehouse table
 - `AddEnterpriseModules` activates the runtime `AfterSales` schema and adds analytics, promotions, coupon usage, shipping, and shipment tracking tables
 - `AddNotificationsModule` adds centralized template, queue, and provider-log tables plus template seed data
+- `AddMediaModule` adds centralized media folders, media-file metadata, usage tracking, and seed root folders for local file storage
+- `AddCompanyModule` adds centralized company profile, billing-address, and application-setting tables plus the default platform record and initial document/localization settings
+- `/uploads` is served from the backend runtime so locally stored managed media files are reachable by the frontend through generated `file_url` values
 
 ## Frontend Runtime Infrastructure
 
@@ -1243,6 +1354,8 @@ Key relationships:
 - Vendor management uses `vendors.view`, `vendors.manage`, and `vendors.users.manage`
 - The newly added enterprise modules currently rely on authenticated role checks and admin route segmentation rather than separate seeded permission codes
 - Notifications currently follow the same authenticated admin route segmentation model
+- Media currently follows the same authenticated admin route segmentation model, with upload validation and audit logging enforced in the backend service layer
+- Company settings currently use `AdminAccess` policy protection rather than separate seeded permission codes
 
 ## API Protection
 
@@ -1254,6 +1367,8 @@ Key relationships:
   - `Referrer-Policy`
 - Rate limiting protects anonymous and authenticated traffic
 - Audit log entries are written for sensitive auth, contact, product, order, invoice, payment, payout, coupon application, shipment updates, and refund processing operations
+- Media uploads additionally enforce extension, MIME-type, and file-size validation before content is accepted into managed storage
+- Company profile and setting mutations are audit logged and validate referenced currency, media, and geography records on the server
 
 # Module Dependencies
 
@@ -1335,6 +1450,18 @@ Key relationships:
   - low inventory alerts
 - `AfterSales -> Notifications`
   - return approval notifications
+- `Media -> Auth`
+  - uploader identity, admin access, audit logging
+- `Products -> Media`
+  - product image selection and media-usage tracking
+- `Vendors -> Media`
+  - vendor logo selection and media-usage tracking
+- `Company -> Media`
+  - logo and favicon references reuse managed media files
+- `Company -> Common`
+  - currency and geography references
+- `Frontend Shell -> Company`
+  - layouts, loader, login, and contact widgets consume runtime company branding/profile data
 
 # System Workflows
 
@@ -1522,3 +1649,93 @@ Key relationships:
 - Domain services enqueue notifications as part of the existing business flows instead of sending directly inside controllers.
 - `NotificationQueueProcessor` polls for `Pending` rows and writes `Sent`, `Failed`, or `Skipped` outcomes with provider responses to `notification_logs`.
 - Admin users can also trigger immediate queue processing through `/notifications/settings/process` and monitor queue health from the notification settings page.
+
+## Media Library
+
+- `Modules/Media` centralizes uploaded files and images in one module instead of letting Products, Vendors, or future CMS features store unmanaged file paths directly.
+- The module stores folder hierarchy in `media_folders`, file metadata and lifecycle state in `media_files`, and cross-module attachment references in `media_usage`.
+- The frontend admin surface is `pages/admin/media/MediaLibraryPage.tsx`, while reusable picking is handled through `components/media/MediaPicker.tsx`.
+
+## File Storage Architecture
+
+- Storage is abstracted behind `IFileStorageProvider`, with `LocalFileStorageProvider` as the current implementation.
+- Files are written under `uploads/media` using GUID-based names, while `original_file_name` preserves the uploaded name for display and auditability.
+- The implementation is prepared for future providers such as S3, Cloudflare R2, or Azure Blob without changing the current media data model.
+
+## Image Processing
+
+- Supported raster image uploads generate `thumbnail`, `medium`, and `large` derivatives under the media storage root.
+- Supported document uploads keep the original asset only and still participate in the same metadata, folder, and usage-tracking flows.
+- Image processing currently happens inside the media storage provider during upload, which keeps derivative creation close to the storage concern.
+
+## Media Usage Tracking
+
+- `MediaService.RecordUsage` and `MediaService.RemoveUsage` track where a file is attached by module, entity type, entity id, and usage type.
+- Product image rows and vendor logo forms already consume the shared picker and can record usage against the central media library.
+- Soft delete keeps file records recoverable through `is_deleted`, allowing admins to restore mistakenly removed assets without reuploading them.
+
+## Company & Application Settings
+
+- `Modules/Company` centralizes platform-level branding, billing identity, support contacts, tax details, and mutable application defaults instead of leaving those values hardcoded in the frontend or scattered across module-specific settings.
+- `CompanyController` exposes the public company profile used by the frontend shell, while `CompanySettingsController` manages admin-only key-value configuration updates.
+- The admin surface lives in `pages/admin/settings/company/CompanySettingsPage.tsx` and is reachable through the new `Settings -> Company` menu group.
+
+## Company Profile Configuration
+
+- `companies` stores display name, legal name, billing name, company code, contact details, tax identifiers, default currency, timezone, and Media-backed logo/favicon references.
+- `company_addresses` stores the billing address against existing Common geography masters rather than duplicating country/state/city data outside the shared reference model.
+- Frontend layouts, sidebar branding, loader visuals, login branding, and contact shortcuts now read their runtime company profile from the backend company module through `config/company.tsx`.
+
+## Application Configuration Management
+
+- `company_settings` stores mutable platform values such as `order_prefix`, `invoice_prefix`, `default_language`, and `date_format`.
+- `CompanyService.GetApplicationSetting` provides a service-level access point for future module integrations that need centralized configuration at runtime.
+- Audit logs capture `Company.ProfileUpdated`, `Company.AddressUpdated`, and `Company.SettingUpdated` so configuration changes remain traceable.
+
+## Branding Settings
+
+- Company logo and favicon reuse the existing Media module through `logo_media_id` and `favicon_media_id`, keeping branding assets under managed upload, checksum, and soft-delete workflows.
+- The frontend company provider updates document title and favicon dynamically from backend company data, eliminating the previous hardcoded brand constants from the active runtime path.
+
+## System Configuration Values
+
+- Current managed values include company currency, timezone, order prefix, invoice prefix, default language, and date format.
+- The design keeps the older `system_settings` infrastructure table intact while making `Modules/Company` the authoritative source for platform-facing branding and business-identity configuration.
+
+## Audit Logs and System Monitoring
+
+- `Modules/Monitoring` implements centralized monitoring through the existing repository module pattern: `Entities`, `Configurations`, `DTOs`, `Services`, and `Controllers`.
+- The module does not create a second audit table. Instead, it extends the existing `audit_logs` model and adds `system_logs`, `error_logs`, and `login_history` as dedicated monitoring tables.
+- `MonitoringController` exposes admin-only endpoints under `/api/admin/monitoring` for audit logs, system logs, error logs, and login history.
+- The frontend integrates monitoring through `cxstore/src/api/monitoringApi.ts`, `cxstore/src/types/monitoring.ts`, and four admin pages under `cxstore/src/pages/admin/monitoring`.
+
+## Audit Trail
+
+- `audit_logs` now captures `module`, `old_values`, `new_values`, and `user_agent` in addition to actor, action, entity, IP, and timestamp.
+- Existing service-level audit logging remains in place across Auth, Company, Inventory, Shipping, Promotions, Media, Products, Sales, Contacts, and AfterSales.
+- `AuditMiddleware` adds centralized coverage for successful `POST`, `PUT`, `PATCH`, and `DELETE` requests and stores request-body snapshots as the new-value payload when a module does not already provide a richer diff.
+
+## System Logs
+
+- `system_logs` stores service-level events from monitoring and operational workflows with `service`, `event_type`, `message`, `details`, `severity`, and `created_at`.
+- Current high-signal system events include `ApplicationStarted`, `SuspiciousIpActivity`, `AdminPermissionChange`, and `MassProductDeletion`.
+- Severity values implemented in the service layer are `Info`, `Warning`, `Critical`, and `Debug`.
+
+## Error Logs
+
+- `ErrorLoggingMiddleware` captures unhandled exceptions globally and stores exception message, stack trace, source, path, actor id, IP address, and creation time in `error_logs`.
+- The middleware returns a generic HTTP 500 payload to callers after logging, keeping stack traces out of client responses.
+- Admin users can review error records through `/api/admin/monitoring/error-logs` and the `ErrorLogsPage` frontend screen.
+
+## Login History
+
+- `login_history` records login success, login failure, blocked attempts, and logout timestamps with email, IP address, device, browser, and OS metadata.
+- `AuthService` now calls `ILoginHistoryService` during login success, failed login, blocked login, and logout.
+- Failed and blocked attempts are stored even when no resolved user exists yet, so the persisted `user_id` is nullable in practice for that flow.
+
+## Security Activity Tracking
+
+- Repeated failed or blocked logins from the same IP generate a `SuspiciousIpActivity` system log.
+- Role-permission updates generate an `AdminPermissionChange` system log.
+- Repeated `Product.Delete` audit activity inside a short time window generates a `MassProductDeletion` monitoring event.
+- The design is ready for later SIEM export or alert delivery without changing the monitoring schema.

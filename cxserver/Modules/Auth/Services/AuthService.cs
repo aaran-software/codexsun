@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using cxserver.Infrastructure;
 using cxserver.Modules.Auth.DTOs;
 using cxserver.Modules.Auth.Entities;
+using cxserver.Modules.Monitoring.Services;
 using cxserver.Modules.Auth.Security;
 using cxserver.Modules.Notifications.Configurations;
 using cxserver.Modules.Notifications.Services;
@@ -14,7 +15,9 @@ public sealed class AuthService(
     PasswordService passwordService,
     JwtTokenService jwtTokenService,
     IOptions<JwtSettings> jwtOptions,
-    NotificationService notificationService)
+    NotificationService notificationService,
+    ILoginHistoryService loginHistoryService,
+    ISystemLogService systemLogService)
 {
     private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
@@ -73,10 +76,16 @@ public sealed class AuthService(
         if (user is null || user.IsDeleted || !passwordService.VerifyPassword(request.Password, user.PasswordHash) || user.Status != "Active")
         {
             await WriteAuditLogAsync(null, "Auth.LoginFailed", nameof(User), null, ipAddress, cancellationToken);
+            await loginHistoryService.RecordFailedLoginAsync(
+                user?.Id,
+                request.UsernameOrEmail.Trim().ToLowerInvariant(),
+                user is not null && (!string.Equals(user.Status, "Active", StringComparison.OrdinalIgnoreCase) || user.IsDeleted) ? "Blocked" : "Failed",
+                cancellationToken);
             throw new UnauthorizedAccessException("Invalid username/email or password.");
         }
 
         await WriteAuditLogAsync(user.Id, "Auth.Login", nameof(User), user.Id.ToString(), ipAddress, cancellationToken);
+        await loginHistoryService.RecordSuccessfulLoginAsync(user.Id, user.Email, cancellationToken);
 
         return await IssueTokensForLoadedUserAsync(user, ipAddress, cancellationToken);
     }
@@ -119,6 +128,7 @@ public sealed class AuthService(
             existingToken.RevokedAt = DateTimeOffset.UtcNow;
             await WriteAuditLogAsync(existingToken.UserId, "Auth.Logout", nameof(RefreshToken), existingToken.Id.ToString(), ipAddress, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await loginHistoryService.RecordLogoutAsync(existingToken.UserId, cancellationToken);
         }
     }
 
@@ -466,6 +476,13 @@ public sealed class AuthService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Auth.RolePermissionsUpdate", nameof(Role), roleId.ToString(), ipAddress, cancellationToken);
+        await systemLogService.LogAsync(
+            "AuthService",
+            "AdminPermissionChange",
+            "Admin permission configuration changed.",
+            "Warning",
+            $"Role {roleId} permissions were updated.",
+            cancellationToken);
         return true;
     }
 
@@ -526,7 +543,11 @@ public sealed class AuthService(
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Auth",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

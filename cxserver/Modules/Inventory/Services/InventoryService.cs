@@ -872,7 +872,11 @@ public sealed class InventoryService(CodexsunDbContext dbContext, NotificationSe
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Inventory",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

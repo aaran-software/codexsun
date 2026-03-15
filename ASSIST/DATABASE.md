@@ -45,6 +45,14 @@ Latest notification migration:
 
 - `AddNotificationsModule`
 
+Latest media migration:
+
+- `AddMediaModule`
+
+Latest company migration:
+
+- `AddCompanyModule`
+
 ## Auth Schema
 
 The baseline creates the security tables below in PostgreSQL:
@@ -157,6 +165,18 @@ Notification tables:
 - `notification_templates`
 - `notifications`
 - `notification_logs`
+
+Media tables:
+
+- `media_folders`
+- `media_files`
+- `media_usage`
+
+Company tables:
+
+- `companies`
+- `company_addresses`
+- `company_settings`
 
 Extended product pricing table:
 
@@ -297,6 +317,64 @@ Operational note:
 - `system_settings` stores operational toggles such as `notifications.email.enabled` and `notifications.batch-size`
 - `notifications` acts as the queue and delivery record, while `notification_logs` stores provider-level responses for each send attempt
 
+## Media Schema
+
+The `AddMediaModule` migration adds a centralized media library and local file-storage metadata model without changing the existing module layout elsewhere.
+
+Relationships:
+
+- `media_folders.parent_folder_id -> media_folders.id`
+- `media_files.folder_id -> media_folders.id`
+- `media_files.uploaded_by_user_id -> users.id`
+- `media_usage.media_file_id -> media_files.id`
+
+Operational note:
+
+- files are initially stored under `uploads/media` through the local storage provider
+- `media_files` keeps the storage path, public URL, checksum, soft-delete flag, and original upload name separately from the generated safe file name
+- `media_usage` tracks where a file is used across modules such as products, vendors, CMS, users, and documents
+- raster image uploads generate `thumbnail`, `medium`, and `large` derivatives, while non-raster supported files keep only the original asset
+
+## Company Schema
+
+The `AddCompanyModule` migration adds centralized platform company and application settings without replacing the existing `system_settings` infrastructure tables.
+
+Relationships:
+
+- `companies.logo_media_id -> media_files.id`
+- `companies.favicon_media_id -> media_files.id`
+- `companies.currency_id -> currencies.id`
+- `company_addresses.company_id -> companies.id`
+- `company_addresses.country_id -> countries.id`
+- `company_addresses.state_id -> states.id`
+- `company_addresses.city_id -> cities.id`
+- `company_addresses.pincode_id -> pincodes.id`
+- `company_settings.company_id -> companies.id`
+
+Operational note:
+
+- `companies` holds the platform branding and billing identity used by the frontend and future downstream documents
+- `company_addresses` stores the current billing/location record while staying aligned with existing Common geography masters
+- `company_settings` stores mutable application values such as `order_prefix`, `invoice_prefix`, `default_language`, and `date_format`
+- media-backed branding keeps logo and favicon selection inside the existing managed media lifecycle instead of storing unmanaged URLs
+
+## Monitoring Schema
+
+The `AddMonitoringModule` migration completes the monitoring data model by extending the existing auth audit table and adding dedicated monitoring tables.
+
+Relationships:
+
+- `audit_logs.user_id -> users.id` (nullable)
+- `error_logs.user_id -> users.id` (nullable)
+- `login_history.user_id -> users.id` (nullable in practice to allow failed attempts before a user is resolved)
+
+Operational note:
+
+- `audit_logs` now stores `module`, `old_values`, `new_values`, and `user_agent` in addition to the existing actor/action fields
+- `system_logs` stores service-level operational events with `event_type`, `message`, `details`, and severity values `Info`, `Warning`, `Critical`, and `Debug`
+- `error_logs` stores exception message, stack trace, request path, source, IP, and optional user reference for unhandled failures
+- `login_history` stores login success, failure, blocked attempts, and logout timestamps with device/browser/OS parsing from user-agent metadata
+
 ## Multi-Channel Product Pricing Schema
 
 The `AddMultiChannelProductPricing` migration updates the existing `product_prices` table in place instead of introducing parallel product or price tables.
@@ -332,7 +410,13 @@ Additional indexes:
 - `refresh_tokens.Token`
 - `refresh_tokens(UserId, ExpiresAt)`
 - `audit_logs.Action`
+- `audit_logs.UserId`
+- `audit_logs.Module`
 - `audit_logs.CreatedAt`
+- `system_logs.Service`
+- `error_logs.CreatedAt`
+- `login_history.UserId`
+- `login_history.LoginTime`
 
 ## Seed Data
 

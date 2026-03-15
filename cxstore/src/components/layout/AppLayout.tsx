@@ -52,6 +52,16 @@ const breadcrumbLabels: Record<string, string> = {
   currencies: "Currency",
   warehouses: "Warehouse",
   "payment-terms": "Payment Term",
+  inventory: "Inventory",
+  media: "Media",
+  notifications: "Notifications",
+  monitoring: "Monitoring",
+  "audit-logs": "Audit Logs",
+  "system-logs": "System Logs",
+  "error-logs": "Error Logs",
+  "login-history": "Login History",
+  settings: "Settings",
+  company: "Company",
 }
 
 const hiddenSegments = new Set(["admin", "vendor", "common"])

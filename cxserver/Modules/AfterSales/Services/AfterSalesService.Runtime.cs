@@ -409,7 +409,11 @@ public sealed partial class AfterSalesService
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "AfterSales",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

@@ -1,63 +1,23 @@
 import { Contact, Mail, MessageCircle, Phone } from "lucide-react";
 import { useMemo, useState } from "react";
-import { company } from "@/config/company";
+import { useCompanyConfig } from "@/config/company";
 
 type ContactInfo = {
   email: string;
   phone: string;
 };
 
-const DEFAULT_CONTACT: ContactInfo = {
-  email: company.contact.email,
-  phone: company.contact.phone,
-};
-
-const CONTACTS_BY_TENANT: Record<string, ContactInfo> = {
-  tirupurdirect: {
-    email: company.contact.email,
-    phone: company.contact.phone,
-  },
-  codexsun: {
-    email: company.contact.email,
-    phone: company.contact.phone,
-  },
-  logicx: {
-    email: "hello@logicx.in",
-    phone: "+91 84280 80080",
-  },
-  asusstore: {
-    email: "hello@asusstore.in",
-    phone: "+91 95141 41494",
-  },
-};
-
 function toPhoneDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-function resolveTenant(): string {
-  if (typeof window === "undefined") {
-    return "tirupurdirect";
-  }
-
-  const host = window.location.hostname.toLowerCase();
-
-  if (host.includes("logicx")) {
-    return "logicx";
-  }
-
-  if (host.includes("asusstore")) {
-    return "asusstore";
-  }
-
-  return "tirupurdirect";
-}
-
 export default function FloatingContactButton() {
+  const { company } = useCompanyConfig();
   const [isOpen, setIsOpen] = useState(false);
-  const tenant = resolveTenant();
-
-  const contact = useMemo(() => CONTACTS_BY_TENANT[tenant] ?? DEFAULT_CONTACT, [tenant]);
+  const contact = useMemo<ContactInfo>(() => ({
+    email: company.supportEmail || company.email,
+    phone: company.phone,
+  }), [company.email, company.phone, company.supportEmail]);
   const phoneDigits = useMemo(() => toPhoneDigits(contact.phone), [contact.phone]);
 
   return (

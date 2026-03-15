@@ -17,10 +17,12 @@ using cxserver.Modules.Auth.Policies;
 using cxserver.Modules.Auth.Security;
 using cxserver.Modules.Auth.Services;
 using cxserver.Modules.Auth.Validators;
+using cxserver.Modules.Company.Services;
 using cxserver.Modules.Common.Services;
 using cxserver.Modules.Contacts.Services;
 using cxserver.Modules.Inventory.Services;
 using cxserver.Modules.Media.Services;
+using cxserver.Modules.Monitoring.Services;
 using cxserver.Modules.Notifications.Providers;
 using cxserver.Modules.Notifications.Services;
 using cxserver.Modules.Promotions.Services;
@@ -117,16 +119,22 @@ builder.Services.AddOutputCache();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<CommonMasterDataService>();
 builder.Services.AddScoped<ContactService>();
 builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<MediaService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<ISystemLogService, SystemLogService>();
+builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
+builder.Services.AddScoped<ILoginHistoryService, LoginHistoryService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<PromotionService>();
@@ -150,6 +158,8 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CodexsunDbContext>();
     await dbContext.Database.MigrateAsync();
+    var systemLogService = scope.ServiceProvider.GetRequiredService<ISystemLogService>();
+    await systemLogService.LogAsync("Program", "ApplicationStarted", "Application startup completed.", "Info", app.Environment.EnvironmentName, CancellationToken.None);
 }
 
 app.Use(async (context, next) =>
@@ -161,7 +171,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseExceptionHandler();
 app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
@@ -176,8 +185,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors("DefaultCors");
 app.UseAuthentication();
+app.UseMiddleware<ErrorLoggingMiddleware>();
 app.UseRateLimiter();
 app.UseAuthorization();
+app.UseMiddleware<AuditMiddleware>();
 app.UseOutputCache();
 app.UseStaticFiles(new StaticFileOptions
 {

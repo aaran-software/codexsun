@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/forms/ProtectedRoute"
 import GlobalLoader from "@/components/global/GlobalLoader"
 import { ThemeProvider } from "@/components/blocks/theme/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { CompanyProvider } from "@/config/company"
 import { useAuth } from "./state/authStore"
 import WebLayout from "./components/layout/WebLayout"
 import AuthLayout from "./components/layout/AuthLayout"
@@ -18,6 +19,13 @@ const Contact = lazy(() => import("./pages/Contact"))
 const Services = lazy(() => import("./pages/Services"))
 const CartPage = lazy(() => import("./pages/CartPage"))
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"))
+const CategoryPage = lazy(() => import("./pages/CategoryPage"))
+const SearchPage = lazy(() => import("./pages/SearchPage"))
+const ProductPage = lazy(() => import("./pages/ProductPage"))
+const VendorStorePage = lazy(() => import("./pages/VendorStorePage"))
+const WishlistPage = lazy(() => import("./pages/WishlistPage"))
+const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"))
+const AccountPage = lazy(() => import("./pages/AccountPage"))
 const Login = lazy(() => import("./pages/Login"))
 const Dashboard = lazy(() => import("./pages/Dashboard"))
 const UsersPage = lazy(() => import("./pages/admin/users/UsersPage"))
@@ -60,9 +68,14 @@ const PromotionsPage = lazy(() => import("./pages/admin/promotions/PromotionsPag
 const ShipmentsPage = lazy(() => import("./pages/admin/shipping/ShipmentsPage"))
 const ReturnsPage = lazy(() => import("./pages/admin/returns/ReturnsPage"))
 const MediaLibraryPage = lazy(() => import("./pages/admin/media/MediaLibraryPage"))
+const CompanySettingsPage = lazy(() => import("./pages/admin/settings/company/CompanySettingsPage"))
 const NotificationTemplatesPage = lazy(() => import("./pages/admin/notifications/templates/NotificationTemplatesPage"))
 const NotificationLogsPage = lazy(() => import("./pages/admin/notifications/logs/NotificationLogsPage"))
 const NotificationSettingsPage = lazy(() => import("./pages/admin/notifications/settings/NotificationSettingsPage"))
+const AuditLogsPage = lazy(() => import("./pages/admin/monitoring/AuditLogsPage"))
+const SystemLogsPage = lazy(() => import("./pages/admin/monitoring/SystemLogsPage"))
+const ErrorLogsPage = lazy(() => import("./pages/admin/monitoring/ErrorLogsPage"))
+const LoginHistoryPage = lazy(() => import("./pages/admin/monitoring/LoginHistoryPage"))
 
 function App() {
   const auth = useAuth()
@@ -74,17 +87,32 @@ function App() {
       themeStorageKey="vite-ui-theme"
       colorStorageKey="vite-ui-color-theme"
     >
-      <Router>
-        <TooltipProvider>
-          <Suspense fallback={<GlobalLoader className="bg-background" />}>
-            <Routes>
+      <CompanyProvider>
+        <Router>
+          <TooltipProvider>
+            <Suspense fallback={<GlobalLoader className="bg-background" />}>
+              <Routes>
               <Route element={<WebLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/services" element={<Services />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/category/:slug" element={<CategoryPage />} />
+                <Route path="/product/:slug" element={<ProductPage />} />
+                <Route path="/store/:vendorSlug" element={<VendorStorePage />} />
                 <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/wishlist" element={<WishlistPage />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
+                  <Route path="/account" element={<AccountPage />} />
+                  <Route path="/account/profile" element={<AccountPage />} />
+                  <Route path="/account/addresses" element={<AccountPage />} />
+                  <Route path="/account/orders" element={<AccountPage />} />
+                  <Route path="/account/wishlist" element={<AccountPage />} />
+                  <Route path="/account/reviews" element={<AccountPage />} />
+                </Route>
               </Route>
 
               <Route element={<AuthLayout />}>
@@ -134,9 +162,14 @@ function App() {
                   <Route path="/admin/returns" element={<ReturnsPage />} />
                   <Route path="/admin/analytics" element={<AnalyticsPage />} />
                   <Route path="/admin/media" element={<MediaLibraryPage />} />
+                  <Route path="/admin/settings/company" element={<CompanySettingsPage />} />
                   <Route path="/admin/notifications/templates" element={<NotificationTemplatesPage />} />
                   <Route path="/admin/notifications/logs" element={<NotificationLogsPage />} />
                   <Route path="/admin/notifications/settings" element={<NotificationSettingsPage />} />
+                  <Route path="/admin/monitoring/audit-logs" element={<AuditLogsPage />} />
+                  <Route path="/admin/monitoring/system-logs" element={<SystemLogsPage />} />
+                  <Route path="/admin/monitoring/error-logs" element={<ErrorLogsPage />} />
+                  <Route path="/admin/monitoring/login-history" element={<LoginHistoryPage />} />
                   <Route path="/admin/vendors" element={<VendorsPage />} />
                   <Route path="/admin/vendors/:id" element={<VendorDetailsPage />} />
                   <Route path="/admin/vendors/:id/users" element={<VendorUsersPage />} />
@@ -174,20 +207,12 @@ function App() {
                 </Route>
               </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={["Customer"]} />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/account/orders" element={<OrderListPage />} />
-                  <Route path="/orders/:id" element={<OrderDetailPage />} />
-                  <Route path="/account/invoices" element={<InvoiceListPage />} />
-                  <Route path="/account/invoices/:id" element={<InvoiceDetailPage />} />
-                </Route>
-              </Route>
-
               <Route path="*" element={<Navigate to={auth.isAuthenticated ? "/dashboard" : "/"} replace />} />
-            </Routes>
-          </Suspense>
-        </TooltipProvider>
-      </Router>
+              </Routes>
+            </Suspense>
+          </TooltipProvider>
+        </Router>
+      </CompanyProvider>
     </ThemeProvider>
   )
 }

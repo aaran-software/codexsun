@@ -577,6 +577,32 @@ namespace cxserver.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("NewValues")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("OldValues")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasDefaultValue("");
+
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
@@ -585,6 +611,8 @@ namespace cxserver.Migrations
                     b.HasIndex("Action");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Module");
 
                     b.HasIndex("UserId");
 
@@ -4515,6 +4543,307 @@ namespace cxserver.Migrations
                         });
                 });
 
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.Company", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BillingName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CurrencyId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("FaviconMediaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GstNumber")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("LegalName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("LogoMediaId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PanNumber")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("SupportEmail")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Timezone")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasDefaultValue("UTC");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Website")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyCode")
+                        .IsUnique();
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("FaviconMediaId");
+
+                    b.HasIndex("LogoMediaId");
+
+                    b.ToTable("companies", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BillingName = "CXStore Platform Private Limited",
+                            CompanyCode = "CXSTORE",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CurrencyId = 2,
+                            DisplayName = "CXStore",
+                            Email = "hello@cxstore.local",
+                            GstNumber = "",
+                            LegalName = "CXStore Platform Private Limited",
+                            PanNumber = "",
+                            Phone = "+91 00000 00000",
+                            SupportEmail = "support@cxstore.local",
+                            Timezone = "Asia/Calcutta",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Website = "https://cxstore.local"
+                        });
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.CompanyAddress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("AddressLine2")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("CityId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CountryId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("PincodeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StateId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CountryId");
+
+                    b.HasIndex("PincodeId");
+
+                    b.HasIndex("StateId");
+
+                    b.HasIndex("CompanyId", "IsPrimary");
+
+                    b.ToTable("company_addresses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AddressLine1 = "",
+                            AddressLine2 = "",
+                            CityId = 1,
+                            CompanyId = 1,
+                            CountryId = 1,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsPrimary = true,
+                            PincodeId = 1,
+                            StateId = 1,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.CompanySetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SettingGroup")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasDefaultValue("General");
+
+                    b.Property<string>("SettingKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SettingValue")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SettingGroup");
+
+                    b.HasIndex("CompanyId", "SettingKey")
+                        .IsUnique();
+
+                    b.ToTable("company_settings", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CompanyId = 1,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            SettingGroup = "Localization",
+                            SettingKey = "default_language",
+                            SettingValue = "en-IN",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CompanyId = 1,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            SettingGroup = "Documents",
+                            SettingKey = "order_prefix",
+                            SettingValue = "SO",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CompanyId = 1,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            SettingGroup = "Documents",
+                            SettingKey = "invoice_prefix",
+                            SettingValue = "INV",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CompanyId = 1,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            SettingGroup = "Localization",
+                            SettingKey = "date_format",
+                            SettingValue = "dd MMM yyyy",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
             modelBuilder.Entity("cxserver.Modules.Contacts.Entities.Contact", b =>
                 {
                     b.Property<int>("Id")
@@ -5672,6 +6001,177 @@ namespace cxserver.Migrations
                         .IsUnique();
 
                     b.ToTable("media_usage", (string)null);
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Monitoring.Entities.ErrorLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExceptionMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Service")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("StackTrace")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Service", "CreatedAt");
+
+                    b.ToTable("error_logs", (string)null);
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Monitoring.Entities.LoginHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Browser")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Device")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LoginStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTimeOffset>("LoginTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LogoutTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OS")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoginTime");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("IpAddress", "LoginTime");
+
+                    b.HasIndex("UserId", "LoginTime");
+
+                    b.ToTable("login_history", (string)null);
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Monitoring.Entities.SystemLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Service")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Service");
+
+                    b.HasIndex("Service", "Severity", "CreatedAt");
+
+                    b.ToTable("system_logs", (string)null);
                 });
 
             modelBuilder.Entity("cxserver.Modules.Notifications.Entities.Notification", b =>
@@ -8195,6 +8695,80 @@ namespace cxserver.Migrations
                     b.Navigation("Vendor");
                 });
 
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.Company", b =>
+                {
+                    b.HasOne("cxserver.Modules.Common.Entities.Currency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("cxserver.Modules.Media.Entities.MediaFile", "FaviconMedia")
+                        .WithMany()
+                        .HasForeignKey("FaviconMediaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("cxserver.Modules.Media.Entities.MediaFile", "LogoMedia")
+                        .WithMany()
+                        .HasForeignKey("LogoMediaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("FaviconMedia");
+
+                    b.Navigation("LogoMedia");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.CompanyAddress", b =>
+                {
+                    b.HasOne("cxserver.Modules.Common.Entities.City", "City")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("cxserver.Modules.Company.Entities.Company", "Company")
+                        .WithMany("Addresses")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("cxserver.Modules.Common.Entities.Country", "Country")
+                        .WithMany()
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("cxserver.Modules.Common.Entities.Pincode", "Pincode")
+                        .WithMany()
+                        .HasForeignKey("PincodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("cxserver.Modules.Common.Entities.State", "State")
+                        .WithMany()
+                        .HasForeignKey("StateId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("City");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Country");
+
+                    b.Navigation("Pincode");
+
+                    b.Navigation("State");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.CompanySetting", b =>
+                {
+                    b.HasOne("cxserver.Modules.Company.Entities.Company", "Company")
+                        .WithMany("Settings")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("cxserver.Modules.Contacts.Entities.Contact", b =>
                 {
                     b.HasOne("cxserver.Modules.Common.Entities.ContactType", "ContactType")
@@ -8585,6 +9159,26 @@ namespace cxserver.Migrations
                         .IsRequired();
 
                     b.Navigation("MediaFile");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Monitoring.Entities.ErrorLog", b =>
+                {
+                    b.HasOne("cxserver.Modules.Auth.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Monitoring.Entities.LoginHistory", b =>
+                {
+                    b.HasOne("cxserver.Modules.Auth.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("cxserver.Modules.Notifications.Entities.Notification", b =>
@@ -9369,6 +9963,13 @@ namespace cxserver.Migrations
             modelBuilder.Entity("cxserver.Modules.Common.Entities.State", b =>
                 {
                     b.Navigation("Districts");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Company.Entities.Company", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Settings");
                 });
 
             modelBuilder.Entity("cxserver.Modules.Contacts.Entities.Contact", b =>

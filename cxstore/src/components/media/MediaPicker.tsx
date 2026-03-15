@@ -9,7 +9,11 @@ import type { MediaFile, MediaFolder } from "@/types/media"
 type MediaPickerProps = {
   value: string
   onChange: (value: string) => void
+  onSelect?: (file: MediaFile) => void
   module?: string
+  entityId?: string
+  entityType?: string
+  usageType?: string
   preferredFolderId?: number | null
   imagesOnly?: boolean
   label?: string
@@ -18,7 +22,11 @@ type MediaPickerProps = {
 export function MediaPicker({
   value,
   onChange,
+  onSelect,
   module,
+  entityId,
+  entityType,
+  usageType,
   preferredFolderId,
   imagesOnly = true,
   label = "Media",
@@ -72,8 +80,12 @@ export function MediaPicker({
         file,
         folderId: selectedFolderId ? Number(selectedFolderId) : preferredFolderId,
         module,
+        entityId,
+        entityType,
+        usageType,
       })
       onChange(uploaded.fileUrl)
+      onSelect?.(uploaded)
       await loadData()
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to upload media.")
@@ -121,6 +133,7 @@ export function MediaPicker({
                 className="overflow-hidden rounded-md border text-left transition hover:border-primary"
                 onClick={() => {
                   onChange(file.fileUrl)
+                  onSelect?.(file)
                   setOpen(false)
                 }}
               >

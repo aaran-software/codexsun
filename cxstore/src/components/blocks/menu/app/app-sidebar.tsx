@@ -1,11 +1,12 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
-import { getAdminMenuItems, getAnalyticsMenuItems, getCommonMenuItems, getInventoryMenuItems, getMasterMenuItems, getMediaMenuItems, getNotificationMenuItems, getPromotionMenuItems, getReturnsMenuItems, getSalesMenuItems, getShippingMenuItems, getVendorMenuItems } from "@/components/admin/menu/admin-menu"
+import { getAdminMenuItems, getAnalyticsMenuItems, getCommonMenuItems, getInventoryMenuItems, getMasterMenuItems, getMediaMenuItems, getMonitoringMenuItems, getNotificationMenuItems, getPromotionMenuItems, getReturnsMenuItems, getSalesMenuItems, getSettingsMenuItems, getShippingMenuItems, getVendorMenuItems } from "@/components/admin/menu/admin-menu"
 import { NavMain } from "./nav-main"
 import { NavSecondary } from "./nav-secondary"
 import { NavUser } from "./nav-user"
 import { useAuth } from "@/state/authStore"
+import { useCompanyConfig } from "@/config/company"
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +20,7 @@ import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon,
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const auth = useAuth()
+  const { company } = useCompanyConfig()
   const adminItems = getAdminMenuItems(auth.user?.role)
   const masterItems = getMasterMenuItems(auth.user?.role)
   const salesItems = getSalesMenuItems(auth.user?.role)
@@ -30,6 +32,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const analyticsItems = getAnalyticsMenuItems(auth.user?.role)
   const mediaItems = getMediaMenuItems(auth.user?.role)
   const notificationItems = getNotificationMenuItems(auth.user?.role)
+  const monitoringItems = getMonitoringMenuItems(auth.user?.role)
+  const settingsItems = getSettingsMenuItems(auth.user?.role)
   const commonItems = getCommonMenuItems(auth.user?.role)
 
   const navMain = [
@@ -181,6 +185,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ]
       : []),
+    ...(monitoringItems.length > 0
+      ? [
+          {
+            title: "Monitoring",
+            url: monitoringItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: monitoringItems,
+          },
+        ]
+      : []),
+    ...(settingsItems.length > 0
+      ? [
+          {
+            title: "Settings",
+            url: settingsItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: settingsItems,
+          },
+        ]
+      : []),
     ...(commonItems.length > 0
       ? [
           {
@@ -216,7 +240,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <TerminalIcon className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Codexsun</span>
+                <span className="truncate font-medium">{company.displayName}</span>
                 <span className="truncate text-xs">{auth.user?.role ?? "Workspace"}</span>
               </div>
             </SidebarMenuButton>

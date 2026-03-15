@@ -143,6 +143,16 @@ export function getMediaMenuItems(role: string | undefined): AdminMenuItem[] {
   ]
 }
 
+export function getSettingsMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Company", url: "/admin/settings/company" },
+  ]
+}
+
 export function getNotificationMenuItems(role: string | undefined): AdminMenuItem[] {
   if (role !== "Admin") {
     return []
@@ -152,6 +162,19 @@ export function getNotificationMenuItems(role: string | undefined): AdminMenuIte
     { title: "Templates", url: "/admin/notifications/templates" },
     { title: "Logs", url: "/admin/notifications/logs" },
     { title: "Settings", url: "/admin/notifications/settings" },
+  ]
+}
+
+export function getMonitoringMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Audit Logs", url: "/admin/monitoring/audit-logs" },
+    { title: "System Logs", url: "/admin/monitoring/system-logs" },
+    { title: "Error Logs", url: "/admin/monitoring/error-logs" },
+    { title: "Login History", url: "/admin/monitoring/login-history" },
   ]
 }
 

@@ -76,6 +76,10 @@ codexsun/
 |   |   |-- 20260315153639_AddEnterpriseModules.Designer.cs
 |   |   |-- 20260315160147_AddNotificationsModule.cs
 |   |   |-- 20260315160147_AddNotificationsModule.Designer.cs
+|   |   |-- 20260315161557_AddMediaModule.cs
+|   |   |-- 20260315161557_AddMediaModule.Designer.cs
+|   |   |-- 20260315163720_AddCompanyModule.cs
+|   |   |-- 20260315163720_AddCompanyModule.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -239,6 +243,34 @@ codexsun/
 |       |   |   `-- NotificationService.cs
 |       |   `-- Templates/
 |       |       `-- NotificationTemplateCatalog.cs
+|       |-- Media/
+|       |   |-- Configurations/
+|       |   |   `-- MediaConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- FoldersController.cs
+|       |   |   `-- MediaController.cs
+|       |   |-- DTOs/
+|       |   |   |-- MediaRequests.cs
+|       |   |   `-- MediaResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- MediaEntities.cs
+|       |   `-- Services/
+|       |       |-- LocalFileStorageProvider.cs
+|       |       |-- MediaService.cs
+|       |       `-- MediaStorageModels.cs
+|       |-- Company/
+|       |   |-- Configurations/
+|       |   |   `-- CompanyConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- CompanyController.cs
+|       |   |   `-- CompanySettingsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- CompanyRequests.cs
+|       |   |   `-- CompanyResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- CompanyEntities.cs
+|       |   `-- Services/
+|       |       `-- CompanyService.cs
 |       |-- Vendors/
 |       |   |-- Configurations/
 |       |   |   `-- VendorConfigurations.cs
@@ -295,6 +327,8 @@ codexsun/
 |       |   |-- productApi.ts
 |       |   |-- salesApi.ts
 |       |   |-- inventoryApi.ts
+|       |   |-- companyApi.ts
+|       |   |-- mediaApi.ts
 |       |   |-- analyticsApi.ts
 |       |   |-- notificationApi.ts
 |       |   |-- promotionApi.ts
@@ -314,6 +348,8 @@ codexsun/
 |       |   |       `-- admin-menu.ts
 |       |   |   `-- products/
 |       |   |       `-- ProductForm.tsx
+|       |   |-- media/
+|       |   |   `-- MediaPicker.tsx
 |       |   |-- blocks/
 |       |   |-- forms/
 |       |   |   |-- CommonList.tsx
@@ -338,6 +374,8 @@ codexsun/
 |       |   `-- table/
 |       |       `-- AdminTable.tsx
 |       |-- css/
+|       |-- config/
+|       |   `-- company.tsx
 |       |-- lib/
 |       |-- pages/
 |       |   |-- CartPage.tsx
@@ -374,6 +412,11 @@ codexsun/
 |       |       |   |-- PurchaseOrdersPage.tsx
 |       |       |   |-- StockMovementsPage.tsx
 |       |       |   `-- TransfersPage.tsx
+|       |       |-- media/
+|       |       |   `-- MediaLibraryPage.tsx
+|       |       |-- settings/
+|       |       |   `-- company/
+|       |       |       `-- CompanySettingsPage.tsx
 |       |       |-- analytics/
 |       |       |   `-- AnalyticsPage.tsx
 |       |       |-- promotions/
@@ -387,6 +430,11 @@ codexsun/
 |       |       |   |   `-- NotificationSettingsPage.tsx
 |       |       |   `-- templates/
 |       |       |       `-- NotificationTemplatesPage.tsx
+|       |       |-- monitoring/
+|       |       |   |-- AuditLogsPage.tsx
+|       |       |   |-- ErrorLogsPage.tsx
+|       |       |   |-- LoginHistoryPage.tsx
+|       |       |   `-- SystemLogsPage.tsx
 |       |       |-- returns/
 |       |       |   `-- ReturnsPage.tsx
 |       |       |-- vendors/
@@ -411,6 +459,9 @@ codexsun/
 |           |-- common.ts
 |           |-- contact.ts
 |           |-- inventory.ts
+|           |-- company.ts
+|           |-- media.ts
+|           |-- monitoring.ts
 |           |-- analytics.ts
 |           |-- notification.ts
 |           |-- promotion.ts
@@ -431,7 +482,10 @@ codexsun/
 |   |   |-- RateLimitTests.cs
 |   |   `-- RefreshTokenTests.cs
 |   |-- CommonMasterDataTests.cs
+|   |-- CompanyModuleTests.cs
 |   |-- InventoryModuleTests.cs
+|   |-- MediaModuleTests.cs
+|   |-- MonitoringModuleTests.cs
 |   |-- NotificationsModuleTests.cs
 |   |-- ProductPricingTests.cs
 |   |-- EnterpriseModulesTests.cs
@@ -441,3 +495,9 @@ codexsun/
 |
 `-- codexsun.slnx
 ```
+
+## Monitoring Module Additions
+
+- Backend monitoring lives in `cxserver/Modules/Monitoring` with `Entities`, `Configurations`, `DTOs`, `Services`, and `Controllers`, matching the existing module convention rather than the prompt's alternate tree.
+- Frontend monitoring lives under `cxstore/src/pages/admin/monitoring` with supporting files in `src/api/monitoringApi.ts` and `src/types/monitoring.ts`.
+- Global middleware wiring is in `cxserver/Program.cs`, and persistence is registered in `cxserver/Infrastructure/CodexsunDbContext.cs`.

@@ -23,3 +23,6 @@
 
 - Platform communications phase: add centralized Notifications module with multi-channel templates, queue processing, and domain-event integrations.
 - Platform asset-management phase: add centralized Media/File Manager module with local storage, thumbnails, usage tracking, and reusable picker workflows for products, vendors, and future CMS content.
+- Platform configuration phase: add centralized Company and Application Settings as the single source of truth for branding, billing identity, contact details, and global application configuration values.
+- Platform observability phase: centralize audit trails, login history, system logs, error logs, and admin monitoring workflows with middleware-backed capture and security alert hooks.
+- Customer commerce phase: turn `cxstore` into a full storefront shell with authenticated catalog browsing, storefront search/filter UX, vendor storefront pages, persisted cart and wishlist state, multi-step checkout UI, and customer account surfaces aligned to the current backend APIs.

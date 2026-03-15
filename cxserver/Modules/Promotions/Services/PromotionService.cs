@@ -268,7 +268,11 @@ public sealed class PromotionService(CodexsunDbContext dbContext)
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Promotions",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

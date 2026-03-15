@@ -794,7 +794,11 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Products",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

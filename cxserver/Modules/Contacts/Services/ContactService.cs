@@ -488,7 +488,11 @@ public sealed class ContactService(CodexsunDbContext dbContext)
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
+            Module = "Contacts",
+            OldValues = string.Empty,
+            NewValues = string.Empty,
             IpAddress = ipAddress,
+            UserAgent = string.Empty,
             CreatedAt = DateTimeOffset.UtcNow
         });
 

@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react"
 import { motion } from "framer-motion"
 
-import { company } from "@/config/company"
+import { useCompanyConfig } from "@/config/company"
 import { cn } from "@/lib/utils"
 
 type LoaderSize = "sm" | "md" | "lg"
@@ -17,6 +17,8 @@ const sizeConfig: Record<LoaderSize, string> = {
 }
 
 export default function GlobalLoader({ size = "md", className, ...props }: GlobalLoaderProps) {
+  const { company } = useCompanyConfig()
+
   return (
     <div className={cn("flex min-h-screen items-center justify-center p-8", className)} {...props}>
       <motion.div
@@ -135,13 +137,13 @@ export default function GlobalLoader({ size = "md", className, ...props }: Globa
 
         <div className="absolute inset-0 flex items-center justify-center">
           <img
-            src={company.logos.light}
-            alt={company.name}
+            src={company.logoUrl}
+            alt={company.displayName}
             className="h-10 w-auto rounded-md object-contain shadow-sm sm:h-12 dark:hidden"
           />
           <img
-            src={company.logos.dark}
-            alt={company.name}
+            src={company.logoUrl}
+            alt={company.displayName}
             className="hidden h-10 w-auto rounded-md object-contain shadow-sm sm:h-12 dark:block"
           />
         </div>
