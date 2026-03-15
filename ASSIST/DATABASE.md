@@ -37,6 +37,14 @@ Latest incremental vendor-warehouse migration:
 
 - `AddVendorWarehouseOwnership`
 
+Latest enterprise-modules migration:
+
+- `AddEnterpriseModules`
+
+Latest notification migration:
+
+- `AddNotificationsModule`
+
 ## Auth Schema
 
 The baseline creates the security tables below in PostgreSQL:
@@ -112,6 +120,43 @@ Vendor business tables:
 - `vendor_users`
 - `vendor_addresses`
 - `vendor_bank_accounts`
+
+Analytics tables:
+
+- `vendor_sales_summary`
+- `product_sales_summary`
+
+Promotion and coupon tables:
+
+- `promotions`
+- `promotion_products`
+- `coupons`
+- `coupon_usages`
+
+Shipping tables:
+
+- `shipping_providers`
+- `shipping_methods`
+- `shipments`
+- `shipment_items`
+
+AfterSales tables:
+
+- `returns`
+- `return_items`
+- `return_status_history`
+- `return_inspections`
+- `restock_events`
+- `inventory_ledger`
+- `refunds`
+- `refund_items`
+- `refund_transactions`
+
+Notification tables:
+
+- `notification_templates`
+- `notifications`
+- `notification_logs`
 
 Extended product pricing table:
 
@@ -203,6 +248,54 @@ Operational note:
 
 - `users` still represent authenticated actors, while `vendors` represent the business entity shared by multiple vendor staff users.
 - Warehouse ownership is enforced in the application layer for vendor routes and inventory APIs, but the nullable foreign key keeps non-vendor shared warehouses compatible with existing data.
+
+## Enterprise Modules Schema
+
+The `AddEnterpriseModules` migration adds analytics, promotions, shipping, and active aftersales persistence without changing the current modular-monolith shape.
+
+Relationships:
+
+- `vendor_sales_summary.vendor_id -> vendors.id`
+- `product_sales_summary.product_id -> products.id`
+- `promotion_products.promotion_id -> promotions.id`
+- `promotion_products.product_id -> products.id`
+- `coupon_usages.coupon_id -> coupons.id`
+- `coupon_usages.order_id -> orders.id`
+- `coupon_usages.user_id -> users.id`
+- `shipping_methods.provider_id -> shipping_providers.id`
+- `shipments.order_id -> orders.id`
+- `shipments.shipping_method_id -> shipping_methods.id`
+- `shipment_items.shipment_id -> shipments.id`
+- `shipment_items.order_item_id -> order_items.id`
+- `returns.order_id -> orders.id`
+- `returns.customer_user_id -> users.id`
+- `return_items.return_id -> returns.id`
+- `return_items.order_item_id -> order_items.id`
+- `restock_events.warehouse_id -> warehouses.id`
+- `refunds.return_id -> returns.id`
+- `refund_transactions.payment_id -> payments.id`
+
+Operational note:
+
+- analytics summaries are derived from live `orders`, `order_items`, and `vendor_earnings`
+- coupon application updates order discount totals directly and records an immutable `coupon_usages` history row
+- aftersales restocking updates the existing `product_inventory` snapshot rather than introducing another warehouse-balance table
+
+## Notification Schema
+
+The `AddNotificationsModule` migration adds centralized queue-backed notifications without changing the current module or table layout elsewhere.
+
+Relationships:
+
+- `notifications.template_id -> notification_templates.id`
+- `notifications.user_id -> users.id`
+- `notification_logs.notification_id -> notifications.id`
+
+Operational note:
+
+- active templates are seeded for registration, password updates, orders, payments, shipping events, returns, vendor payouts, and low inventory alerts
+- `system_settings` stores operational toggles such as `notifications.email.enabled` and `notifications.batch-size`
+- `notifications` acts as the queue and delivery record, while `notification_logs` stores provider-level responses for each send attempt
 
 ## Multi-Channel Product Pricing Schema
 

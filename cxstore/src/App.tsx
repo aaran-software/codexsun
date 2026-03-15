@@ -55,6 +55,14 @@ const VendorsPage = lazy(() => import("./pages/admin/vendors/VendorsPage"))
 const VendorDetailsPage = lazy(() => import("./pages/admin/vendors/VendorDetailsPage"))
 const VendorUsersPage = lazy(() => import("./pages/admin/vendors/VendorUsersPage"))
 const VendorWarehousesPage = lazy(() => import("./pages/admin/vendors/VendorWarehousesPage"))
+const AnalyticsPage = lazy(() => import("./pages/admin/analytics/AnalyticsPage"))
+const PromotionsPage = lazy(() => import("./pages/admin/promotions/PromotionsPage"))
+const ShipmentsPage = lazy(() => import("./pages/admin/shipping/ShipmentsPage"))
+const ReturnsPage = lazy(() => import("./pages/admin/returns/ReturnsPage"))
+const MediaLibraryPage = lazy(() => import("./pages/admin/media/MediaLibraryPage"))
+const NotificationTemplatesPage = lazy(() => import("./pages/admin/notifications/templates/NotificationTemplatesPage"))
+const NotificationLogsPage = lazy(() => import("./pages/admin/notifications/logs/NotificationLogsPage"))
+const NotificationSettingsPage = lazy(() => import("./pages/admin/notifications/settings/NotificationSettingsPage"))
 
 function App() {
   const auth = useAuth()
@@ -121,6 +129,14 @@ function App() {
                   <Route path="/admin/inventory/transfers" element={<TransfersPage />} />
                   <Route path="/admin/inventory/warehouse" element={<InventoryPage />} />
                   <Route path="/admin/inventory/movements" element={<StockMovementsPage />} />
+                  <Route path="/admin/promotions" element={<PromotionsPage />} />
+                  <Route path="/admin/shipping" element={<ShipmentsPage />} />
+                  <Route path="/admin/returns" element={<ReturnsPage />} />
+                  <Route path="/admin/analytics" element={<AnalyticsPage />} />
+                  <Route path="/admin/media" element={<MediaLibraryPage />} />
+                  <Route path="/admin/notifications/templates" element={<NotificationTemplatesPage />} />
+                  <Route path="/admin/notifications/logs" element={<NotificationLogsPage />} />
+                  <Route path="/admin/notifications/settings" element={<NotificationSettingsPage />} />
                   <Route path="/admin/vendors" element={<VendorsPage />} />
                   <Route path="/admin/vendors/:id" element={<VendorDetailsPage />} />
                   <Route path="/admin/vendors/:id/users" element={<VendorUsersPage />} />

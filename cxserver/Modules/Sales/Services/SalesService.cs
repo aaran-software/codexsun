@@ -2,13 +2,15 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using cxserver.Infrastructure;
 using cxserver.Modules.Auth.Entities;
+using cxserver.Modules.Notifications.Configurations;
+using cxserver.Modules.Notifications.Services;
 using cxserver.Modules.Products.Entities;
 using cxserver.Modules.Sales.DTOs;
 using cxserver.Modules.Sales.Entities;
 
 namespace cxserver.Modules.Sales.Services;
 
-public sealed partial class SalesService(CodexsunDbContext dbContext)
+public sealed partial class SalesService(CodexsunDbContext dbContext, NotificationService notificationService)
 {
     private const decimal VendorCommissionRate = 0.10m;
 
@@ -281,6 +283,13 @@ public sealed partial class SalesService(CodexsunDbContext dbContext)
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Order.Create", nameof(Order), order.Id.ToString(), ipAddress, cancellationToken);
+        await notificationService.QueueEventAsync(NotificationTemplateCatalog.OrderCreated, order.CustomerUserId, new Dictionary<string, string>
+        {
+            ["OrderId"] = order.Id.ToString(),
+            ["OrderNumber"] = order.OrderNumber,
+            ["TotalAmount"] = order.TotalAmount.ToString("0.00"),
+            ["OccurredAt"] = now.ToString("O")
+        }, cancellationToken);
         return (await GetOrderByIdAsync(order.Id, actorUserId, role, cancellationToken))!;
     }
 
@@ -430,6 +439,13 @@ public sealed partial class SalesService(CodexsunDbContext dbContext)
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Payment.Record", nameof(Payment), payment.Id.ToString(), ipAddress, cancellationToken);
+        await notificationService.QueueEventAsync(NotificationTemplateCatalog.PaymentSuccess, invoice.Order?.CustomerUserId, new Dictionary<string, string>
+        {
+            ["PaymentId"] = payment.Id.ToString(),
+            ["OrderNumber"] = invoice.Order?.OrderNumber ?? string.Empty,
+            ["Amount"] = payment.Amount.ToString("0.00"),
+            ["OccurredAt"] = now.ToString("O")
+        }, cancellationToken);
         return (await GetPaymentsAsync(actorUserId, role, cancellationToken)).Single(x => x.Id == payment.Id);
     }
 
@@ -509,6 +525,13 @@ public sealed partial class SalesService(CodexsunDbContext dbContext)
         dbContext.VendorPayouts.Add(payout);
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "VendorPayout.Create", nameof(VendorPayout), payout.Id.ToString(), ipAddress, cancellationToken);
+        await notificationService.QueueEventAsync(NotificationTemplateCatalog.VendorPayoutCreated, payout.VendorUserId, new Dictionary<string, string>
+        {
+            ["PayoutId"] = payout.Id.ToString(),
+            ["PayoutNumber"] = payout.PayoutNumber,
+            ["Amount"] = payout.Amount.ToString("0.00"),
+            ["OccurredAt"] = now.ToString("O")
+        }, cancellationToken);
         return (await GetVendorPayoutsAsync(actorUserId, role, cancellationToken)).Single(x => x.Id == payout.Id);
     }
 

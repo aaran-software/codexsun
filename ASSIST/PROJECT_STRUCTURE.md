@@ -91,13 +91,21 @@ Active controller groups:
 - `WarehouseTransfersController` -> `/inventory/transfers*`
 - `InventoryController` -> `/inventory/products/*`, `/inventory/warehouse/*`, `/inventory/adjustments`
 - `StockMovementsController` -> `/inventory/movements`
+- `NotificationTemplatesController` -> `/notifications/templates`
+- `NotificationLogsController` -> `/notifications/logs`
+- `NotificationSettingsController` -> `/notifications/settings`
 - `VendorsController` -> `/vendors*`, `/vendors/warehouses`
 - `VendorUsersController` -> `/vendors/{vendorId}/users`
+- `AnalyticsController` -> `/analytics/*`
+- `PromotionsController` -> `/promotions`
+- `CouponsController` -> `/coupons/*`
+- `ShipmentsController` -> `/shipments*`
+- `ReturnsController` -> `/returns*`
+- `RefundsController` -> `/refunds*`
 
 Not currently active:
 
 - `Modules/Finance` and `Modules/System` define entities/configurations only
-- `Modules/AfterSales` contains entities, DTOs, configurations, and service code, but it is not wired into `Program.cs`, not exposed by `CodexsunDbContext`, has no controllers, and is not present in migrations
 
 # Backend Modules
 
@@ -247,6 +255,66 @@ Not currently active:
   - vendor profile, tax, address, and banking metadata
   - warehouse discovery for the current vendor company
 
+## Analytics
+
+- Purpose: vendor and product sales reporting plus aggregate sales overview snapshots
+- Domain entities:
+  - `VendorSalesSummary`
+  - `ProductSalesSummary`
+- Application service: `AnalyticsService`
+- Infrastructure components:
+  - reads `Orders`, `OrderItems`, and `VendorEarnings` from `Sales`
+  - references `Vendor` and `Product`
+  - persists period snapshots in analytics summary tables
+- API controller: `AnalyticsController`
+- Key responsibilities:
+  - vendor sales summary
+  - vendor top-product reporting
+  - product sales summary
+  - sales overview aggregation
+
+## Promotions
+
+- Purpose: product promotions, coupon validation, coupon application, and discount usage tracking
+- Domain entities:
+  - `Promotion`
+  - `PromotionProduct`
+  - `Coupon`
+  - `CouponUsage`
+- Application service: `PromotionService`
+- Infrastructure components:
+  - references `Product` from `Products`
+  - references `Order` from `Sales`
+  - references `User` and `AuditLog` from `Auth`
+- API controllers:
+  - `PromotionsController`
+  - `CouponsController`
+- Key responsibilities:
+  - promotion creation and listing
+  - coupon creation
+  - coupon validation
+  - order-level coupon application and usage logging
+
+## Shipping
+
+- Purpose: shipment creation, shipment status management, tracking, and shipping-method reference data
+- Domain entities:
+  - `ShippingProvider`
+  - `ShippingMethod`
+  - `Shipment`
+  - `ShipmentItem`
+- Application service: `ShippingService`
+- Infrastructure components:
+  - references `Order` and `OrderItem` from `Sales`
+  - seeds baseline provider and shipping-method rows
+  - writes Auth audit logs for shipment mutations
+- API controller: `ShipmentsController`
+- Key responsibilities:
+  - create shipment
+  - update shipment status
+  - track shipment by tracking number
+  - expose shipping methods for admin workflows
+
 ## Finance
 
 - Purpose: financial master/reference entities and ledger transaction persistence
@@ -265,15 +333,49 @@ Not currently active:
 
 ## AfterSales
 
-- Purpose on disk: returns, inspections, restocking, refunds, refund transactions
+- Purpose: returns, approvals, restocking, refunds, and refund transaction history
 - Domain entities:
   - `Return`, `ReturnItem`, `ReturnStatusHistory`, `ReturnInspection`
   - `RestockEvent`, `InventoryLedgerEntry`
   - `Refund`, `RefundItem`, `RefundTransaction`
-- Application service: partial `AfterSalesService`
-- API layer: none
-- Database status: not in `CodexsunDbContext` and not migrated
-- Architectural conclusion: scaffolded/incomplete module, not part of the active runtime architecture yet
+- Application service: `AfterSalesService`
+- Infrastructure components:
+  - references `Order`, `OrderItem`, and `Payment` from `Sales`
+  - references `ProductInventory` and `Warehouse` for restocking
+  - writes Auth audit logs for return and refund mutations
+- API controllers:
+  - `ReturnsController`
+  - `RefundsController`
+- Key responsibilities:
+  - return request creation
+  - return approval
+  - refund processing
+  - returned-stock restocking
+
+## Notifications
+
+- Purpose: centralized template-driven notifications across Email, SMS, WhatsApp, and In-App channels
+- Domain entities:
+  - `NotificationTemplate`
+  - `Notification`
+  - `NotificationLog`
+- Application service: `NotificationService`
+- Infrastructure components:
+  - `INotificationProvider`
+  - `EmailNotificationProvider`
+  - `SmsNotificationProvider`
+  - `WhatsAppNotificationProvider`
+  - `NotificationQueueProcessor`
+  - `system_settings` keys for channel toggles and queue batch size
+- API controllers:
+  - `NotificationTemplatesController`
+  - `NotificationLogsController`
+  - `NotificationSettingsController`
+- Key responsibilities:
+  - queue notifications from domain events
+  - process the pending notification queue in the background
+  - manage templates and channel settings
+  - record provider outcomes in `notification_logs`
 
 # Frontend Architecture
 
@@ -342,6 +444,11 @@ Main frontend module areas are represented by:
 - `salesApi.ts`
 - `inventoryApi.ts`
 - `vendorApi.ts`
+- `analyticsApi.ts`
+- `promotionApi.ts`
+- `shippingApi.ts`
+- `returnsApi.ts`
+- `notificationApi.ts`
 - `userApi.ts`, `roleApi.ts`
 
 # Frontend Modules
@@ -423,6 +530,44 @@ Main frontend module areas are represented by:
 - Types: `types/vendor.ts`
 - Purpose: vendor-company administration, vendor-user assignment, and vendor-scoped warehouse visibility
 
+## Analytics
+
+- Pages: `pages/admin/analytics/*`
+- API: `analyticsApi.ts`
+- Types: `types/analytics.ts`
+- Purpose: admin reporting for vendor performance, product sales, and overall sales totals
+
+## Promotions
+
+- Pages: `pages/admin/promotions/*`
+- API: `promotionApi.ts`
+- Types: `types/promotion.ts`
+- Purpose: admin management of promotions, coupons, validation, and coupon application flows
+
+## Shipping
+
+- Pages: `pages/admin/shipping/*`
+- API: `shippingApi.ts`
+- Types: `types/shipping.ts`
+- Purpose: shipment creation, shipping-method visibility, and delivery-status tracking
+
+## Returns
+
+- Pages: `pages/admin/returns/*`
+- API: `returnsApi.ts`
+- Types: `types/returns.ts`
+- Purpose: return approval, refund processing, and warehouse restocking workflows
+
+## Notifications
+
+- Pages:
+  - `pages/admin/notifications/templates/NotificationTemplatesPage.tsx`
+  - `pages/admin/notifications/logs/NotificationLogsPage.tsx`
+  - `pages/admin/notifications/settings/NotificationSettingsPage.tsx`
+- API: `notificationApi.ts`
+- Types: `types/notification.ts`
+- Purpose: admin management of templates, queue settings, and delivery logs
+
 ## Lookups and Reusable Form Infrastructure
 
 - `components/lookups/*` -> autocomplete lookup primitives
@@ -467,6 +612,10 @@ Routes using `AppLayout`:
   - `/admin/contacts*`
   - `/admin/products*`
   - `/admin/sales/*`
+  - `/admin/promotions`
+  - `/admin/shipping`
+  - `/admin/returns`
+  - `/admin/analytics`
   - `/admin/common/*`
 - vendor:
   - `/vendor`
@@ -488,6 +637,7 @@ Vendor route usage inside `AppLayout` is now split as:
 - `/vendor/contacts*`, `/vendor/products*`, `/vendor/sales/*` -> vendor-scoped transactional pages
 - `/vendor/warehouses` -> vendor-company owned warehouse list
 - `/vendor/inventory/*` -> vendor-scoped purchase orders, transfers, inventory summaries, and stock movements
+- `/admin/promotions`, `/admin/shipping`, `/admin/returns`, `/admin/analytics` -> enterprise operations and reporting screens for admin users
 
 # Database Structure
 
@@ -506,8 +656,9 @@ The active database structure is defined by:
   - `20260315134829_AddMultiChannelProductPricing`
   - `20260315143615_AddVendorCompanySupport`
   - `20260315151649_AddVendorWarehouseOwnership`
+  - `20260315153639_AddEnterpriseModules`
 
-The active schema currently contains 72 mapped tables.
+The active schema currently contains 91 mapped tables.
 
 ## Identity Tables
 
@@ -678,6 +829,46 @@ Key relationships:
 - `vendor_bank_accounts.vendor_id -> vendors.id`
 - `vendor_bank_accounts.bank_id -> banks.id`
 
+## Analytics Tables
+
+- `vendor_sales_summary`
+- `product_sales_summary`
+
+Key relationships:
+
+- `vendor_sales_summary.vendor_id -> vendors.id`
+- `product_sales_summary.product_id -> products.id`
+
+## Promotion Tables
+
+- `promotions`
+- `promotion_products`
+- `coupons`
+- `coupon_usages`
+
+Key relationships:
+
+- `promotion_products.promotion_id -> promotions.id`
+- `promotion_products.product_id -> products.id`
+- `coupon_usages.coupon_id -> coupons.id`
+- `coupon_usages.order_id -> orders.id`
+- `coupon_usages.user_id -> users.id`
+
+## Shipping Tables
+
+- `shipping_providers`
+- `shipping_methods`
+- `shipments`
+- `shipment_items`
+
+Key relationships:
+
+- `shipping_methods.provider_id -> shipping_providers.id`
+- `shipments.order_id -> orders.id`
+- `shipments.shipping_method_id -> shipping_methods.id`
+- `shipment_items.shipment_id -> shipments.id`
+- `shipment_items.order_item_id -> order_items.id`
+
 Key relationships:
 
 - `carts.user_id -> users.id`
@@ -715,6 +906,44 @@ Key relationships:
 - `vendor_payout_items.vendor_payout_id -> vendor_payouts.id`
 - `vendor_payout_items.vendor_earning_id -> vendor_earnings.id`
 
+## AfterSales Tables
+
+- `returns`
+- `return_items`
+- `return_status_history`
+- `return_inspections`
+- `restock_events`
+- `inventory_ledger`
+- `refunds`
+- `refund_items`
+- `refund_transactions`
+
+Key relationships:
+
+- `returns.order_id -> orders.id`
+- `returns.customer_user_id -> users.id`
+- `returns.customer_contact_id -> contacts.id`
+- `return_items.return_id -> returns.id`
+- `return_items.order_item_id -> order_items.id`
+- `return_items.product_id -> products.id`
+- `return_status_history.return_id -> returns.id`
+- `return_inspections.return_item_id -> return_items.id`
+- `return_inspections.inspector_user_id -> users.id`
+- `restock_events.return_item_id -> return_items.id`
+- `restock_events.warehouse_id -> warehouses.id`
+- `restock_events.product_id -> products.id`
+- `inventory_ledger.return_item_id -> return_items.id`
+- `inventory_ledger.warehouse_id -> warehouses.id`
+- `inventory_ledger.product_id -> products.id`
+- `refunds.order_id -> orders.id`
+- `refunds.return_id -> returns.id`
+- `refunds.currency_id -> currencies.id`
+- `refund_items.refund_id -> refunds.id`
+- `refund_items.order_item_id -> order_items.id`
+- `refund_items.product_id -> products.id`
+- `refund_transactions.refund_id -> refunds.id`
+- `refund_transactions.payment_id -> payments.id`
+
 ## Finance Tables
 
 - `banks`
@@ -732,22 +961,6 @@ Key relationships:
 
 - `system_settings`
 - `number_series`
-
-## Inactive / Not-Migrated Database Design
-
-`Modules/AfterSales` defines planned tables:
-
-- `returns`
-- `return_items`
-- `return_status_history`
-- `return_inspections`
-- `restock_events`
-- `inventory_ledger`
-- `refunds`
-- `refund_items`
-- `refund_transactions`
-
-These are configuration-level definitions only. They are not part of the active schema because they are not registered in `CodexsunDbContext` and do not appear in migrations.
 
 # Module Database Mapping
 
@@ -811,6 +1024,30 @@ These are configuration-level definitions only. They are not part of the active 
   - vendor bank accounts bridge vendor companies to Finance bank masters
   - warehouse ownership is modeled indirectly through `Common.warehouses.vendor_id`
 
+## Analytics module
+
+- Tables: `vendor_sales_summary`, `product_sales_summary`
+- Relationships:
+  - vendor summary rows cache vendor-level order, sales, and earnings totals for a period
+  - product summary rows cache product-level quantity and revenue totals for a period
+  - source data is derived from live Sales transactions
+
+## Promotions module
+
+- Tables: `promotions`, `promotion_products`, `coupons`, `coupon_usages`
+- Relationships:
+  - promotions map to products through `promotion_products`
+  - coupons track order usage through `coupon_usages`
+  - coupon application updates live order discounts in `Sales`
+
+## Shipping module
+
+- Tables: `shipping_providers`, `shipping_methods`, `shipments`, `shipment_items`
+- Relationships:
+  - providers own shipping methods
+  - shipments link orders to selected shipping methods
+  - shipment items link shipments to order items and quantities
+
 ## Finance module
 
 - Tables: `banks`, `payment_modes`, `ledger_groups`, `transactions`
@@ -823,9 +1060,12 @@ These are configuration-level definitions only. They are not part of the active 
 
 ## AfterSales module
 
-- Planned tables only: `returns`, `return_items`, `return_status_history`, `return_inspections`, `restock_events`, `inventory_ledger`, `refunds`, `refund_items`, `refund_transactions`
-- Relationships: designed to bridge orders, order items, products, contacts, warehouses, payments
-- Status: not active
+- Tables: `returns`, `return_items`, `return_status_history`, `return_inspections`, `restock_events`, `inventory_ledger`, `refunds`, `refund_items`, `refund_transactions`
+- Relationships:
+  - returns link orders, optional customer users, optional customer contacts, and returned order items
+  - refunds link approved returns back to orders and optional payments
+  - restock events and return inventory ledger rows bridge return items to warehouses and product stock
+- Status: active
 
 # API Architecture
 
@@ -896,11 +1136,40 @@ These are configuration-level definitions only. They are not part of the active 
 - `StockMovementsController` -> `/inventory/movements`
 - Responsible module: `Inventory`
 
+## Notifications API
+
+- `NotificationTemplatesController` -> `/notifications/templates`
+- `NotificationLogsController` -> `/notifications/logs`
+- `NotificationSettingsController` -> `/notifications/settings`, `/notifications/settings/process`
+- Responsible module: `Notifications`
+
 ## Vendors API
 
 - `VendorsController` -> `/vendors`, `/vendors/{id}`, `/vendors/warehouses`
 - `VendorUsersController` -> `/vendors/{vendorId}/users`
 - Responsible module: `Vendors`
+
+## Analytics API
+
+- `AnalyticsController` -> `/analytics/vendors/{vendorId}/sales`, `/analytics/products/{productId}/sales`, `/analytics/sales-overview`
+- Responsible module: `Analytics`
+
+## Promotions API
+
+- `PromotionsController` -> `/promotions`
+- `CouponsController` -> `/coupons`, `/coupons/validate`, `/coupons/apply`
+- Responsible module: `Promotions`
+
+## Shipping API
+
+- `ShipmentsController` -> `/shipments`, `/shipments/methods`, `/shipments/{id}/status`, `/shipments/{trackingNumber}`
+- Responsible module: `Shipping`
+
+## AfterSales API
+
+- `ReturnsController` -> `/returns`, `/returns/{id}`, `/returns/{id}/approve`
+- `RefundsController` -> `/refunds`, `/refunds/process`
+- Responsible module: `AfterSales`
 
 # Infrastructure Components
 
@@ -937,6 +1206,8 @@ These are configuration-level definitions only. They are not part of the active 
 - OpenTelemetry metrics/tracing/logging
 - EF migrations now extend `product_prices` in place for multi-channel pricing instead of introducing separate retail or wholesale product tables
 - EF migrations also extend the shared `warehouses` master with nullable `vendor_id` ownership instead of introducing a parallel vendor warehouse table
+- `AddEnterpriseModules` activates the runtime `AfterSales` schema and adds analytics, promotions, coupon usage, shipping, and shipment tracking tables
+- `AddNotificationsModule` adds centralized template, queue, and provider-log tables plus template seed data
 
 ## Frontend Runtime Infrastructure
 
@@ -970,6 +1241,8 @@ These are configuration-level definitions only. They are not part of the active 
 - Admin pages include role-permission editing against `/auth/roles/{id}/permissions`
 - Inventory uses `inventory.view`, `inventory.manage`, `inventory.transfer`, and `inventory.adjust`
 - Vendor management uses `vendors.view`, `vendors.manage`, and `vendors.users.manage`
+- The newly added enterprise modules currently rely on authenticated role checks and admin route segmentation rather than separate seeded permission codes
+- Notifications currently follow the same authenticated admin route segmentation model
 
 ## API Protection
 
@@ -980,7 +1253,7 @@ These are configuration-level definitions only. They are not part of the active 
   - `X-XSS-Protection`
   - `Referrer-Policy`
 - Rate limiting protects anonymous and authenticated traffic
-- Audit log entries are written for sensitive auth, contact, product, order, invoice, payment, and payout operations
+- Audit log entries are written for sensitive auth, contact, product, order, invoice, payment, payout, coupon application, shipment updates, and refund processing operations
 
 # Module Dependencies
 
@@ -1024,13 +1297,44 @@ These are configuration-level definitions only. They are not part of the active 
   - vendor address and warehouse ownership references
 - `Vendors -> Finance`
   - vendor bank-account references
-
-## Planned but inactive dependencies
-
+- `Analytics -> Sales`
+  - vendor earnings, orders, and order items are the source data for summaries
+- `Analytics -> Products`
+  - product references for product-sales summaries
+- `Analytics -> Vendors`
+  - vendor references for vendor-sales summaries
+- `Promotions -> Sales`
+  - coupon application updates order discounts and records coupon usage against orders
+- `Promotions -> Products`
+  - promotion-product mappings
+- `Promotions -> Auth`
+  - coupon usages record the acting user and audit log activity
+- `Shipping -> Sales`
+  - shipments and shipment items depend on orders and order items
+- `Shipping -> Auth`
+  - shipment mutations are audit logged by actor
 - `AfterSales -> Sales`
+  - returns, refunds, order items, and optional payment references
 - `AfterSales -> Products`
+  - returned products and restocked inventory rows
 - `AfterSales -> Common`
+  - warehouse references for restocking
 - `AfterSales -> Auth`
+  - customer users, inspectors, and audit logs
+- `Notifications -> Auth`
+  - target users and operational audit context
+- `Notifications -> System`
+  - queue settings and channel toggles stored in `system_settings`
+- `Auth -> Notifications`
+  - registration and password update notifications
+- `Sales -> Notifications`
+  - order, payment, and vendor payout notifications
+- `Shipping -> Notifications`
+  - shipment shipped and delivered notifications
+- `Inventory -> Notifications`
+  - low inventory alerts
+- `AfterSales -> Notifications`
+  - return approval notifications
 
 # System Workflows
 
@@ -1140,6 +1444,34 @@ These are configuration-level definitions only. They are not part of the active 
 2. `InventoryService` compares requested quantity with the current `product_inventory` snapshot for each item.
 3. The service stores `inventory_adjustments` and `inventory_adjustment_items`, writes `ADJUSTMENT` movements and ledger rows, updates snapshot quantities, and records the adjustment in the audit log.
 
+## Vendor Analytics
+
+- `AnalyticsService` reads live Sales data and persists period snapshots into `vendor_sales_summary` and `product_sales_summary`.
+- `/analytics/vendors/{vendorId}/sales` returns vendor-level totals plus top products for the requested period.
+- `/analytics/products/{productId}/sales` returns product-level quantity and revenue totals.
+- `/analytics/sales-overview` returns aggregate totals for orders, sales, tax, discounts, and vendor earnings.
+
+## Promotions and Coupons
+
+- Promotions are stored in `promotions` and optionally targeted to products through `promotion_products`.
+- Coupons are validated against active date range, usage limit, and prior order usage before application.
+- Applying a coupon records `coupon_usages`, increments `used_count`, updates the target order discount, and writes an audit log entry.
+- The frontend admin page supports promotion creation, coupon creation, validation, and application testing.
+
+## Shipping and Logistics
+
+1. Admin creates a shipment against an existing order and shipping method through `/shipments`.
+2. `ShippingService` validates the order, order items, shipping method, and tracking-number uniqueness before persisting `shipments` and `shipment_items`.
+3. Shipment status updates are posted to `/shipments/{id}/status` and audit logged.
+4. `/shipments/{trackingNumber}` exposes tracking lookup, while `/shipments/methods` feeds the admin shipment page.
+
+## AfterSales Returns and Refunds
+
+1. Admin or an authorized actor creates a return request through `/returns`.
+2. `AfterSalesService` validates the order and return items, then stores `returns`, `return_items`, and initial `return_status_history`.
+3. Admin or staff approves the return through `/returns/{id}/approve`.
+4. Refund processing through `/refunds/process` creates `refunds` and `refund_transactions`, optionally restocks inventory into a warehouse, closes the return, and writes an audit log entry.
+
 ## Vendor Payout Workflow
 
 1. Vendor or admin requests a payout from unsettled `vendor_earnings`.
@@ -1154,6 +1486,39 @@ These are configuration-level definitions only. They are not part of the active 
 3. Frontend persists tokens, then loads `/auth/me` for hydrated user state.
 4. On token expiry, `httpClient.ts` triggers refresh once using the refresh token.
 
-## AfterSales Workflow Status
+## Inventory Module
 
-Return/refund/restock workflows are partially coded in `Modules/AfterSales`, but they are not wired into the active application. They should be treated as planned architecture, not live functionality.
+- The `Inventory` module remains the active warehouse-operations implementation for purchase orders, transfers, adjustments, and stock history.
+- This enterprise-module phase did not replace the existing inventory architecture; it kept the current module and added Analytics, Promotions, Shipping, and active AfterSales around it.
+
+## Notification System
+
+- `Modules/Notifications` centralizes delivery for Email, SMS, WhatsApp, and In-App channels without introducing channel-specific tables outside the module.
+- Notification dispatch is template-driven from `notification_templates`, queued in `notifications`, and operationally traced through `notification_logs`.
+- `NotificationQueueProcessor` runs as a hosted worker and processes pending notifications in configurable batches.
+
+## Email SMS WhatsApp Integration
+
+- Channel dispatch is abstracted behind `INotificationProvider`.
+- The current repository implementation includes `EmailNotificationProvider`, `SmsNotificationProvider`, and `WhatsAppNotificationProvider` as simulated transport adapters, which keeps the architecture ready for real provider credentials later.
+- `InApp` notifications reuse the same queue and template system and are completed without an external transport provider.
+
+## Notification Templates
+
+- Seeded template codes cover:
+  - `USER_REGISTRATION`
+  - `PASSWORD_RESET`
+  - `ORDER_CREATED`
+  - `PAYMENT_SUCCESS`
+  - `SHIPMENT_SHIPPED`
+  - `SHIPMENT_DELIVERED`
+  - `RETURN_APPROVED`
+  - `VENDOR_PAYOUT_CREATED`
+  - `LOW_INVENTORY_ALERT`
+- Each template is channel-specific and managed through `/notifications/templates`.
+
+## Notification Queue Processing
+
+- Domain services enqueue notifications as part of the existing business flows instead of sending directly inside controllers.
+- `NotificationQueueProcessor` polls for `Pending` rows and writes `Sent`, `Failed`, or `Skipped` outcomes with provider responses to `notification_logs`.
+- Admin users can also trigger immediate queue processing through `/notifications/settings/process` and monitor queue health from the notification settings page.

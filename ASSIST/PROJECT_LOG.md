@@ -2,6 +2,21 @@
 
 ---
 
+CX-041
+- Added `cxserver/Modules/Media` with media folders, media files, usage tracking, local file storage, checksum generation, soft delete/restore, upload validation, and media/folder APIs under the existing backend module pattern.
+- Wired static serving for `/uploads`, generated the `AddMediaModule` EF migration, added raster thumbnail generation for local image uploads, and logged media upload/delete/restore/folder-create actions through the existing audit log model.
+- Added `cxstore` media APIs, types, `MediaLibraryPage`, and reusable `MediaPicker` integration for product image rows and vendor logos, then revalidated backend/frontend builds, solution build, and the full `cxtest` suite with 45 passing tests.
+
+CX-040
+- Added `cxserver/Modules/Notifications` with notification templates, queued notifications, provider logs, simulated Email/SMS/WhatsApp providers, a hosted queue processor, and admin APIs for templates, logs, and channel settings.
+- Integrated notification events into the existing Auth, Sales, Shipping, Inventory, and AfterSales services for user registration, password updates, order creation, payment success, shipment shipped/delivered, return approval, vendor payout creation, and low-inventory alerts.
+- Added `cxstore` notification APIs, types, admin pages, routes, and sidebar menu entries, generated the `AddNotificationsModule` EF migration, updated ASSIST documentation, and revalidated backend/frontend builds plus the full test suite with 44 passing tests.
+
+CX-039
+- Preserved the existing live `Inventory` module, activated the previously scaffolded `AfterSales` module, and added the new `Analytics`, `Promotions`, and `Shipping` modules under the existing `Modules/<ModuleName>` backend pattern.
+- Registered the new entities in `CodexsunDbContext`, wired runtime services/controllers in `Program.cs`, generated the `AddEnterpriseModules` migration, and extended audit logging for coupon usage, shipment updates, and refund processing.
+- Added frontend admin APIs, types, pages, routes, and sidebar groups for analytics, promotions, shipping, and returns, then revalidated the frontend build, full solution build, and the `cxtest` suite with 43 passing tests including new enterprise-module coverage.
+
 CX-038
 - Extended the existing Common `warehouses` master with nullable `vendor_id` ownership, generated the `AddVendorWarehouseOwnership` migration, and kept the current architecture intact instead of introducing a parallel vendor-warehouse table.
 - Updated vendor scope enforcement across Contacts and Inventory so vendor users inherit warehouse and contact visibility through `vendor_users` company membership while preserving all existing `vendor_user_id` references.

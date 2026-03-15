@@ -3,11 +3,12 @@ using cxserver.Infrastructure;
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Inventory.DTOs;
 using cxserver.Modules.Inventory.Entities;
+using cxserver.Modules.Notifications.Services;
 using cxserver.Modules.Products.Entities;
 
 namespace cxserver.Modules.Inventory.Services;
 
-public sealed class InventoryService(CodexsunDbContext dbContext)
+public sealed class InventoryService(CodexsunDbContext dbContext, NotificationService notificationService)
 {
     private static readonly HashSet<string> ManagerRoles = ["Admin", "Staff", "Vendor"];
     private static readonly HashSet<string> ViewerRoles = ["Admin", "Staff", "Vendor"];
@@ -603,6 +604,27 @@ public sealed class InventoryService(CodexsunDbContext dbContext)
             CreatedAt = now,
             UpdatedAt = now
         });
+
+        if (inventory.ReorderLevel > 0 && inventory.Quantity <= inventory.ReorderLevel)
+        {
+            var productName = await dbContext.Products
+                .Where(x => x.Id == productId)
+                .Select(x => x.Name)
+                .SingleAsync(cancellationToken);
+            var warehouseName = await dbContext.Warehouses
+                .Where(x => x.Id == warehouseId)
+                .Select(x => x.Name)
+                .SingleAsync(cancellationToken);
+
+            await notificationService.QueueLowInventoryAlertAsync(
+                productId,
+                productName,
+                warehouseId,
+                warehouseName,
+                inventory.Quantity,
+                inventory.ReorderLevel,
+                cancellationToken);
+        }
     }
 
     private async Task<ProductInventory> GetOrCreateProductInventoryAsync(int productId, int warehouseId, DateTimeOffset now, CancellationToken cancellationToken)

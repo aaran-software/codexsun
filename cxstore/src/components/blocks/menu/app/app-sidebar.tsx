@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
-import { getAdminMenuItems, getCommonMenuItems, getInventoryMenuItems, getMasterMenuItems, getSalesMenuItems, getVendorMenuItems } from "@/components/admin/menu/admin-menu"
+import { getAdminMenuItems, getAnalyticsMenuItems, getCommonMenuItems, getInventoryMenuItems, getMasterMenuItems, getMediaMenuItems, getNotificationMenuItems, getPromotionMenuItems, getReturnsMenuItems, getSalesMenuItems, getShippingMenuItems, getVendorMenuItems } from "@/components/admin/menu/admin-menu"
 import { NavMain } from "./nav-main"
 import { NavSecondary } from "./nav-secondary"
 import { NavUser } from "./nav-user"
@@ -24,6 +24,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const salesItems = getSalesMenuItems(auth.user?.role)
   const inventoryItems = getInventoryMenuItems(auth.user?.role)
   const vendorItems = getVendorMenuItems(auth.user?.role)
+  const promotionItems = getPromotionMenuItems(auth.user?.role)
+  const shippingItems = getShippingMenuItems(auth.user?.role)
+  const returnsItems = getReturnsMenuItems(auth.user?.role)
+  const analyticsItems = getAnalyticsMenuItems(auth.user?.role)
+  const mediaItems = getMediaMenuItems(auth.user?.role)
+  const notificationItems = getNotificationMenuItems(auth.user?.role)
   const commonItems = getCommonMenuItems(auth.user?.role)
 
   const navMain = [
@@ -112,6 +118,66 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: vendorItems[0]?.url ?? "/dashboard",
             icon: <DatabaseIcon />,
             items: vendorItems,
+          },
+        ]
+      : []),
+    ...(promotionItems.length > 0
+      ? [
+          {
+            title: "Promotions",
+            url: promotionItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: promotionItems,
+          },
+        ]
+      : []),
+    ...(shippingItems.length > 0
+      ? [
+          {
+            title: "Shipping",
+            url: shippingItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: shippingItems,
+          },
+        ]
+      : []),
+    ...(returnsItems.length > 0
+      ? [
+          {
+            title: "Returns",
+            url: returnsItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: returnsItems,
+          },
+        ]
+      : []),
+    ...(analyticsItems.length > 0
+      ? [
+          {
+            title: "Analytics",
+            url: analyticsItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: analyticsItems,
+          },
+        ]
+      : []),
+    ...(mediaItems.length > 0
+      ? [
+          {
+            title: "Media",
+            url: mediaItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: mediaItems,
+          },
+        ]
+      : []),
+    ...(notificationItems.length > 0
+      ? [
+          {
+            title: "Notifications",
+            url: notificationItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: notificationItems,
           },
         ]
       : []),

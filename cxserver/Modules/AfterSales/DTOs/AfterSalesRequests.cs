@@ -91,6 +91,8 @@ public sealed class ApproveRefundRequest
 
 public sealed class ProcessRefundRequest
 {
+    public int ReturnId { get; set; }
+    public int? WarehouseId { get; set; }
     public int? PaymentId { get; set; }
     public decimal Amount { get; set; }
     public string TransactionReference { get; set; } = string.Empty;

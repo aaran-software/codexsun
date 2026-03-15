@@ -1,616 +1,539 @@
-﻿# PROMPT NAME
+﻿# Prompt 050 — Audit Logs & System Monitoring
 
-0037_RETURNS_REFUNDS_RESTOCK_SYSTEM
+Implement a **complete Audit Logs and System Monitoring module** for the Codexsun platform.
 
----
+The goal is to **track all system activities, user actions, security events, and application errors** across the platform.
 
-# ROLE
+This module must work **centrally across all modules** including:
 
-You are a **Senior Full-Stack Architect (ASP.NET Core + Aspire + React + Multi-Vendor Ecommerce + ERP)** responsible for implementing the **Returns, Refunds, and Restocking system**.
+* Authentication
+* Vendors
+* Orders
+* Inventory
+* Payments
+* Settings
+* Admin actions
 
-This module manages the **post-sales lifecycle of orders**.
-
-The system must support:
-
-• customer return requests
-• vendor returns
-• return approval workflows
-• product inspection and restocking
-• refunds and partial refunds
-• refund payment tracking
-
-Before doing anything you MUST read:
-
-```
-/ASSIST/AI_RULES.md
-```
-
-Follow all rules defined in that file.
-
-You must analyze the repository before making changes.
+The system must support **audit trails, system logs, error logs, and login history tracking**.
 
 ---
 
-# FILES TO ANALYZE
+# 1 Backend Architecture
 
-Read first:
-
-```
-/ASSIST/AI_RULES.md
-/ASSIST/ARCHITECTURE.md
-/ASSIST/STRUCTURE.md
-/ASSIST/SECURITY.md
-```
-
-Then analyze the projects.
-
-Understand the module architecture used in the project.
-
----
-
-# OBJECTIVE
-
-Create the **Returns and Refund Management System**.
-
-Modules to implement:
+Follow existing architecture:
 
 ```
-returns
-refunds
-restocking
-return_inspections
-refund_transactions
-```
-
-These modules must integrate with:
-
-```
-orders
-inventory
-payments
-products
-vendors
-```
-
-# RETURNS SYSTEM
-
-Returns represent **customer requests to send products back**.
-
-Tables:
-
-```
-returns
-return_items
-return_status_history
-return_inspections
+/Backend
+ ├── Modules
+ │     └── Monitoring
+ │           ├── Domain
+ │           ├── Infrastructure
+ │           ├── Application
+ │           ├── API
+ │           └── DTOs
 ```
 
 ---
 
-# RETURNS TABLE
+# 2 Database Tables
 
-Fields:
-
-```
-Id
-ReturnNumber
-OrderId
-CustomerContactId
-ReturnReason
-Status
-RequestedAt
-ApprovedAt
-ReceivedAt
-ClosedAt
-CreatedAt
-```
+Create tables **only if they do not exist**.
 
 ---
 
-# RETURN ITEMS
+## audit_logs
 
-Fields:
-
-```
-Id
-ReturnId
-OrderItemId
-ProductId
-Quantity
-ReturnReason
-Condition
-ResolutionType
-```
-
----
-
-# RESOLUTION TYPES
-
-Possible outcomes:
+Tracks **user actions across the platform**.
 
 ```
-Refund
-Replacement
-StoreCredit
-Repair
+audit_logs
+-----------
+Id (Guid, PK)
+UserId (Guid, nullable)
+Action (nvarchar 200)
+EntityType (nvarchar 100)
+EntityId (nvarchar 100)
+Module (nvarchar 100)
+OldValues (nvarchar(max))
+NewValues (nvarchar(max))
+IPAddress (nvarchar 100)
+UserAgent (nvarchar 500)
+CreatedAt (datetime)
 ```
-
----
-
-# RETURN STATUS
 
 Examples:
 
 ```
-Requested
-Approved
-Rejected
-InTransit
-Received
-Inspected
-Completed
-Cancelled
-```
-
-All status changes must be tracked in:
-
-```
-return_status_history
+User updated product
+Admin deleted vendor
+Vendor changed order status
+Admin updated settings
 ```
 
 ---
 
-# RETURN INSPECTIONS
+## system_logs
 
-Products must be inspected when received.
-
-Table:
+Tracks **system events and internal operations**.
 
 ```
-return_inspections
+system_logs
+------------
+Id (Guid, PK)
+Service (nvarchar 100)
+EventType (nvarchar 100)
+Message (nvarchar(max))
+Details (nvarchar(max))
+Severity (nvarchar 50)
+CreatedAt (datetime)
 ```
 
-Fields:
+Severity values:
 
 ```
-Id
-ReturnItemId
-InspectorUserId
-Condition
-Notes
-ApprovedForRefund
-ApprovedForRestock
-CreatedAt
+Info
+Warning
+Critical
+Debug
 ```
-
----
-
-# RESTOCKING SYSTEM
-
-Returned items may be restocked.
-
-Table:
-
-```
-restock_events
-```
-
-Fields:
-
-```
-Id
-ReturnItemId
-WarehouseId
-ProductId
-Quantity
-RestockedAt
-```
-
-Restocking must update:
-
-```
-inventory
-inventory_ledger
-```
-
-Transaction type:
-
-```
-Return
-```
-
----
-
-# REFUND SYSTEM
-
-Refunds return money to customers.
-
-Tables:
-
-```
-refunds
-refund_items
-refund_transactions
-```
-
----
-
-# REFUNDS TABLE
-
-Fields:
-
-```
-Id
-RefundNumber
-OrderId
-ReturnId
-CustomerContactId
-CurrencyId
-RefundAmount
-Status
-RefundMethod
-CreatedAt
-ProcessedAt
-```
-
----
-
-# REFUND ITEMS
-
-Fields:
-
-```
-Id
-RefundId
-OrderItemId
-ProductId
-Quantity
-RefundAmount
-```
-
----
-
-# REFUND METHODS
 
 Examples:
 
 ```
-OriginalPayment
-StoreCredit
-BankTransfer
-Wallet
+Inventory recalculation started
+Scheduled job executed
+Shipping API triggered
+Background worker started
 ```
 
 ---
 
-# REFUND STATUS
+## error_logs
+
+Tracks **application errors and exceptions**.
+
+```
+error_logs
+-----------
+Id (Guid, PK)
+Service (nvarchar 100)
+ExceptionMessage (nvarchar(max))
+StackTrace (nvarchar(max))
+Source (nvarchar 200)
+Path (nvarchar 300)
+UserId (Guid, nullable)
+IPAddress (nvarchar 100)
+CreatedAt (datetime)
+```
 
 Examples:
 
 ```
-Pending
-Approved
-Processed
+NullReferenceException
+Database timeout
+Payment gateway failure
+```
+
+---
+
+## login_history
+
+Tracks **user authentication activity**.
+
+```
+login_history
+--------------
+Id (Guid, PK)
+UserId (Guid)
+Email (nvarchar 200)
+IPAddress (nvarchar 100)
+Device (nvarchar 200)
+Browser (nvarchar 200)
+OS (nvarchar 200)
+LoginStatus (nvarchar 50)
+LoginTime (datetime)
+LogoutTime (datetime, nullable)
+```
+
+LoginStatus values
+
+```
+Success
 Failed
-Cancelled
+Blocked
 ```
 
 ---
 
-# REFUND TRANSACTIONS
+# 3 Entity Models
 
-Records actual payment refund events.
+Create entities:
 
-Fields:
+```
+AuditLog
+SystemLog
+ErrorLog
+LoginHistory
+```
+
+Each entity must include
 
 ```
 Id
-RefundId
-PaymentId
-Amount
-TransactionReference
-ProcessedAt
+CreatedAt
+```
+
+Use **BaseEntity if available**.
+
+---
+
+# 4 Services
+
+Create services:
+
+```
+IAuditLogService
+AuditLogService
+
+ISystemLogService
+SystemLogService
+
+IErrorLogService
+ErrorLogService
+
+ILoginHistoryService
+LoginHistoryService
+```
+
+---
+
+## AuditLogService Responsibilities
+
+* log user actions
+* capture entity changes
+* store before/after values
+* attach user and request metadata
+
+Example usage
+
+```
+AuditLogService.Log(
+  userId,
+  "Update Product",
+  "Product",
+  productId,
+  "Catalog",
+  oldValues,
+  newValues
+)
+```
+
+---
+
+## ErrorLogService Responsibilities
+
+Capture exceptions globally.
+
+Integrate with **ASP.NET middleware**.
+
+Example:
+
+```
+app.UseMiddleware<ErrorLoggingMiddleware>()
+```
+
+Middleware responsibilities
+
+```
+capture exception
+log stacktrace
+store request path
+store user id
+```
+
+---
+
+## SystemLogService Responsibilities
+
+Used for internal operations.
+
+Example:
+
+```
+SystemLogService.Log(
+   "InventoryService",
+   "RecalculateStock",
+   "Stock recalculation started",
+   "Info"
+)
+```
+
+---
+
+## LoginHistoryService Responsibilities
+
+Track
+
+```
+login success
+login failure
+logout
+account lock
+```
+
+Used inside **Auth module**.
+
+---
+
+# 5 Global Audit Middleware
+
+Create middleware:
+
+```
+AuditMiddleware
+```
+
+Responsibilities:
+
+Automatically log
+
+```
+POST
+PUT
+DELETE
+PATCH
+```
+
+Capture:
+
+```
+user id
+endpoint
+ip address
+request body
+```
+
+---
+
+# 6 API Endpoints
+
+Create controller
+
+```
+/api/admin/monitoring
+```
+
+Endpoints
+
+---
+
+## Get Audit Logs
+
+```
+GET /api/admin/monitoring/audit-logs
+```
+
+Filters
+
+```
+user
+module
+date
+action
+```
+
+---
+
+## Get System Logs
+
+```
+GET /api/admin/monitoring/system-logs
+```
+
+Filters
+
+```
+service
+severity
+date
+```
+
+---
+
+## Get Error Logs
+
+```
+GET /api/admin/monitoring/error-logs
+```
+
+Filters
+
+```
+service
+date
+user
+```
+
+---
+
+## Get Login History
+
+```
+GET /api/admin/monitoring/login-history
+```
+
+Filters
+
+```
+user
+status
+date
+ip
+```
+
+---
+
+# 7 Frontend (React)
+
+Create new module
+
+```
+/frontend/src/modules/monitoring
+```
+
+Pages
+
+```
+AuditLogsPage
+SystemLogsPage
+ErrorLogsPage
+LoginHistoryPage
+```
+
+---
+
+## Audit Logs Page
+
+Columns
+
+```
+Date
+User
+Module
+Action
+Entity
+IP
+```
+
+Features
+
+```
+search
+filter
+view changes
+pagination
+```
+
+---
+
+## Error Logs Page
+
+Columns
+
+```
+Date
+Service
+Message
+Path
+User
+```
+
+Features
+
+```
+view stack trace modal
+severity filter
+```
+
+---
+
+## System Logs Page
+
+Columns
+
+```
+Date
+Service
+Event
+Severity
+Message
+```
+
+---
+
+## Login History Page
+
+Columns
+
+```
+User
+Email
+IP
+Device
+Browser
 Status
+Login Time
+Logout Time
 ```
 
 ---
 
-# RETURN WORKFLOW
+# 8 Security Features
 
-Standard flow:
+Add monitoring alerts for
 
 ```
-Customer requests return
-↓
-Admin reviews request
-↓
-Return approved
-↓
-Customer ships product
-↓
-Warehouse receives item
-↓
-Inspection performed
-↓
-Item restocked
-↓
-Refund issued
+multiple login failures
+admin permission changes
+mass product deletion
+suspicious IP activity
+```
+
+Future integration ready for
+
+```
+SIEM
+Security dashboards
+Alert systems
 ```
 
 ---
 
-# APPLICATION LAYER
+# 9 Performance
 
-Create commands and queries.
-
----
-
-# RETURN COMMANDS
+Add indexes
 
 ```
-CreateReturnRequest
-ApproveReturn
-RejectReturn
-ReceiveReturn
-InspectReturnItem
-CompleteReturn
-```
+audit_logs(UserId)
+audit_logs(Module)
+audit_logs(CreatedAt)
 
----
+error_logs(CreatedAt)
+system_logs(Service)
 
-# REFUND COMMANDS
-
-```
-CreateRefund
-ApproveRefund
-ProcessRefund
-CancelRefund
+login_history(UserId)
+login_history(LoginTime)
 ```
 
 ---
 
-# RESTOCK COMMANDS
-
-```
-RestockReturnedItem
-```
-
-This must update:
-
-```
-inventory
-inventory_ledger
-```
-
----
-
-# API ENDPOINTS
-
----
-
-# RETURNS API
-
-```
-GET /returns
-GET /returns/{id}
-
-POST /returns
-PUT /returns/{id}/approve
-PUT /returns/{id}/reject
-PUT /returns/{id}/receive
-```
-
----
-
-# INSPECTION API
-
-```
-POST /returns/{id}/inspect
-```
-
----
-
-# REFUND API
-
-```
-GET /refunds
-GET /refunds/{id}
-
-POST /refunds
-PUT /refunds/{id}/approve
-PUT /refunds/{id}/process
-```
-
----
-
-# RESTOCK API
-
-```
-POST /returns/{id}/restock
-```
-
----
-
-# FRONTEND IMPLEMENTATION
-
-Create frontend modules.
-
-Location:
-
-```
-cxstore/src/modules
-```
-
-Create:
-
-```
-returns
-refunds
-```
-
----
-
-# FRONTEND PAGES
-
----
-
-# RETURNS
-
-```
-ReturnRequestPage
-ReturnListPage
-ReturnDetailPage
-ReturnInspectionPage
-```
-
----
-
-# REFUNDS
-
-```
-RefundListPage
-RefundDetailPage
-RefundProcessPage
-```
-
----
-
-# CUSTOMER STORE FRONT
-
-Customers can:
-
-```
-view order history
-request returns
-track return status
-view refund status
-```
-
----
-
-# ADMIN PANEL
-
-Admins can:
-
-```
-approve returns
-inspect returned products
-restock products
-process refunds
-```
-
----
-
-# ADMIN SIDE MENU
-
-Add new menu group:
-
-```
-After Sales
-```
-
-Menu structure:
-
-```
-After Sales
- ├ Returns
- ├ Refunds
-```
-
----
-
-# INVENTORY INTEGRATION
-
-If item approved for restock:
-
-```
-Inventory quantity increases
-Inventory ledger records transaction
-TransactionType = Return
-```
-
----
-
-# SECURITY
-
-Ensure:
-
-• company isolation
-• vendor isolation
-• role-based access
-
-Permissions examples:
-
-```
-returns.view
-returns.approve
-returns.inspect
-
-refunds.view
-refunds.process
-```
-
----
-
-# DATABASE MIGRATIONS
-
-Create migrations if tables do not exist.
-
-Migration names:
-
-```
-AddReturnsModule
-AddRefundsModule
-AddRestockingModule
-```
-
----
-
-# VALIDATION CHECK
-
-Verify:
-
-• return requests created successfully
-• returns approved/rejected
-• returned items inspected
-• inventory updated after restocking
-• refunds created and processed
-
-Ensure **financial and inventory accuracy**.
-
----
-
-# DOCUMENTATION
-
-If structure changes update:
-
-```
-STRUCTURE.md
-ARCHITECTURE.md
-PROJECT_LOG.md
-```
-
-Add a project log entry.
-
----
-
-# OUTPUT
-
-Provide:
-
-1. Backend module folder structure
-2. Domain entities
-3. EF Core configurations
-4. Commands and queries
-5. API controllers
-6. Database migrations
-7. Frontend module structure
-8. Return management UI
-9. Refund management UI
-10. Side menu updates
-
-Ensure the application **builds successfully**.
-
-Reuse existing architecture and infrastructure.
-
-Do not break existing modules.
+# 10 Expected Result
+
+After implementation the system must support:
+
+✓ full audit trail
+✓ login tracking
+✓ error monitoring
+✓ admin monitoring dashboard
+✓ security activity tracking
+✓ system diagnostics

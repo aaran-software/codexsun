@@ -18,3 +18,8 @@
 - Establish the platform security baseline with modular identity, JWT authentication, refresh-token rotation, and policy-based authorization.
 - Integrate the frontend app shell with backend identity for persistent sessions, protected routing, and role-aware navigation.
 - Add admin-facing user, role, and permission management workflows on top of the identity foundation.
+
+- Enterprise operations phase: activate AfterSales and add Analytics, Promotions, and Shipping modules on top of the current modular monolith without changing module boundaries.
+
+- Platform communications phase: add centralized Notifications module with multi-channel templates, queue processing, and domain-event integrations.
+- Platform asset-management phase: add centralized Media/File Manager module with local storage, thumbnails, usage tracking, and reusable picker workflows for products, vendors, and future CMS content.

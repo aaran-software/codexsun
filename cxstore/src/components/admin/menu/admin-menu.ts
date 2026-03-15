@@ -93,6 +93,68 @@ export function getVendorMenuItems(role: string | undefined): AdminMenuItem[] {
   ]
 }
 
+export function getPromotionMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Promotions", url: "/admin/promotions" },
+  ]
+}
+
+export function getShippingMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Shipments", url: "/admin/shipping" },
+  ]
+}
+
+export function getReturnsMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Returns", url: "/admin/returns" },
+  ]
+}
+
+export function getAnalyticsMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Analytics", url: "/admin/analytics" },
+  ]
+}
+
+export function getMediaMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Media Library", url: "/admin/media" },
+  ]
+}
+
+export function getNotificationMenuItems(role: string | undefined): AdminMenuItem[] {
+  if (role !== "Admin") {
+    return []
+  }
+
+  return [
+    { title: "Templates", url: "/admin/notifications/templates" },
+    { title: "Logs", url: "/admin/notifications/logs" },
+    { title: "Settings", url: "/admin/notifications/settings" },
+  ]
+}
+
 export function getAdminMenuItems(role: string | undefined): AdminMenuItem[] {
   if (role !== "Admin") {
     return role === "Vendor"

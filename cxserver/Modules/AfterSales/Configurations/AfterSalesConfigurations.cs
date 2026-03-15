@@ -27,6 +27,7 @@ public sealed class ReturnConfiguration : IEntityTypeConfiguration<Return>
         builder.HasIndex(x => x.ReturnNumber).IsUnique();
         builder.HasIndex(x => new { x.OrderId, x.Status });
         builder.HasOne(x => x.Order).WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.CustomerUser).WithMany().HasForeignKey(x => x.CustomerUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.CustomerContact).WithMany().HasForeignKey(x => x.CustomerContactId).OnDelete(DeleteBehavior.Restrict);
     }
 }

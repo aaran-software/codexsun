@@ -5,10 +5,13 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Serilog;
 using cxserver.Infrastructure;
+using cxserver.Modules.AfterSales.Services;
+using cxserver.Modules.Analytics.Services;
 using cxserver.Modules.Auth.DTOs;
 using cxserver.Modules.Auth.Policies;
 using cxserver.Modules.Auth.Security;
@@ -17,8 +20,13 @@ using cxserver.Modules.Auth.Validators;
 using cxserver.Modules.Common.Services;
 using cxserver.Modules.Contacts.Services;
 using cxserver.Modules.Inventory.Services;
+using cxserver.Modules.Media.Services;
+using cxserver.Modules.Notifications.Providers;
+using cxserver.Modules.Notifications.Services;
+using cxserver.Modules.Promotions.Services;
 using cxserver.Modules.Products.Services;
 using cxserver.Modules.Sales.Services;
+using cxserver.Modules.Shipping.Services;
 using cxserver.Modules.Vendors.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -118,12 +126,25 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CommonMasterDataService>();
 builder.Services.AddScoped<ContactService>();
 builder.Services.AddScoped<InventoryService>();
+builder.Services.AddScoped<MediaService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<PromotionService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<SalesService>();
+builder.Services.AddScoped<ShippingService>();
+builder.Services.AddScoped<AfterSalesService>();
 builder.Services.AddScoped<VendorService>();
+builder.Services.AddSingleton<IFileStorageProvider, LocalFileStorageProvider>();
+builder.Services.AddScoped<INotificationProvider, EmailNotificationProvider>();
+builder.Services.AddScoped<INotificationProvider, SmsNotificationProvider>();
+builder.Services.AddScoped<INotificationProvider, WhatsAppNotificationProvider>();
+builder.Services.AddHostedService<NotificationQueueProcessor>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
 
 var app = builder.Build();
+var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "uploads");
+Directory.CreateDirectory(Path.Combine(uploadsRoot, "media"));
 
 using (var scope = app.Services.CreateScope())
 {
@@ -158,6 +179,11 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.UseOutputCache();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
+});
 
 app.MapControllers();
 app.MapDefaultEndpoints();

@@ -1,11 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using cxserver.Modules.AfterSales.Entities;
+using cxserver.Modules.Analytics.Entities;
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Common.Entities;
 using cxserver.Modules.Contacts.Entities;
 using cxserver.Modules.Finance.Entities;
 using cxserver.Modules.Inventory.Entities;
+using cxserver.Modules.Media.Entities;
+using cxserver.Modules.Notifications.Entities;
+using cxserver.Modules.Promotions.Entities;
 using cxserver.Modules.Products.Entities;
 using cxserver.Modules.Sales.Entities;
+using cxserver.Modules.Shipping.Entities;
 using cxserver.Modules.System.Entities;
 using cxserver.Modules.Vendors.Entities;
 
@@ -82,10 +88,35 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<WarehouseTransferItem> WarehouseTransferItems => Set<WarehouseTransferItem>();
     public DbSet<InventoryAdjustment> InventoryAdjustments => Set<InventoryAdjustment>();
     public DbSet<InventoryAdjustmentItem> InventoryAdjustmentItems => Set<InventoryAdjustmentItem>();
+    public DbSet<MediaFolder> MediaFolders => Set<MediaFolder>();
+    public DbSet<MediaFile> MediaFiles => Set<MediaFile>();
+    public DbSet<MediaUsage> MediaUsage => Set<MediaUsage>();
+    public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
     public DbSet<Vendor> Vendors => Set<Vendor>();
     public DbSet<VendorUser> VendorUsers => Set<VendorUser>();
     public DbSet<VendorAddress> VendorAddresses => Set<VendorAddress>();
     public DbSet<VendorBankAccount> VendorBankAccounts => Set<VendorBankAccount>();
+    public DbSet<VendorSalesSummary> VendorSalesSummaries => Set<VendorSalesSummary>();
+    public DbSet<ProductSalesSummary> ProductSalesSummaries => Set<ProductSalesSummary>();
+    public DbSet<Promotion> Promotions => Set<Promotion>();
+    public DbSet<PromotionProduct> PromotionProducts => Set<PromotionProduct>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
+    public DbSet<ShippingProvider> ShippingProviders => Set<ShippingProvider>();
+    public DbSet<ShippingMethod> ShippingMethods => Set<ShippingMethod>();
+    public DbSet<Shipment> Shipments => Set<Shipment>();
+    public DbSet<ShipmentItem> ShipmentItems => Set<ShipmentItem>();
+    public DbSet<Return> Returns => Set<Return>();
+    public DbSet<ReturnItem> ReturnItems => Set<ReturnItem>();
+    public DbSet<ReturnStatusHistory> ReturnStatusHistoryEntries => Set<ReturnStatusHistory>();
+    public DbSet<ReturnInspection> ReturnInspections => Set<ReturnInspection>();
+    public DbSet<RestockEvent> RestockEvents => Set<RestockEvent>();
+    public DbSet<InventoryLedgerEntry> ReturnInventoryLedgerEntries => Set<InventoryLedgerEntry>();
+    public DbSet<Refund> Refunds => Set<Refund>();
+    public DbSet<RefundItem> RefundItems => Set<RefundItem>();
+    public DbSet<RefundTransaction> RefundTransactions => Set<RefundTransaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

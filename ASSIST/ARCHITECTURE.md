@@ -148,3 +148,21 @@ codexsun.slnx
 - `InventoryService` now enforces warehouse ownership for vendor users on purchase orders, transfers, warehouse inventory views, product inventory summaries, and stock movement history, while admins and staff continue to see the full operational dataset.
 - `ContactService` now treats vendor-company membership as an additive access scope, so vendor staff users can work with contacts assigned to other users in the same vendor business without changing existing `vendor_user_id` references.
 - `VendorService` exposes a vendor-scoped warehouse discovery endpoint consumed by the frontend, and `cxstore` now includes vendor warehouse and vendor inventory routes under the existing `AppLayout` instead of introducing a new frontend architecture.
+
+## Enterprise Modules Update (2026-03-15)
+
+- The existing `Inventory` module remains the active warehouse-operations implementation; this phase did not replace or restructure it.
+- `cxserver/Modules/Analytics` was added for vendor and product sales summaries plus aggregate sales-overview reporting, with summary snapshots stored in dedicated analytics tables.
+- `cxserver/Modules/Promotions` was added for promotions, coupon validation, coupon application, and coupon-usage tracking against live orders.
+- `cxserver/Modules/Shipping` was added for shipping providers, shipping methods, shipments, and shipment-item tracking, with seeded baseline delivery methods for admin workflows.
+- The previously scaffolded `cxserver/Modules/AfterSales` module is now active in the runtime through registered DbSets, services, controllers, and migrations, enabling returns, approvals, refunds, and optional warehouse restocking.
+- `cxstore` now includes admin pages and typed API clients for analytics, promotions, shipping, and returns under the existing `AppLayout` and sidebar grouping model.
+
+## Notification System Update (2026-03-15)
+
+- `cxserver/Modules/Notifications` adds a centralized notification layer using the existing modular-monolith pattern: entities, EF configurations, DTOs, providers, services, controllers, and a hosted background worker.
+- Notification delivery is template-driven through `notification_templates`, queue-backed through `notifications`, and operationally traceable through `notification_logs`.
+- The backend keeps channel dispatch behind `INotificationProvider` implementations for `Email`, `SMS`, and `WhatsApp`, while `InApp` notifications are stored and marked sent inside the same queue flow.
+- `NotificationQueueProcessor` runs as a hosted background worker and processes pending notifications in configurable batches stored through existing `system_settings`.
+- Existing domain services now enqueue notifications for user registration, password update/reset, order creation, payment success, shipment shipped, shipment delivered, return approval, vendor payout creation, and low-inventory alerts.
+- `cxstore` integrates the module with `notificationApi.ts`, `types/notification.ts`, and admin pages for templates, logs, and settings under the existing route and sidebar structure.

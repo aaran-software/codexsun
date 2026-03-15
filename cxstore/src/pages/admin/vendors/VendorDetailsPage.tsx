@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 import { getVendorById, updateVendor } from "@/api/vendorApi"
+import { MediaPicker } from "@/components/media/MediaPicker"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -105,6 +106,9 @@ export default function VendorDetailsPage() {
         <Field label="Website">
           <Input value={vendor.website} onChange={(event) => setVendor((current) => current ? { ...current, website: event.target.value } : current)} />
         </Field>
+        <div className="grid gap-2 text-sm md:col-span-2">
+          <MediaPicker value={vendor.logoUrl} onChange={(value) => setVendor((current) => current ? { ...current, logoUrl: value } : current)} module="vendors" preferredFolderId={2} imagesOnly label="Logo" />
+        </div>
         <Field label="Status">
           <Input value={vendor.status} onChange={(event) => setVendor((current) => current ? { ...current, status: event.target.value } : current)} />
         </Field>

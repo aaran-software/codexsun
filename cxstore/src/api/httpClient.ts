@@ -55,7 +55,7 @@ export async function requestJson<T>(
   const { auth = true, retryOnUnauthorized = true } = options
   const headers = new Headers(init.headers)
 
-  if (!headers.has("Content-Type") && init.body) {
+  if (!headers.has("Content-Type") && init.body && !(typeof FormData !== "undefined" && init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json")
   }
 

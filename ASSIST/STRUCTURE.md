@@ -72,6 +72,10 @@ codexsun/
 |   |   |-- 20260315143615_AddVendorCompanySupport.Designer.cs
 |   |   |-- 20260315151649_AddVendorWarehouseOwnership.cs
 |   |   |-- 20260315151649_AddVendorWarehouseOwnership.Designer.cs
+|   |   |-- 20260315153639_AddEnterpriseModules.cs
+|   |   |-- 20260315153639_AddEnterpriseModules.Designer.cs
+|   |   |-- 20260315160147_AddNotificationsModule.cs
+|   |   |-- 20260315160147_AddNotificationsModule.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -177,6 +181,64 @@ codexsun/
 |       |   |   `-- InventoryEntities.cs
 |       |   `-- Services/
 |       |       `-- InventoryService.cs
+|       |-- Analytics/
+|       |   |-- Configurations/
+|       |   |   `-- AnalyticsConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   `-- AnalyticsController.cs
+|       |   |-- DTOs/
+|       |   |   `-- AnalyticsResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- AnalyticsEntities.cs
+|       |   `-- Services/
+|       |       `-- AnalyticsService.cs
+|       |-- Promotions/
+|       |   |-- Configurations/
+|       |   |   `-- PromotionConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- CouponsController.cs
+|       |   |   `-- PromotionsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- PromotionRequests.cs
+|       |   |   `-- PromotionResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- PromotionEntities.cs
+|       |   `-- Services/
+|       |       `-- PromotionService.cs
+|       |-- Shipping/
+|       |   |-- Configurations/
+|       |   |   `-- ShippingConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   `-- ShipmentsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- ShippingRequests.cs
+|       |   |   `-- ShippingResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- ShippingEntities.cs
+|       |   `-- Services/
+|       |       `-- ShippingService.cs
+|       |-- Notifications/
+|       |   |-- Configurations/
+|       |   |   `-- NotificationConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- NotificationLogsController.cs
+|       |   |   |-- NotificationSettingsController.cs
+|       |   |   `-- NotificationTemplatesController.cs
+|       |   |-- DTOs/
+|       |   |   |-- NotificationRequests.cs
+|       |   |   `-- NotificationResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- NotificationEntities.cs
+|       |   |-- Providers/
+|       |   |   |-- EmailNotificationProvider.cs
+|       |   |   |-- INotificationProvider.cs
+|       |   |   |-- SmsNotificationProvider.cs
+|       |   |   `-- WhatsAppNotificationProvider.cs
+|       |   |-- Services/
+|       |   |   |-- NotificationQueueProcessor.cs
+|       |   |   `-- NotificationService.cs
+|       |   `-- Templates/
+|       |       `-- NotificationTemplateCatalog.cs
 |       |-- Vendors/
 |       |   |-- Configurations/
 |       |   |   `-- VendorConfigurations.cs
@@ -196,6 +258,20 @@ codexsun/
 |       |-- System/
 |       |   |-- Configurations/
 |       |   `-- Entities/
+|       |-- AfterSales/
+|       |   |-- Configurations/
+|       |   |   `-- AfterSalesConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- RefundsController.cs
+|       |   |   `-- ReturnsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- AfterSalesRequests.cs
+|       |   |   `-- AfterSalesResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- AfterSalesEntities.cs
+|       |   `-- Services/
+|       |       |-- AfterSalesService.Returns.cs
+|       |       `-- AfterSalesService.Runtime.cs
 |       |-- Admin/
 |       |-- VendorDashboard/
 |       `-- CXCore/
@@ -219,6 +295,11 @@ codexsun/
 |       |   |-- productApi.ts
 |       |   |-- salesApi.ts
 |       |   |-- inventoryApi.ts
+|       |   |-- analyticsApi.ts
+|       |   |-- notificationApi.ts
+|       |   |-- promotionApi.ts
+|       |   |-- shippingApi.ts
+|       |   |-- returnsApi.ts
 |       |   |-- vendorApi.ts
 |       |   |-- roleApi.ts
 |       |   |-- sizeApi.ts
@@ -293,6 +374,21 @@ codexsun/
 |       |       |   |-- PurchaseOrdersPage.tsx
 |       |       |   |-- StockMovementsPage.tsx
 |       |       |   `-- TransfersPage.tsx
+|       |       |-- analytics/
+|       |       |   `-- AnalyticsPage.tsx
+|       |       |-- promotions/
+|       |       |   `-- PromotionsPage.tsx
+|       |       |-- shipping/
+|       |       |   `-- ShipmentsPage.tsx
+|       |       |-- notifications/
+|       |       |   |-- logs/
+|       |       |   |   `-- NotificationLogsPage.tsx
+|       |       |   |-- settings/
+|       |       |   |   `-- NotificationSettingsPage.tsx
+|       |       |   `-- templates/
+|       |       |       `-- NotificationTemplatesPage.tsx
+|       |       |-- returns/
+|       |       |   `-- ReturnsPage.tsx
 |       |       |-- vendors/
 |       |       |   |-- VendorDetailsPage.tsx
 |       |       |   |-- VendorUsersPage.tsx
@@ -315,6 +411,11 @@ codexsun/
 |           |-- common.ts
 |           |-- contact.ts
 |           |-- inventory.ts
+|           |-- analytics.ts
+|           |-- notification.ts
+|           |-- promotion.ts
+|           |-- shipping.ts
+|           |-- returns.ts
 |           |-- product.ts
 |           |-- sales.ts
 |           `-- vendor.ts
@@ -331,7 +432,9 @@ codexsun/
 |   |   `-- RefreshTokenTests.cs
 |   |-- CommonMasterDataTests.cs
 |   |-- InventoryModuleTests.cs
+|   |-- NotificationsModuleTests.cs
 |   |-- ProductPricingTests.cs
+|   |-- EnterpriseModulesTests.cs
 |   |-- VendorCompaniesTests.cs
 |   |-- VendorWarehouseAccessTests.cs
 |   `-- TestAssembly.cs

@@ -47,6 +47,10 @@
 - Auth module currently records register, login, failed login, refresh, and logout actions
 - Auth audit IP capture honors `X-Forwarded-For` before falling back to the direct connection address
 - Inventory operations also record audit entries for purchase order creation, purchase receiving, warehouse transfer creation/completion, and inventory adjustments
+- Promotions record coupon-application audit events
+- Shipping records shipment creation and shipment-status updates
+- AfterSales records return creation/approval and refund processing
+- Notifications record queue processing outcomes in `notification_logs`, while the source business actions continue to be audited in `audit_logs`
 
 ## Security Validation
 
@@ -63,6 +67,8 @@
 - All `/common/*` master-data mutation and lookup endpoints are currently protected with `AdminAccess`
 - Inventory APIs require authentication and use seeded permission claims `inventory.view`, `inventory.manage`, `inventory.transfer`, and `inventory.adjust` for operation-level authorization
 - Vendor-management APIs use the seeded `vendors.view`, `vendors.manage`, and `vendors.users.manage` permissions alongside authenticated role checks
+- Analytics, Promotions, Shipping, and AfterSales currently use authenticated role checks and admin route segmentation rather than separate seeded permission codes
+- Notifications currently use authenticated admin route segmentation rather than separate seeded permission codes
 
 ## Vendor Scope Enforcement
 
@@ -90,6 +96,18 @@
 - `cxstore` exposes vendor-specific routes for warehouses and inventory operations under the existing authenticated app shell.
 - Vendor pages consume `/vendors/warehouses` instead of unrestricted master-data warehouse endpoints, so the UI receives only warehouses inside the actor's vendor-company scope.
 - Backend validation remains authoritative; vendor frontend filtering is a convenience layer and not the security boundary.
+
+## Enterprise Operations Security
+
+- Coupon validation and application still execute discount rules on the backend; the admin page is only a client for the server-side decision.
+- Shipment creation validates referenced orders, order items, and shipping methods on the backend before persistence.
+- AfterSales refund processing validates return status on the backend before creating refunds or restocking inventory.
+
+## Notification Security
+
+- Notification dispatch remains server-side; frontend pages only manage templates, review logs, and update channel settings through authenticated admin APIs.
+- Queue processing is centralized in the backend and does not expose provider credentials or delivery logic to the client.
+- The current provider implementations are simulated transport adapters, which keeps the notification architecture in place without introducing hardcoded external credentials into the repository.
 
 ## Error Monitoring
 

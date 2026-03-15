@@ -4,6 +4,8 @@ using cxserver.Infrastructure;
 using cxserver.Modules.Auth.DTOs;
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Auth.Security;
+using cxserver.Modules.Notifications.Configurations;
+using cxserver.Modules.Notifications.Services;
 
 namespace cxserver.Modules.Auth.Services;
 
@@ -11,7 +13,8 @@ public sealed class AuthService(
     CodexsunDbContext dbContext,
     PasswordService passwordService,
     JwtTokenService jwtTokenService,
-    IOptions<JwtSettings> jwtOptions)
+    IOptions<JwtSettings> jwtOptions,
+    NotificationService notificationService)
 {
     private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
@@ -46,6 +49,12 @@ public sealed class AuthService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await WriteAuditLogAsync(user.Id, "Auth.Register", nameof(User), user.Id.ToString(), ipAddress, cancellationToken);
+        await notificationService.QueueEventAsync(NotificationTemplateCatalog.UserRegistration, user.Id, new Dictionary<string, string>
+        {
+            ["Username"] = user.Username,
+            ["Email"] = user.Email,
+            ["OccurredAt"] = DateTimeOffset.UtcNow.ToString("O")
+        }, cancellationToken);
 
         return await IssueTokensAsync(user.Id, ipAddress, cancellationToken);
     }
@@ -251,13 +260,23 @@ public sealed class AuthService(
         user.Status = string.IsNullOrWhiteSpace(request.Status) ? user.Status : request.Status.Trim();
         user.UpdatedAt = DateTimeOffset.UtcNow;
 
-        if (!string.IsNullOrWhiteSpace(request.Password))
+        var passwordChanged = !string.IsNullOrWhiteSpace(request.Password);
+        if (passwordChanged)
         {
-            user.PasswordHash = passwordService.HashPassword(request.Password);
+            user.PasswordHash = passwordService.HashPassword(request.Password!);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Auth.UserUpdate", nameof(User), user.Id.ToString(), ipAddress, cancellationToken);
+        if (passwordChanged)
+        {
+            await notificationService.QueueEventAsync(NotificationTemplateCatalog.PasswordReset, user.Id, new Dictionary<string, string>
+            {
+                ["Username"] = user.Username,
+                ["Email"] = user.Email,
+                ["OccurredAt"] = DateTimeOffset.UtcNow.ToString("O")
+            }, cancellationToken);
+        }
 
         return await GetUserByIdAsync(user.Id, cancellationToken);
     }

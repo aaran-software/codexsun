@@ -3,12 +3,14 @@ using cxserver.Infrastructure;
 using cxserver.Modules.AfterSales.DTOs;
 using cxserver.Modules.AfterSales.Entities;
 using cxserver.Modules.Auth.Entities;
+using cxserver.Modules.Notifications.Configurations;
+using cxserver.Modules.Notifications.Services;
 using cxserver.Modules.Products.Entities;
 using cxserver.Modules.Sales.Entities;
 
 namespace cxserver.Modules.AfterSales.Services;
 
-public sealed partial class AfterSalesService(CodexsunDbContext dbContext)
+public sealed partial class AfterSalesService(CodexsunDbContext dbContext, NotificationService notificationService)
 {
     private static readonly HashSet<string> AllowedReturnStatuses =
     [
@@ -64,6 +66,7 @@ public sealed partial class AfterSalesService(CodexsunDbContext dbContext)
             ReturnNumber = await GenerateDocumentNumberAsync("RTN", dbContext.Returns.Select(x => x.ReturnNumber),
                 cancellationToken),
             OrderId = order.Id,
+            CustomerUserId = order.CustomerUserId,
             CustomerContactId = request.CustomerContactId ?? order.CustomerContactId,
             ReturnReason = request.ReturnReason.Trim(),
             Status = "Requested",
@@ -155,6 +158,12 @@ public sealed partial class AfterSalesService(CodexsunDbContext dbContext)
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Return.Approve", nameof(Return), entity.Id.ToString(), ipAddress,
             cancellationToken);
+        await notificationService.QueueEventAsync(NotificationTemplateCatalog.ReturnApproved, entity.CustomerUserId, new Dictionary<string, string>
+        {
+            ["ReturnId"] = entity.Id.ToString(),
+            ["ReturnNumber"] = entity.ReturnNumber,
+            ["OccurredAt"] = now.ToString("O")
+        }, cancellationToken);
         return await GetReturnByIdAsync(entity.Id, actorUserId, role, cancellationToken);
     }
 

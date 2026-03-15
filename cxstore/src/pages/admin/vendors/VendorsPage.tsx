@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import { createVendor, getVendors } from "@/api/vendorApi"
 import { CommonList, type CommonListColumn } from "@/components/forms/CommonList"
+import { MediaPicker } from "@/components/media/MediaPicker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -114,6 +115,9 @@ export default function VendorsPage() {
         <div className="space-y-2">
           <Label>Phone</Label>
           <Input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <MediaPicker value={form.logoUrl} onChange={(value) => setForm((current) => ({ ...current, logoUrl: value }))} module="vendors" preferredFolderId={2} imagesOnly label="Logo" />
         </div>
         <div className="flex items-end">
           <Button onClick={() => void handleCreate()}>Create Vendor</Button>

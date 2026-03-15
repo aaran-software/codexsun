@@ -18,6 +18,8 @@ public sealed class Return : AfterSalesEntity
     public string ReturnNumber { get; set; } = string.Empty;
     public int OrderId { get; set; }
     public Order Order { get; set; } = null!;
+    public Guid? CustomerUserId { get; set; }
+    public User? CustomerUser { get; set; }
     public int? CustomerContactId { get; set; }
     public Contact? CustomerContact { get; set; }
     public string ReturnReason { get; set; } = string.Empty;

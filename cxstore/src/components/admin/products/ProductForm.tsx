@@ -7,6 +7,7 @@ import { listCommonItems } from "@/api/commonApi"
 import { getProductCategories } from "@/api/productApi"
 import { AutocompleteLookup, type LookupOption } from "@/components/lookups/AutocompleteLookup"
 import { CommonMasterLookup, mapCommonItemToLookupOption } from "@/components/lookups/commonLookups"
+import { MediaPicker } from "@/components/media/MediaPicker"
 import { useAuth } from "@/state/authStore"
 import type { AdminUserSummary } from "@/types/admin"
 import type { ProductDetail, ProductUpsertRequest } from "@/types/product"
@@ -366,7 +367,14 @@ export function ProductForm({ title, description, submitLabel, initialValue, onS
                 <InlinePanel key={`image-${index}`}>
                   <div className="grid gap-4 md:grid-cols-[1.4fr_1fr_150px_100px_auto]">
                     <Field label="Image URL">
-                      <Input value={image.imageUrl} onChange={(event) => updateArray(setForm, "images", index, { ...image, imageUrl: event.target.value })} placeholder="Image URL" />
+                      <MediaPicker
+                        value={image.imageUrl}
+                        onChange={(value) => updateArray(setForm, "images", index, { ...image, imageUrl: value })}
+                        module="products"
+                        preferredFolderId={1}
+                        imagesOnly
+                        label="Image URL"
+                      />
                     </Field>
                     <Field label="Alt Text">
                       <Input value={image.altText} onChange={(event) => updateArray(setForm, "images", index, { ...image, altText: event.target.value })} placeholder="Alt text" />
