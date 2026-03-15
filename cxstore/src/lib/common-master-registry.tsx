@@ -5,6 +5,7 @@ import { createHsnCode, deleteHsnCode, getHsnCodeById, listHsnCodes, restoreHsnC
 import { countriesApi, statesApi, districtsApi, citiesApi, pincodesApi } from "@/api/locationApi"
 import { createSize, deleteSize, getSizeById, listSizes, restoreSize, updateSize } from "@/api/sizeApi"
 import { createUnit, deleteUnit, getUnitById, listUnits, restoreUnit, updateUnit } from "@/api/unitApi"
+import { getVendors } from "@/api/vendorApi"
 import type { CommonMasterDefinition } from "@/components/forms/commonMasterTypes"
 import type { CommonUpsertFormValues, CommonUpsertSelectOption } from "@/components/forms/CommonUpsertDialog"
 import type {
@@ -569,10 +570,25 @@ export const commonMasterDefinitions = {
     fields: [
       { key: "name", label: "Warehouse Name", required: true, placeholder: "Enter warehouse name" },
       { key: "location", label: "Location", required: true, placeholder: "Enter warehouse location" },
+      {
+        key: "vendorId",
+        label: "Vendor Company",
+        type: "select",
+        parseAs: "number",
+        placeholder: "Platform warehouse",
+        loadOptions: async () => {
+          const vendors = await getVendors()
+          return vendors.map((vendor) => ({
+            value: vendor.id,
+            label: vendor.companyName,
+          }))
+        },
+      },
     ],
     columns: [
       { id: "name", header: "Warehouse Name", accessor: (item) => item.name },
       { id: "location", header: "Location", accessor: (item) => item.location ?? "" },
+      { id: "vendorCompany", header: "Vendor Company", accessor: (item) => item.vendorCompanyName ?? "Platform" },
     ],
     api: {
       list: () => listCommonItems("/common/warehouses"),
@@ -585,6 +601,13 @@ export const commonMasterDefinitions = {
     toRequest: (values: CommonUpsertFormValues): WarehouseUpsertRequest => ({
       name: String(values.name ?? "").trim(),
       location: String(values.location ?? "").trim(),
+      vendorId: Number(values.vendorId ?? 0) || undefined,
+    }),
+    toFormValues: (item) => ({
+      name: item.name,
+      location: item.location ?? "",
+      vendorId: item.vendorId ?? "",
+      isActive: item.isActive,
     }),
   },
   "payment-terms": {

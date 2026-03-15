@@ -22,10 +22,15 @@ public sealed class ProductVariantResponse
 public sealed class ProductPriceResponse
 {
     public int Id { get; init; }
+    public int? ProductVariantId { get; init; }
     public string PriceType { get; init; } = string.Empty;
-    public decimal Amount { get; init; }
+    public string SalesChannel { get; init; } = string.Empty;
+    public int MinQuantity { get; init; }
+    public decimal Price { get; init; }
     public int? CurrencyId { get; init; }
     public string CurrencyName { get; init; } = string.Empty;
+    public DateTimeOffset? StartDate { get; init; }
+    public DateTimeOffset? EndDate { get; init; }
 }
 
 public sealed class ProductImageResponse
@@ -51,6 +56,8 @@ public sealed class ProductVendorLinkResponse
 {
     public int Id { get; init; }
     public Guid VendorUserId { get; init; }
+    public int? VendorId { get; init; }
+    public string VendorCompanyName { get; init; } = string.Empty;
     public string VendorName { get; init; } = string.Empty;
     public string VendorSku { get; init; } = string.Empty;
     public decimal VendorSpecificPrice { get; init; }
@@ -76,6 +83,8 @@ public class ProductListItemResponse
     public int Id { get; init; }
     public Guid OwnerUserId { get; init; }
     public Guid? VendorUserId { get; init; }
+    public int? VendorId { get; init; }
+    public string VendorCompanyName { get; init; } = string.Empty;
     public string VendorName { get; init; } = string.Empty;
     public int? GroupId { get; init; }
     public string GroupName { get; init; } = string.Empty;

@@ -11,9 +11,14 @@ public sealed class ProductVariantRequest
 
 public sealed class ProductPriceRequest
 {
+    public int? ProductVariantId { get; set; }
     public string PriceType { get; set; } = string.Empty;
-    public decimal Amount { get; set; }
+    public string SalesChannel { get; set; } = string.Empty;
+    public int MinQuantity { get; set; } = 1;
+    public decimal Price { get; set; }
     public int? CurrencyId { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
 }
 
 public sealed class ProductImageRequest

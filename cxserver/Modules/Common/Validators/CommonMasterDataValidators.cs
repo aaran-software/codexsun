@@ -101,6 +101,7 @@ public sealed class WarehouseUpsertRequestValidator : AbstractValidator<Warehous
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(128);
         RuleFor(x => x.Location).NotEmpty().MaximumLength(256);
+        RuleFor(x => x.VendorId).GreaterThan(0).When(x => x.VendorId.HasValue);
     }
 }
 

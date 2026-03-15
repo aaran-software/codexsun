@@ -10,6 +10,8 @@ public sealed class CommonMasterDataResponse
     public decimal? Percentage { get; init; }
     public string? Symbol { get; init; }
     public string? Location { get; init; }
+    public int? VendorId { get; init; }
+    public string? VendorCompanyName { get; init; }
     public int? Days { get; init; }
     public int? CountryId { get; init; }
     public string? CountryName { get; init; }

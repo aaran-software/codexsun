@@ -62,6 +62,16 @@ codexsun/
 |   |   |-- 20260314143943_ExpandedAuthAndCommonSeedData.Designer.cs
 |   |   |-- 20260314165636_AddContactsAndProductsModules.cs
 |   |   |-- 20260314165636_AddContactsAndProductsModules.Designer.cs
+|   |   |-- 20260314184850_AddSalesCommerceModule.cs
+|   |   |-- 20260314184850_AddSalesCommerceModule.Designer.cs
+|   |   |-- 20260315132411_AddInventoryWarehouseModule.cs
+|   |   |-- 20260315132411_AddInventoryWarehouseModule.Designer.cs
+|   |   |-- 20260315134829_AddMultiChannelProductPricing.cs
+|   |   |-- 20260315134829_AddMultiChannelProductPricing.Designer.cs
+|   |   |-- 20260315143615_AddVendorCompanySupport.cs
+|   |   |-- 20260315143615_AddVendorCompanySupport.Designer.cs
+|   |   |-- 20260315151649_AddVendorWarehouseOwnership.cs
+|   |   |-- 20260315151649_AddVendorWarehouseOwnership.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -136,6 +146,50 @@ codexsun/
 |       |   |   `-- ProductEntities.cs
 |       |   `-- Services/
 |       |       `-- ProductService.cs
+|       |-- Sales/
+|       |   |-- Configurations/
+|       |   |   `-- SalesConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- CartController.cs
+|       |   |   |-- InvoicesController.cs
+|       |   |   |-- OrdersController.cs
+|       |   |   |-- PaymentsController.cs
+|       |   |   `-- VendorPayoutsController.cs
+|       |   |-- DTOs/
+|       |   |   |-- SalesRequests.cs
+|       |   |   `-- SalesResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- SalesEntities.cs
+|       |   `-- Services/
+|       |       `-- SalesService.cs
+|       |-- Inventory/
+|       |   |-- Configurations/
+|       |   |   `-- InventoryConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- InventoryController.cs
+|       |   |   |-- PurchaseOrdersController.cs
+|       |   |   |-- StockMovementsController.cs
+|       |   |   `-- WarehouseTransfersController.cs
+|       |   |-- DTOs/
+|       |   |   |-- InventoryRequests.cs
+|       |   |   `-- InventoryResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- InventoryEntities.cs
+|       |   `-- Services/
+|       |       `-- InventoryService.cs
+|       |-- Vendors/
+|       |   |-- Configurations/
+|       |   |   `-- VendorConfigurations.cs
+|       |   |-- Controllers/
+|       |   |   |-- VendorsController.cs
+|       |   |   `-- VendorUsersController.cs
+|       |   |-- DTOs/
+|       |   |   |-- VendorRequests.cs
+|       |   |   `-- VendorResponses.cs
+|       |   |-- Entities/
+|       |   |   `-- VendorEntities.cs
+|       |   `-- Services/
+|       |       `-- VendorService.cs
 |       |-- Finance/
 |       |   |-- Configurations/
 |       |   `-- Entities/
@@ -163,6 +217,9 @@ codexsun/
 |       |   |-- httpClient.ts
 |       |   |-- locationApi.ts
 |       |   |-- productApi.ts
+|       |   |-- salesApi.ts
+|       |   |-- inventoryApi.ts
+|       |   |-- vendorApi.ts
 |       |   |-- roleApi.ts
 |       |   |-- sizeApi.ts
 |       |   |-- unitApi.ts
@@ -202,6 +259,8 @@ codexsun/
 |       |-- css/
 |       |-- lib/
 |       |-- pages/
+|       |   |-- CartPage.tsx
+|       |   |-- CheckoutPage.tsx
 |       |   `-- admin/
 |       |       |-- contacts/
 |       |       |   |-- ContactCreatePage.tsx
@@ -219,6 +278,26 @@ codexsun/
 |       |       |   |-- ProductDetailPage.tsx
 |       |       |   |-- ProductEditPage.tsx
 |       |       |   `-- ProductsPage.tsx
+|       |       |-- sales/
+|       |       |   |-- InvoiceDetailPage.tsx
+|       |       |   |-- InvoiceListPage.tsx
+|       |       |   |-- OrderCreatePage.tsx
+|       |       |   |-- OrderDetailPage.tsx
+|       |       |   |-- OrderListPage.tsx
+|       |       |   |-- PaymentCreatePage.tsx
+|       |       |   |-- PaymentListPage.tsx
+|       |       |   |-- VendorPayoutListPage.tsx
+|       |       |   `-- VendorPayoutRequestPage.tsx
+|       |       |-- inventory/
+|       |       |   |-- InventoryPage.tsx
+|       |       |   |-- PurchaseOrdersPage.tsx
+|       |       |   |-- StockMovementsPage.tsx
+|       |       |   `-- TransfersPage.tsx
+|       |       |-- vendors/
+|       |       |   |-- VendorDetailsPage.tsx
+|       |       |   |-- VendorUsersPage.tsx
+|       |       |   |-- VendorWarehousesPage.tsx
+|       |       |   `-- VendorsPage.tsx
 |       |       |-- roles/
 |       |       |   |-- RoleCreatePage.tsx
 |       |       |   |-- RoleEditPage.tsx
@@ -235,7 +314,10 @@ codexsun/
 |           |-- auth.ts
 |           |-- common.ts
 |           |-- contact.ts
-|           `-- product.ts
+|           |-- inventory.ts
+|           |-- product.ts
+|           |-- sales.ts
+|           `-- vendor.ts
 |
 |-- cxtest/                              <- xUnit infrastructure validation tests
 |   |-- AuthSecurityTests/
@@ -248,6 +330,10 @@ codexsun/
 |   |   |-- RateLimitTests.cs
 |   |   `-- RefreshTokenTests.cs
 |   |-- CommonMasterDataTests.cs
+|   |-- InventoryModuleTests.cs
+|   |-- ProductPricingTests.cs
+|   |-- VendorCompaniesTests.cs
+|   |-- VendorWarehouseAccessTests.cs
 |   `-- TestAssembly.cs
 |
 `-- codexsun.slnx

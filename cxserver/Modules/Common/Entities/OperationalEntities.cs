@@ -1,3 +1,5 @@
+using cxserver.Modules.Vendors.Entities;
+
 namespace cxserver.Modules.Common.Entities;
 
 public sealed class Transport : NamedCommonMasterEntity;
@@ -19,6 +21,8 @@ public sealed class Currency : NamedCommonMasterEntity
 public sealed class Warehouse : NamedCommonMasterEntity
 {
     public string Location { get; set; } = string.Empty;
+    public int? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
 }
 
 public sealed class PaymentTerm : NamedCommonMasterEntity

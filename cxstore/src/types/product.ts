@@ -17,10 +17,15 @@ export interface ProductVariant {
 
 export interface ProductPrice {
   id: number
+  productVariantId?: number | null
   priceType: string
-  amount: number
+  salesChannel: string
+  minQuantity: number
+  price: number
   currencyId?: number | null
   currencyName: string
+  startDate?: string | null
+  endDate?: string | null
 }
 
 export interface ProductImage {
@@ -43,6 +48,8 @@ export interface ProductInventory {
 export interface ProductVendorLink {
   id: number
   vendorUserId: string
+  vendorId?: number | null
+  vendorCompanyName: string
   vendorName: string
   vendorSku: string
   vendorSpecificPrice: number
@@ -65,6 +72,8 @@ export interface ProductSummary {
   id: number
   ownerUserId: string
   vendorUserId?: string | null
+  vendorId?: number | null
+  vendorCompanyName: string
   vendorName: string
   groupId?: number | null
   groupName: string
@@ -114,9 +123,14 @@ export interface ProductVariantInput {
 }
 
 export interface ProductPriceInput {
+  productVariantId?: number | null
   priceType: string
-  amount: number
+  salesChannel: string
+  minQuantity: number
+  price: number
   currencyId?: number | null
+  startDate?: string | null
+  endDate?: string | null
 }
 
 export interface ProductImageInput {

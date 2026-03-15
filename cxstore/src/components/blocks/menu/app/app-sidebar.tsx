@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
 
-import { getAdminMenuItems, getCommonMenuItems, getMasterMenuItems } from "@/components/admin/menu/admin-menu"
+import { getAdminMenuItems, getCommonMenuItems, getInventoryMenuItems, getMasterMenuItems, getSalesMenuItems, getVendorMenuItems } from "@/components/admin/menu/admin-menu"
 import { NavMain } from "./nav-main"
 import { NavSecondary } from "./nav-secondary"
 import { NavUser } from "./nav-user"
@@ -21,6 +21,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const auth = useAuth()
   const adminItems = getAdminMenuItems(auth.user?.role)
   const masterItems = getMasterMenuItems(auth.user?.role)
+  const salesItems = getSalesMenuItems(auth.user?.role)
+  const inventoryItems = getInventoryMenuItems(auth.user?.role)
+  const vendorItems = getVendorMenuItems(auth.user?.role)
   const commonItems = getCommonMenuItems(auth.user?.role)
 
   const navMain = [
@@ -79,6 +82,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: masterItems[0]?.url ?? "/dashboard",
             icon: <DatabaseIcon />,
             items: masterItems,
+          },
+        ]
+      : []),
+    ...(salesItems.length > 0
+      ? [
+          {
+            title: "Sales",
+            url: salesItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: salesItems,
+          },
+        ]
+      : []),
+    ...(inventoryItems.length > 0
+      ? [
+          {
+            title: "Inventory",
+            url: inventoryItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: inventoryItems,
+          },
+        ]
+      : []),
+    ...(vendorItems.length > 0
+      ? [
+          {
+            title: "Vendors",
+            url: vendorItems[0]?.url ?? "/dashboard",
+            icon: <DatabaseIcon />,
+            items: vendorItems,
           },
         ]
       : []),

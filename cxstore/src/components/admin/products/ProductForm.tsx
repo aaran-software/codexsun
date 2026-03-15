@@ -13,6 +13,7 @@ import type { ProductDetail, ProductUpsertRequest } from "@/types/product"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
@@ -32,6 +33,9 @@ type AttributeEditor = {
 type ProductFormState = Omit<ProductUpsertRequest, "attributes"> & {
   attributes: AttributeEditor[]
 }
+
+const priceTypeOptions = ["Retail", "Wholesale", "Vendor", "Offer"] as const
+const salesChannelOptions = ["Online", "Wholesale", "Vendor", "Marketplace"] as const
 
 function createEmptyState(): ProductFormState {
   return {
@@ -54,7 +58,7 @@ function createEmptyState(): ProductFormState {
     isPublished: true,
     isActive: true,
     variants: [{ sku: "", variantName: "", price: 0, costPrice: 0, inventoryQuantity: 0 }],
-    prices: [{ priceType: "Retail", amount: 0, currencyId: null }],
+    prices: [{ productVariantId: null, priceType: "Retail", salesChannel: "Online", minQuantity: 1, price: 0, currencyId: null, startDate: null, endDate: null }],
     images: [{ imageUrl: "", altText: "", isPrimary: true, sortOrder: 1 }],
     inventory: [{ warehouseId: null, quantity: 0, reservedQuantity: 0, reorderLevel: 0 }],
     vendorLinks: [],
@@ -83,7 +87,16 @@ function fromDetail(detail: ProductDetail): ProductFormState {
     isPublished: detail.isPublished,
     isActive: detail.isActive,
     variants: detail.variants.length > 0 ? detail.variants.map((variant) => ({ sku: variant.sku, variantName: variant.variantName, price: variant.price, costPrice: variant.costPrice, inventoryQuantity: variant.inventoryQuantity })) : createEmptyState().variants,
-    prices: detail.prices.length > 0 ? detail.prices.map((price) => ({ priceType: price.priceType, amount: price.amount, currencyId: price.currencyId ?? null })) : createEmptyState().prices,
+    prices: detail.prices.length > 0 ? detail.prices.map((price) => ({
+      productVariantId: price.productVariantId ?? null,
+      priceType: price.priceType,
+      salesChannel: price.salesChannel,
+      minQuantity: price.minQuantity,
+      price: price.price,
+      currencyId: price.currencyId ?? null,
+      startDate: toDateInputValue(price.startDate),
+      endDate: toDateInputValue(price.endDate),
+    })) : createEmptyState().prices,
     images: detail.images.length > 0 ? detail.images.map((image) => ({ imageUrl: image.imageUrl, altText: image.altText, isPrimary: image.isPrimary, sortOrder: image.sortOrder })) : createEmptyState().images,
     inventory: detail.inventory.length > 0 ? detail.inventory.map((item) => ({ warehouseId: item.warehouseId ?? null, quantity: item.quantity, reservedQuantity: item.reservedQuantity, reorderLevel: item.reorderLevel })) : createEmptyState().inventory,
     vendorLinks: detail.vendorLinks.map((link) => ({ vendorUserId: link.vendorUserId, vendorSku: link.vendorSku, vendorSpecificPrice: link.vendorSpecificPrice, vendorInventory: link.vendorInventory })),
@@ -145,9 +158,30 @@ export function ProductForm({ title, description, submitLabel, initialValue, onS
     setSubmitting(true)
 
     try {
+      const normalizedPrices = form.prices.map((price) => ({
+        ...price,
+        priceType: price.priceType.trim(),
+        salesChannel: price.salesChannel.trim(),
+        minQuantity: Math.max(1, Number.isFinite(price.minQuantity) ? price.minQuantity : 1),
+        price: Number.isFinite(price.price) ? price.price : 0,
+        startDate: normalizeDateValue(price.startDate),
+        endDate: normalizeDateValue(price.endDate),
+      }))
+      const primaryRetailPrice = normalizedPrices.find((price) => price.priceType === "Retail")
+
+      if (!primaryRetailPrice) {
+        throw new Error("A retail price row is required.")
+      }
+
+      if (normalizedPrices.some((price) => price.minQuantity < 1)) {
+        throw new Error("Minimum quantity must be at least 1 for every price row.")
+      }
+
       await onSubmit({
         ...form,
         vendorUserId: auth.user?.role === "Vendor" ? auth.user.id : form.vendorUserId || null,
+        basePrice: primaryRetailPrice.price,
+        prices: normalizedPrices,
         attributes: form.attributes
           .filter((attribute) => attribute.name.trim().length > 0)
           .map((attribute) => ({
@@ -280,19 +314,41 @@ export function ProductForm({ title, description, submitLabel, initialValue, onS
           </FormSection>
 
           <FormSection title="Price Tiers" description="Additional price levels for retail, wholesale, dealer, or channel-specific pricing.">
-            <SectionHeader title="Tier Rows" onAdd={() => setForm((current) => ({ ...current, prices: [...current.prices, { priceType: "", amount: 0, currencyId: current.currencyId }] }))} />
+            <SectionHeader title="Tier Rows" onAdd={() => setForm((current) => ({ ...current, prices: [...current.prices, { productVariantId: null, priceType: "Retail", salesChannel: "Online", minQuantity: 1, price: 0, currencyId: current.currencyId, startDate: null, endDate: null }] }))} />
             <div className="space-y-4">
               {form.prices.map((price, index) => (
                 <InlinePanel key={`price-${index}`}>
-                  <div className="grid gap-4 md:grid-cols-[1fr_1fr_220px_auto]">
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[180px_180px_120px_1fr_180px_180px_auto]">
                     <Field label="Price Type">
-                      <Input value={price.priceType} onChange={(event) => updateArray(setForm, "prices", index, { ...price, priceType: event.target.value })} placeholder="Retail, Wholesale..." />
+                      <Select value={price.priceType} onValueChange={(value) => updateArray(setForm, "prices", index, { ...price, priceType: value ?? "Retail" })}>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent>
+                          {priceTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </Field>
-                    <Field label="Amount">
-                      <Input type="number" value={price.amount} onChange={(event) => updateArray(setForm, "prices", index, { ...price, amount: Number(event.target.value) })} placeholder="Amount" />
+                    <Field label="Sales Channel">
+                      <Select value={price.salesChannel} onValueChange={(value) => updateArray(setForm, "prices", index, { ...price, salesChannel: value ?? "Online" })}>
+                        <SelectTrigger><SelectValue placeholder="Select channel" /></SelectTrigger>
+                        <SelectContent>
+                          {salesChannelOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field label="Min Quantity">
+                      <Input type="number" min={1} value={price.minQuantity} onChange={(event) => updateArray(setForm, "prices", index, { ...price, minQuantity: Math.max(1, Number(event.target.value)) })} placeholder="1" />
+                    </Field>
+                    <Field label="Price">
+                      <Input type="number" value={price.price} onChange={(event) => updateArray(setForm, "prices", index, { ...price, price: Number(event.target.value) })} placeholder="Price" />
                     </Field>
                     <Field label="Currency">
                       <CommonMasterLookup masterKey="currencies" value={toLookupValue(price.currencyId)} onChange={(value) => updateArray(setForm, "prices", index, { ...price, currencyId: toNumberOrNull(value) })} options={currencies} onOptionsChange={setCurrencies} placeholder="Currency" />
+                    </Field>
+                    <Field label="Start Date">
+                      <Input type="date" value={price.startDate ?? ""} onChange={(event) => updateArray(setForm, "prices", index, { ...price, startDate: event.target.value || null })} />
+                    </Field>
+                    <Field label="End Date">
+                      <Input type="date" value={price.endDate ?? ""} onChange={(event) => updateArray(setForm, "prices", index, { ...price, endDate: event.target.value || null })} />
                     </Field>
                     <div className="flex items-end">
                       <Button type="button" variant="outline" onClick={() => removeArrayItem(setForm, "prices", index)}>Remove</Button>
@@ -424,6 +480,14 @@ function toLookupValue(value: number | null | undefined) {
 
 function toNumberOrNull(value: string) {
   return value ? Number(value) : null
+}
+
+function toDateInputValue(value: string | null | undefined) {
+  return value ? value.slice(0, 10) : null
+}
+
+function normalizeDateValue(value: string | null | undefined) {
+  return value ? value : null
 }
 
 function updateArray<T extends keyof ProductFormState>(

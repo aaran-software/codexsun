@@ -10,6 +10,22 @@ namespace cxserver.Modules.Products.Services;
 
 public sealed class ProductService(CodexsunDbContext dbContext)
 {
+    private static readonly HashSet<string> AllowedPriceTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Retail",
+        "Wholesale",
+        "Vendor",
+        "Offer"
+    };
+
+    private static readonly HashSet<string> AllowedSalesChannels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Online",
+        "Wholesale",
+        "Vendor",
+        "Marketplace"
+    };
+
     public async Task<IReadOnlyList<ProductCategoryResponse>> GetCategoriesAsync(bool includeInactive, CancellationToken cancellationToken)
     {
         return await dbContext.ProductCategories
@@ -103,6 +119,8 @@ public sealed class ProductService(CodexsunDbContext dbContext)
                 Id = x.Id,
                 OwnerUserId = x.OwnerUserId,
                 VendorUserId = x.VendorUserId,
+                VendorId = x.VendorId,
+                VendorCompanyName = x.Vendor != null ? x.Vendor.CompanyName : string.Empty,
                 VendorName = x.VendorUser != null ? x.VendorUser.Username : string.Empty,
                 GroupId = x.GroupId,
                 GroupName = x.Group != null ? x.Group.Name : string.Empty,
@@ -147,13 +165,20 @@ public sealed class ProductService(CodexsunDbContext dbContext)
                     .ToList(),
                 Prices = x.Prices
                     .OrderBy(price => price.PriceType)
+                    .ThenBy(price => price.SalesChannel)
+                    .ThenBy(price => price.MinQuantity)
                     .Select(price => new ProductPriceResponse
                     {
                         Id = price.Id,
+                        ProductVariantId = price.ProductVariantId,
                         PriceType = price.PriceType,
-                        Amount = price.Amount,
+                        SalesChannel = price.SalesChannel,
+                        MinQuantity = price.MinQuantity,
+                        Price = price.Price,
                         CurrencyId = price.CurrencyId,
-                        CurrencyName = price.Currency != null ? price.Currency.Name : string.Empty
+                        CurrencyName = price.Currency != null ? price.Currency.Name : string.Empty,
+                        StartDate = price.StartDate,
+                        EndDate = price.EndDate
                     })
                     .ToList(),
                 Images = x.Images
@@ -186,6 +211,8 @@ public sealed class ProductService(CodexsunDbContext dbContext)
                     {
                         Id = link.Id,
                         VendorUserId = link.VendorUserId,
+                        VendorId = link.VendorId,
+                        VendorCompanyName = link.Vendor != null ? link.Vendor.CompanyName : string.Empty,
                         VendorName = link.VendorUser.Username,
                         VendorSku = link.VendorSku,
                         VendorSpecificPrice = link.VendorSpecificPrice,
@@ -218,6 +245,9 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         await EnsureProductReferencesAsync(request, cancellationToken);
         await EnsureVendorAssignmentsAsync(request, actorUserId, role, cancellationToken);
         ValidateRequest(request);
+        var primaryRetailPrice = GetPrimaryRetailPrice(request);
+        var resolvedVendorUserId = ResolveVendorUserId(request.VendorUserId, actorUserId, role);
+        var resolvedVendorId = await ResolveVendorIdAsync(resolvedVendorUserId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var slug = string.IsNullOrWhiteSpace(request.Slug) ? ToSlug(request.Name) : ToSlug(request.Slug);
@@ -226,7 +256,8 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         var product = new Product
         {
             OwnerUserId = actorUserId,
-            VendorUserId = ResolveVendorUserId(request.VendorUserId, actorUserId, role),
+            VendorUserId = resolvedVendorUserId,
+            VendorId = resolvedVendorId,
             GroupId = request.GroupId,
             TypeId = request.TypeId,
             CategoryId = request.CategoryId,
@@ -240,7 +271,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             Slug = slug,
             ShortDescription = request.ShortDescription.Trim(),
             Description = request.Description.Trim(),
-            BasePrice = request.BasePrice,
+            BasePrice = primaryRetailPrice.Price,
             CostPrice = request.CostPrice,
             IsPublished = request.IsPublished,
             IsActive = request.IsActive,
@@ -248,7 +279,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             UpdatedAt = now
         };
 
-        ApplyProductCollections(product, request, now);
+        await ApplyProductCollectionsAsync(product, request, now, cancellationToken);
 
         dbContext.Products.Add(product);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -267,7 +298,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             .Include(x => x.Attributes).ThenInclude(attribute => attribute.Values)
             .SingleOrDefaultAsync(x => x.Id == productId, cancellationToken);
 
-        if (product is null || !CanAccess(product, actorUserId, role))
+        if (product is null || !await CanAccessAsync(product, actorUserId, role, cancellationToken))
         {
             return null;
         }
@@ -275,12 +306,16 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         await EnsureProductReferencesAsync(request, cancellationToken);
         await EnsureVendorAssignmentsAsync(request, actorUserId, role, cancellationToken);
         ValidateRequest(request);
+        var primaryRetailPrice = GetPrimaryRetailPrice(request);
+        var resolvedVendorUserId = ResolveVendorUserId(request.VendorUserId, actorUserId, role);
+        var resolvedVendorId = await ResolveVendorIdAsync(resolvedVendorUserId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var slug = string.IsNullOrWhiteSpace(request.Slug) ? ToSlug(request.Name) : ToSlug(request.Slug);
         await EnsureUniqueProductAsync(request.Sku.Trim(), slug, productId, cancellationToken);
 
-        product.VendorUserId = ResolveVendorUserId(request.VendorUserId, actorUserId, role);
+        product.VendorUserId = resolvedVendorUserId;
+        product.VendorId = resolvedVendorId;
         product.GroupId = request.GroupId;
         product.TypeId = request.TypeId;
         product.CategoryId = request.CategoryId;
@@ -294,7 +329,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         product.Slug = slug;
         product.ShortDescription = request.ShortDescription.Trim();
         product.Description = request.Description.Trim();
-        product.BasePrice = request.BasePrice;
+        product.BasePrice = primaryRetailPrice.Price;
         product.CostPrice = request.CostPrice;
         product.IsPublished = request.IsPublished;
         product.IsActive = request.IsActive;
@@ -308,7 +343,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         dbContext.ProductAttributeValues.RemoveRange(product.Attributes.SelectMany(attribute => attribute.Values));
         dbContext.ProductAttributes.RemoveRange(product.Attributes);
 
-        ApplyProductCollections(product, request, now);
+        await ApplyProductCollectionsAsync(product, request, now, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Product.Update", nameof(Product), product.Id.ToString(), ipAddress, cancellationToken);
@@ -318,7 +353,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
     public async Task<bool> DeleteProductAsync(int productId, Guid actorUserId, string role, string ipAddress, CancellationToken cancellationToken)
     {
         var product = await dbContext.Products.SingleOrDefaultAsync(x => x.Id == productId, cancellationToken);
-        if (product is null || !CanAccess(product, actorUserId, role))
+        if (product is null || !await CanAccessAsync(product, actorUserId, role, cancellationToken))
         {
             return false;
         }
@@ -336,6 +371,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         var query = dbContext.Products
             .AsNoTracking()
             .Include(x => x.VendorUser)
+            .Include(x => x.Vendor)
             .Include(x => x.Group)
             .Include(x => x.Type)
             .Include(x => x.Category)
@@ -349,6 +385,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             .Include(x => x.Images)
             .Include(x => x.Inventory).ThenInclude(inventory => inventory.Warehouse)
             .Include(x => x.VendorLinks).ThenInclude(link => link.VendorUser)
+            .Include(x => x.VendorLinks).ThenInclude(link => link.Vendor)
             .Include(x => x.Attributes).ThenInclude(attribute => attribute.Values)
             .AsQueryable();
 
@@ -357,9 +394,21 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             query = query.Where(x => x.IsActive);
         }
 
-        return role == "Admin"
-            ? query
-            : query.Where(x => x.OwnerUserId == actorUserId || x.VendorUserId == actorUserId || x.VendorLinks.Any(link => link.VendorUserId == actorUserId));
+        if (role == "Admin")
+        {
+            return query;
+        }
+
+        var actorVendorIds = dbContext.VendorUsers
+            .Where(x => x.UserId == actorUserId)
+            .Select(x => x.VendorId);
+
+        return query.Where(x =>
+            x.OwnerUserId == actorUserId
+            || x.VendorUserId == actorUserId
+            || (x.VendorId.HasValue && actorVendorIds.Contains(x.VendorId.Value))
+            || x.VendorLinks.Any(link => link.VendorUserId == actorUserId)
+            || x.VendorLinks.Any(link => link.VendorId.HasValue && actorVendorIds.Contains(link.VendorId.Value)));
     }
 
     private static Expression<Func<Product, ProductListItemResponse>> MapListItem()
@@ -369,6 +418,8 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             Id = x.Id,
             OwnerUserId = x.OwnerUserId,
             VendorUserId = x.VendorUserId,
+            VendorId = x.VendorId,
+            VendorCompanyName = x.Vendor != null ? x.Vendor.CompanyName : string.Empty,
             VendorName = x.VendorUser != null ? x.VendorUser.Username : string.Empty,
             GroupId = x.GroupId,
             GroupName = x.Group != null ? x.Group.Name : string.Empty,
@@ -405,6 +456,10 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         await EnsureExistsAsync(request.GstPercentId, dbContext.GstPercents, "GST percent", cancellationToken);
         await EnsureExistsAsync(request.BrandId, dbContext.Brands, "Brand", cancellationToken);
         await EnsureExistsAsync(request.HsnCodeId, dbContext.HsnCodes, "HSN code", cancellationToken);
+        foreach (var price in request.Prices.Where(item => item.CurrencyId.HasValue))
+        {
+            await EnsureExistsAsync(price.CurrencyId, dbContext.Currencies, "Price currency", cancellationToken);
+        }
 
         foreach (var inventory in request.Inventory.Where(item => item.WarehouseId.HasValue))
         {
@@ -488,10 +543,57 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         {
             throw new InvalidOperationException("Product name is required.");
         }
+
+        if (request.Prices.Count == 0)
+        {
+            throw new InvalidOperationException("At least one product price row is required.");
+        }
+
+        foreach (var price in request.Prices)
+        {
+            if (string.IsNullOrWhiteSpace(price.PriceType) || !AllowedPriceTypes.Contains(price.PriceType.Trim()))
+            {
+                throw new InvalidOperationException("Price type must be Retail, Wholesale, Vendor, or Offer.");
+            }
+
+            if (string.IsNullOrWhiteSpace(price.SalesChannel) || !AllowedSalesChannels.Contains(price.SalesChannel.Trim()))
+            {
+                throw new InvalidOperationException("Sales channel must be Online, Wholesale, Vendor, or Marketplace.");
+            }
+
+            if (price.MinQuantity < 1)
+            {
+                throw new InvalidOperationException("Minimum quantity must be at least 1.");
+            }
+
+            if (price.StartDate.HasValue && price.EndDate.HasValue && price.EndDate.Value < price.StartDate.Value)
+            {
+                throw new InvalidOperationException("Price end date must be on or after the start date.");
+            }
+        }
+
+        if (!request.Prices.Any(price => string.Equals(price.PriceType.Trim(), "Retail", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException("A retail price row is required.");
+        }
     }
 
-    private static bool CanAccess(Product product, Guid actorUserId, string role)
-        => role == "Admin" || product.OwnerUserId == actorUserId || product.VendorUserId == actorUserId;
+    private async Task<bool> CanAccessAsync(Product product, Guid actorUserId, string role, CancellationToken cancellationToken)
+    {
+        if (role == "Admin" || product.OwnerUserId == actorUserId || product.VendorUserId == actorUserId)
+        {
+            return true;
+        }
+
+        if (!product.VendorId.HasValue)
+        {
+            return false;
+        }
+
+        return await dbContext.VendorUsers.AnyAsync(
+            x => x.UserId == actorUserId && x.VendorId == product.VendorId.Value,
+            cancellationToken);
+    }
 
     private static string ToSlug(string value)
     {
@@ -519,7 +621,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
         return builder.ToString().Trim('-');
     }
 
-    private static void ApplyProductCollections(Product product, ProductUpsertRequest request, DateTimeOffset now)
+    private async Task ApplyProductCollectionsAsync(Product product, ProductUpsertRequest request, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var variants = request.Variants
             .Where(variant => !string.IsNullOrWhiteSpace(variant.Sku) && !string.IsNullOrWhiteSpace(variant.VariantName))
@@ -536,14 +638,21 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             })
             .ToList();
 
+        var vendorLinkVendorIds = await ResolveVendorIdsAsync(request.VendorLinks.Select(link => link.VendorUserId), cancellationToken);
+
         product.Variants = variants;
         product.Prices = request.Prices
-            .Where(price => !string.IsNullOrWhiteSpace(price.PriceType))
+            .Where(price => !string.IsNullOrWhiteSpace(price.PriceType) && !string.IsNullOrWhiteSpace(price.SalesChannel))
             .Select(price => new ProductPrice
             {
-                PriceType = price.PriceType.Trim(),
-                Amount = price.Amount,
+                ProductVariantId = price.ProductVariantId,
+                PriceType = NormalizePriceType(price.PriceType),
+                SalesChannel = NormalizeSalesChannel(price.SalesChannel),
+                MinQuantity = price.MinQuantity,
+                Price = price.Price,
                 CurrencyId = price.CurrencyId,
+                StartDate = price.StartDate,
+                EndDate = price.EndDate,
                 IsActive = true,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -578,6 +687,7 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             .Select(link => new ProductVendorLink
             {
                 VendorUserId = link.VendorUserId,
+                VendorId = vendorLinkVendorIds.TryGetValue(link.VendorUserId, out var vendorId) ? vendorId : null,
                 VendorSku = link.VendorSku.Trim(),
                 VendorSpecificPrice = link.VendorSpecificPrice,
                 VendorInventory = link.VendorInventory,
@@ -615,6 +725,65 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             product.Images.First().IsPrimary = true;
         }
     }
+
+    private async Task<int?> ResolveVendorIdAsync(Guid? vendorUserId, CancellationToken cancellationToken)
+    {
+        if (!vendorUserId.HasValue)
+        {
+            return null;
+        }
+
+        return await dbContext.VendorUsers
+            .Where(x => x.UserId == vendorUserId.Value)
+            .Select(x => (int?)x.VendorId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task<Dictionary<Guid, int?>> ResolveVendorIdsAsync(IEnumerable<Guid> vendorUserIds, CancellationToken cancellationToken)
+    {
+        var ids = vendorUserIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await dbContext.VendorUsers
+            .Where(x => ids.Contains(x.UserId))
+            .GroupBy(x => x.UserId)
+            .Select(x => new { x.Key, VendorId = (int?)x.Select(item => item.VendorId).FirstOrDefault() })
+            .ToDictionaryAsync(x => x.Key, x => x.VendorId, cancellationToken);
+    }
+
+    private static ProductPriceRequest GetPrimaryRetailPrice(ProductUpsertRequest request)
+    {
+        var retailPrice = request.Prices
+            .Where(price => string.Equals(price.PriceType.Trim(), "Retail", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(price => string.Equals(price.SalesChannel.Trim(), "Online", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .ThenBy(price => price.MinQuantity)
+            .FirstOrDefault();
+
+        return retailPrice ?? throw new InvalidOperationException("A retail price row is required.");
+    }
+
+    private static string NormalizePriceType(string value)
+        => value.Trim().ToLowerInvariant() switch
+        {
+            "retail" => "Retail",
+            "wholesale" => "Wholesale",
+            "vendor" => "Vendor",
+            "offer" => "Offer",
+            _ => value.Trim()
+        };
+
+    private static string NormalizeSalesChannel(string value)
+        => value.Trim().ToLowerInvariant() switch
+        {
+            "online" => "Online",
+            "wholesale" => "Wholesale",
+            "vendor" => "Vendor",
+            "marketplace" => "Marketplace",
+            _ => value.Trim()
+        };
 
     private async Task WriteAuditLogAsync(Guid? userId, string action, string entityType, string? entityId, string ipAddress, CancellationToken cancellationToken)
     {

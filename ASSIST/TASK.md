@@ -2,32 +2,31 @@
 
 ## Prompt
 
-036_COMMERCE_TRANSACTION_SYSTEM
+PROMPT 042 - Vendor-Owned Warehouses And Vendor-Scoped Access
 
 ## Objective
 
-Implement cart, order, billing, payment, and vendor-payout capabilities in the repository’s existing backend/frontend architecture without creating the prompt’s requested but nonexistent `cxstore/src/modules` feature layout.
+Extend the existing vendor-company implementation so warehouses can be owned by vendor businesses and operational access is scoped by vendor company membership across inventory-facing and vendor-facing workflows, with matching frontend support.
 
 ## Constraints
 
 - Follow `ASSIST/AI_RULES.md` and `ASSIST/STANDARDS.md`.
-- Capture the prompt exactly in `prompts/036.md` before implementation.
-- Reuse existing module conventions in `cxserver/Modules/*` and current frontend organization under `cxstore/src/{api,components,pages,types}`.
-- Do not introduce a parallel company or vendor domain if the current Auth role model and existing product/contact ownership are the active isolation mechanism.
-- Preserve existing Auth, Common, Contacts, Products, and admin UX behavior.
-- Ensure backend and frontend builds pass before closeout.
+- Capture the prompt in `prompts/042.md` before implementation.
+- Do not create a second warehouse system; reuse the existing Common `warehouses` master.
+- Preserve existing module boundaries and keep changes additive.
+- Do not remove existing `vendor_user_id` behavior; expand access and ownership through `vendor_id` and vendor-company membership.
+- Keep backend/frontend architecture intact and validate builds/tests after implementation.
 
 ## Observed Repository State
 
-- The backend currently uses transactional modules such as `Contacts` and `Products` with entities, configurations, DTOs, services, and controllers under `cxserver/Modules/*`.
-- Common master coverage already includes reusable `currencies`, `warehouses`, and related operational masters that the commerce transaction system should reuse.
-- The prompt references frontend folders under `cxstore/src/modules`, but the real frontend is built around shared `api`, `components`, `pages`, `types`, and `state` folders.
-- Vendor isolation today is implemented through Auth users plus optional `VendorUserId` ownership on transactional records rather than separate `companies` or `vendors` tables.
+- `warehouses` currently live in the Common operational master module and only store `name` and `location`.
+- Inventory already references warehouses everywhere but does not currently enforce vendor-company ownership.
+- Products and Sales already started additive `vendor_id` support, but Contacts and warehouse-facing UX still rely on individual-user assumptions or admin-only master screens.
+- Vendor users currently have no dedicated warehouse page or inventory routes in the frontend.
 
 ## Plan
 
-1. Analyze current backend module patterns, database model registration, auth permissions, and frontend page/routing/menu conventions relevant to transactional commerce features.
-2. Design an adapted commerce transaction scope that fits the current repository, including carts, orders, invoices, payments, vendor earnings, and vendor payouts tied to existing contacts/products/common masters.
-3. Implement backend entities, configurations, DTOs, validators, services, controllers, permission seeding, and migrations for the missing commerce transaction capabilities.
-4. Implement frontend API clients, types, pages, shared UI pieces, route wiring, and menu updates using the repo’s current structure rather than a new module folder pattern.
-5. Run builds, then update ASSIST documentation and the project log to reflect the new transaction architecture.
+1. Extend the existing warehouse master with additive vendor ownership and expose vendor-aware warehouse listing without changing the master-data architecture.
+2. Update backend access rules so vendor-company membership governs warehouse visibility and inventory/contact access where appropriate.
+3. Add frontend support for warehouse ownership in the admin warehouse form and vendor-facing warehouse/inventory screens/routes.
+4. Add/update tests, run migrations/build/tests, and update ASSIST documentation/logs.

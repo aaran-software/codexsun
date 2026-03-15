@@ -2,6 +2,31 @@
 
 ---
 
+CX-038
+- Extended the existing Common `warehouses` master with nullable `vendor_id` ownership, generated the `AddVendorWarehouseOwnership` migration, and kept the current architecture intact instead of introducing a parallel vendor-warehouse table.
+- Updated vendor scope enforcement across Contacts and Inventory so vendor users inherit warehouse and contact visibility through `vendor_users` company membership while preserving all existing `vendor_user_id` references.
+- Added vendor-facing warehouse and inventory frontend routes, the `/vendors/warehouses` API flow, `VendorWarehousesPage`, warehouse ownership fields in the Common master UI, and `VendorWarehouseAccessTests.cs`, then revalidated backend/frontend builds and the full test suite with 40 passing tests.
+
+CX-036
+- Extended the existing `product_prices` model with multi-channel pricing fields, generated the `AddMultiChannelProductPricing` migration, and updated Products/Sales pricing logic to resolve offer, wholesale, vendor, and retail prices without splitting the product catalog.
+- Updated the admin product editor and shared product types so pricing rows now capture `price_type`, `sales_channel`, `min_quantity`, and seasonal date windows on the existing product form.
+- Added pricing integration coverage in `cxtest/ProductPricingTests.cs`, then revalidated backend build, frontend production build, full solution build, and the complete `cxtest` suite with 36 passing tests.
+
+CX-035
+- Added `cxserver/Modules/Inventory` with inventory ledger, purchase order, stock movement, warehouse transfer, and inventory adjustment entities, EF configurations, DTOs, services, controllers, DbContext registration, permission seeding, and the `AddInventoryWarehouseModule` migration.
+- Reused the existing `warehouses` Common master and `product_inventory` Products snapshot table instead of changing the current architecture, while writing inventory history and document flows into inventory-specific tables with audit-log coverage.
+- Added `cxstore` inventory APIs, types, admin pages, and sidebar navigation, then revalidated backend build, frontend production build, full solution build, and the `cxtest` integration suite including the new inventory integration test.
+
+CX-034
+- Captured the repository architecture-discovery prompt in `prompts/038.md` and updated `ASSIST/TASK.md` for a documentation-only repository analysis task.
+- Analyzed the active solution structure across `cxserver`, `cxstore`, `cx.AppHost`, `.container`, `cxtest`, EF configurations, migrations, routing, and frontend API/state layers.
+- Added `ASSIST/PROJECT_STRUCTURE.md` as the canonical architecture report, documenting the active backend/frontend modules, route/layout map, 60-table active schema, infrastructure wiring, security model, module dependencies, and the inactive `AfterSales` scaffolding separately from the live system.
+
+CX-033
+- Added `cxserver/Modules/Sales` with EF entities, configurations, services, REST controllers, permission seed expansion, and the `AddSalesCommerceModule` migration for carts, orders, invoices, payments, vendor earnings, and vendor payouts.
+- Reused the existing Contacts, Products, Common, and Finance modules instead of creating parallel transaction masters, wiring order checkout from cart items, invoice generation from orders, payment recording against invoices, and vendor settlement generation from vendor order items.
+- Added `cxstore` sales APIs, transaction types, storefront cart and checkout pages, admin and vendor Sales pages, route integration, and sidebar Sales navigation, then revalidated backend and frontend production builds.
+
 CX-032
 - Extracted a reusable frontend lookup layer under `cxstore/src/components/lookups`, including a shared `AutocompleteLookup` primitive plus common-master wrappers for country, state, district, city, and other create-capable master selections.
 - Refactored `CommonUpsertDialog`, `ContactForm`, and `ProductForm` to use the same autocomplete pattern so master popups and page forms share selection, filtering, and create-on-no-results behavior.
@@ -120,6 +145,11 @@ CX-010
 CX-009
 - Captured the current repository delivery state for infrastructure, authentication, admin management, and frontend auth UI work.
 - Prepared the repository for a full-worktree commit and remote push on `main` following the Codexsun AI operating rules.
+CX-037
+- Added `Modules/Vendors` with vendor company, vendor user, vendor address, and vendor bank account entities plus CRUD/assignment APIs.
+- Extended Products, Inventory, and Sales with additive `vendor_id` references while preserving all existing `vendor_user_id` relationships and request flows.
+- Added admin vendor pages and menu/routes in `cxstore`, created the `AddVendorCompanySupport` EF migration, updated project structure documentation, and verified backend/frontend builds plus 38 passing tests.
+
 - Verified build status before source control handoff and recorded this commit/push activity in the project log.
 
 CX-008

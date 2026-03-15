@@ -29,6 +29,14 @@ Connection string:
 
 The database now uses a consolidated `ProductionBaseline` migration as the clean schema baseline for local and production-oriented deployments.
 
+Latest incremental pricing migration:
+
+- `AddMultiChannelProductPricing`
+
+Latest incremental vendor-warehouse migration:
+
+- `AddVendorWarehouseOwnership`
+
 ## Auth Schema
 
 The baseline creates the security tables below in PostgreSQL:
@@ -72,6 +80,10 @@ Current Common master tables:
 - `warehouses`
 - `payment_terms`
 
+Warehouse ownership extension:
+
+- `warehouses.vendor_id -> vendors.id` is now nullable so existing shared warehouses remain valid while vendor-owned warehouses can be scoped to a vendor company.
+
 The current frontend Common admin area is aligned only to these existing baseline-backed Common tables. It does not assume Prompt 013 tables that are not yet present in the live schema.
 
 Additional baseline tables:
@@ -82,6 +94,37 @@ Additional baseline tables:
 - `transactions`
 - `system_settings`
 - `number_series`
+
+Inventory module tables:
+
+- `inventory_ledgers`
+- `purchase_orders`
+- `purchase_order_items`
+- `stock_movements`
+- `warehouse_transfers`
+- `warehouse_transfer_items`
+- `inventory_adjustments`
+- `inventory_adjustment_items`
+
+Vendor business tables:
+
+- `vendors`
+- `vendor_users`
+- `vendor_addresses`
+- `vendor_bank_accounts`
+
+Extended product pricing table:
+
+- `product_prices`
+  - `product_id`
+  - `product_variant_id`
+  - `currency_id`
+  - `price`
+  - `price_type`
+  - `sales_channel`
+  - `min_quantity`
+  - `start_date`
+  - `end_date`
 
 All Common tables use integer identities plus `IsActive`, `CreatedAt`, and `UpdatedAt`.
 
@@ -112,6 +155,71 @@ Representative indexes and uniqueness rules:
 - `number_series.Name` unique
 
 Search-oriented indexes are also present on common master names and active flags to support autocomplete-style queries.
+
+## Inventory Schema
+
+The `AddInventoryWarehouseModule` migration extends the active schema with warehouse-operation history and document tables while reusing the existing `warehouses` master and `product_inventory` snapshot table.
+
+Relationships:
+
+- `inventory_ledgers` references `products`, optional `product_variants`, `warehouses`, and `users`
+- `purchase_orders` references vendor `users`, `currencies`, and creator `users`
+- `purchase_order_items` references `purchase_orders`, `products`, and optional `product_variants`
+- `stock_movements` references `products`, optional `product_variants`, `warehouses`, and creator `users`
+- `warehouse_transfers` references source and destination `warehouses` plus creator `users`
+- `warehouse_transfer_items` references `warehouse_transfers`, `products`, and optional `product_variants`
+- `inventory_adjustments` references `warehouses` and creator `users`
+- `inventory_adjustment_items` references `inventory_adjustments`, `products`, and optional `product_variants`
+
+Operational note:
+
+- `product_inventory` remains the source of truth for current warehouse quantity on hand.
+- `stock_movements` and `inventory_ledgers` are append-only history tables for inventory transactions.
+
+## Vendor Company And Warehouse Ownership Schema
+
+The `AddVendorCompanySupport` and `AddVendorWarehouseOwnership` migrations extend the schema with a vendor business layer plus additive warehouse ownership, without removing any existing `vendor_user_id` relationships.
+
+Relationships:
+
+- `vendor_users.vendor_id -> vendors.id`
+- `vendor_users.user_id -> users.id`
+- `vendor_addresses.vendor_id -> vendors.id`
+- `vendor_addresses.country_id -> countries.id`
+- `vendor_addresses.state_id -> states.id`
+- `vendor_addresses.district_id -> districts.id`
+- `vendor_addresses.city_id -> cities.id`
+- `vendor_addresses.pincode_id -> pincodes.id`
+- `vendor_bank_accounts.vendor_id -> vendors.id`
+- `vendor_bank_accounts.bank_id -> banks.id`
+- `warehouses.vendor_id -> vendors.id`
+- `products.vendor_id -> vendors.id`
+- `product_vendor_links.vendor_id -> vendors.id`
+- `purchase_orders.vendor_id -> vendors.id`
+- `vendor_earnings.vendor_id -> vendors.id`
+- `vendor_payouts.vendor_id -> vendors.id`
+
+Operational note:
+
+- `users` still represent authenticated actors, while `vendors` represent the business entity shared by multiple vendor staff users.
+- Warehouse ownership is enforced in the application layer for vendor routes and inventory APIs, but the nullable foreign key keeps non-vendor shared warehouses compatible with existing data.
+
+## Multi-Channel Product Pricing Schema
+
+The `AddMultiChannelProductPricing` migration updates the existing `product_prices` table in place instead of introducing parallel product or price tables.
+
+Relationships:
+
+- `product_prices.product_id -> products.id`
+- `product_prices.product_variant_id -> product_variants.id`
+- `product_prices.currency_id -> currencies.id`
+
+Behavioral constraints enforced in the application layer:
+
+- every product must have at least one `Retail` price row
+- `min_quantity` must be `>= 1`
+- `start_date` and `end_date` must form a valid optional offer window
+- pricing resolution order is offer -> wholesale -> vendor -> retail
 
 Frontend note:
 
@@ -148,6 +256,13 @@ Permissions:
 - `User.Read`
 - `User.Update`
 - `User.Delete`
+- `inventory.view`
+- `inventory.manage`
+- `inventory.transfer`
+- `inventory.adjust`
+- `vendors.view`
+- `vendors.manage`
+- `vendors.users.manage`
 
 Bootstrap user:
 

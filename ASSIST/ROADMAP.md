@@ -6,6 +6,9 @@
 - Standardize frontend admin list screens with a full reusable list skeleton covering header, filters, table, footer, and pagination so future master-data and operational pages ship with consistent UX by default.
 - Add a reusable frontend common-master management pattern with shared list and modal upsert flows so future master pages plug into a consistent admin interaction model.
 - Extend shared popup autocomplete creation to dependent location fields beyond the currently wired country and city->district flows, only where enough parent context exists for valid server-side creates.
+- Expand the current product pricing model so a single catalog item can serve retail, wholesale, vendor-channel, and date-bounded offer pricing without forking the product or variant tables.
+- Introduce a vendor-company layer above vendor users so future storefront, warehouse ownership, tax onboarding, and multi-staff vendor operations can target a business entity instead of only individual Auth users.
+- Connect vendor companies to warehouse ownership and enforce vendor-company scoped access across inventory, contacts, and operational vendor workflows.
 
 ## Near Term
 

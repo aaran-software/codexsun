@@ -188,7 +188,9 @@ public sealed class VendorEarningConfiguration : IEntityTypeConfiguration<Vendor
         builder.Property(x => x.VendorAmount).HasColumnType("numeric(18,2)").IsRequired();
         builder.Property(x => x.IsSettled).HasDefaultValue(false);
         builder.HasIndex(x => new { x.VendorUserId, x.IsSettled });
+        builder.HasIndex(x => x.VendorId);
         builder.HasOne(x => x.VendorUser).WithMany().HasForeignKey(x => x.VendorUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Vendor).WithMany().HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.OrderItem).WithMany(x => x.VendorEarnings).HasForeignKey(x => x.OrderItemId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Order).WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
@@ -206,6 +208,7 @@ public sealed class VendorPayoutConfiguration : IEntityTypeConfiguration<VendorP
         builder.Property(x => x.Status).HasMaxLength(32).IsRequired();
         builder.HasIndex(x => x.PayoutNumber).IsUnique();
         builder.HasOne(x => x.VendorUser).WithMany().HasForeignKey(x => x.VendorUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Vendor).WithMany().HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
     }
 }

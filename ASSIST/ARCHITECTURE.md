@@ -119,3 +119,32 @@ codexsun.slnx
 - Vendor isolation is implemented with user ownership and optional `VendorUserId` scoping tied to the current Auth role model, allowing Admin to see everything while Vendor users only see their own contact and product data.
 - Contacts reuse existing Common contact and location masters, while Products reuse Common catalog, pricing, and warehouse masters and add their own transactional tables for categories, variants, prices, images, inventory, vendor links, and attributes.
 - `cxstore` integrates these modules through dedicated admin and vendor pages plus shared editor forms rather than a separate `src/modules` folder, which keeps the implementation aligned with the current frontend architecture.
+
+## Sales Commerce Module Update (2026-03-14)
+
+- `cxserver/Modules/Sales` now groups cart, orders, invoices, payments, vendor earnings, and vendor payouts into one transaction-focused module while still exposing separate REST controllers for each workflow.
+- The sales module reuses existing Common and Finance masters instead of duplicating them: `Currency`, `Warehouse`, `Contact`, `Product`, `ProductVariant`, and `PaymentMode` remain the source of truth for shared references.
+- Order creation is checkout-driven from the cart, automatically creates an invoice, calculates line tax from existing GST percentages, and generates vendor earnings for vendor-owned order items using the current Auth user model for isolation.
+- `cxstore` integrates the module through `salesApi`, storefront cart and checkout pages, and shared admin/vendor Sales pages under the existing route structure instead of introducing the prompt's nonexistent `src/modules` directory.
+
+## Inventory Module Update (2026-03-15)
+
+- `cxserver/Modules/Inventory` adds warehouse operations without changing the modular-monolith structure: entities, EF configurations, DTOs, service logic, and controllers all follow the existing `Modules/<ModuleName>` convention.
+- The module reuses `Warehouse` from `Common`, `Product` and `ProductVariant` from `Products`, and `User` plus `AuditLog` from `Auth`; current stock snapshots continue to live in the existing `product_inventory` table rather than in a new duplicate warehouse-stock table.
+- The new backend APIs cover purchase orders, purchase receiving, warehouse transfers, inventory adjustments, warehouse inventory summaries, product inventory summaries, and stock movement history.
+- `cxstore` integrates the module through `src/api/inventoryApi.ts`, `src/types/inventory.ts`, four admin inventory pages, and admin sidebar wiring under the existing `AppLayout`.
+
+## Multi-Channel Product Pricing Update (2026-03-15)
+
+- The existing `Modules/Products` and `Modules/Sales` architecture was preserved; multi-channel pricing was implemented by extending the existing `product_prices` table and request/response contracts rather than introducing separate retail or wholesale catalog tables.
+- `ProductService` now enforces a mandatory retail price row, normalizes supported price types and sales channels, and persists quantity-based and date-ranged price rows on the existing product aggregate.
+- `SalesService` now resolves unit price from `product_prices` in priority order: active offer, wholesale threshold, vendor-context price, then retail, with the legacy vendor-link price retained as a backward-compatible fallback.
+- `cxstore/src/components/admin/products/ProductForm.tsx` was extended in place so product admins can manage multiple price rows with type, channel, quantity, and seasonal date windows without changing the existing page structure.
+
+## Vendor Company And Warehouse Ownership Update (2026-03-15)
+
+- `cxserver/Modules/Vendors` remains the business layer above vendor users, but the shared `Warehouse` master in `Modules/Common` now carries an optional `VendorId` ownership link instead of introducing a separate vendor-warehouse table.
+- Vendor-company membership is resolved through `vendor_users`, allowing multiple vendor staff users to share the same warehouse, product, purchasing, and inventory visibility boundary.
+- `InventoryService` now enforces warehouse ownership for vendor users on purchase orders, transfers, warehouse inventory views, product inventory summaries, and stock movement history, while admins and staff continue to see the full operational dataset.
+- `ContactService` now treats vendor-company membership as an additive access scope, so vendor staff users can work with contacts assigned to other users in the same vendor business without changing existing `vendor_user_id` references.
+- `VendorService` exposes a vendor-scoped warehouse discovery endpoint consumed by the frontend, and `cxstore` now includes vendor warehouse and vendor inventory routes under the existing `AppLayout` instead of introducing a new frontend architecture.

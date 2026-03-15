@@ -7,6 +7,8 @@ export interface CommonMasterItem {
   percentage?: number | null
   symbol?: string | null
   location?: string | null
+  vendorId?: number | null
+  vendorCompanyName?: string | null
   days?: number | null
   countryId?: number | null
   countryName?: string | null
@@ -80,6 +82,7 @@ export interface CurrencyUpsertRequest {
 export interface WarehouseUpsertRequest {
   name: string
   location: string
+  vendorId?: number | null
 }
 
 export interface PaymentTermUpsertRequest {

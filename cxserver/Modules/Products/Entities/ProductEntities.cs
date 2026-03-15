@@ -1,5 +1,6 @@
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Common.Entities;
+using cxserver.Modules.Vendors.Entities;
 
 namespace cxserver.Modules.Products.Entities;
 
@@ -24,6 +25,8 @@ public sealed class Product : ProductEntity
     public User OwnerUser { get; set; } = null!;
     public Guid? VendorUserId { get; set; }
     public User? VendorUser { get; set; }
+    public int? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
     public int? GroupId { get; set; }
     public ProductGroup? Group { get; set; }
     public int? TypeId { get; set; }
@@ -72,10 +75,16 @@ public sealed class ProductPrice : ProductEntity
 {
     public int ProductId { get; set; }
     public Product Product { get; set; } = null!;
+    public int? ProductVariantId { get; set; }
+    public ProductVariant? ProductVariant { get; set; }
     public string PriceType { get; set; } = string.Empty;
-    public decimal Amount { get; set; }
+    public string SalesChannel { get; set; } = string.Empty;
+    public int MinQuantity { get; set; } = 1;
+    public decimal Price { get; set; }
     public int? CurrencyId { get; set; }
     public Currency? Currency { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
 }
 
 public sealed class ProductImage : ProductEntity
@@ -105,6 +114,8 @@ public sealed class ProductVendorLink : ProductEntity
     public Product Product { get; set; } = null!;
     public Guid VendorUserId { get; set; }
     public User VendorUser { get; set; } = null!;
+    public int? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
     public string VendorSku { get; set; } = string.Empty;
     public decimal VendorSpecificPrice { get; set; }
     public int VendorInventory { get; set; }

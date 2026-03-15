@@ -203,12 +203,16 @@ public sealed partial class CommonMasterDataService
 
     public async Task<IReadOnlyList<CommonMasterDataResponse>> ListWarehousesAsync(CancellationToken cancellationToken)
     {
-        return await dbContext.Warehouses.AsNoTracking().OrderBy(x => x.Name)
+        return await dbContext.Warehouses.AsNoTracking()
+            .Include(x => x.Vendor)
+            .OrderBy(x => x.Name)
             .Select(x => new CommonMasterDataResponse
             {
                 Id = x.Id,
                 Name = x.Name,
                 Location = x.Location,
+                VendorId = x.VendorId,
+                VendorCompanyName = x.Vendor != null ? x.Vendor.CompanyName : null,
                 IsActive = x.IsActive,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
@@ -232,6 +236,7 @@ public sealed partial class CommonMasterDataService
 
     public async Task<CommonMasterDataResponse> CreateWarehouseAsync(WarehouseUpsertRequest request, CancellationToken cancellationToken)
     {
+        await EnsureWarehouseVendorExistsAsync(request.VendorId, cancellationToken);
         var normalized = Normalize(request.Name);
         var exists = await dbContext.Warehouses.AnyAsync(x => x.Name.ToLower() == normalized, cancellationToken);
         if (exists)
@@ -243,6 +248,7 @@ public sealed partial class CommonMasterDataService
         {
             Name = request.Name.Trim(),
             Location = request.Location.Trim(),
+            VendorId = request.VendorId,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -258,6 +264,7 @@ public sealed partial class CommonMasterDataService
         var entity = await dbContext.Warehouses.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (entity is null) return null;
 
+        await EnsureWarehouseVendorExistsAsync(request.VendorId, cancellationToken);
         var normalized = Normalize(request.Name);
         var exists = await dbContext.Warehouses.AnyAsync(x => x.Id != id && x.Name.ToLower() == normalized, cancellationToken);
         if (exists)
@@ -267,6 +274,7 @@ public sealed partial class CommonMasterDataService
 
         entity.Name = request.Name.Trim();
         entity.Location = request.Location.Trim();
+        entity.VendorId = request.VendorId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
         return (await ListWarehousesAsync(cancellationToken)).Single(x => x.Id == entity.Id);
@@ -346,4 +354,17 @@ public sealed partial class CommonMasterDataService
     }
 
     public Task<bool> SetPaymentTermActiveAsync(int id, bool isActive, CancellationToken cancellationToken) => SetActiveAsync<PaymentTerm>(id, isActive, cancellationToken);
+
+    private async Task EnsureWarehouseVendorExistsAsync(int? vendorId, CancellationToken cancellationToken)
+    {
+        if (!vendorId.HasValue)
+        {
+            return;
+        }
+
+        if (!await dbContext.Vendors.AnyAsync(x => x.Id == vendorId.Value, cancellationToken))
+        {
+            throw new InvalidOperationException("Vendor company was not found.");
+        }
+    }
 }

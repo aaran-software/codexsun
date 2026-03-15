@@ -65,6 +65,7 @@ public sealed class WarehouseUpsertRequest
 {
     public string Name { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
+    public int? VendorId { get; set; }
 }
 
 public sealed class PaymentTermUpsertRequest

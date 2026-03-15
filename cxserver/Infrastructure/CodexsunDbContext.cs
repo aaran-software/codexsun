@@ -3,8 +3,11 @@ using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Common.Entities;
 using cxserver.Modules.Contacts.Entities;
 using cxserver.Modules.Finance.Entities;
+using cxserver.Modules.Inventory.Entities;
 using cxserver.Modules.Products.Entities;
+using cxserver.Modules.Sales.Entities;
 using cxserver.Modules.System.Entities;
+using cxserver.Modules.Vendors.Entities;
 
 namespace cxserver.Infrastructure;
 
@@ -52,12 +55,37 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<ProductVendorLink> ProductVendorLinks => Set<ProductVendorLink>();
     public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
     public DbSet<ProductAttributeValue> ProductAttributeValues => Set<ProductAttributeValue>();
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<OrderStatusHistory> OrderStatusHistory => Set<OrderStatusHistory>();
+    public DbSet<OrderAddress> OrderAddresses => Set<OrderAddress>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<VendorEarning> VendorEarnings => Set<VendorEarning>();
+    public DbSet<VendorPayout> VendorPayouts => Set<VendorPayout>();
+    public DbSet<VendorPayoutItem> VendorPayoutItems => Set<VendorPayoutItem>();
     public DbSet<Bank> Banks => Set<Bank>();
     public DbSet<PaymentMode> PaymentModes => Set<PaymentMode>();
     public DbSet<LedgerGroup> LedgerGroups => Set<LedgerGroup>();
     public DbSet<LedgerTransaction> Transactions => Set<LedgerTransaction>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
+    public DbSet<InventoryLedger> InventoryLedgers => Set<InventoryLedger>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderItem> PurchaseOrderItems => Set<PurchaseOrderItem>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<WarehouseTransfer> WarehouseTransfers => Set<WarehouseTransfer>();
+    public DbSet<WarehouseTransferItem> WarehouseTransferItems => Set<WarehouseTransferItem>();
+    public DbSet<InventoryAdjustment> InventoryAdjustments => Set<InventoryAdjustment>();
+    public DbSet<InventoryAdjustmentItem> InventoryAdjustmentItems => Set<InventoryAdjustmentItem>();
+    public DbSet<Vendor> Vendors => Set<Vendor>();
+    public DbSet<VendorUser> VendorUsers => Set<VendorUser>();
+    public DbSet<VendorAddress> VendorAddresses => Set<VendorAddress>();
+    public DbSet<VendorBankAccount> VendorBankAccounts => Set<VendorBankAccount>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

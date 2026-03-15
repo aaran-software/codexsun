@@ -16,7 +16,10 @@ using cxserver.Modules.Auth.Services;
 using cxserver.Modules.Auth.Validators;
 using cxserver.Modules.Common.Services;
 using cxserver.Modules.Contacts.Services;
+using cxserver.Modules.Inventory.Services;
 using cxserver.Modules.Products.Services;
+using cxserver.Modules.Sales.Services;
+using cxserver.Modules.Vendors.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,7 +117,10 @@ builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CommonMasterDataService>();
 builder.Services.AddScoped<ContactService>();
+builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<SalesService>();
+builder.Services.AddScoped<VendorService>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
 
 var app = builder.Build();

@@ -266,9 +266,22 @@ public sealed class ContactService(CodexsunDbContext dbContext)
             query = query.Where(x => x.IsActive);
         }
 
-        return role == "Admin"
-            ? query
-            : query.Where(x => x.OwnerUserId == actorUserId || x.VendorUserId == actorUserId);
+        if (role == "Admin")
+        {
+            return query;
+        }
+
+        var actorVendorIds = dbContext.VendorUsers
+            .Where(x => x.UserId == actorUserId)
+            .Select(x => x.VendorId);
+
+        return query.Where(x =>
+            x.OwnerUserId == actorUserId
+            || x.VendorUserId == actorUserId
+            || (x.VendorUserId.HasValue
+                && dbContext.VendorUsers.Any(vendorUser =>
+                    vendorUser.UserId == x.VendorUserId.Value
+                    && actorVendorIds.Contains(vendorUser.VendorId))));
     }
 
     private static Expression<Func<Contact, ContactListItemResponse>> MapListItem()
@@ -327,7 +340,20 @@ public sealed class ContactService(CodexsunDbContext dbContext)
 
         if (role != "Admin" && vendorUserId.Value != actorUserId)
         {
-            throw new InvalidOperationException("Vendors can only assign their own vendor scope.");
+            var actorVendorIds = await dbContext.VendorUsers
+                .Where(x => x.UserId == actorUserId)
+                .Select(x => x.VendorId)
+                .ToListAsync(cancellationToken);
+
+            var targetVendorId = await dbContext.VendorUsers
+                .Where(x => x.UserId == vendorUserId.Value)
+                .Select(x => (int?)x.VendorId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (!targetVendorId.HasValue || !actorVendorIds.Contains(targetVendorId.Value))
+            {
+                throw new InvalidOperationException("Vendors can only assign vendor scope within their vendor company.");
+            }
         }
 
         var exists = await dbContext.Users.AnyAsync(
@@ -367,8 +393,24 @@ public sealed class ContactService(CodexsunDbContext dbContext)
         }
     }
 
-    private static bool CanAccess(Contact contact, Guid actorUserId, string role)
-        => role == "Admin" || contact.OwnerUserId == actorUserId || contact.VendorUserId == actorUserId;
+    private bool CanAccess(Contact contact, Guid actorUserId, string role)
+    {
+        if (role == "Admin" || contact.OwnerUserId == actorUserId || contact.VendorUserId == actorUserId)
+        {
+            return true;
+        }
+
+        if (!contact.VendorUserId.HasValue)
+        {
+            return false;
+        }
+
+        var actorVendorIds = dbContext.VendorUsers
+            .Where(x => x.UserId == actorUserId)
+            .Select(x => x.VendorId);
+
+        return dbContext.VendorUsers.Any(x => x.UserId == contact.VendorUserId.Value && actorVendorIds.Contains(x.VendorId));
+    }
 
     private static void ApplyContactCollections(Contact contact, ContactUpsertRequest request, DateTimeOffset now)
     {

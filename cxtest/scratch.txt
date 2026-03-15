@@ -1,20 +1,23 @@
 ﻿# PROMPT NAME
 
-0035_ORDER_CART_BILLING_PAYMENT_SYSTEM
+0037_RETURNS_REFUNDS_RESTOCK_SYSTEM
 
 ---
 
 # ROLE
 
-You are a **Senior Full-Stack Architect (ASP.NET Core + Aspire + React + Multi-Vendor Ecommerce)** responsible for implementing the **Order, Cart, Billing, Payment, and Vendor Payout system**.
+You are a **Senior Full-Stack Architect (ASP.NET Core + Aspire + React + Multi-Vendor Ecommerce + ERP)** responsible for implementing the **Returns, Refunds, and Restocking system**.
 
-This module must support:
+This module manages the **post-sales lifecycle of orders**.
 
-• Ecommerce storefront orders
-• Wholesale/B2B orders
-• Billing/invoicing workflows
-• Multi-vendor marketplace orders
-• Vendor commission and payouts
+The system must support:
+
+• customer return requests
+• vendor returns
+• return approval workflows
+• product inspection and restocking
+• refunds and partial refunds
+• refund payment tracking
 
 Before doing anything you MUST read:
 
@@ -24,13 +27,13 @@ Before doing anything you MUST read:
 
 Follow all rules defined in that file.
 
-You must **analyze the repository before making changes.**
+You must analyze the repository before making changes.
 
 ---
 
 # FILES TO ANALYZE
 
-Read the following files first:
+Read first:
 
 ```
 /ASSIST/AI_RULES.md
@@ -39,428 +42,344 @@ Read the following files first:
 /ASSIST/SECURITY.md
 ```
 
-Then analyze the projects:
+Then analyze the projects.
 
-Understand how existing modules are structured.
-and match to existing don't override
+Understand the module architecture used in the project.
 
 ---
 
-
 # OBJECTIVE
 
-Create the **Commerce Transaction System**.
+Create the **Returns and Refund Management System**.
 
 Modules to implement:
 
 ```
-cart
-orders
-billing
-payments
-vendor_payouts
+returns
+refunds
+restocking
+return_inspections
+refund_transactions
 ```
 
-These modules must support:
-
-• Ecommerce checkout
-• Wholesale ordering
-• Invoice generation
-• Payment tracking
-• Vendor revenue sharing
-
----
-
-# CART MODULE
-
-The cart system stores products before checkout.
-
-Tables:
-
-```
-carts
-cart_items
-```
-
----
-
-## CART TABLE
-
-Fields:
-
-```
-Id
-UserId
-CompanyId
-VendorId
-SessionId
-CurrencyId
-CreatedAt
-UpdatedAt
-```
-
----
-
-## CART ITEMS
-
-Fields:
-
-```
-Id
-CartId
-ProductId
-ProductVariantId
-Quantity
-UnitPrice
-TotalPrice
-VendorId
-CreatedAt
-```
-
----
-
-# CART FEATURES
-
-Support:
-
-• Guest carts (session)
-• Logged-in carts (user)
-• Multi-vendor items
-• price recalculation
-
----
-
-# ORDER MODULE
-
-Orders represent **completed purchases**.
-
-Tables:
+These modules must integrate with:
 
 ```
 orders
-order_items
-order_status_history
-order_addresses
-```
-
----
-
-## ORDERS TABLE
-
-Fields:
-
-```
-Id
-OrderNumber
-CompanyId
-CustomerContactId
-CurrencyId
-OrderStatus
-Subtotal
-TaxAmount
-DiscountAmount
-TotalAmount
-PaymentStatus
-CreatedAt
-UpdatedAt
-```
-
----
-
-## ORDER ITEMS
-
-Fields:
-
-```
-Id
-OrderId
-ProductId
-ProductVariantId
-VendorId
-Quantity
-UnitPrice
-TaxAmount
-TotalPrice
-```
-
----
-
-## ORDER STATUS
-
-Examples:
-
-```
-Pending
-Confirmed
-Processing
-Shipped
-Delivered
-Cancelled
-Refunded
-```
-
-Track changes in:
-
-```
-order_status_history
-```
-
----
-
-# ORDER ADDRESSES
-
-Store:
-
-```
-BillingAddress
-ShippingAddress
-```
-
-Fields:
-
-```
-OrderId
-ContactId
-AddressType
-AddressLine1
-City
-State
-Country
-PostalCode
-```
-
----
-
-# BILLING MODULE
-
-Billing module generates invoices.
-
-Tables:
-
-```
-invoices
-invoice_items
-invoice_payments
-```
-
----
-
-## INVOICES TABLE
-
-Fields:
-
-```
-Id
-InvoiceNumber
-OrderId
-CustomerContactId
-CurrencyId
-Subtotal
-TaxAmount
-TotalAmount
-Status
-IssuedDate
-DueDate
-CreatedAt
-```
-
----
-
-## INVOICE ITEMS
-
-Fields:
-
-```
-Id
-InvoiceId
-ProductId
-Description
-Quantity
-UnitPrice
-TaxAmount
-TotalAmount
-```
-
----
-
-# PAYMENT MODULE
-
-Payments record money received.
-
-Tables:
-
-```
+inventory
 payments
-payment_transactions
-payment_methods
+products
+vendors
 ```
 
----
+# RETURNS SYSTEM
 
-## PAYMENTS TABLE
-
-Fields:
-
-```
-Id
-InvoiceId
-PaymentMethodId
-Amount
-CurrencyId
-Status
-TransactionReference
-PaidAt
-CreatedAt
-```
-
----
-
-# PAYMENT METHODS
-
-Support:
-
-```
-Cash
-Bank Transfer
-Credit Card
-UPI
-Online Gateway
-Wallet
-```
-
-Payment providers may be added later.
-
----
-
-# PAYMENT STATUS
-
-Examples:
-
-```
-Pending
-Completed
-Failed
-Refunded
-```
-
----
-
-# VENDOR PAYOUT MODULE
-
-Multi-vendor marketplaces require vendor settlements.
+Returns represent **customer requests to send products back**.
 
 Tables:
 
 ```
-vendor_earnings
-vendor_payouts
-vendor_payout_items
+returns
+return_items
+return_status_history
+return_inspections
 ```
 
 ---
 
-## VENDOR EARNINGS
-
-Tracks vendor revenue per order item.
+# RETURNS TABLE
 
 Fields:
 
 ```
 Id
-VendorId
-OrderItemId
-ProductId
+ReturnNumber
 OrderId
-SaleAmount
-CommissionAmount
-VendorAmount
-CreatedAt
-```
-
----
-
-## VENDOR PAYOUTS
-
-Vendor withdrawal requests.
-
-Fields:
-
-```
-Id
-VendorId
-PayoutNumber
-Amount
-CurrencyId
+CustomerContactId
+ReturnReason
 Status
 RequestedAt
+ApprovedAt
+ReceivedAt
+ClosedAt
+CreatedAt
+```
+
+---
+
+# RETURN ITEMS
+
+Fields:
+
+```
+Id
+ReturnId
+OrderItemId
+ProductId
+Quantity
+ReturnReason
+Condition
+ResolutionType
+```
+
+---
+
+# RESOLUTION TYPES
+
+Possible outcomes:
+
+```
+Refund
+Replacement
+StoreCredit
+Repair
+```
+
+---
+
+# RETURN STATUS
+
+Examples:
+
+```
+Requested
+Approved
+Rejected
+InTransit
+Received
+Inspected
+Completed
+Cancelled
+```
+
+All status changes must be tracked in:
+
+```
+return_status_history
+```
+
+---
+
+# RETURN INSPECTIONS
+
+Products must be inspected when received.
+
+Table:
+
+```
+return_inspections
+```
+
+Fields:
+
+```
+Id
+ReturnItemId
+InspectorUserId
+Condition
+Notes
+ApprovedForRefund
+ApprovedForRestock
+CreatedAt
+```
+
+---
+
+# RESTOCKING SYSTEM
+
+Returned items may be restocked.
+
+Table:
+
+```
+restock_events
+```
+
+Fields:
+
+```
+Id
+ReturnItemId
+WarehouseId
+ProductId
+Quantity
+RestockedAt
+```
+
+Restocking must update:
+
+```
+inventory
+inventory_ledger
+```
+
+Transaction type:
+
+```
+Return
+```
+
+---
+
+# REFUND SYSTEM
+
+Refunds return money to customers.
+
+Tables:
+
+```
+refunds
+refund_items
+refund_transactions
+```
+
+---
+
+# REFUNDS TABLE
+
+Fields:
+
+```
+Id
+RefundNumber
+OrderId
+ReturnId
+CustomerContactId
+CurrencyId
+RefundAmount
+Status
+RefundMethod
+CreatedAt
 ProcessedAt
 ```
 
 ---
 
-## PAYOUT STATUS
+# REFUND ITEMS
+
+Fields:
+
+```
+Id
+RefundId
+OrderItemId
+ProductId
+Quantity
+RefundAmount
+```
+
+---
+
+# REFUND METHODS
+
+Examples:
+
+```
+OriginalPayment
+StoreCredit
+BankTransfer
+Wallet
+```
+
+---
+
+# REFUND STATUS
+
+Examples:
 
 ```
 Pending
 Approved
-Paid
-Rejected
+Processed
+Failed
+Cancelled
+```
+
+---
+
+# REFUND TRANSACTIONS
+
+Records actual payment refund events.
+
+Fields:
+
+```
+Id
+RefundId
+PaymentId
+Amount
+TransactionReference
+ProcessedAt
+Status
+```
+
+---
+
+# RETURN WORKFLOW
+
+Standard flow:
+
+```
+Customer requests return
+↓
+Admin reviews request
+↓
+Return approved
+↓
+Customer ships product
+↓
+Warehouse receives item
+↓
+Inspection performed
+↓
+Item restocked
+↓
+Refund issued
 ```
 
 ---
 
 # APPLICATION LAYER
 
-Each module must include commands and queries.
+Create commands and queries.
 
 ---
 
-## CART COMMANDS
+# RETURN COMMANDS
 
 ```
-AddItemToCart
-UpdateCartItem
-RemoveCartItem
-ClearCart
-```
-
----
-
-## ORDER COMMANDS
-
-```
-CreateOrder
-UpdateOrderStatus
-CancelOrder
+CreateReturnRequest
+ApproveReturn
+RejectReturn
+ReceiveReturn
+InspectReturnItem
+CompleteReturn
 ```
 
 ---
 
-## BILLING COMMANDS
+# REFUND COMMANDS
 
 ```
-CreateInvoice
-UpdateInvoice
-CancelInvoice
-```
-
----
-
-## PAYMENT COMMANDS
-
-```
-RecordPayment
-RefundPayment
+CreateRefund
+ApproveRefund
+ProcessRefund
+CancelRefund
 ```
 
 ---
 
-## PAYOUT COMMANDS
+# RESTOCK COMMANDS
 
 ```
-CreateVendorPayout
-ApproveVendorPayout
-CompleteVendorPayout
+RestockReturnedItem
+```
+
+This must update:
+
+```
+inventory
+inventory_ledger
 ```
 
 ---
@@ -469,55 +388,45 @@ CompleteVendorPayout
 
 ---
 
-## CART API
+# RETURNS API
 
 ```
-GET /cart
-POST /cart/items
-PUT /cart/items/{id}
-DELETE /cart/items/{id}
-```
+GET /returns
+GET /returns/{id}
 
----
-
-## ORDER API
-
-```
-GET /orders
-GET /orders/{id}
-
-POST /orders
-PUT /orders/{id}/status
+POST /returns
+PUT /returns/{id}/approve
+PUT /returns/{id}/reject
+PUT /returns/{id}/receive
 ```
 
 ---
 
-## BILLING API
+# INSPECTION API
 
 ```
-GET /invoices
-GET /invoices/{id}
-
-POST /invoices
+POST /returns/{id}/inspect
 ```
 
 ---
 
-## PAYMENT API
+# REFUND API
 
 ```
-POST /payments
-GET /payments
+GET /refunds
+GET /refunds/{id}
+
+POST /refunds
+PUT /refunds/{id}/approve
+PUT /refunds/{id}/process
 ```
 
 ---
 
-## VENDOR PAYOUT API
+# RESTOCK API
 
 ```
-GET /vendor-payouts
-POST /vendor-payouts
-PUT /vendor-payouts/{id}/approve
+POST /returns/{id}/restock
 ```
 
 ---
@@ -535,11 +444,8 @@ cxstore/src/modules
 Create:
 
 ```
-cart
-orders
-invoices
-payments
-vendorPayouts
+returns
+refunds
 ```
 
 ---
@@ -548,96 +454,79 @@ vendorPayouts
 
 ---
 
-## CART
+# RETURNS
 
 ```
-CartPage
-CartSummary
-CheckoutPage
-```
-
----
-
-## ORDERS
-
-```
-OrderListPage
-OrderDetailPage
-OrderCreatePage
+ReturnRequestPage
+ReturnListPage
+ReturnDetailPage
+ReturnInspectionPage
 ```
 
 ---
 
-## INVOICES
+# REFUNDS
 
 ```
-InvoiceListPage
-InvoiceDetailPage
-```
-
----
-
-## PAYMENTS
-
-```
-PaymentListPage
-PaymentCreatePage
-```
-
----
-
-## VENDOR PAYOUTS
-
-```
-VendorPayoutListPage
-VendorPayoutRequestPage
-```
-
----
-
-# ADMIN SIDE MENU
-
-Add menu entries under:
-
-```
-Sales
-```
-
-Menu structure:
-
-```
-Sales
- ├ Orders
- ├ Invoices
- ├ Payments
- ├ Vendor Payouts
+RefundListPage
+RefundDetailPage
+RefundProcessPage
 ```
 
 ---
 
 # CUSTOMER STORE FRONT
 
-WebLayout must support:
+Customers can:
 
 ```
-Product listing
-Cart
-Checkout
-Order confirmation
-Order history
+view order history
+request returns
+track return status
+view refund status
 ```
 
 ---
 
-# VENDOR DASHBOARD
+# ADMIN PANEL
 
-Vendor users can see:
+Admins can:
 
 ```
-their products
-their orders
-their earnings
-their payout requests
+approve returns
+inspect returned products
+restock products
+process refunds
+```
+
+---
+
+# ADMIN SIDE MENU
+
+Add new menu group:
+
+```
+After Sales
+```
+
+Menu structure:
+
+```
+After Sales
+ ├ Returns
+ ├ Refunds
+```
+
+---
+
+# INVENTORY INTEGRATION
+
+If item approved for restock:
+
+```
+Inventory quantity increases
+Inventory ledger records transaction
+TransactionType = Return
 ```
 
 ---
@@ -646,40 +535,33 @@ their payout requests
 
 Ensure:
 
-• Vendor data isolation
-• Company isolation
-• Role-based access
-• API authorization
+• company isolation
+• vendor isolation
+• role-based access
 
-Use existing permission system.
-
-Example permissions:
+Permissions examples:
 
 ```
-orders.view
-orders.create
+returns.view
+returns.approve
+returns.inspect
 
-invoices.view
-payments.create
-
-vendor_payouts.request
-vendor_payouts.approve
+refunds.view
+refunds.process
 ```
 
 ---
 
 # DATABASE MIGRATIONS
 
-If tables do not exist create EF Core migrations.
+Create migrations if tables do not exist.
 
 Migration names:
 
 ```
-AddCartModule
-AddOrdersModule
-AddBillingModule
-AddPaymentsModule
-AddVendorPayoutModule
+AddReturnsModule
+AddRefundsModule
+AddRestockingModule
 ```
 
 ---
@@ -688,19 +570,19 @@ AddVendorPayoutModule
 
 Verify:
 
-• Cart works
-• Checkout works
-• Orders created successfully
-• Invoice generated
-• Payment recorded
-• Vendor earnings calculated
-• Vendor payouts created
+• return requests created successfully
+• returns approved/rejected
+• returned items inspected
+• inventory updated after restocking
+• refunds created and processed
+
+Ensure **financial and inventory accuracy**.
 
 ---
 
 # DOCUMENTATION
 
-If project structure changes update:
+If structure changes update:
 
 ```
 STRUCTURE.md
@@ -708,7 +590,7 @@ ARCHITECTURE.md
 PROJECT_LOG.md
 ```
 
-Add project log entry.
+Add a project log entry.
 
 ---
 
@@ -723,14 +605,12 @@ Provide:
 5. API controllers
 6. Database migrations
 7. Frontend module structure
-8. Cart and checkout pages
-9. Orders and invoice pages
-10. Vendor payout pages
-11. Side menu updates
+8. Return management UI
+9. Refund management UI
+10. Side menu updates
 
 Ensure the application **builds successfully**.
 
-Reuse existing modules and infrastructure.
+Reuse existing architecture and infrastructure.
 
-Do not break existing features.
-and match to existing don't override
+Do not break existing modules.

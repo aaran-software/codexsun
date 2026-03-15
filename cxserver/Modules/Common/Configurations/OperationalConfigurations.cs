@@ -50,6 +50,8 @@ public sealed class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
         builder.ConfigureNamed();
         builder.Property(x => x.Location).HasMaxLength(256).IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();
+        builder.HasIndex(x => x.VendorId);
+        builder.HasOne(x => x.Vendor).WithMany().HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasData(OperationalSeedData.Warehouses);
     }
 }

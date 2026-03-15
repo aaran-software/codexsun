@@ -46,6 +46,7 @@
 - Captures user, IP, entity type, and entity id where available
 - Auth module currently records register, login, failed login, refresh, and logout actions
 - Auth audit IP capture honors `X-Forwarded-For` before falling back to the direct connection address
+- Inventory operations also record audit entries for purchase order creation, purchase receiving, warehouse transfer creation/completion, and inventory adjustments
 
 ## Security Validation
 
@@ -60,6 +61,15 @@
 - `CustomerAccess` requires role `Customer`
 - Frontend route guards support authenticated and role-based route restriction
 - All `/common/*` master-data mutation and lookup endpoints are currently protected with `AdminAccess`
+- Inventory APIs require authentication and use seeded permission claims `inventory.view`, `inventory.manage`, `inventory.transfer`, and `inventory.adjust` for operation-level authorization
+- Vendor-management APIs use the seeded `vendors.view`, `vendors.manage`, and `vendors.users.manage` permissions alongside authenticated role checks
+
+## Vendor Scope Enforcement
+
+- Vendor access is no longer limited to a single `vendor_user_id`; the runtime now expands vendor visibility through `vendor_users` so multiple staff users in the same vendor company can operate inside one business scope.
+- Warehouse access is constrained by `warehouses.vendor_id`, and vendor users can only access purchase orders, transfers, warehouse inventory, product inventory rows, and stock movements for warehouses owned by their vendor company.
+- Contact visibility is also widened from single-user scope to vendor-company scope, allowing vendor staff to collaborate on shared contacts without changing the existing contact ownership schema.
+- Existing `vendor_user_id` references are preserved for backward compatibility, but business-level access decisions now also consider `vendor_id` membership.
 
 ## Common Master Data Validation
 
@@ -68,6 +78,18 @@
 - Hierarchical foreign keys such as Country/State/District/City relationships are verified before create or update operations succeed
 - Destination records require at least one location reference (`CountryId` or `CityId`)
 - Inline related-record creation from popup autocompletes still goes through the existing validated backend create endpoints; client-side autocomplete does not bypass server-side foreign-key or uniqueness rules
+
+## Product Pricing Validation
+
+- Product pricing is validated server-side in `ProductService`; the frontend form does not bypass those rules.
+- Each product must include at least one retail price row, every price row requires `min_quantity >= 1`, and invalid date windows are rejected before persistence.
+- Cart pricing resolution is enforced on the backend, including quantity-threshold and date-window checks, so clients cannot choose a lower tier by posting a manual unit price.
+
+## Vendor Warehouse Frontend Surface
+
+- `cxstore` exposes vendor-specific routes for warehouses and inventory operations under the existing authenticated app shell.
+- Vendor pages consume `/vendors/warehouses` instead of unrestricted master-data warehouse endpoints, so the UI receives only warehouses inside the actor's vendor-company scope.
+- Backend validation remains authoritative; vendor frontend filtering is a convenience layer and not the security boundary.
 
 ## Error Monitoring
 

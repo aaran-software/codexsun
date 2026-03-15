@@ -47,8 +47,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => new { x.OwnerUserId, x.IsActive });
         builder.HasIndex(x => new { x.VendorUserId, x.IsActive });
+        builder.HasIndex(x => x.VendorId);
         builder.HasOne(x => x.OwnerUser).WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.VendorUser).WithMany().HasForeignKey(x => x.VendorUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Vendor).WithMany().HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Group).WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Type).WithMany().HasForeignKey(x => x.TypeId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Category).WithMany(x => x.Products).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
@@ -82,8 +84,14 @@ public sealed class ProductPriceConfiguration : IEntityTypeConfiguration<Product
         builder.ToTable("product_prices");
         builder.ConfigureProduct();
         builder.Property(x => x.PriceType).HasMaxLength(64).IsRequired();
-        builder.Property(x => x.Amount).HasColumnType("numeric(18,2)").IsRequired();
+        builder.Property(x => x.SalesChannel).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.MinQuantity).HasDefaultValue(1).IsRequired();
+        builder.Property(x => x.Price).HasColumnName("price").HasColumnType("numeric(18,2)").IsRequired();
+        builder.Property(x => x.StartDate).IsRequired(false);
+        builder.Property(x => x.EndDate).IsRequired(false);
+        builder.HasIndex(x => new { x.ProductId, x.ProductVariantId, x.PriceType, x.SalesChannel, x.MinQuantity });
         builder.HasOne(x => x.Product).WithMany(x => x.Prices).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.ProductVariant).WithMany().HasForeignKey(x => x.ProductVariantId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
     }
 }
@@ -121,8 +129,10 @@ public sealed class ProductVendorLinkConfiguration : IEntityTypeConfiguration<Pr
         builder.Property(x => x.VendorSku).HasMaxLength(64).HasDefaultValue(string.Empty);
         builder.Property(x => x.VendorSpecificPrice).HasColumnType("numeric(18,2)").IsRequired();
         builder.HasIndex(x => new { x.ProductId, x.VendorUserId }).IsUnique();
+        builder.HasIndex(x => x.VendorId);
         builder.HasOne(x => x.Product).WithMany(x => x.VendorLinks).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.VendorUser).WithMany().HasForeignKey(x => x.VendorUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Vendor).WithMany().HasForeignKey(x => x.VendorId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

@@ -3,6 +3,7 @@ using cxserver.Modules.Common.Entities;
 using cxserver.Modules.Contacts.Entities;
 using cxserver.Modules.Finance.Entities;
 using cxserver.Modules.Products.Entities;
+using cxserver.Modules.Vendors.Entities;
 
 namespace cxserver.Modules.Sales.Entities;
 
@@ -162,6 +163,8 @@ public sealed class VendorEarning : SalesEntity
 {
     public Guid VendorUserId { get; set; }
     public User VendorUser { get; set; } = null!;
+    public int? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
     public int OrderItemId { get; set; }
     public OrderItem OrderItem { get; set; } = null!;
     public int ProductId { get; set; }
@@ -179,6 +182,8 @@ public sealed class VendorPayout : SalesEntity
 {
     public Guid VendorUserId { get; set; }
     public User VendorUser { get; set; } = null!;
+    public int? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
     public string PayoutNumber { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public int? CurrencyId { get; set; }
