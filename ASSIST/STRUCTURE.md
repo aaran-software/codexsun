@@ -313,9 +313,10 @@ codexsun/
 |           `-- Master/
 |
 |-- cxstore/                             <- React frontend
-|   |-- package.json                     <- Frontend dependencies including `framer-motion`
+|   |-- package.json                     <- Frontend dependencies including `framer-motion`, `axios`, `@tanstack/react-query`, and `zustand`
 |   `-- src/
 |       |-- api/
+|       |   |-- apiClient.ts
 |       |   |-- authApi.ts
 |       |   |-- brandApi.ts
 |       |   |-- colourApi.ts
@@ -350,7 +351,17 @@ codexsun/
 |       |   |       `-- ProductForm.tsx
 |       |   |-- media/
 |       |   |   `-- MediaPicker.tsx
+|       |   |-- cart/
+|       |   |   |-- CartItemCard.tsx
+|       |   |   |-- CartSummaryCard.tsx
+|       |   |   `-- CouponInput.tsx
 |       |   |-- blocks/
+|       |   |-- checkout/
+|       |   |   |-- AddressFormCard.tsx
+|       |   |   |-- CheckoutStepper.tsx
+|       |   |   |-- OrderSummaryCard.tsx
+|       |   |   |-- PaymentSelector.tsx
+|       |   |   `-- ShippingOptions.tsx
 |       |   |-- forms/
 |       |   |   |-- CommonList.tsx
 |       |   |   |-- CommonUpsertDialog.tsx
@@ -361,9 +372,31 @@ codexsun/
 |       |   |-- global/
 |       |   |   `-- GlobalLoader.tsx
 |       |   |-- layout/
+|       |   |   |-- MainLayout.tsx
+|       |   |   |-- navbar.tsx
+|       |   |   |-- storefront-auth-notice.tsx
+|       |   |   |-- storefront-bottom-nav.tsx
+|       |   |   |-- storefront-footer.tsx
+|       |   |   |-- storefront-header.tsx
+|       |   |   |-- storefront-mobile-menu.tsx
+|       |   |   `-- storefront-search-bar.tsx
 |       |   |-- lookups/
 |       |   |   |-- AutocompleteLookup.tsx
 |       |   |   `-- commonLookups.tsx
+|       |   |-- product/
+|       |   |   |-- CategoryGrid.tsx
+|       |   |   |-- DealBanner.tsx
+|       |   |   |-- FilterSidebar.tsx
+|       |   |   |-- HeroSlider.tsx
+|       |   |   |-- ProductCard.tsx
+|       |   |   |-- ProductGallery.tsx
+|       |   |   |-- ProductGrid.tsx
+|       |   |   |-- QuantitySelector.tsx
+|       |   |   |-- RatingStars.tsx
+|       |   |   |-- ReviewForm.tsx
+|       |   |   |-- ReviewList.tsx
+|       |   |   |-- SortDropdown.tsx
+|       |   |   `-- VendorCarousel.tsx
 |       |   |-- ui/
 |       |   |   |-- combobox.tsx
 |       |   |   |-- input.tsx
@@ -377,9 +410,17 @@ codexsun/
 |       |-- config/
 |       |   `-- company.tsx
 |       |-- lib/
+|       |   `-- queryClient.ts
 |       |-- pages/
+|       |   |-- AccountPage.tsx
 |       |   |-- CartPage.tsx
+|       |   |-- CategoryPage.tsx
 |       |   |-- CheckoutPage.tsx
+|       |   |-- OrderSuccessPage.tsx
+|       |   |-- ProductPage.tsx
+|       |   |-- SearchPage.tsx
+|       |   |-- VendorStorePage.tsx
+|       |   |-- WishlistPage.tsx
 |       |   `-- admin/
 |       |       |-- contacts/
 |       |       |   |-- ContactCreatePage.tsx
@@ -451,8 +492,15 @@ codexsun/
 |       |           |-- UserEditPage.tsx
 |       |           `-- UsersPage.tsx
 |       |-- hooks/
+|       |   `-- usePageMeta.ts
+|       |-- routes/
+|       |   `-- router.tsx
 |       |-- state/
-|       |   `-- authStore.ts
+|       |   |-- authStore.ts
+|       |   |-- cartStore.ts
+|       |   `-- wishlistStore.ts
+|       |-- utils/
+|       |   `-- storefront.ts
 |       `-- types/
 |           |-- admin.ts
 |           |-- auth.ts
@@ -466,6 +514,7 @@ codexsun/
 |           |-- notification.ts
 |           |-- promotion.ts
 |           |-- shipping.ts
+|           |-- storefront.ts
 |           |-- returns.ts
 |           |-- product.ts
 |           |-- sales.ts
@@ -501,3 +550,9 @@ codexsun/
 - Backend monitoring lives in `cxserver/Modules/Monitoring` with `Entities`, `Configurations`, `DTOs`, `Services`, and `Controllers`, matching the existing module convention rather than the prompt's alternate tree.
 - Frontend monitoring lives under `cxstore/src/pages/admin/monitoring` with supporting files in `src/api/monitoringApi.ts` and `src/types/monitoring.ts`.
 - Global middleware wiring is in `cxserver/Program.cs`, and persistence is registered in `cxserver/Infrastructure/CodexsunDbContext.cs`.
+
+## Storefront Frontend Additions
+
+- The customer storefront was added inside `cxstore/src/pages` and `cxstore/src/components` rather than as a separate frontend project.
+- Storefront data access uses `src/api/apiClient.ts`, `src/lib/queryClient.ts`, and persisted Zustand stores in `src/state/cartStore.ts` and `src/state/wishlistStore.ts`.
+- Customer-facing routes now include catalog browsing, search, product detail, vendor stores, wishlist, checkout, order success, and account views while keeping the existing admin and vendor route tree intact.

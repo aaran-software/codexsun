@@ -1,38 +1,37 @@
 import { useEffect, useMemo, useState } from "react"
+import { EditIcon, MoreHorizontalIcon, Trash2Icon, UsersIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
-import { createVendor, getVendors } from "@/api/vendorApi"
+import { getVendors } from "@/api/vendorApi"
 import { CommonList, type CommonListColumn } from "@/components/forms/CommonList"
-import { MediaPicker } from "@/components/media/MediaPicker"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { VendorSummary } from "@/types/vendor"
-
-const emptyVendorForm = {
-  companyName: "",
-  legalName: "",
-  gstNumber: "",
-  panNumber: "",
-  email: "",
-  phone: "",
-  website: "",
-  logoUrl: "",
-  status: "Active",
-}
 
 export default function VendorsPage() {
   const navigate = useNavigate()
   const [vendors, setVendors] = useState<VendorSummary[]>([])
   const [search, setSearch] = useState("")
-  const [form, setForm] = useState(emptyVendorForm)
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
+    setLoading(true)
     try {
+      setError(null)
       setVendors(await getVendors())
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load vendors.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -49,37 +48,81 @@ export default function VendorsPage() {
       || vendor.status.toLowerCase().includes(term))
   }, [vendors, search])
 
-  const handleCreate = async () => {
-    setError(null)
-
-    try {
-      const created = await createVendor({
-        ...form,
-        addresses: [],
-        bankAccounts: [],
-      })
-      setForm(emptyVendorForm)
-      await load()
-      navigate(`/admin/vendors/${created.id}`)
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to create vendor.")
-    }
-  }
+  const totalRecords = filtered.length
+  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedVendors = filtered.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
 
   const columns: CommonListColumn<VendorSummary>[] = [
-    { id: "company", header: "Company", cell: (row) => row.companyName },
-    { id: "legal", header: "Legal Name", cell: (row) => row.legalName || "-" },
-    { id: "gst", header: "GST", cell: (row) => row.gstNumber || "-" },
-    { id: "email", header: "Email", cell: (row) => row.email || "-" },
-    { id: "users", header: "Users", cell: (row) => row.userCount },
-    { id: "status", header: "Status", cell: (row) => row.status },
+    {
+      id: "serialNumber",
+      header: "Sl.No",
+      cell: (row) => ((safeCurrentPage - 1) * pageSize) + paginatedVendors.findIndex((item) => item.id === row.id) + 1,
+      className: "w-12 min-w-12 px-2 text-center text-foreground",
+      headerClassName: "w-12 min-w-12 px-2 text-center",
+      sticky: "left",
+    },
+    {
+      id: "company",
+      header: "Company",
+      accessor: (row) => row.companyName,
+      sortable: true,
+      cell: (row) => (
+        <div className="space-y-1">
+          <div className="font-medium text-foreground">{row.companyName}</div>
+          <div className="text-xs text-muted-foreground">{row.email || "No email configured"}</div>
+        </div>
+      ),
+    },
+    { id: "legal", header: "Legal Name", accessor: (row) => row.legalName || "", sortable: true, cell: (row) => row.legalName || "-" },
+    { id: "gst", header: "GST", accessor: (row) => row.gstNumber || "", sortable: true, cell: (row) => row.gstNumber || "-" },
+    { id: "email", header: "Email", accessor: (row) => row.email || "", sortable: true, cell: (row) => row.email || "-" },
+    { id: "users", header: "Users", accessor: (row) => row.userCount, sortable: true, cell: (row) => row.userCount },
+    {
+      id: "status",
+      header: "Status",
+      accessor: (row) => row.status,
+      sortable: true,
+      cell: (row) => (
+        <Badge className={row.status.toLowerCase() === "active"
+          ? "bg-emerald-500 text-white hover:bg-emerald-500/90"
+          : "bg-slate-500 text-white hover:bg-slate-500/90"}
+        >
+          {row.status}
+        </Badge>
+      ),
+    },
     {
       id: "actions",
-      header: "Action",
+      header: "Actions",
+      sticky: "right",
+      className: "w-16 min-w-16 text-center",
+      headerClassName: "w-16 min-w-16 text-center",
       cell: (row) => (
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => navigate(`/admin/vendors/${row.id}`)}>Details</Button>
-          <Button size="sm" variant="outline" onClick={() => navigate(`/admin/vendors/${row.id}/users`)}>Users</Button>
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={(
+                <Button type="button" size="icon" variant="ghost" className="size-8 rounded-md data-[state=open]:bg-accent" />
+              )}
+            >
+              <MoreHorizontalIcon className="size-4 stroke-[2.5]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-0 w-auto whitespace-nowrap">
+              <DropdownMenuItem onClick={() => navigate(`/admin/vendors/${row.id}`)}>
+                <EditIcon className="size-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/admin/vendors/${row.id}/users`)}>
+                <UsersIcon className="size-4" />
+                <span>Users</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled variant="destructive">
+                <Trash2Icon className="size-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },
@@ -87,52 +130,52 @@ export default function VendorsPage() {
 
   return (
     <div className="space-y-4">
-      <section className="grid gap-4 rounded-md border bg-card p-4 md:grid-cols-4">
-        <div className="space-y-2">
-          <Label>Company Name</Label>
-          <Input value={form.companyName} onChange={(event) => setForm((current) => ({ ...current, companyName: event.target.value }))} />
-        </div>
-        <div className="space-y-2">
-          <Label>Legal Name</Label>
-          <Input value={form.legalName} onChange={(event) => setForm((current) => ({ ...current, legalName: event.target.value }))} />
-        </div>
-        <div className="space-y-2">
-          <Label>Email</Label>
-          <Input value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Input value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))} />
-        </div>
-        <div className="space-y-2">
-          <Label>GST</Label>
-          <Input value={form.gstNumber} onChange={(event) => setForm((current) => ({ ...current, gstNumber: event.target.value }))} />
-        </div>
-        <div className="space-y-2">
-          <Label>PAN</Label>
-          <Input value={form.panNumber} onChange={(event) => setForm((current) => ({ ...current, panNumber: event.target.value }))} />
-        </div>
-        <div className="space-y-2">
-          <Label>Phone</Label>
-          <Input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <MediaPicker value={form.logoUrl} onChange={(value) => setForm((current) => ({ ...current, logoUrl: value }))} module="vendors" preferredFolderId={2} imagesOnly label="Logo" />
-        </div>
-        <div className="flex items-end">
-          <Button onClick={() => void handleCreate()}>Create Vendor</Button>
-        </div>
-        {error ? <p className="text-sm text-destructive md:col-span-4">{error}</p> : null}
-      </section>
+      {error ? <div className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div> : null}
 
       <CommonList
         header={{
           pageTitle: "Vendors",
           pageDescription: "Manage vendor companies, tax profiles, and business onboarding.",
+          addLabel: "New Vendor",
+          onAddClick: () => navigate("/admin/vendors/create"),
         }}
-        search={{ value: search, onChange: setSearch, placeholder: "Search vendor companies" }}
-        table={{ columns, data: filtered, emptyMessage: "No vendors found." }}
-        footer={{ content: <span>Total vendors: <span className="font-medium text-foreground">{filtered.length}</span></span> }}
+        search={{
+          value: search,
+          onChange: (value) => {
+            setSearch(value)
+            setCurrentPage(1)
+          },
+          placeholder: "Search vendor companies by name, email, GST, or status",
+        }}
+        table={{
+          columns,
+          data: paginatedVendors,
+          loading,
+          emptyMessage: "No vendors found.",
+          rowKey: (vendor) => vendor.id,
+        }}
+        footer={{
+          content: (
+            <div className="flex flex-wrap items-center gap-4">
+              <span>
+                Total records: <span className="font-medium text-foreground">{totalRecords}</span>
+              </span>
+              <span>
+                Active records: <span className="font-medium text-foreground">{filtered.filter((vendor) => vendor.status.toLowerCase() === "active").length}</span>
+              </span>
+            </div>
+          ),
+        }}
+        pagination={{
+          currentPage: safeCurrentPage,
+          pageSize,
+          totalRecords,
+          onPageChange: setCurrentPage,
+          onPageSizeChange: (value) => {
+            setPageSize(value)
+            setCurrentPage(1)
+          },
+        }}
       />
     </div>
   )

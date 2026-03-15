@@ -1,7 +1,7 @@
 import { SparklesIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export function DealBanner() {
   return (
@@ -15,7 +15,7 @@ export function DealBanner() {
           <h2 className="text-2xl font-semibold">Seasonal offer windows and wholesale tiers are live in the shared catalog.</h2>
           <p className="max-w-2xl text-sm text-muted-foreground">The storefront highlights offer-driven prices from the existing multi-channel pricing model while keeping one unified product catalog.</p>
         </div>
-        <Button render={<Link to="/search?sort=price-asc" />} className="rounded-full px-5">Browse deals</Button>
+        <Link to="/search?sort=price-asc" className={buttonVariants({ className: "rounded-full px-5" })}>Browse deals</Link>
       </div>
     </section>
   )

@@ -38,10 +38,29 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
-export function formatCurrency(amount: number, currencyName = "INR") {
+function resolveCurrencyCode(currencyValue?: string | null) {
+  const candidate = (currencyValue ?? "").trim().toUpperCase()
+  if (/^[A-Z]{3}$/.test(candidate)) {
+    return candidate
+  }
+
+  const namedCurrencyMap: Record<string, string> = {
+    "INDIAN RUPEE": "INR",
+    "RUPEE": "INR",
+    "US DOLLAR": "USD",
+    "DOLLAR": "USD",
+    "EURO": "EUR",
+    "POUND": "GBP",
+    "POUND STERLING": "GBP",
+  }
+
+  return namedCurrencyMap[candidate] ?? "INR"
+}
+
+export function formatCurrency(amount: number, currencyValue = "INR") {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: currencyName || "INR",
+    currency: resolveCurrencyCode(currencyValue),
     maximumFractionDigits: 2,
   }).format(amount || 0)
 }

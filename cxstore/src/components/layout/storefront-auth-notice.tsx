@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export function StorefrontAuthNotice({
   title,
@@ -14,8 +14,8 @@ export function StorefrontAuthNotice({
       <div className="text-2xl font-semibold">{title}</div>
       <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{description}</p>
       <div className="mt-6 flex justify-center gap-3">
-        <Button render={<Link to="/login" />} className="rounded-full px-5">Sign In</Button>
-        <Button render={<Link to="/" />} variant="outline" className="rounded-full px-5">Back to Home</Button>
+        <Link to="/login" className={buttonVariants({ className: "rounded-full px-5" })}>Sign In</Link>
+        <Link to="/" className={buttonVariants({ variant: "outline", className: "rounded-full px-5" })}>Back to Home</Link>
       </div>
     </div>
   )

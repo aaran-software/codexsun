@@ -32,6 +32,7 @@
 - Failed refresh attempts clear local auth state and return the user to login
 - The auth screen now supports both sign-in and self-service signup against the existing backend auth endpoints
 - Google sign-in on the frontend is configuration-driven via `VITE_GOOGLE_AUTH_URL`; without that provider URL the button remains a non-authenticating entry point and does not bypass local auth
+- Customer storefront pages now also use `src/api/apiClient.ts`, which mirrors the same bearer-token and one-time refresh behavior for Axios-based React Query requests
 
 ## Rate Limiting
 
@@ -130,6 +131,13 @@
 - `ErrorLoggingMiddleware` captures unhandled exceptions with stack trace, request path, IP address, and optional user id, then returns a generic error response to the client.
 - Suspicious-IP alerts are emitted when repeated failed or blocked login attempts occur from the same IP inside a rolling time window.
 - Admin permission changes emit system-log alerts, and repeated `Product.Delete` audit activity emits a mass-deletion security signal for future SIEM or alert integrations.
+
+## Storefront Commerce Security
+
+- The storefront was implemented against the current backend API surface, which still protects product and vendor discovery endpoints with authentication; anonymous users can browse the shell, but live catalog data prompts for sign-in.
+- Cart APIs already support anonymous or session-backed usage, while checkout and order-history routes remain protected behind authenticated customer access.
+- Wishlist and review persistence are currently frontend-managed local features because dedicated backend wishlist and product-review endpoints do not yet exist; they are convenience features, not an authoritative system of record.
+- Checkout payment selection is UI-only at this stage for Stripe, Razorpay, PayPal, and Cash on Delivery; final pricing, coupon handling, and order creation remain backend-enforced through the Sales module.
 
 ## Error Monitoring
 

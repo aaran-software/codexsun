@@ -81,6 +81,54 @@ export default defineConfig({
       '/vendor-payouts': {
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true
+      },
+      '/vendors': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/company': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/inventory': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/analytics': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/promotions': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/coupons': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/shipments': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/returns': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/refunds': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/notifications': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/media': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
+      '/monitoring': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
       }
     }
   }

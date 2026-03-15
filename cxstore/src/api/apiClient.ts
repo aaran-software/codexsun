@@ -1,4 +1,5 @@
 import axios from "axios"
+import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios"
 
 import { clearAuthState, getAccessToken, getRefreshToken, refreshSession } from "@/state/authStore"
 
@@ -7,10 +8,12 @@ type RequestConfig = {
   skipRetry?: boolean
 }
 
-declare module "axios" {
-  export interface InternalAxiosRequestConfig<D = unknown> {
-    metadata?: RequestConfig
-  }
+type StorefrontRequestConfig = InternalAxiosRequestConfig & {
+  _cx?: RequestConfig
+}
+
+function withStorefrontConfig(config: AxiosRequestConfig, storefrontConfig?: RequestConfig): AxiosRequestConfig {
+  return { ...config, _cx: storefrontConfig } as AxiosRequestConfig
 }
 
 export const apiClient = axios.create({
@@ -21,21 +24,25 @@ export const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use((config) => {
-  if (!config.metadata?.skipAuth) {
+  const nextConfig = config as StorefrontRequestConfig
+
+  if (!nextConfig._cx?.skipAuth) {
     const accessToken = getAccessToken()
     if (accessToken) {
-      config.headers.set("Authorization", `Bearer ${accessToken}`)
+      nextConfig.headers.set("Authorization", `Bearer ${accessToken}`)
     }
   }
 
-  return config
+  return nextConfig
 })
 
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const { response, config } = error
-    if (!response || !config || config.metadata?.skipRetry || response.status !== 401 || !getRefreshToken()) {
+    const response = error.response
+    const config = error.config as StorefrontRequestConfig | undefined
+
+    if (!response || !config || config._cx?.skipRetry || response.status !== 401 || !getRefreshToken()) {
       if (response?.status === 401) {
         clearAuthState()
       }
@@ -49,7 +56,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    config.metadata = { ...(config.metadata ?? {}), skipRetry: true }
+    config._cx = { ...(config._cx ?? {}), skipRetry: true }
     const accessToken = getAccessToken()
     if (accessToken) {
       config.headers.set("Authorization", `Bearer ${accessToken}`)
@@ -60,21 +67,21 @@ apiClient.interceptors.response.use(
 )
 
 export async function getJson<T>(url: string, config?: RequestConfig) {
-  const response = await apiClient.get<T>(url, { metadata: config })
+  const response = await apiClient.get<T>(url, withStorefrontConfig({}, config))
   return response.data
 }
 
 export async function postJson<TResponse, TRequest>(url: string, data: TRequest, config?: RequestConfig) {
-  const response = await apiClient.post<TResponse>(url, data, { metadata: config })
+  const response = await apiClient.post<TResponse>(url, data, withStorefrontConfig({}, config))
   return response.data
 }
 
 export async function putJson<TResponse, TRequest>(url: string, data: TRequest, config?: RequestConfig) {
-  const response = await apiClient.put<TResponse>(url, data, { metadata: config })
+  const response = await apiClient.put<TResponse>(url, data, withStorefrontConfig({}, config))
   return response.data
 }
 
 export async function deleteJson<TResponse>(url: string, config?: RequestConfig) {
-  const response = await apiClient.delete<TResponse>(url, { metadata: config })
+  const response = await apiClient.delete<TResponse>(url, withStorefrontConfig({}, config))
   return response.data
 }

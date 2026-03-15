@@ -1,1 +1,1 @@
-PROMPT 048 - Build the customer storefront frontend in the existing `cxstore` app with authenticated product browsing, search, category/product/vendor pages, persisted cart and wishlist state, checkout/account flows, storefront layout/components, and documentation updates aligned to the current backend API surface.
+PROMPT 049 - Normalize non-common admin module UX in `cxstore` so business modules follow the same split list/create/edit pattern and sectioned upsert form tone already used by contacts, vendors, and products.

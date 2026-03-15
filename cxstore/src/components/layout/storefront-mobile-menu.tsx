@@ -15,7 +15,18 @@ type MobileMenuLink = {
   url: string
 }
 
-export function StorefrontMobileMenu({ links }: { links: MobileMenuLink[] }) {
+type MobileMenuCategory = {
+  label: string
+  slug: string
+}
+
+export function StorefrontMobileMenu({
+  links,
+  categories = [],
+}: {
+  links: MobileMenuLink[]
+  categories?: MobileMenuCategory[]
+}) {
   return (
     <Sheet>
       <SheetTrigger render={<Button variant="outline" size="icon" className="rounded-full md:hidden"><MenuIcon className="size-5" /></Button>} />
@@ -34,6 +45,22 @@ export function StorefrontMobileMenu({ links }: { links: MobileMenuLink[] }) {
             </Link>
           ))}
         </nav>
+        {categories.length > 0 ? (
+          <div className="mt-8">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">Popular Categories</div>
+            <div className="grid gap-2">
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  to={`/category/${category.slug}`}
+                  className="rounded-2xl bg-muted/40 px-4 py-3 text-sm text-foreground transition hover:bg-accent"
+                >
+                  {category.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </SheetContent>
     </Sheet>
   )

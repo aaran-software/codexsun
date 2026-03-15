@@ -190,3 +190,11 @@ codexsun.slnx
 - `ErrorLoggingMiddleware` captures unhandled exceptions globally, while `AuditMiddleware` records successful mutating HTTP requests with request metadata and payload snapshots.
 - `AuthService` now records login success, login failure, blocked attempts, and logout events into `login_history`, and emits monitoring-oriented system logs for suspicious IP activity and admin permission changes.
 - `cxstore` integrates monitoring through `monitoringApi.ts`, `types/monitoring.ts`, and four admin pages under `pages/admin/monitoring`, all wired into the existing `AppLayout` and sidebar grouping model.
+
+## Storefront Frontend Update (2026-03-15)
+
+- The customer storefront was implemented inside the existing `cxstore` application instead of creating a second `/frontend` project, preserving the current monorepo and route architecture.
+- `WebLayout` now hosts a richer commerce shell through `MainLayout`, `storefront-header`, `storefront-footer`, `navbar`, `storefront-mobile-menu`, and `storefront-bottom-nav`, while `AppLayout` remains the authenticated admin or vendor workspace.
+- The storefront data layer adds `api/apiClient.ts` for Axios-based customer requests, `lib/queryClient.ts` for React Query caching, and Zustand-based `cartStore` and `wishlistStore` for local customer state.
+- Public route pages now cover home, category browsing, search, product details, vendor stores, cart, wishlist, checkout, order success, and customer account views, all implemented under the existing `cxstore/src/pages` structure.
+- The implementation intentionally adapts to the current backend API surface: live product and vendor discovery still rely on authenticated backend endpoints, while wishlist and review persistence stay frontend-managed until dedicated backend APIs are added.

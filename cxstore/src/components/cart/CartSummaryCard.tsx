@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/utils/storefront"
 
@@ -29,9 +29,13 @@ export function CartSummaryCard({
           <SummaryRow label="Shipping" value={formatCurrency(shipping)} />
           <SummaryRow label="Total" value={formatCurrency(total)} emphasized />
         </div>
-        <Button render={<Link to="/checkout" />} className="w-full rounded-full" disabled={!canCheckout}>
+        <Link
+          to="/checkout"
+          aria-disabled={!canCheckout}
+          className={buttonVariants({ className: `w-full rounded-full${canCheckout ? "" : " pointer-events-none opacity-50"}` })}
+        >
           Proceed to Checkout
-        </Button>
+        </Link>
       </CardContent>
     </Card>
   )

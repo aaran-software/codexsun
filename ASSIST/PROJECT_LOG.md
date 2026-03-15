@@ -182,6 +182,11 @@ CX-008
 - Added frontend signup wiring against the existing `/auth/register` endpoint and kept session persistence through the shared auth store.
 - Added a configuration-driven Google sign-in entry point, updated auth/security docs, and verified the frontend production build.
 
+CX-048
+- Implemented the customer storefront inside the existing `cxstore` app with a commerce shell, customer routes, React Query data fetching, and persisted Zustand cart and wishlist stores.
+- Added public-facing pages for home, category browsing, search, product details, vendor stores, wishlist, checkout, order success, and account views without changing the repository structure.
+- Connected the storefront to the current ASP.NET Core APIs where available, documented the authenticated catalog constraint and local wishlist or review fallbacks, and verified the frontend production build.
+
 CX-007
 - Added a seeded bootstrap admin user linked to the existing `Admin` role in the Auth database model.
 - Stored the bootstrap account as a BCrypt password hash and created/applied the `SuperAdminSeed` EF Core migration.

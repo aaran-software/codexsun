@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useParams, useSearchParams } from "react-router-dom"
 
 import { getOrderById } from "@/api/salesApi"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { usePageMeta } from "@/hooks/usePageMeta"
 import { useAuth } from "@/state/authStore"
 import { formatCurrency } from "@/utils/storefront"
@@ -76,8 +76,8 @@ export default function OrderSuccessPage() {
       </section>
 
       <div className="flex flex-wrap gap-3">
-        <Button render={<Link to="/account/orders" />} className="rounded-full px-5">View Orders</Button>
-        <Button render={<Link to="/search" />} variant="outline" className="rounded-full px-5">Continue Shopping</Button>
+        <Link to="/account/orders" className={buttonVariants({ className: "rounded-full px-5" })}>View Orders</Link>
+        <Link to="/search" className={buttonVariants({ variant: "outline", className: "rounded-full px-5" })}>Continue Shopping</Link>
       </div>
     </div>
   )

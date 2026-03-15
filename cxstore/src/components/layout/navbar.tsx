@@ -11,7 +11,7 @@ export function Navbar({ items }: { items: NavItem[] }) {
   const location = useLocation()
 
   return (
-    <nav className="hidden items-center gap-1 lg:flex">
+    <nav className="hidden flex-1 items-center justify-center gap-2 lg:flex">
       {items.map((item) => {
         const isActive = location.pathname === item.url || location.pathname.startsWith(`${item.url}/`)
 
@@ -20,7 +20,7 @@ export function Navbar({ items }: { items: NavItem[] }) {
             key={item.url}
             to={item.url}
             className={cn(
-              "rounded-full px-3 py-2 text-sm font-medium transition",
+              "min-w-28 rounded-full px-4 py-2 text-center text-sm font-medium transition",
               isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >

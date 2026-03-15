@@ -60,6 +60,7 @@ const TransfersPage = lazy(() => import("./pages/admin/inventory/TransfersPage")
 const InventoryPage = lazy(() => import("./pages/admin/inventory/InventoryPage"))
 const StockMovementsPage = lazy(() => import("./pages/admin/inventory/StockMovementsPage"))
 const VendorsPage = lazy(() => import("./pages/admin/vendors/VendorsPage"))
+const VendorCreatePage = lazy(() => import("./pages/admin/vendors/VendorCreatePage"))
 const VendorDetailsPage = lazy(() => import("./pages/admin/vendors/VendorDetailsPage"))
 const VendorUsersPage = lazy(() => import("./pages/admin/vendors/VendorUsersPage"))
 const VendorWarehousesPage = lazy(() => import("./pages/admin/vendors/VendorWarehousesPage"))
@@ -171,6 +172,7 @@ function App() {
                   <Route path="/admin/monitoring/error-logs" element={<ErrorLogsPage />} />
                   <Route path="/admin/monitoring/login-history" element={<LoginHistoryPage />} />
                   <Route path="/admin/vendors" element={<VendorsPage />} />
+                  <Route path="/admin/vendors/create" element={<VendorCreatePage />} />
                   <Route path="/admin/vendors/:id" element={<VendorDetailsPage />} />
                   <Route path="/admin/vendors/:id/users" element={<VendorUsersPage />} />
                   <Route path="/admin/common" element={<Navigate to="/admin/common/brands" replace />} />

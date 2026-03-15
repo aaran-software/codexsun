@@ -5,7 +5,7 @@ import { Link } from "react-router-dom"
 import { getProducts, getProductCategories } from "@/api/productApi"
 import { getVendors } from "@/api/vendorApi"
 import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { CategoryGrid } from "@/components/product/CategoryGrid"
 import { DealBanner } from "@/components/product/DealBanner"
 import { HeroSlider } from "@/components/product/HeroSlider"
@@ -96,7 +96,7 @@ export default function Home() {
                 <div className="text-2xl font-semibold">Newsletter Signup</div>
                 <p className="text-sm text-muted-foreground">The backend does not yet expose a customer newsletter endpoint, so this storefront phase keeps the signup CTA visual and routes customers to support.</p>
               </div>
-              <Button render={<Link to="/contact" />} className="rounded-full px-5">Contact Support</Button>
+              <Link to="/contact" className={buttonVariants({ className: "rounded-full px-5" })}>Contact Support</Link>
             </div>
           </section>
         </>

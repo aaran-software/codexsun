@@ -16,7 +16,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, TerminalIcon, DatabaseIcon } from "lucide-react"
+import {
+  BellIcon,
+  BoxesIcon,
+  ChartColumnBigIcon,
+  ClipboardListIcon,
+  LayoutDashboardIcon,
+  LifeBuoyIcon,
+  PackageSearchIcon,
+  PackagePlusIcon,
+  ReceiptTextIcon,
+  SendIcon,
+  Settings2Icon,
+  ShieldCheckIcon,
+  StoreIcon,
+  SwatchBookIcon,
+  TruckIcon,
+  UsersRoundIcon,
+  WalletCardsIcon,
+} from "lucide-react"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const auth = useAuth()
@@ -35,62 +53,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const monitoringItems = getMonitoringMenuItems(auth.user?.role)
   const settingsItems = getSettingsMenuItems(auth.user?.role)
   const commonItems = getCommonMenuItems(auth.user?.role)
+  const portalHome = auth.user?.role === "Admin" ? "/admin" : auth.user?.role === "Vendor" ? "/vendor" : "/dashboard"
+  const displayLogo = company.logoUrl || "/Aspire.png"
 
   const navMain = [
     {
-      title: "Workspace",
-      url: "/dashboard",
-      icon: <TerminalSquareIcon />,
+      title: "Overview",
+      url: portalHome,
+      icon: <LayoutDashboardIcon />,
       isActive: true,
       items: [
         {
           title: "Dashboard",
-          url: "/dashboard",
+          url: portalHome,
         },
       ],
-    },
-    {
-      title: "Account",
-      url: auth.user?.role === "Vendor" ? "/vendor" : "/dashboard",
-      icon: <BotIcon />,
-      items: [
-        {
-          title: "Profile",
-          url: "/dashboard",
-        },
-        {
-          title: "Session",
-          url: auth.user?.role === "Vendor" ? "/vendor" : "/dashboard",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "/services",
-      icon: <BookOpenIcon />,
-      items: [
-        {
-          title: "Services",
-          url: "/services",
-        },
-        {
-          title: "About",
-          url: "/about",
-        },
-      ],
-    },
-    {
-      title: "Administration",
-      url: auth.user?.role === "Admin" ? "/admin" : "/dashboard",
-      icon: <Settings2Icon />,
-      items: adminItems,
     },
     ...(masterItems.length > 0
       ? [
           {
-            title: "Master",
+            title: auth.user?.role === "Vendor" ? "Catalog" : "Catalog",
             url: masterItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <SwatchBookIcon />,
             items: masterItems,
           },
         ]
@@ -100,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Sales",
             url: salesItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <ReceiptTextIcon />,
             items: salesItems,
           },
         ]
@@ -110,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Inventory",
             url: inventoryItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <BoxesIcon />,
             items: inventoryItems,
           },
         ]
@@ -120,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Vendors",
             url: vendorItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <StoreIcon />,
             items: vendorItems,
           },
         ]
@@ -130,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Promotions",
             url: promotionItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <PackagePlusIcon />,
             items: promotionItems,
           },
         ]
@@ -140,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Shipping",
             url: shippingItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <TruckIcon />,
             items: shippingItems,
           },
         ]
@@ -150,7 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Returns",
             url: returnsItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <ClipboardListIcon />,
             items: returnsItems,
           },
         ]
@@ -160,8 +144,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Analytics",
             url: analyticsItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <ChartColumnBigIcon />,
             items: analyticsItems,
+          },
+        ]
+      : []),
+    ...(commonItems.length > 0
+      ? [
+          {
+            title: "Common",
+            url: "/admin/common/brands",
+            icon: <PackageSearchIcon />,
+            items: commonItems,
           },
         ]
       : []),
@@ -170,7 +164,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Media",
             url: mediaItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <WalletCardsIcon />,
             items: mediaItems,
           },
         ]
@@ -180,7 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Notifications",
             url: notificationItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <BellIcon />,
             items: notificationItems,
           },
         ]
@@ -190,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Monitoring",
             url: monitoringItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <ShieldCheckIcon />,
             items: monitoringItems,
           },
         ]
@@ -200,18 +194,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Settings",
             url: settingsItems[0]?.url ?? "/dashboard",
-            icon: <DatabaseIcon />,
+            icon: <Settings2Icon />,
             items: settingsItems,
           },
         ]
       : []),
-    ...(commonItems.length > 0
+    ...(adminItems.length > 0
       ? [
           {
-            title: "Common",
-            url: "/admin/common/brands",
-            icon: <DatabaseIcon />,
-            items: commonItems,
+            title: auth.user?.role === "Admin" ? "Administration" : "Workspace",
+            url: adminItems[0]?.url ?? portalHome,
+            icon: <UsersRoundIcon />,
+            items: adminItems,
           },
         ]
       : []),
@@ -235,13 +229,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="/dashboard" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <TerminalIcon className="size-4" />
+            <SidebarMenuButton size="lg" render={<Link to={portalHome} />}>
+              <div className="flex aspect-square size-9 items-center justify-center overflow-hidden rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40">
+                <img src={displayLogo} alt={company.displayName} className="size-full object-cover" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{company.displayName}</span>
-                <span className="truncate text-xs">{auth.user?.role ?? "Workspace"}</span>
+                <span className="truncate font-semibold">{company.displayName}</span>
+                <span className="truncate text-xs text-sidebar-foreground/70">{auth.user?.role ?? "Workspace"} Portal</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

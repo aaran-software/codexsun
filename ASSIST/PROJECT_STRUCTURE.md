@@ -426,19 +426,21 @@ Not currently active:
 
 `cxstore/src` is the frontend root. Main folders:
 
-- `api/` -> HTTP clients per domain
+- `api/` -> HTTP clients per domain, including the storefront axios client
 - `components/` -> layouts, admin UI, forms, lookups, shared primitives, shadcn-style UI components
 - `config/` -> company metadata
 - `css/` -> global app stylesheet
 - `hooks/` -> small shared hooks
-- `lib/` -> registry/config helpers
+- `lib/` -> registry/config helpers plus the shared React Query client
 - `pages/` -> route-level screens
-- `state/` -> auth state store
-- `types/` -> TypeScript contracts aligned to backend DTOs
+- `routes/` -> lightweight storefront route constants
+- `state/` -> auth store plus storefront cart and wishlist stores
+- `types/` -> TypeScript contracts aligned to backend DTOs and storefront view models
+- `utils/` -> storefront filtering, formatting, slug, and local persistence helpers
 
 ## Frontend Folder Structure
 
-There is no `cxstore/src/modules` folder. The frontend is organized by cross-cutting folders plus route folders under `pages/admin/*`.
+There is no `cxstore/src/modules` folder. The frontend is organized by cross-cutting folders, public storefront pages under `pages/*`, and admin or vendor route folders under `pages/admin/*`.
 
 Main frontend module areas are represented by:
 
@@ -453,6 +455,14 @@ Main frontend module areas are represented by:
   - `WebLayout`
   - `AuthLayout`
   - `AppLayout`
+- Storefront shell:
+  - `MainLayout`
+  - `storefront-header.tsx`
+  - `storefront-footer.tsx`
+  - `navbar.tsx`
+  - `storefront-mobile-menu.tsx`
+  - `storefront-bottom-nav.tsx`
+  - `storefront-search-bar.tsx`
 - Shared admin primitives:
   - `CommonList`
   - `CommonUpsertDialog`
@@ -464,6 +474,10 @@ Main frontend module areas are represented by:
   - sidebar navigation blocks under `components/blocks/menu/app`
 - Shared UI:
   - `components/ui/*` contains the reusable component set
+- Commerce components:
+  - `components/product/*` for cards, filters, galleries, reviews, and merchandising sections
+  - `components/cart/*` for cart rows, coupon entry, and totals
+  - `components/checkout/*` for stepper, address, shipping, payment, and review blocks
 
 ## Frontend State Management
 
@@ -471,12 +485,15 @@ Main frontend module areas are represented by:
 - Storage-backed state includes access token, refresh token, expiry, and current user
 - Session restore runs from `main.tsx` through `initializeAuth()`
 - Auth store handles refresh-token retry and logout cleanup
-- No Redux, Zustand, MobX, or React Query is used
+- Storefront cart state is implemented in `state/cartStore.ts` using Zustand persistence
+- Storefront wishlist state is implemented in `state/wishlistStore.ts` using Zustand persistence
+- Cart persistence is local-storage backed and synchronizes against the existing cart APIs
+- React Query is now used for customer-facing data fetching and cache management through `lib/queryClient.ts`
 
 ## Frontend API Integration
 
-- All API calls go through `api/httpClient.ts`
-- `requestJson()` injects bearer tokens, retries once on `401` using refresh token flow, and throws typed `HttpError`
+- Existing business APIs still use `api/httpClient.ts`
+- Storefront pages use `api/apiClient.ts`, an Axios client that attaches JWT access tokens when present and retries once after refresh
 - Domain API clients:
   - `authApi.ts`
   - `commonApi.ts`
@@ -485,6 +502,7 @@ Main frontend module areas are represented by:
   - `contactApi.ts`
 - `productApi.ts`
 - `salesApi.ts`
+- `apiClient.ts`
 - `inventoryApi.ts`
 - `companyApi.ts`
 - `mediaApi.ts`
@@ -500,9 +518,46 @@ Main frontend module areas are represented by:
 
 ## Public / Storefront
 
-- Pages: `Home`, `About`, `Services`, `Contact`, `CartPage`, `CheckoutPage`
+- Pages:
+  - `Home`
+  - `About`
+  - `Services`
+  - `Contact`
+  - `CategoryPage`
+  - `SearchPage`
+  - `ProductPage`
+  - `VendorStorePage`
+  - `CartPage`
+  - `CheckoutPage`
+  - `OrderSuccessPage`
+  - `WishlistPage`
+  - `AccountPage`
 - Layout: `WebLayout`
-- Purpose: marketing/storefront shell plus cart and checkout entry points
+- Supporting files:
+  - `routes/router.tsx`
+  - `hooks/usePageMeta.ts`
+  - `types/storefront.ts`
+  - `utils/storefront.ts`
+- Purpose: customer ecommerce shell covering merchandising, browsing, cart, checkout, account, wishlist, and order-success flows without introducing a second frontend application
+
+## Storefront Commerce
+
+- Home:
+  - merchandising sections for hero, featured products, category grid, best sellers, top vendors, trending products, deal banner, and newsletter CTA
+- Catalog:
+  - category and search pages provide client-side filtering, sorting, pagination, and vendor-aware product cards
+- Product detail:
+  - gallery, pricing, stock status, vendor link, quantity selection, related products, local reviews, and wishlist actions
+- Cart and checkout:
+  - Zustand-backed cart with quantity editing, coupon entry, shipping selection, payment-method selection, and order submission against the existing Sales APIs
+- Account:
+  - one route-aware account page renders profile, addresses, order history, wishlist, and reviews views under `/account/*`
+- Vendor storefront:
+  - vendor landing pages are resolved from vendor-company data and render vendor profile plus catalog slices
+- Constraint:
+  - the current backend product and vendor discovery APIs require authentication, so the storefront shows an auth notice for live catalog data when no session is present
+- Constraint:
+  - wishlist and review persistence are currently frontend-managed because dedicated backend wishlist and product-review APIs do not yet exist
 
 ## Authentication
 
@@ -650,10 +705,23 @@ Routes using `WebLayout`:
 - `/about`
 - `/contact`
 - `/services`
+- `/search`
+- `/category/:slug`
+- `/product/:slug`
+- `/store/:vendorSlug`
 - `/cart`
-- `/checkout`
+- `/wishlist`
+- authenticated storefront routes still rendered inside `WebLayout`:
+  - `/checkout`
+  - `/order-success/:orderId`
+  - `/account`
+  - `/account/profile`
+  - `/account/addresses`
+  - `/account/orders`
+  - `/account/wishlist`
+  - `/account/reviews`
 
-This is the public storefront shell with top navigation, theme toggle, footer, and optional authenticated dashboard link.
+This is the storefront shell with customer navigation, search, wishlist, cart badge, mobile menu, footer, and account entry points.
 
 ## AuthLayout
 
@@ -691,11 +759,6 @@ Routes using `AppLayout`:
   - `/vendor/sales/*`
   - `/vendor/warehouses`
   - `/vendor/inventory/*`
-- customer:
-  - `/account/orders`
-  - `/orders/:id`
-  - `/account/invoices`
-  - `/account/invoices/:id`
 
 `ProtectedRoute` wraps these route groups and enforces allowed roles.
 

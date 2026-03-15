@@ -1,7 +1,7 @@
 import { ArrowRightIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export function HeroSlider() {
   return (
@@ -18,13 +18,13 @@ export function HeroSlider() {
           Browse a shared marketplace, compare vendor-led offers, manage your cart, and convert checkout into live orders on the Codexsun platform.
         </p>
         <div className="flex flex-wrap gap-3">
-          <Button render={<Link to="/search" />} className="rounded-full bg-white px-5 text-black hover:bg-white/90">
+          <Link to="/search" className={buttonVariants({ className: "rounded-full bg-white px-5 text-black hover:bg-white/90" })}>
             Explore catalog
             <ArrowRightIcon className="size-4" />
-          </Button>
-          <Button render={<Link to="/account/orders" />} variant="outline" className="rounded-full border-white/25 bg-transparent px-5 text-white hover:bg-white/10">
+          </Link>
+          <Link to="/account/orders" className={buttonVariants({ variant: "outline", className: "rounded-full border-white/25 bg-transparent px-5 text-white hover:bg-white/10" })}>
             View orders
-          </Button>
+          </Link>
         </div>
       </div>
     </section>

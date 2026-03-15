@@ -39,7 +39,12 @@ export default function ProductPage() {
     enabled: Boolean(auth.isAuthenticated && summary?.id),
   })
 
-  const relatedProducts = useMemo(() => products.filter((candidate) => candidate.categoryId === product?.categoryId && candidate.id !== product.id).slice(0, 3), [product?.categoryId, product?.id, products])
+  const relatedProducts = useMemo(
+    () => products
+      .filter((candidate) => candidate.categoryId === product?.categoryId && candidate.id !== (product?.id ?? -1))
+      .slice(0, 3),
+    [product?.categoryId, product?.id, products],
+  )
   const reviews = summary ? getProductReviews(summary.id) : []
   const rating = summary ? getAverageRating(summary.id) : 0
   const reviewCount = summary ? getReviewCount(summary.id) : 0
