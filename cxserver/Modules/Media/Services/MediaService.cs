@@ -306,6 +306,33 @@ public sealed class MediaService(CodexsunDbContext dbContext, IFileStorageProvid
         return MapFile(entity);
     }
 
+    public async Task<MediaFileResponse?> RenameFileAsync(int id, MediaRenameRequest request, Guid actorUserId, string ipAddress, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            throw new InvalidOperationException("New file name is required.");
+        }
+
+        var entity = await dbContext.MediaFiles
+            .Include(x => x.Folder)
+            .Include(x => x.UploadedByUser)
+            .Include(x => x.UsageEntries)
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        entity.OriginalFileName = request.Name.Trim();
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        await WriteAuditLogAsync(actorUserId, "Media.Rename", nameof(MediaFile), entity.Id.ToString(), ipAddress, cancellationToken);
+        
+        return MapFile(entity);
+    }
+
     public async Task RecordUsageAsync(int mediaFileId, MediaUsageRequest request, CancellationToken cancellationToken)
     {
         ValidateUsageRequest(request);

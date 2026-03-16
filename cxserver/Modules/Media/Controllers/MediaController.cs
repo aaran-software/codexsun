@@ -58,6 +58,20 @@ public sealed class MediaController(MediaService mediaService) : ControllerBase
         }
     }
 
+    [HttpPost("files/{id:int}/rename")]
+    public async Task<IActionResult> RenameFile(int id, MediaRenameRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var file = await mediaService.RenameFileAsync(id, request, GetActorUserId(), GetIpAddress(), cancellationToken);
+            return file is null ? NotFound() : Ok(file);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
+    }
+
     [HttpPost("files/{id:int}/usage")]
     public async Task<IActionResult> RecordUsage(int id, MediaUsageRequest request, CancellationToken cancellationToken)
     {

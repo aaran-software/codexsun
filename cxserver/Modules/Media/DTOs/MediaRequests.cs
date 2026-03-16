@@ -23,6 +23,11 @@ public sealed class MediaMoveRequest
     public int? FolderId { get; set; }
 }
 
+public sealed class MediaRenameRequest
+{
+    public string Name { get; set; } = string.Empty;
+}
+
 public sealed class MediaUsageRequest
 {
     public string Module { get; set; } = string.Empty;

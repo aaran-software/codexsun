@@ -54,6 +54,13 @@ export function restoreMediaFile(id: number) {
   return requestJson<void>(`/media/files/${id}/restore`, { method: "POST" })
 }
 
+export function renameMediaFile(id: number, name: string) {
+  return requestJson<MediaFile>(`/media/files/${id}/rename`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  })
+}
+
 export function getMediaFolders() {
   return requestJson<MediaFolder[]>("/media/folders", { method: "GET" })
 }

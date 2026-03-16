@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getProductCategories } from "@/api/productApi"
 import { StorefrontBottomNav } from "@/components/layout/storefront-bottom-nav"
 import { StorefrontFooter } from "@/components/layout/storefront-footer"
+import { StorefrontCategories } from "@/components/layout/storefront-categories"
 import { StorefrontHeader } from "@/components/layout/storefront-header"
 import { useAuth } from "@/state/authStore"
 
@@ -32,6 +33,7 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f6efe6,transparent_30%),linear-gradient(180deg,#fcfbf8_0%,#f5efe7_100%)] text-foreground">
       <StorefrontHeader categories={cleanCategories} />
+      <StorefrontCategories />
       <main className="pb-20 md:pb-0">
         <Outlet />
       </main>
