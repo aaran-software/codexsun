@@ -53,6 +53,11 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.ToTable("orders");
         builder.ConfigureSales();
         builder.Property(x => x.OrderNumber).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.IdempotencyKey).HasMaxLength(128).HasDefaultValue(string.Empty);
+        builder.Property(x => x.PaymentProvider).HasMaxLength(64).HasDefaultValue(string.Empty);
+        builder.Property(x => x.PaymentGatewayOrderId).HasMaxLength(128).HasDefaultValue(string.Empty);
+        builder.Property(x => x.ShippingMethod).HasMaxLength(64).HasDefaultValue(string.Empty);
+        builder.Property(x => x.PaymentMethod).HasMaxLength(64).HasDefaultValue(string.Empty);
         builder.Property(x => x.OrderStatus).HasMaxLength(32).IsRequired();
         builder.Property(x => x.PaymentStatus).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Subtotal).HasColumnType("numeric(18,2)").IsRequired();
@@ -60,7 +65,9 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.DiscountAmount).HasColumnType("numeric(18,2)").IsRequired();
         builder.Property(x => x.TotalAmount).HasColumnType("numeric(18,2)").IsRequired();
         builder.HasIndex(x => x.OrderNumber).IsUnique();
+        builder.HasIndex(x => x.PaymentGatewayOrderId);
         builder.HasIndex(x => x.CustomerUserId);
+        builder.HasIndex(x => new { x.CustomerUserId, x.IdempotencyKey });
         builder.HasIndex(x => x.OrderStatus);
         builder.HasOne(x => x.CustomerUser).WithMany().HasForeignKey(x => x.CustomerUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.CustomerContact).WithMany().HasForeignKey(x => x.CustomerContactId).OnDelete(DeleteBehavior.Restrict);
@@ -94,6 +101,23 @@ public sealed class OrderStatusHistoryConfiguration : IEntityTypeConfiguration<O
         builder.Property(x => x.Status).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Notes).HasMaxLength(512).HasDefaultValue(string.Empty);
         builder.HasOne(x => x.Order).WithMany(x => x.StatusHistory).HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public sealed class OrderInventoryReservationConfiguration : IEntityTypeConfiguration<OrderInventoryReservation>
+{
+    public void Configure(EntityTypeBuilder<OrderInventoryReservation> builder)
+    {
+        builder.ToTable("order_inventory_reservations");
+        builder.ConfigureSales();
+        builder.Property(x => x.Quantity).IsRequired();
+        builder.Property(x => x.ReleasedQuantity).HasDefaultValue(0);
+        builder.HasIndex(x => x.OrderItemId);
+        builder.HasIndex(x => x.ProductInventoryId);
+        builder.HasIndex(x => x.VendorUserId);
+        builder.HasOne(x => x.OrderItem).WithMany(x => x.InventoryReservations).HasForeignKey(x => x.OrderItemId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.ProductInventory).WithMany().HasForeignKey(x => x.ProductInventoryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.VendorUser).WithMany().HasForeignKey(x => x.VendorUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

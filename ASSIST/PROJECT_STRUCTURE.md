@@ -50,6 +50,7 @@ The `/cxstore` frontend relies on modern React/Vite.
 - Common Masters (Countries, States, Units, HSN, Tax)
 - Comprehensive Cart & Checkout UI
 - Orders & Invoices Flow
+- Razorpay + UPI hosted storefront payments
 - Inventory (Warehouse, PO, Adjustments)
 - After-Sales (Returns, Refunds)
 

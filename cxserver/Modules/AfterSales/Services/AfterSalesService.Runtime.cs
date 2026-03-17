@@ -89,6 +89,8 @@ public sealed partial class AfterSalesService
             entity.ReceivedAt = now;
         }
 
+        await ReleaseOrderReservationsAsync(entity, now, cancellationToken);
+
         entity.Status = "Completed";
         entity.ClosedAt = now;
         entity.UpdatedAt = now;
@@ -289,6 +291,7 @@ public sealed partial class AfterSalesService
         => await dbContext.Returns
             .Include(x => x.Order)
             .Include(x => x.Items).ThenInclude(x => x.Product)
+            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.InventoryReservations)
             .Include(x => x.StatusHistory)
             .SingleOrDefaultAsync(x => x.Id == returnId, cancellationToken);
 
@@ -397,6 +400,39 @@ public sealed partial class AfterSalesService
                 CreatedAt = now,
                 UpdatedAt = now
             });
+        }
+    }
+
+    private async Task ReleaseOrderReservationsAsync(Return entity, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        foreach (var item in entity.Items)
+        {
+            var quantityToRelease = item.Quantity;
+            foreach (var reservation in item.OrderItem.InventoryReservations.Where(x => x.Quantity > x.ReleasedQuantity).OrderBy(x => x.Id))
+            {
+                if (quantityToRelease <= 0)
+                {
+                    break;
+                }
+
+                var availableReservedQuantity = reservation.Quantity - reservation.ReleasedQuantity;
+                var releasedQuantity = Math.Min(availableReservedQuantity, quantityToRelease);
+                if (releasedQuantity <= 0)
+                {
+                    continue;
+                }
+
+                if (reservation.ProductInventoryId.HasValue)
+                {
+                    var inventory = await dbContext.ProductInventory.SingleAsync(x => x.Id == reservation.ProductInventoryId.Value, cancellationToken);
+                    inventory.ReservedQuantity = Math.Max(0, inventory.ReservedQuantity - releasedQuantity);
+                    inventory.UpdatedAt = now;
+                }
+
+                reservation.ReleasedQuantity += releasedQuantity;
+                reservation.UpdatedAt = now;
+                quantityToRelease -= releasedQuantity;
+            }
         }
     }
 

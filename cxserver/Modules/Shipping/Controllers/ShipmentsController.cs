@@ -13,11 +13,15 @@ public sealed class ShipmentsController(ShippingService shippingService) : Contr
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ShipmentResponse>>> GetShipments(CancellationToken cancellationToken)
-        => Ok(await shippingService.GetShipmentsAsync(cancellationToken));
+        => Ok(await shippingService.GetShipmentsAsync(GetActorUserId(), GetActorRole(), cancellationToken));
 
     [HttpGet("methods")]
     public async Task<ActionResult<IReadOnlyList<ShippingMethodResponse>>> GetShippingMethods(CancellationToken cancellationToken)
         => Ok(await shippingService.GetShippingMethodsAsync(cancellationToken));
+
+    [HttpGet("order/{orderId:int}")]
+    public async Task<ActionResult<IReadOnlyList<ShipmentResponse>>> GetShipmentsForOrder(int orderId, CancellationToken cancellationToken)
+        => Ok(await shippingService.GetShipmentsForOrderAsync(orderId, GetActorUserId(), GetActorRole(), cancellationToken));
 
     [HttpPost]
     public async Task<IActionResult> CreateShipment(ShipmentCreateRequest request, CancellationToken cancellationToken)
@@ -25,6 +29,19 @@ public sealed class ShipmentsController(ShippingService shippingService) : Contr
         try
         {
             return Ok(await shippingService.CreateShipmentAsync(request, GetActorUserId(), GetActorRole(), GetIpAddress(), cancellationToken));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
+    }
+
+    [HttpPost("auto-create/{orderId:int}")]
+    public async Task<IActionResult> AutoCreateShipment(int orderId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Ok(await shippingService.EnsureShipmentForOrderAsync(orderId, GetActorUserId(), GetActorRole(), GetIpAddress(), cancellationToken));
         }
         catch (InvalidOperationException exception)
         {
@@ -49,7 +66,7 @@ public sealed class ShipmentsController(ShippingService shippingService) : Contr
     [HttpGet("{trackingNumber}")]
     public async Task<IActionResult> TrackShipment(string trackingNumber, CancellationToken cancellationToken)
     {
-        var shipment = await shippingService.TrackShipmentAsync(trackingNumber, cancellationToken);
+        var shipment = await shippingService.TrackShipmentAsync(trackingNumber, GetActorUserId(), GetActorRole(), cancellationToken);
         return shipment is null ? NotFound() : Ok(shipment);
     }
 

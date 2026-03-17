@@ -2,50 +2,40 @@ import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 
-import { getProducts } from "@/api/productApi"
-import { getVendors } from "@/api/vendorApi"
-import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
+import { getStorefrontProducts } from "@/api/productApi"
+import { getStorefrontVendors } from "@/api/vendorApi"
 import { ProductGrid } from "@/components/product/ProductGrid"
 import { RatingStars } from "@/components/product/RatingStars"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
-import { useAuth } from "@/state/authStore"
-import { getAverageRating, getReviewCount, slugify } from "@/utils/storefront"
+import { slugify } from "@/utils/storefront"
 
 export default function VendorStorePage() {
   const { vendorSlug = "" } = useParams()
-  const auth = useAuth()
+  const { company } = useCompanyConfig()
 
   const { data: vendors = [] } = useQuery({
     queryKey: ["storefront", "vendors", "store", vendorSlug],
-    queryFn: getVendors,
-    enabled: auth.isAuthenticated,
+    queryFn: () => getStorefrontVendors(),
   })
   const { data: products = [] } = useQuery({
     queryKey: ["storefront", "products", "vendor-store", vendorSlug],
-    queryFn: () => getProducts(false),
-    enabled: auth.isAuthenticated,
+    queryFn: () => getStorefrontProducts({ vendorSlug }),
+    enabled: Boolean(vendorSlug),
   })
 
   const vendor = vendors.find((entry) => slugify(entry.companyName) === vendorSlug)
   const vendorProducts = useMemo(() => products.filter((product) => slugify(product.vendorCompanyName || product.vendorName) === vendorSlug), [products, vendorSlug])
   const vendorRating = vendorProducts.length > 0
-    ? vendorProducts.reduce((total, product) => total + getAverageRating(product.id), 0) / vendorProducts.length
+    ? vendorProducts.reduce((total, product) => total + product.averageRating, 0) / vendorProducts.length
     : 0
-  const vendorReviewCount = vendorProducts.reduce((total, product) => total + getReviewCount(product.id), 0)
+  const vendorReviewCount = vendorProducts.reduce((total, product) => total + product.reviewCount, 0)
 
   usePageMeta({
     title: vendor ? `${vendor.companyName} - Vendor Store` : "Vendor Store",
-    description: vendor ? `Browse products sold by ${vendor.companyName}.` : "Browse a vendor storefront in the Codexsun marketplace.",
+    description: vendor ? `Browse products sold by ${vendor.companyName}.` : `Browse a vendor storefront in the ${company.displayName} marketplace.`,
     canonicalPath: `/store/${vendorSlug}`,
   })
-
-  if (!auth.isAuthenticated) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <StorefrontAuthNotice title="Vendor storefronts require sign-in" description="The current vendor and product APIs are authenticated. Sign in to browse vendor storefronts and live vendor catalogs." />
-      </div>
-    )
-  }
 
   if (!vendor) {
     return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground sm:px-6">Loading vendor storefront...</div>

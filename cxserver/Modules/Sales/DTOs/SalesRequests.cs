@@ -31,10 +31,13 @@ public sealed class CreateOrderRequest
 {
     public int? CartId { get; set; }
     public string SessionId { get; set; } = string.Empty;
+    public string IdempotencyKey { get; set; } = string.Empty;
     public int? CustomerContactId { get; set; }
     public int? CurrencyId { get; set; }
     public decimal DiscountAmount { get; set; }
     public DateTimeOffset? InvoiceDueDate { get; set; }
+    public string ShippingMethod { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = string.Empty;
     public OrderAddressRequest BillingAddress { get; set; } = new();
     public OrderAddressRequest ShippingAddress { get; set; } = new();
 }
@@ -59,6 +62,19 @@ public sealed class RecordPaymentRequest
     public int? CurrencyId { get; set; }
     public string TransactionReference { get; set; } = string.Empty;
     public string Provider { get; set; } = string.Empty;
+}
+
+public sealed class InitializeRazorpayCheckoutRequest
+{
+    public int OrderId { get; set; }
+}
+
+public sealed class VerifyRazorpayPaymentRequest
+{
+    public int OrderId { get; set; }
+    public string RazorpayOrderId { get; set; } = string.Empty;
+    public string RazorpayPaymentId { get; set; } = string.Empty;
+    public string RazorpaySignature { get; set; } = string.Empty;
 }
 
 public sealed class RefundPaymentRequest

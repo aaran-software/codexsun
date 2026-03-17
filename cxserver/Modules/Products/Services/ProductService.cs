@@ -42,6 +42,29 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProductCategoryResponse>> GetStorefrontCategoriesAsync(CancellationToken cancellationToken)
+    {
+        var activeCategoryIds = await dbContext.Products
+            .AsNoTracking()
+            .Where(x => x.IsActive && x.IsPublished && x.CategoryId.HasValue)
+            .Select(x => x.CategoryId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return await dbContext.ProductCategories
+            .AsNoTracking()
+            .Where(x => x.IsActive && activeCategoryIds.Contains(x.Id))
+            .OrderBy(x => x.Name)
+            .Select(x => new ProductCategoryResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Slug = x.Slug,
+                IsActive = x.IsActive
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ProductCategoryResponse> CreateCategoryAsync(string name, CancellationToken cancellationToken)
     {
         var normalizedName = name.Trim();
@@ -85,6 +108,53 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             .OrderBy(x => x.Name)
             .Select(MapListItem())
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProductListItemResponse>> GetStorefrontProductsAsync(
+        string? query,
+        string? categorySlug,
+        string? vendorSlug,
+        int? limit,
+        CancellationToken cancellationToken)
+    {
+        var storefrontQuery = BuildStorefrontProductsQuery();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var normalizedQuery = query.Trim().ToLowerInvariant();
+            storefrontQuery = storefrontQuery.Where(x =>
+                x.Name.ToLower().Contains(normalizedQuery)
+                || x.Sku.ToLower().Contains(normalizedQuery)
+                || (x.Category != null && x.Category.Name.ToLower().Contains(normalizedQuery))
+                || (x.Vendor != null && x.Vendor.CompanyName.ToLower().Contains(normalizedQuery)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(categorySlug))
+        {
+            var normalizedCategorySlug = categorySlug.Trim().ToLowerInvariant();
+            storefrontQuery = storefrontQuery.Where(x => x.Category != null && x.Category.Slug == normalizedCategorySlug);
+        }
+
+        var items = await storefrontQuery
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.Name)
+            .Select(MapListItem())
+            .ToListAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(vendorSlug))
+        {
+            var normalizedVendorSlug = vendorSlug.Trim().ToLowerInvariant();
+            items = items
+                .Where(x => ToSlug(!string.IsNullOrWhiteSpace(x.VendorCompanyName) ? x.VendorCompanyName : x.VendorName) == normalizedVendorSlug)
+                .ToList();
+        }
+
+        if (limit.HasValue && limit.Value > 0)
+        {
+            items = items.Take(limit.Value).ToList();
+        }
+
+        return items;
     }
 
     public async Task<IReadOnlyList<ProductListItemResponse>> GetProductsByVendorAsync(Guid vendorUserId, Guid actorUserId, string role, bool includeInactive, CancellationToken cancellationToken)
@@ -142,6 +212,8 @@ public sealed class ProductService(CodexsunDbContext dbContext)
                 IsPublished = x.IsPublished,
                 IsActive = x.IsActive,
                 TotalInventory = x.Inventory.Sum(inventory => inventory.Quantity - inventory.ReservedQuantity) + x.VendorLinks.Sum(link => link.VendorInventory),
+                AverageRating = x.Reviews.Where(review => review.IsApproved).Select(review => (decimal?)review.Rating).Average() ?? 0m,
+                ReviewCount = x.Reviews.Count(review => review.IsApproved),
                 ShortDescription = x.ShortDescription,
                 Description = x.Description,
                 BrandId = x.BrandId,
@@ -226,6 +298,151 @@ public sealed class ProductService(CodexsunDbContext dbContext)
                         Id = attribute.Id,
                         Name = attribute.Name,
                         Values = attribute.Values
+                            .OrderBy(value => value.Id)
+                            .Select(value => new ProductAttributeValueResponse
+                            {
+                                Id = value.Id,
+                                Value = value.Value,
+                                ProductVariantId = value.ProductVariantId
+                            })
+                            .ToList()
+                    })
+                    .ToList()
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<ProductDetailResponse?> GetStorefrontProductBySlugAsync(string slug, CancellationToken cancellationToken)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedSlug))
+        {
+            return null;
+        }
+
+        return await BuildStorefrontProductsQuery()
+            .Where(x => x.Slug == normalizedSlug)
+            .Select(x => new ProductDetailResponse
+            {
+                Id = x.Id,
+                OwnerUserId = x.OwnerUserId,
+                VendorUserId = x.VendorUserId,
+                VendorId = x.VendorId,
+                VendorCompanyName = x.Vendor != null ? x.Vendor.CompanyName : string.Empty,
+                VendorName = x.VendorUser != null ? x.VendorUser.Username : string.Empty,
+                GroupId = x.GroupId,
+                GroupName = x.Group != null ? x.Group.Name : string.Empty,
+                TypeId = x.TypeId,
+                TypeName = x.Type != null ? x.Type.Name : string.Empty,
+                CategoryId = x.CategoryId,
+                CategoryName = x.Category != null ? x.Category.Name : string.Empty,
+                UnitId = x.UnitId,
+                UnitName = x.Unit != null ? x.Unit.Name : string.Empty,
+                CurrencyId = x.CurrencyId,
+                CurrencyName = x.Currency != null ? x.Currency.Name : string.Empty,
+                GstPercentId = x.GstPercentId,
+                GstPercent = x.GstPercent != null ? x.GstPercent.Percentage : null,
+                Sku = x.Sku,
+                Name = x.Name,
+                Slug = x.Slug,
+                BasePrice = x.BasePrice,
+                CostPrice = x.CostPrice,
+                IsPublished = x.IsPublished,
+                IsActive = x.IsActive,
+                TotalInventory = x.Inventory.Sum(inventory => inventory.Quantity - inventory.ReservedQuantity) + x.VendorLinks.Sum(link => link.VendorInventory),
+                AverageRating = x.Reviews.Where(review => review.IsApproved).Select(review => (decimal?)review.Rating).Average() ?? 0m,
+                ReviewCount = x.Reviews.Count(review => review.IsApproved),
+                ShortDescription = x.ShortDescription,
+                Description = x.Description,
+                BrandId = x.BrandId,
+                BrandName = x.Brand != null ? x.Brand.Name : string.Empty,
+                HsnCodeId = x.HsnCodeId,
+                HsnCode = x.HsnCode != null ? x.HsnCode.Code : string.Empty,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+                Variants = x.Variants
+                    .Where(variant => variant.IsActive)
+                    .OrderBy(variant => variant.VariantName)
+                    .Select(variant => new ProductVariantResponse
+                    {
+                        Id = variant.Id,
+                        Sku = variant.Sku,
+                        VariantName = variant.VariantName,
+                        Price = variant.Price,
+                        CostPrice = variant.CostPrice,
+                        InventoryQuantity = variant.InventoryQuantity,
+                        IsActive = variant.IsActive
+                    })
+                    .ToList(),
+                Prices = x.Prices
+                    .Where(price => price.IsActive)
+                    .OrderBy(price => price.PriceType)
+                    .ThenBy(price => price.SalesChannel)
+                    .ThenBy(price => price.MinQuantity)
+                    .Select(price => new ProductPriceResponse
+                    {
+                        Id = price.Id,
+                        ProductVariantId = price.ProductVariantId,
+                        PriceType = price.PriceType,
+                        SalesChannel = price.SalesChannel,
+                        MinQuantity = price.MinQuantity,
+                        Price = price.Price,
+                        CurrencyId = price.CurrencyId,
+                        CurrencyName = price.Currency != null ? price.Currency.Name : string.Empty,
+                        StartDate = price.StartDate,
+                        EndDate = price.EndDate
+                    })
+                    .ToList(),
+                Images = x.Images
+                    .Where(image => image.IsActive)
+                    .OrderByDescending(image => image.IsPrimary)
+                    .ThenBy(image => image.SortOrder)
+                    .Select(image => new ProductImageResponse
+                    {
+                        Id = image.Id,
+                        ImageUrl = image.ImageUrl,
+                        AltText = image.AltText,
+                        IsPrimary = image.IsPrimary,
+                        SortOrder = image.SortOrder
+                    })
+                    .ToList(),
+                Inventory = x.Inventory
+                    .Where(inventory => inventory.IsActive)
+                    .OrderBy(inventory => inventory.Id)
+                    .Select(inventory => new ProductInventoryResponse
+                    {
+                        Id = inventory.Id,
+                        WarehouseId = inventory.WarehouseId,
+                        WarehouseName = inventory.Warehouse != null ? inventory.Warehouse.Name : string.Empty,
+                        Quantity = inventory.Quantity,
+                        ReservedQuantity = inventory.ReservedQuantity,
+                        ReorderLevel = inventory.ReorderLevel
+                    })
+                    .ToList(),
+                VendorLinks = x.VendorLinks
+                    .Where(link => link.IsActive)
+                    .OrderBy(link => link.VendorUser.Username)
+                    .Select(link => new ProductVendorLinkResponse
+                    {
+                        Id = link.Id,
+                        VendorUserId = link.VendorUserId,
+                        VendorId = link.VendorId,
+                        VendorCompanyName = link.Vendor != null ? link.Vendor.CompanyName : string.Empty,
+                        VendorName = link.VendorUser.Username,
+                        VendorSku = link.VendorSku,
+                        VendorSpecificPrice = link.VendorSpecificPrice,
+                        VendorInventory = link.VendorInventory
+                    })
+                    .ToList(),
+                Attributes = x.Attributes
+                    .Where(attribute => attribute.IsActive)
+                    .OrderBy(attribute => attribute.Name)
+                    .Select(attribute => new ProductAttributeResponse
+                    {
+                        Id = attribute.Id,
+                        Name = attribute.Name,
+                        Values = attribute.Values
+                            .Where(value => value.IsActive)
                             .OrderBy(value => value.Id)
                             .Select(value => new ProductAttributeValueResponse
                             {
@@ -411,6 +628,30 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             || x.VendorLinks.Any(link => link.VendorId.HasValue && actorVendorIds.Contains(link.VendorId.Value)));
     }
 
+    private IQueryable<Product> BuildStorefrontProductsQuery()
+    {
+        return dbContext.Products
+            .AsNoTracking()
+            .Include(x => x.VendorUser)
+            .Include(x => x.Vendor)
+            .Include(x => x.Group)
+            .Include(x => x.Type)
+            .Include(x => x.Category)
+            .Include(x => x.Unit)
+            .Include(x => x.Currency)
+            .Include(x => x.GstPercent)
+            .Include(x => x.Brand)
+            .Include(x => x.HsnCode)
+            .Include(x => x.Variants)
+            .Include(x => x.Prices).ThenInclude(price => price.Currency)
+            .Include(x => x.Images)
+            .Include(x => x.Inventory).ThenInclude(inventory => inventory.Warehouse)
+            .Include(x => x.VendorLinks).ThenInclude(link => link.VendorUser)
+            .Include(x => x.VendorLinks).ThenInclude(link => link.Vendor)
+            .Include(x => x.Attributes).ThenInclude(attribute => attribute.Values)
+            .Where(x => x.IsActive && x.IsPublished);
+    }
+
     private static Expression<Func<Product, ProductListItemResponse>> MapListItem()
     {
         return x => new ProductListItemResponse
@@ -441,6 +682,8 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             IsPublished = x.IsPublished,
             IsActive = x.IsActive,
             TotalInventory = x.Inventory.Sum(inventory => inventory.Quantity - inventory.ReservedQuantity) + x.VendorLinks.Sum(link => link.VendorInventory),
+            AverageRating = x.Reviews.Where(review => review.IsApproved).Select(review => (decimal?)review.Rating).Average() ?? 0m,
+            ReviewCount = x.Reviews.Count(review => review.IsApproved),
             CreatedAt = x.CreatedAt,
             UpdatedAt = x.UpdatedAt
         };

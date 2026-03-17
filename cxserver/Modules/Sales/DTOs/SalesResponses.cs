@@ -31,6 +31,8 @@ public class OrderSummaryResponse
 {
     public int Id { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
+    public string ShippingMethod { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = string.Empty;
     public int? CustomerContactId { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string OrderStatus { get; set; } = string.Empty;
@@ -131,8 +133,34 @@ public sealed class PaymentSummaryResponse
     public decimal Amount { get; set; }
     public string Status { get; set; } = string.Empty;
     public string TransactionReference { get; set; } = string.Empty;
+    public string Provider { get; set; } = string.Empty;
     public DateTimeOffset? PaidAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class RazorpayCheckoutSessionResponse
+{
+    public int OrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string KeyId { get; set; } = string.Empty;
+    public string RazorpayOrderId { get; set; } = string.Empty;
+    public int AmountInSubunits { get; set; }
+    public string Currency { get; set; } = string.Empty;
+    public string MerchantName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerEmail { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
+    public string ThemeColor { get; set; } = string.Empty;
+}
+
+public sealed class RazorpayPaymentVerificationResponse
+{
+    public int OrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string OrderStatus { get; set; } = string.Empty;
+    public string PaymentStatus { get; set; } = string.Empty;
+    public PaymentSummaryResponse Payment { get; set; } = new();
 }
 
 public sealed class VendorEarningResponse

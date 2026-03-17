@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useCartStore } from "@/state/cartStore"
 import { useWishlistStore } from "@/state/wishlistStore"
 import type { ProductSummary } from "@/types/product"
-import { formatCurrency, getAverageRating, getPrimaryProductImage, getReviewCount, slugify, toWishlistItem } from "@/utils/storefront"
+import { formatCurrency, getPrimaryProductImage, slugify } from "@/utils/storefront"
 import { RatingStars } from "./RatingStars"
 
 export function ProductCard({ product }: { product: ProductSummary }) {
@@ -14,8 +14,6 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const toggleWishlist = useWishlistStore((state) => state.toggleItem)
   const isInWishlist = useWishlistStore((state) => state.isInWishlist(product.id))
   const imageUrl = getPrimaryProductImage(product)
-  const rating = getAverageRating(product.id)
-  const reviewCount = getReviewCount(product.id)
   const vendorSlug = product.vendorCompanyName ? slugify(product.vendorCompanyName) : (product.vendorId ?? product.vendorUserId ?? "vendor").toString()
 
   return (
@@ -31,7 +29,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         <div className="text-sm text-muted-foreground">
           <Link to={`/store/${vendorSlug}`}>{product.vendorCompanyName || product.vendorName || "Marketplace Vendor"}</Link>
         </div>
-        <RatingStars rating={rating} reviewCount={reviewCount} />
+        <RatingStars rating={product.averageRating} reviewCount={product.reviewCount} />
         <div className="flex items-center justify-between">
           <div className="text-xl font-semibold">{formatCurrency(product.basePrice, product.currencyName || "INR")}</div>
           <div className="text-xs text-muted-foreground">{product.totalInventory > 0 ? `${product.totalInventory} in stock` : "Out of stock"}</div>
@@ -42,7 +40,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           <ShoppingCartIcon className="size-4" />
           Add to Cart
         </Button>
-        <Button variant="outline" size="icon" className="rounded-full" onClick={() => toggleWishlist(toWishlistItem(product, imageUrl))}>
+        <Button variant="outline" size="icon" className="rounded-full" onClick={() => void toggleWishlist(product.id)}>
           <HeartIcon className={isInWishlist ? "size-4 fill-current" : "size-4"} />
         </Button>
       </CardFooter>

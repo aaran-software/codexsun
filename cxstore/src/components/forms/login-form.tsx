@@ -26,7 +26,8 @@ export function LoginForm({
   const location = useLocation()
   const { company } = useCompanyConfig()
   const googleAuthUrl = import.meta.env.VITE_GOOGLE_AUTH_URL?.trim() ?? ""
-  const [mode, setMode] = useState<"login" | "signup" | "google">("login")
+  const initialTab = new URLSearchParams(location.search).get("tab") === "signup" ? "signup" : "login"
+  const [mode, setMode] = useState<"login" | "signup" | "google">(initialTab)
   const [usernameOrEmail, setUsernameOrEmail] = useState("")
   const [password, setPassword] = useState("")
   const [registerUsername, setRegisterUsername] = useState("")

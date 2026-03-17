@@ -80,6 +80,10 @@ codexsun/
 |   |   |-- 20260315161557_AddMediaModule.Designer.cs
 |   |   |-- 20260315163720_AddCompanyModule.cs
 |   |   |-- 20260315163720_AddCompanyModule.Designer.cs
+|   |   |-- 20260316115104_AddCheckoutResilienceAndReservations.cs
+|   |   |-- 20260316115104_AddCheckoutResilienceAndReservations.Designer.cs
+|   |   |-- 20260316120934_AddRazorpayPaymentIntegration.cs
+|   |   |-- 20260316120934_AddRazorpayPaymentIntegration.Designer.cs
 |   |   `-- CodexsunDbContextModelSnapshot.cs
 |   `-- Modules/
 |       |-- Auth/
@@ -162,6 +166,7 @@ codexsun/
 |       |   |   |-- InvoicesController.cs
 |       |   |   |-- OrdersController.cs
 |       |   |   |-- PaymentsController.cs
+|       |   |   |-- RazorpayPaymentsController.cs
 |       |   |   `-- VendorPayoutsController.cs
 |       |   |-- DTOs/
 |       |   |   |-- SalesRequests.cs
@@ -169,7 +174,10 @@ codexsun/
 |       |   |-- Entities/
 |       |   |   `-- SalesEntities.cs
 |       |   `-- Services/
+|       |       |-- RazorpayGatewayService.cs
+|       |       |-- RazorpaySettings.cs
 |       |       `-- SalesService.cs
+|       |       `-- order_inventory_reservations` persistence now lives in the Sales aggregate for deterministic stock release
 |       |-- Inventory/
 |       |   |-- Configurations/
 |       |   |   `-- InventoryConfigurations.cs
@@ -556,3 +564,8 @@ codexsun/
 - The customer storefront was added inside `cxstore/src/pages` and `cxstore/src/components` rather than as a separate frontend project.
 - Storefront data access uses `src/api/apiClient.ts`, `src/lib/queryClient.ts`, and persisted Zustand stores in `src/state/cartStore.ts` and `src/state/wishlistStore.ts`.
 - Customer-facing routes now include catalog browsing, search, product detail, vendor stores, wishlist, checkout, order success, and account views while keeping the existing admin and vendor route tree intact.
+- Public browsing is now backed by additive anonymous endpoints in `cxserver/Modules/Products/Controllers/StorefrontCatalogController.cs` and `cxserver/Modules/Vendors/Controllers/StorefrontVendorsController.cs`, with the storefront pages consuming `getStorefrontProducts`, `getStorefrontProductBySlug`, `getStorefrontCategories`, and `getStorefrontVendors`.
+- Customer wishlist and product reviews are now backed by `cxserver/Modules/Storefront`, with frontend integrations in `src/api/wishlistApi.ts`, `src/api/reviewApi.ts`, and the shared `src/state/wishlistStore.ts`.
+- Razorpay storefront payments are now shared through `src/lib/razorpay.ts`, which is consumed by both `CheckoutPage.tsx` and `AccountPage.tsx` for initial payment and retry-payment flows.
+- Payment repair now uses `reconcileRazorpayPayment` from `src/api/salesApi.ts`, while shipping fulfillment operations can auto-create shipments through `autoCreateShipment` in `src/api/shippingApi.ts`.
+- Customer shipment visibility now uses `getShipments` and `getShipmentsForOrder` from `src/api/shippingApi.ts`, and is surfaced in `src/pages/AccountPage.tsx` and `src/pages/OrderSuccessPage.tsx`.

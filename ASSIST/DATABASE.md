@@ -53,6 +53,14 @@ Latest company migration:
 
 - `AddCompanyModule`
 
+Latest checkout-hardening migration:
+
+- `AddCheckoutResilienceAndReservations`
+
+Latest payment integration migration:
+
+- `AddRazorpayPaymentIntegration`
+
 ## Auth Schema
 
 The baseline creates the security tables below in PostgreSQL:
@@ -177,6 +185,15 @@ Company tables:
 - `companies`
 - `company_addresses`
 - `company_settings`
+
+Sales payment extensions:
+
+- `orders.idempotency_key`
+- `orders.payment_provider`
+- `orders.payment_gateway_order_id`
+- `orders.shipping_method`
+- `orders.payment_method`
+- `order_inventory_reservations`
 
 Extended product pricing table:
 

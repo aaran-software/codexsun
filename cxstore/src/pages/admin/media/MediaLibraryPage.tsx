@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { createMediaFolder, deleteMediaFile, deleteMediaFolder, getMediaFiles, getMediaFolders, restoreMediaFile, uploadMedia } from "@/api/mediaApi"
+import { createMediaFolder, deleteMediaFile, deleteMediaFolder, getMediaFiles, getMediaFolders, renameMediaFile, restoreMediaFile, uploadMedia } from "@/api/mediaApi"
 import { CommonList, type CommonListColumn } from "@/components/forms/CommonList"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,8 @@ export default function MediaLibraryPage() {
   const [folderName, setFolderName] = useState("")
   const [parentFolderId, setParentFolderId] = useState("")
   const [error, setError] = useState("")
+  
+  const [renameTarget, setRenameTarget] = useState<{ id: number; name: string } | null>(null)
 
   async function loadData() {
     const [fileResult, folderResult] = await Promise.all([
@@ -68,6 +70,22 @@ export default function MediaLibraryPage() {
     }
   }
 
+  async function handleRename() {
+    if (!renameTarget || !renameTarget.name.trim()) {
+      setRenameTarget(null)
+      return
+    }
+
+    setError("")
+    try {
+      await renameMediaFile(renameTarget.id, renameTarget.name.trim())
+      setRenameTarget(null)
+      await loadData()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to rename configuration.")
+    }
+  }
+
   const columns: CommonListColumn<MediaFile>[] = [
     {
       id: "preview",
@@ -76,7 +94,28 @@ export default function MediaLibraryPage() {
         ? <img src={row.thumbnailUrl || row.fileUrl} alt={row.originalFileName} className="h-12 w-12 rounded-md object-cover" />
         : <span className="text-xs">{row.extension.toUpperCase()}</span>,
     },
-    { id: "name", header: "File", cell: (row) => row.originalFileName },
+    { 
+      id: "name", 
+      header: "File", 
+      cell: (row) => renameTarget?.id === row.id ? (
+        <div className="flex items-center gap-2">
+          <Input 
+            autoFocus 
+            className="h-8 w-48"
+            value={renameTarget.name} 
+            onChange={(e) => setRenameTarget({ ...renameTarget, name: e.target.value })} 
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void handleRename()
+              if (e.key === "Escape") setRenameTarget(null)
+            }}
+          />
+          <Button size="sm" onClick={() => void handleRename()}>Save</Button>
+          <Button size="sm" variant="ghost" onClick={() => setRenameTarget(null)}>Cancel</Button>
+        </div>
+      ) : (
+        row.originalFileName
+      )
+    },
     { id: "folder", header: "Folder", cell: (row) => row.folderName || "-" },
     { id: "mime", header: "Type", cell: (row) => row.mimeType },
     { id: "size", header: "Size", cell: (row) => `${Math.max(1, Math.round(row.fileSize / 1024))} KB` },
@@ -87,6 +126,7 @@ export default function MediaLibraryPage() {
       header: "Action",
       cell: (row) => (
         <div className="flex gap-2">
+          {!row.isDeleted ? <Button size="sm" variant="outline" onClick={() => setRenameTarget({ id: row.id, name: row.originalFileName })}>Rename</Button> : null}
           {!row.isDeleted ? <Button size="sm" variant="outline" onClick={() => void deleteMediaFile(row.id).then(loadData)}>Delete</Button> : null}
           {row.isDeleted ? <Button size="sm" variant="outline" onClick={() => void restoreMediaFile(row.id).then(loadData)}>Restore</Button> : null}
         </div>

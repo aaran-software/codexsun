@@ -16,9 +16,15 @@ export function StorefrontFooter() {
           <div className="space-y-6 lg:col-span-2 lg:pr-8">
             <Link to="/" className="inline-block">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#c88638,#5e2a1a)] text-sm font-bold text-white shadow-md">
-                  CX
-                </div>
+                {company.logoUrl ? (
+                  <div className="flex size-10 items-center justify-center overflow-hidden rounded-2xl border border-border/50">
+                    <img src={company.logoUrl} alt={company.displayName} className="size-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="flex size-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#c88638,#5e2a1a)] text-sm font-bold text-white shadow-md">
+                    {company.displayName.slice(0, 2).toUpperCase() || "CX"}
+                  </div>
+                )}
                 <div className="flex flex-col">
                   <span className="text-xl font-bold tracking-tight text-foreground">{company.displayName}</span>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marketplace</span>
@@ -29,18 +35,32 @@ export function StorefrontFooter() {
               Your premier destination for multi-vendor commerce. Discover curated products from trusted sellers around the world, all in one unified shopping experience with faster checkout flows.
             </p>
             <div className="space-y-3 pt-2 text-sm text-muted-foreground">
-              <div className="flex items-start gap-3">
-                <MapPinIcon className="mt-0.5 size-4 shrink-0" />
-                <span>123 Commerce Avenue, Tech District, San Francisco, CA 94105</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <PhoneIcon className="size-4 shrink-0" />
-                <span>{company.phone || "+1 (800) 123-4567"}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <MailIcon className="size-4 shrink-0" />
-                <span>{company.supportEmail || "support@cxstore.com"}</span>
-              </div>
+              {(company.address?.addressLine1 || company.address?.cityName || company.address?.stateName) ? (
+                <div className="flex items-start gap-3">
+                  <MapPinIcon className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    {[company.address?.addressLine1, company.address?.addressLine2, company.address?.cityName, company.address?.stateName, company.address?.pincodeValue].filter(Boolean).join(", ")}
+                  </span>
+                </div>
+              ) : null}
+              {company.phone ? (
+                <div className="flex items-center gap-3">
+                  <PhoneIcon className="size-4 shrink-0" />
+                  <a href={`tel:${company.phone}`} className="hover:text-foreground transition-colors">{company.phone}</a>
+                </div>
+              ) : null}
+              {(company.supportEmail || company.email) ? (
+                <div className="flex items-center gap-3">
+                  <MailIcon className="size-4 shrink-0" />
+                  <a href={`mailto:${company.supportEmail || company.email}`} className="hover:text-foreground transition-colors">{company.supportEmail || company.email}</a>
+                </div>
+              ) : null}
+              {company.website ? (
+                <div className="flex items-center gap-3">
+                  <span className="size-4 shrink-0 text-center text-xs">🌐</span>
+                  <a href={company.website} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">{company.website.replace(/^https?:\/\//, "")}</a>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -119,7 +139,7 @@ export function StorefrontFooter() {
           </div>
 
           <div className="text-center text-sm text-muted-foreground md:text-right">
-            © {new Date().getFullYear()} Acme Commerce. All rights reserved.
+            © {new Date().getFullYear()} {company.legalName || company.displayName}. All rights reserved.
           </div>
         </div>
       </div>

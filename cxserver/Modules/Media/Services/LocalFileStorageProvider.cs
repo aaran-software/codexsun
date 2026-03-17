@@ -31,8 +31,8 @@ public sealed class LocalFileStorageProvider(IHostEnvironment environment) : IFi
         var stored = new StoredMediaFile
         {
             FileName = fileName,
-            FilePath = NormalizePath(Path.Combine("uploads", "media", normalizedFolderPath, fileName)),
-            FileUrl = $"/{NormalizePath(Path.Combine("uploads", "media", normalizedFolderPath, fileName))}"
+            FilePath = NormalizePath(Path.Combine("storage", "media", normalizedFolderPath, fileName)),
+            FileUrl = $"/{NormalizePath(Path.Combine("storage", "media", normalizedFolderPath, fileName))}"
         };
 
         if (isImage && supportsThumbnailGeneration)
@@ -58,8 +58,8 @@ public sealed class LocalFileStorageProvider(IHostEnvironment environment) : IFi
         var moved = new StoredMediaFile
         {
             FileName = file.FileName,
-            FilePath = NormalizePath(Path.Combine("uploads", "media", normalizedTarget, file.FileName)),
-            FileUrl = $"/{NormalizePath(Path.Combine("uploads", "media", normalizedTarget, file.FileName))}",
+            FilePath = NormalizePath(Path.Combine("storage", "media", normalizedTarget, file.FileName)),
+            FileUrl = $"/{NormalizePath(Path.Combine("storage", "media", normalizedTarget, file.FileName))}",
             ThumbnailUrl = file.ThumbnailUrl,
             MediumUrl = file.MediumUrl,
             LargeUrl = file.LargeUrl
@@ -81,7 +81,7 @@ public sealed class LocalFileStorageProvider(IHostEnvironment environment) : IFi
                 Size = new Size(width, width)
             }));
 
-            var relativeThumbnailPath = NormalizePath(Path.Combine("uploads", "media", "thumbnails", profileName, relativeFolderPath, fileName));
+            var relativeThumbnailPath = NormalizePath(Path.Combine("storage", "media", "thumbnails", profileName, relativeFolderPath, fileName));
             var physicalThumbnailPath = Path.Combine(environment.ContentRootPath, relativeThumbnailPath.Replace('/', Path.DirectorySeparatorChar));
             Directory.CreateDirectory(Path.GetDirectoryName(physicalThumbnailPath)!);
             await clone.SaveAsync(physicalThumbnailPath, GetEncoder(extension), cancellationToken);
@@ -111,7 +111,7 @@ public sealed class LocalFileStorageProvider(IHostEnvironment environment) : IFi
             _ => new PngEncoder()
         };
 
-    private string GetMediaRoot() => Path.Combine(environment.ContentRootPath, "uploads", "media");
+    private string GetMediaRoot() => Path.Combine(environment.ContentRootPath, "storage", "media");
 
     private static string NormalizePath(string path)
         => path.Replace('\\', '/').Trim('/').ToLowerInvariant();

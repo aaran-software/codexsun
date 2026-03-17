@@ -134,10 +134,21 @@
 
 ## Storefront Commerce Security
 
-- The storefront was implemented against the current backend API surface, which still protects product and vendor discovery endpoints with authentication; anonymous users can browse the shell, but live catalog data prompts for sign-in.
+- Anonymous storefront browsing now uses dedicated `/storefront` endpoints for product listing, product detail, category discovery, and vendor discovery instead of reusing authenticated admin or vendor APIs.
+- The new storefront endpoints are additive and read-only; they return only active and published catalog data and do not weaken the permission model on the existing operational controllers.
 - Cart APIs already support anonymous or session-backed usage, while checkout and order-history routes remain protected behind authenticated customer access.
-- Wishlist and review persistence are currently frontend-managed local features because dedicated backend wishlist and product-review endpoints do not yet exist; they are convenience features, not an authoritative system of record.
-- Checkout payment selection is UI-only at this stage for Stripe, Razorpay, PayPal, and Cash on Delivery; final pricing, coupon handling, and order creation remain backend-enforced through the Sales module.
+- Wishlist persistence now uses authenticated `/wishlist` endpoints bound to the signed-in customer account, and anonymous clients can no longer mutate wishlist state without authentication.
+- Product reviews now live in the backend and require a signed-in customer with a verified prior purchase of the reviewed product; duplicate customer reviews for the same product are rejected server-side.
+- Checkout now sends an idempotency key and selected shipping or payment methods to the backend, which blocks duplicate order creation for the same customer request.
+- Order creation now performs reservation-backed inventory validation before checkout succeeds, and cancellation or refund flows release reserved stock through persisted reservation records.
+- Razorpay checkout signatures are now verified server-side using the gateway `order_id`, returned `payment_id`, and the configured `key_secret` before the payment is accepted as authentic.
+- Razorpay webhooks now validate the `X-Razorpay-Signature` header against the raw request body and configured webhook secret before any reconciliation logic runs.
+- Payment recording rejects duplicate provider-reference submissions and overpayments, and Razorpay `payment.captured` events reconcile through the same backend payment write path used by manual recordings.
+- Unpaid Razorpay orders now expire after the configured `Sales.PendingPaymentExpiryMinutes` threshold, at which point their inventory reservations are released and the order becomes non-payable.
+- Storefront retry payment only appears for still-payable Razorpay orders; expired, cancelled, and already-paid orders cannot reopen the hosted payment flow.
+- Razorpay reconciliation still requires an authenticated actor with order visibility and only marks an order paid when a captured or authorized gateway payment matching the expected order amount is found.
+- Shipment auto-creation is restricted to paid or confirmed orders and returns the existing shipment if one is already present, preventing duplicate fulfillment records from repeated retries.
+- Shipment listing and per-order shipment retrieval are now role-aware: customers can only see shipments tied to their own orders, vendors can only see shipments for their order items, and admin or staff retain full access.
 
 ## Error Monitoring
 

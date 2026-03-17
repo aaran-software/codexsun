@@ -38,3 +38,8 @@ export function assignVendorUser(vendorId: number, request: AssignVendorUserRequ
 export function getAccessibleWarehouses() {
   return requestJson<CommonMasterItem[]>("/vendors/warehouses", { method: "GET" })
 }
+
+export function getStorefrontVendors(limit?: number) {
+  const url = limit ? `/storefront/vendors?limit=${limit}` : "/storefront/vendors"
+  return requestJson<VendorSummary[]>(url, { method: "GET" }, { auth: false })
+}

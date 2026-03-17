@@ -7334,6 +7334,13 @@ namespace cxserver.Migrations
                     b.Property<decimal>("DiscountAmount")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -7344,10 +7351,38 @@ namespace cxserver.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("PaymentGatewayOrderId")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("PaymentProvider")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ShippingMethod")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("numeric(18,2)");
@@ -7373,6 +7408,10 @@ namespace cxserver.Migrations
                         .IsUnique();
 
                     b.HasIndex("OrderStatus");
+
+                    b.HasIndex("PaymentGatewayOrderId");
+
+                    b.HasIndex("CustomerUserId", "IdempotencyKey");
 
                     b.ToTable("orders", (string)null);
                 });
@@ -7449,6 +7488,48 @@ namespace cxserver.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("order_addresses", (string)null);
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Sales.Entities.OrderInventoryReservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OrderItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProductInventoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReleasedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("VendorUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderItemId");
+
+                    b.HasIndex("ProductInventoryId");
+
+                    b.HasIndex("VendorUserId");
+
+                    b.ToTable("order_inventory_reservations", (string)null);
                 });
 
             modelBuilder.Entity("cxserver.Modules.Sales.Entities.OrderItem", b =>
@@ -7985,6 +8066,93 @@ namespace cxserver.Migrations
                             TrackingUrl = "https://tracking.codexsun.local/{tracking}",
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Storefront.Entities.ProductReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsVerifiedPurchase")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Review")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductId", "IsApproved", "CreatedAt");
+
+                    b.ToTable("product_reviews", (string)null);
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Storefront.Entities.WishlistEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("wishlist_entries", (string)null);
                 });
 
             modelBuilder.Entity("cxserver.Modules.System.Entities.NumberSeries", b =>
@@ -9599,6 +9767,31 @@ namespace cxserver.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("cxserver.Modules.Sales.Entities.OrderInventoryReservation", b =>
+                {
+                    b.HasOne("cxserver.Modules.Sales.Entities.OrderItem", "OrderItem")
+                        .WithMany("InventoryReservations")
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("cxserver.Modules.Products.Entities.ProductInventory", "ProductInventory")
+                        .WithMany()
+                        .HasForeignKey("ProductInventoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("cxserver.Modules.Auth.Entities.User", "VendorUser")
+                        .WithMany()
+                        .HasForeignKey("VendorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("OrderItem");
+
+                    b.Navigation("ProductInventory");
+
+                    b.Navigation("VendorUser");
+                });
+
             modelBuilder.Entity("cxserver.Modules.Sales.Entities.OrderItem", b =>
                 {
                     b.HasOne("cxserver.Modules.Sales.Entities.Order", "Order")
@@ -9812,6 +10005,44 @@ namespace cxserver.Migrations
                         .IsRequired();
 
                     b.Navigation("Provider");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Storefront.Entities.ProductReview", b =>
+                {
+                    b.HasOne("cxserver.Modules.Products.Entities.Product", "Product")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("cxserver.Modules.Auth.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("cxserver.Modules.Storefront.Entities.WishlistEntry", b =>
+                {
+                    b.HasOne("cxserver.Modules.Products.Entities.Product", "Product")
+                        .WithMany("WishlistEntries")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("cxserver.Modules.Auth.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("cxserver.Modules.Vendors.Entities.VendorAddress", b =>
@@ -10050,9 +10281,13 @@ namespace cxserver.Migrations
 
                     b.Navigation("Prices");
 
+                    b.Navigation("Reviews");
+
                     b.Navigation("Variants");
 
                     b.Navigation("VendorLinks");
+
+                    b.Navigation("WishlistEntries");
                 });
 
             modelBuilder.Entity("cxserver.Modules.Products.Entities.ProductAttribute", b =>
@@ -10105,6 +10340,8 @@ namespace cxserver.Migrations
 
             modelBuilder.Entity("cxserver.Modules.Sales.Entities.OrderItem", b =>
                 {
+                    b.Navigation("InventoryReservations");
+
                     b.Navigation("VendorEarnings");
                 });
 

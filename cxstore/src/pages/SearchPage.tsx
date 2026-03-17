@@ -2,13 +2,12 @@ import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "react-router-dom"
 
-import { getProducts } from "@/api/productApi"
-import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
-import { ProductGrid } from "@/components/product/ProductGrid"
+import { getStorefrontProducts } from "@/api/productApi"
 import { FilterSidebar } from "@/components/product/FilterSidebar"
+import { ProductGrid } from "@/components/product/ProductGrid"
 import { SortDropdown } from "@/components/product/SortDropdown"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
-import { useAuth } from "@/state/authStore"
 import type { CatalogFilters, ProductSortOption } from "@/types/storefront"
 import { filterProducts, sortProducts } from "@/utils/storefront"
 
@@ -22,8 +21,8 @@ const initialFilters: CatalogFilters = {
 }
 
 export default function SearchPage() {
-  const auth = useAuth()
   const [params, setParams] = useSearchParams()
+  const { company } = useCompanyConfig()
   const [filters, setFilters] = useState<CatalogFilters>(initialFilters)
   const [sort, setSort] = useState<ProductSortOption>((params.get("sort") as ProductSortOption) || "featured")
 
@@ -31,34 +30,16 @@ export default function SearchPage() {
 
   usePageMeta({
     title: query ? `Search - ${query}` : "Search Products",
-    description: "Search the authenticated Codexsun product catalog.",
+    description: `Search the ${company.displayName} product catalog.`,
     canonicalPath: query ? `/search?q=${encodeURIComponent(query)}` : "/search",
   })
 
   const { data: products = [] } = useQuery({
-    queryKey: ["storefront", "products", "search"],
-    queryFn: () => getProducts(false),
-    enabled: auth.isAuthenticated,
+    queryKey: ["storefront", "products", "search", query],
+    queryFn: () => getStorefrontProducts({ q: query || undefined }),
   })
 
-  const searchedProducts = useMemo(() => {
-    const scoped = products.filter((product) =>
-      query.length === 0
-      || product.name.toLowerCase().includes(query)
-      || product.sku.toLowerCase().includes(query)
-      || product.vendorCompanyName.toLowerCase().includes(query)
-      || product.categoryName.toLowerCase().includes(query))
-
-    return sortProducts(filterProducts(scoped, filters), sort)
-  }, [filters, products, query, sort])
-
-  if (!auth.isAuthenticated) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <StorefrontAuthNotice title="Search requires sign-in" description="The current backend exposes product search through the authenticated catalog API. Sign in to run live catalog search." />
-      </div>
-    )
-  }
+  const searchedProducts = useMemo(() => sortProducts(filterProducts(products, filters), sort), [filters, products, sort])
 
   return (
     <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[280px_1fr]">
@@ -67,7 +48,7 @@ export default function SearchPage() {
         <div className="flex flex-col gap-4 rounded-[2rem] border border-border/60 bg-card p-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
             <div className="text-sm uppercase tracking-[0.28em] text-muted-foreground">Search</div>
-            <h1 className="text-3xl font-semibold">{query ? `Results for “${query}”` : "Browse the Catalog"}</h1>
+            <h1 className="text-3xl font-semibold">{query ? `Results for "${query}"` : "Browse the Catalog"}</h1>
             <p className="text-sm text-muted-foreground">{searchedProducts.length} products match your current query and filters.</p>
           </div>
           <SortDropdown

@@ -27,28 +27,82 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
             })
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<ShipmentResponse>> GetShipmentsAsync(CancellationToken cancellationToken)
-        => await dbContext.Shipments.AsNoTracking()
-            .Include(x => x.Order)
-            .Include(x => x.ShippingMethod).ThenInclude(x => x.Provider)
-            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.Product)
+    public async Task<IReadOnlyList<ShipmentResponse>> GetShipmentsAsync(Guid actorUserId, string role, CancellationToken cancellationToken)
+        => await BuildVisibleShipmentsQuery(actorUserId, role)
             .OrderByDescending(x => x.CreatedAt)
             .Select(MapShipment())
             .ToListAsync(cancellationToken);
 
-    public async Task<ShipmentResponse?> TrackShipmentAsync(string trackingNumber, CancellationToken cancellationToken)
-        => await dbContext.Shipments.AsNoTracking()
-            .Include(x => x.Order)
-            .Include(x => x.ShippingMethod).ThenInclude(x => x.Provider)
-            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.Product)
+    public async Task<ShipmentResponse?> TrackShipmentAsync(string trackingNumber, Guid actorUserId, string role, CancellationToken cancellationToken)
+        => await BuildVisibleShipmentsQuery(actorUserId, role)
             .Where(x => x.TrackingNumber == trackingNumber)
             .Select(MapShipment())
             .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ShipmentResponse>> GetShipmentsForOrderAsync(int orderId, Guid actorUserId, string role, CancellationToken cancellationToken)
+        => await BuildVisibleShipmentsQuery(actorUserId, role)
+            .Where(x => x.OrderId == orderId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(MapShipment())
+            .ToListAsync(cancellationToken);
 
     public async Task<ShipmentResponse> CreateShipmentAsync(ShipmentCreateRequest request, Guid actorUserId, string role,
         string ipAddress, CancellationToken cancellationToken)
     {
         EnsureManager(role);
+        return await CreateShipmentInternalAsync(request, actorUserId, ipAddress, sendShipmentNotification: true, initialStatus: "Created", markShippedAtCreation: true, cancellationToken);
+    }
+
+    public async Task<ShipmentResponse> EnsureShipmentForOrderAsync(int orderId, Guid? actorUserId, string role, string ipAddress, CancellationToken cancellationToken)
+    {
+        if (role is not ("Admin" or "Staff" or "System" or "Customer"))
+        {
+            throw new InvalidOperationException("You do not have permission to create shipments.");
+        }
+
+        var existingShipment = await dbContext.Shipments
+            .AsNoTracking()
+            .Include(x => x.Order)
+            .Include(x => x.ShippingMethod).ThenInclude(x => x.Provider)
+            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.Product)
+            .Where(x => x.OrderId == orderId)
+            .Select(MapShipment())
+            .FirstOrDefaultAsync(cancellationToken);
+        if (existingShipment is not null)
+        {
+            return existingShipment;
+        }
+
+        var order = await dbContext.Orders
+            .Include(x => x.Items)
+            .SingleOrDefaultAsync(x => x.Id == orderId, cancellationToken)
+            ?? throw new InvalidOperationException("Order was not found.");
+
+        if (order.PaymentStatus != "Completed" && order.OrderStatus != "Confirmed")
+        {
+            throw new InvalidOperationException("Shipment can only be created for paid or confirmed orders.");
+        }
+
+        var shippingMethod = await ResolveShippingMethodAsync(order.ShippingMethod, cancellationToken)
+            ?? throw new InvalidOperationException("No shipping method is available for this order.");
+
+        var request = new ShipmentCreateRequest
+        {
+            OrderId = order.Id,
+            ShippingMethodId = shippingMethod.Id,
+            TrackingNumber = $"AUTO-{order.OrderNumber}",
+            Items = order.Items.Select(item => new ShipmentItemCreateRequest
+            {
+                OrderItemId = item.Id,
+                Quantity = item.Quantity
+            }).ToList()
+        };
+
+        return await CreateShipmentInternalAsync(request, actorUserId, ipAddress, sendShipmentNotification: false, initialStatus: "Ready", markShippedAtCreation: false, cancellationToken);
+    }
+
+    private async Task<ShipmentResponse> CreateShipmentInternalAsync(ShipmentCreateRequest request, Guid? actorUserId, string ipAddress, bool sendShipmentNotification, string initialStatus, bool markShippedAtCreation, CancellationToken cancellationToken)
+    {
         if (request.Items.Count == 0)
         {
             throw new InvalidOperationException("At least one shipment item is required.");
@@ -76,8 +130,8 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
             OrderId = request.OrderId,
             ShippingMethodId = request.ShippingMethodId,
             TrackingNumber = request.TrackingNumber.Trim(),
-            Status = "Created",
-            ShippedAt = now,
+            Status = initialStatus,
+            ShippedAt = markShippedAtCreation ? now : null,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -106,14 +160,24 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
         dbContext.Shipments.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
         await WriteAuditLogAsync(actorUserId, "Shipping.CreateShipment", nameof(Shipment), entity.Id.ToString(), ipAddress, cancellationToken);
-        await notificationService.QueueEventAsync(NotificationTemplateCatalog.ShipmentShipped, order.CustomerUserId, new Dictionary<string, string>
+        if (sendShipmentNotification)
         {
-            ["ShipmentId"] = entity.Id.ToString(),
-            ["OrderNumber"] = order.OrderNumber,
-            ["TrackingNumber"] = entity.TrackingNumber,
-            ["OccurredAt"] = now.ToString("O")
-        }, cancellationToken);
-        return (await GetShipmentsAsync(cancellationToken)).Single(x => x.Id == entity.Id);
+            await notificationService.QueueEventAsync(NotificationTemplateCatalog.ShipmentShipped, order.CustomerUserId, new Dictionary<string, string>
+            {
+                ["ShipmentId"] = entity.Id.ToString(),
+                ["OrderNumber"] = order.OrderNumber,
+                ["TrackingNumber"] = entity.TrackingNumber,
+                ["OccurredAt"] = now.ToString("O")
+            }, cancellationToken);
+        }
+        return await dbContext.Shipments
+            .AsNoTracking()
+            .Include(x => x.Order)
+            .Include(x => x.ShippingMethod).ThenInclude(x => x.Provider)
+            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.Product)
+            .Where(x => x.Id == entity.Id)
+            .Select(MapShipment())
+            .SingleAsync(cancellationToken);
     }
 
     public async Task<ShipmentResponse?> UpdateShipmentStatusAsync(int shipmentId, ShipmentStatusUpdateRequest request,
@@ -150,7 +214,7 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
                 ["OccurredAt"] = now.ToString("O")
             }, cancellationToken);
         }
-        return (await GetShipmentsAsync(cancellationToken)).Single(x => x.Id == entity.Id);
+        return (await GetShipmentsAsync(actorUserId, role, cancellationToken)).Single(x => x.Id == entity.Id);
     }
 
     private static global::System.Linq.Expressions.Expression<Func<Shipment, ShipmentResponse>> MapShipment()
@@ -186,6 +250,21 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
         }
     }
 
+    private async Task<ShippingMethod?> ResolveShippingMethodAsync(string selectedShippingMethod, CancellationToken cancellationToken)
+    {
+        var trimmed = selectedShippingMethod.Trim();
+        if (!string.IsNullOrWhiteSpace(trimmed))
+        {
+            var exact = await dbContext.ShippingMethods.FirstOrDefaultAsync(x => x.Name == trimmed, cancellationToken);
+            if (exact is not null)
+            {
+                return exact;
+            }
+        }
+
+        return await dbContext.ShippingMethods.OrderBy(x => x.Id).FirstOrDefaultAsync(cancellationToken);
+    }
+
     private async Task WriteAuditLogAsync(Guid? userId, string action, string entityType, string? entityId, string ipAddress, CancellationToken cancellationToken)
     {
         dbContext.AuditLogs.Add(new AuditLog
@@ -204,5 +283,32 @@ public sealed class ShippingService(CodexsunDbContext dbContext, NotificationSer
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private IQueryable<Shipment> BuildVisibleShipmentsQuery(Guid actorUserId, string role)
+    {
+        var query = dbContext.Shipments
+            .AsNoTracking()
+            .Include(x => x.Order)
+            .Include(x => x.ShippingMethod).ThenInclude(x => x.Provider)
+            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.Product)
+            .Include(x => x.Items).ThenInclude(x => x.OrderItem).ThenInclude(x => x.VendorUser)
+            .AsQueryable();
+
+        var actorVendorIds = dbContext.VendorUsers
+            .Where(x => x.UserId == actorUserId)
+            .Select(x => x.VendorId);
+
+        return role switch
+        {
+            "Admin" or "Staff" => query,
+            "Vendor" => query.Where(x =>
+                x.Items.Any(item => item.OrderItem.VendorUserId == actorUserId)
+                || x.Items.Any(item => item.OrderItem.VendorUserId.HasValue
+                    && dbContext.VendorUsers.Any(vendorUser =>
+                        vendorUser.UserId == item.OrderItem.VendorUserId.Value
+                        && actorVendorIds.Contains(vendorUser.VendorId)))),
+            _ => query.Where(x => x.Order.CustomerUserId == actorUserId)
+        };
     }
 }

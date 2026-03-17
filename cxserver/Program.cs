@@ -29,6 +29,7 @@ using cxserver.Modules.Promotions.Services;
 using cxserver.Modules.Products.Services;
 using cxserver.Modules.Sales.Services;
 using cxserver.Modules.Shipping.Services;
+using cxserver.Modules.Storefront.Services;
 using cxserver.Modules.Vendors.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +51,8 @@ builder.Services.AddSingleton(_ => new NpgsqlDataSourceBuilder(postgresConnectio
 builder.Services.AddDbContext<CodexsunDbContext>(options => options.UseNpgsql(postgresConnectionString));
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+builder.Services.Configure<SalesSettings>(builder.Configuration.GetSection(SalesSettings.SectionName));
+builder.Services.Configure<RazorpaySettings>(builder.Configuration.GetSection(RazorpaySettings.SectionName));
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JWT settings are required.");
 
@@ -140,8 +143,10 @@ builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<PromotionService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<SalesService>();
+builder.Services.AddHttpClient<RazorpayGatewayService>();
 builder.Services.AddScoped<ShippingService>();
 builder.Services.AddScoped<AfterSalesService>();
+builder.Services.AddScoped<StorefrontService>();
 builder.Services.AddScoped<VendorService>();
 builder.Services.AddSingleton<IFileStorageProvider, LocalFileStorageProvider>();
 builder.Services.AddScoped<INotificationProvider, EmailNotificationProvider>();
@@ -151,7 +156,7 @@ builder.Services.AddHostedService<NotificationQueueProcessor>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginValidator>();
 
 var app = builder.Build();
-var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "uploads");
+var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "storage");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "media"));
 
 using (var scope = app.Services.CreateScope())
@@ -193,7 +198,7 @@ app.UseOutputCache();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsRoot),
-    RequestPath = "/uploads"
+    RequestPath = "/storage"
 });
 
 app.MapControllers();

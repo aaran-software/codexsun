@@ -13,8 +13,9 @@ import {
   TrendingUpIcon,
   DownloadIcon,
   LogOutIcon,
+  LogInIcon,
 } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 
 import { StorefrontMobileMenu } from "@/components/layout/storefront-mobile-menu"
@@ -42,8 +43,14 @@ type HeaderCategory = {
 export function StorefrontHeader({ categories }: { categories: HeaderCategory[] }) {
   const { company } = useCompanyConfig()
   const auth = useAuth()
+  const navigate = useNavigate()
   const wishlistCount = useWishlistStore((state) => state.items.length)
   const cartItemsCount = useCartStore((state) => state.cart?.totalItems ?? 0)
+
+  const handleLogout = async () => {
+    await logout()
+    navigate("/", { replace: true })
+  }
 
   const navItems = [
     { title: "Home", url: "/" },
@@ -59,9 +66,15 @@ export function StorefrontHeader({ categories }: { categories: HeaderCategory[] 
         <StorefrontMobileMenu links={navItems} categories={categories.slice(0, 6)} />
         <Link to="/" className="shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#c88638,#5e2a1a)] text-sm font-semibold text-white">
-              CX
-            </div>
+            {company.logoUrl ? (
+              <div className="flex size-10 items-center justify-center overflow-hidden rounded-2xl border border-border/50">
+                <img src={company.logoUrl} alt={company.displayName} className="size-full object-contain" />
+              </div>
+            ) : (
+              <div className="flex size-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#c88638,#5e2a1a)] text-sm font-semibold text-white">
+                {company.displayName.slice(0, 2).toUpperCase() || "CX"}
+              </div>
+            )}
             <div className="hidden min-w-0 sm:block">
               <div className="truncate text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Marketplace</div>
               <div className="truncate font-semibold text-foreground">{company.displayName}</div>
@@ -84,11 +97,11 @@ export function StorefrontHeader({ categories }: { categories: HeaderCategory[] 
             <ShoppingCartIcon className="size-5" />
             {cartItemsCount > 0 ? <Badge className="absolute -top-1 -right-1 min-w-5 justify-center rounded-full px-1 text-[10px]">{cartItemsCount}</Badge> : null}
           </Link>
-          {auth.isAuthenticated ? null : (
+          {/* {auth.isAuthenticated ? null : (
             <Link to="/login" className={buttonVariants({ className: "hidden rounded-full px-4 md:inline-flex" })}>
-              Sign In
+              Login
             </Link>
-          )}
+          )} */}
 
           <DropdownMenu>
             <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", className: "group cursor-pointer rounded-full px-3 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground md:px-4" })}>
@@ -101,11 +114,16 @@ export function StorefrontHeader({ categories }: { categories: HeaderCategory[] 
                 <>
                   <div className="mb-2 flex items-center justify-between px-2 py-2">
                     <span className="text-sm font-medium text-muted-foreground">New customer?</span>
-                    <Link to="/register" className="text-sm font-bold text-primary hover:underline">
+                    <Link to="/login?tab=signup" className="text-sm font-bold text-primary hover:underline">
                       Sign Up
                     </Link>
                   </div>
                   <DropdownMenuSeparator className="mb-2" />
+                  <DropdownMenuItem render={<Link to="/login" />} className="cursor-pointer font-medium">
+                    <LogInIcon className="mr-3 size-4 text-muted-foreground" />
+                    <span>Sign In</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-2" />
                 </>
               ) : (
                 <>
@@ -129,11 +147,11 @@ export function StorefrontHeader({ categories }: { categories: HeaderCategory[] 
                 <HeartIcon className="mr-3 size-4 text-muted-foreground" />
                 <span>Wishlist</span>
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link to="/rewards" />} className="cursor-pointer">
+              <DropdownMenuItem render={<Link to="/" />} className="cursor-pointer">
                 <GiftIcon className="mr-3 size-4 text-muted-foreground" />
                 <span>Rewards</span>
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link to="/gift-cards" />} className="cursor-pointer">
+              <DropdownMenuItem render={<Link to="/" />} className="cursor-pointer">
                 <CreditCardIcon className="mr-3 size-4 text-muted-foreground" />
                 <span>Gift Cards</span>
               </DropdownMenuItem>
@@ -145,7 +163,7 @@ export function StorefrontHeader({ categories }: { categories: HeaderCategory[] 
                     <LayoutDashboardIcon className="mr-3 size-4 text-muted-foreground" />
                     <span>Dashboard</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive" onSelect={() => void logout()}>
+                  <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => void handleLogout()}>
                     <LogOutIcon className="mr-3 size-4" />
                     <span>Logout</span>
                   </DropdownMenuItem>

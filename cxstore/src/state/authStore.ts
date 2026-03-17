@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react"
 import type { AuthClaims, AuthRole, AuthState, AuthUser, LoginRequest, RegisterRequest, TokenResponse } from "@/types/auth"
+import { resetWishlistStore, useWishlistStore } from "@/state/wishlistStore"
 
 const ACCESS_TOKEN_KEY = "cxstore.auth.accessToken"
 const REFRESH_TOKEN_KEY = "cxstore.auth.refreshToken"
@@ -122,6 +123,9 @@ async function hydrateAuthenticatedSession(tokens: Pick<TokenResponse, "accessTo
   persistSession(tokens, null)
   const user = await authApi.getCurrentUser()
   updateStoredUser(user)
+  const cartStore = await import("@/state/cartStore")
+  await cartStore.useCartStore.getState().hydrateCart()
+  await useWishlistStore.getState().hydrateWishlist()
 }
 
 export function updateStoredUser(user: AuthUser | null) {
@@ -132,6 +136,7 @@ export function updateStoredUser(user: AuthUser | null) {
     isAuthenticated: Boolean(state.accessToken && state.refreshToken && user),
     isInitializing: false,
   })
+  resetWishlistStore()
 }
 
 export function clearAuthState() {
@@ -217,6 +222,9 @@ export async function refreshSession() {
       persistSession(tokens, state.user)
       const user = await authApi.getCurrentUser()
       updateStoredUser(user)
+      const cartStore = await import("@/state/cartStore")
+      await cartStore.useCartStore.getState().hydrateCart()
+      await useWishlistStore.getState().hydrateWishlist()
       return true
     } catch {
       clearAuthState()

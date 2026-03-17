@@ -106,6 +106,8 @@ public class ProductListItemResponse
     public bool IsPublished { get; init; }
     public bool IsActive { get; init; }
     public int TotalInventory { get; init; }
+    public decimal AverageRating { get; init; }
+    public int ReviewCount { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

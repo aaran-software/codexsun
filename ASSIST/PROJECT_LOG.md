@@ -220,3 +220,41 @@ CX-001
 - Added root `.container` infrastructure for PostgreSQL and Redis with persistent volumes and fixed local ports.
 - Aligned `cx.AppHost`, `cxserver`, and `cxstore` to ports `7020` through `7025`.
 - Added `cxtest` with PostgreSQL connectivity validation using `SELECT 1`.
+
+CX-049
+- Normalized admin user and role upsert UX in cxstore to match the split list/create/edit pattern and sectioned form tone already used by contacts, vendors, and products.
+- Added shared UserForm and RoleForm components, rewired the create and edit pages to use them, and preserved redirect-to-list behavior after save.
+- Captured prompt 049, updated task tracking, and verified the frontend production build.
+
+CX-050
+- Captured the go-live hardening prompt, added a dedicated `GO_LIVE_TASKLIST.md`, and started the launch-blocker work from the current repository state instead of jumping to a broad undocumented refactor.
+- Added public storefront catalog and vendor discovery endpoints in `cxserver` through dedicated anonymous controllers while preserving the existing secured admin and vendor API surface.
+- Rewired the customer storefront pages in `cxstore` to use the new anonymous storefront APIs for home, category, search, product detail, and vendor store browsing, then verified backend and frontend builds.
+- Hardened the existing server-backed cart flow by sending authenticated cart requests after sign-in, merging guest carts into the customer cart on auth hydration, and requiring the cart session id for anonymous item update or delete operations.
+- Added `Modules/Storefront` with persistent wishlist and product-review entities, customer-authenticated wishlist APIs, anonymous public review reads, and verified-purchase review writes.
+- Replaced storefront local wishlist and review placeholders with backend API clients, backend-driven rating and review-count fields on product responses, and customer account integration for saved products and submitted reviews.
+- Added idempotent checkout submission in `Modules/Sales`, persisted selected shipping and payment methods on orders, and generated the `AddCheckoutResilienceAndReservations` migration.
+- Added explicit `order_inventory_reservations` records so order placement reserves stock, order cancellation releases reservations, refund completion releases reserved stock, and duplicate payment references or overpayments are rejected server-side.
+
+CX-051
+- Added Razorpay-backed online payment initialization and reconciliation in `Modules/Sales`, including provider settings, gateway order creation, checkout signature verification, webhook verification, and payment capture reconciliation without introducing a new payment module.
+- Extended the `orders` aggregate with provider and gateway-order tracking, generated the `AddRazorpayPaymentIntegration` migration, and kept payment recording inside the existing Sales payment flow so invoice, order, and notification updates remain consistent.
+- Reworked the storefront checkout to use a real hosted Razorpay Checkout flow with UPI support, removed the old fake Stripe and PayPal options, and verified backend and frontend production builds.
+
+CX-052
+- Added a configurable unpaid-payment expiry policy to `Modules/Sales` through `SalesSettings.PendingPaymentExpiryMinutes` and applied it to unpaid Razorpay orders before order retrieval and payment initialization flows.
+- Expired Razorpay orders now release inventory reservations, transition to `Expired`, and record status-history entries instead of lingering indefinitely as payable pending orders.
+- Reused the existing Razorpay checkout path from storefront account order history so customers can retry payment on still-payable orders without creating a duplicate order, then revalidated backend and frontend production builds.
+
+CX-053
+- Added Razorpay order-payment reconciliation in `Modules/Sales` so unpaid orders can be checked directly against Razorpay order payments and repaired after delayed or missed webhooks.
+- Extended `Modules/Shipping` with auto-shipment creation from paid or confirmed orders, reused during payment completion and as an explicit admin shipping operation, while preventing duplicate shipment creation for the same order.
+- Updated storefront and shipping admin clients for payment recheck and one-click shipment creation, then revalidated backend and frontend production builds.
+
+CX-054
+- Added role-aware shipment visibility in `Modules/Shipping`, including per-order shipment retrieval and customer-safe shipment filtering on the existing authenticated shipping API surface.
+- Updated storefront account and order-success pages to display shipment status, provider, and tracking details directly from backend shipping data.
+- Captured prompt 054, updated task tracking, and revalidated backend and frontend production builds after stopping a stale backend process lock.
+
+
+

@@ -502,7 +502,7 @@ public sealed class MediaService(CodexsunDbContext dbContext, IFileStorageProvid
             return string.Empty;
         }
 
-        var relativeFolder = entity.FilePath.Replace("uploads/media/", string.Empty, StringComparison.OrdinalIgnoreCase);
+        var relativeFolder = entity.FilePath.Replace("storage/media/", string.Empty, StringComparison.OrdinalIgnoreCase);
         var segments = relativeFolder.Split('/');
         if (segments.Length < 2)
         {
@@ -510,7 +510,7 @@ public sealed class MediaService(CodexsunDbContext dbContext, IFileStorageProvid
         }
 
         var folderPath = string.Join("/", segments[..^1]);
-        return $"/uploads/media/thumbnails/{profile}/{folderPath}/{entity.FileName}";
+        return $"/storage/media/thumbnails/{profile}/{folderPath}/{entity.FileName}";
     }
 
     private async Task WriteAuditLogAsync(Guid? userId, string action, string entityType, string? entityId, string ipAddress, CancellationToken cancellationToken)

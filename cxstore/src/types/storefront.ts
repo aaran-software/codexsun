@@ -18,24 +18,28 @@ export interface CatalogFilters {
 }
 
 export interface WishlistItem {
+  id: number
   productId: number
   slug: string
   name: string
   vendorName: string
   vendorCompanyName: string
   price: number
+  currencyName: string
   imageUrl: string
   addedAt: string
 }
 
 export interface ProductReview {
-  id: string
+  id: number
   productId: number
-  userId?: string | null
+  userId: string
   username: string
   rating: number
   title: string
   review: string
+  isApproved: boolean
+  isVerifiedPurchase: boolean
   createdAt: string
 }
 
@@ -57,7 +61,7 @@ export interface CheckoutStep {
 }
 
 export interface PaymentMethodOption {
-  id: "stripe" | "razorpay" | "paypal" | "cod"
+  id: "razorpay" | "cod"
   label: string
   description: string
 }

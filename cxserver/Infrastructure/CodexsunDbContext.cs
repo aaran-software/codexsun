@@ -14,6 +14,7 @@ using cxserver.Modules.Promotions.Entities;
 using cxserver.Modules.Products.Entities;
 using cxserver.Modules.Sales.Entities;
 using cxserver.Modules.Shipping.Entities;
+using cxserver.Modules.Storefront.Entities;
 using cxserver.Modules.System.Entities;
 using cxserver.Modules.Vendors.Entities;
 
@@ -70,6 +71,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<OrderInventoryReservation> OrderInventoryReservations => Set<OrderInventoryReservation>();
     public DbSet<OrderStatusHistory> OrderStatusHistory => Set<OrderStatusHistory>();
     public DbSet<OrderAddress> OrderAddresses => Set<OrderAddress>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
@@ -125,6 +127,8 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<Refund> Refunds => Set<Refund>();
     public DbSet<RefundItem> RefundItems => Set<RefundItem>();
     public DbSet<RefundTransaction> RefundTransactions => Set<RefundTransaction>();
+    public DbSet<WishlistEntry> WishlistEntries => Set<WishlistEntry>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

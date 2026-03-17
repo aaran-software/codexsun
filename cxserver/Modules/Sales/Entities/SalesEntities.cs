@@ -44,12 +44,17 @@ public sealed class CartItem : SalesEntity
 public sealed class Order : SalesEntity
 {
     public string OrderNumber { get; set; } = string.Empty;
+    public string IdempotencyKey { get; set; } = string.Empty;
+    public string PaymentProvider { get; set; } = string.Empty;
+    public string PaymentGatewayOrderId { get; set; } = string.Empty;
     public Guid? CustomerUserId { get; set; }
     public User? CustomerUser { get; set; }
     public int? CustomerContactId { get; set; }
     public Contact? CustomerContact { get; set; }
     public int? CurrencyId { get; set; }
     public Currency? Currency { get; set; }
+    public string ShippingMethod { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = string.Empty;
     public string OrderStatus { get; set; } = "Pending";
     public decimal Subtotal { get; set; }
     public decimal TaxAmount { get; set; }
@@ -77,6 +82,7 @@ public sealed class OrderItem : SalesEntity
     public decimal TaxAmount { get; set; }
     public decimal TotalPrice { get; set; }
     public ICollection<VendorEarning> VendorEarnings { get; set; } = [];
+    public ICollection<OrderInventoryReservation> InventoryReservations { get; set; } = [];
 }
 
 public sealed class OrderStatusHistory : SalesEntity
@@ -157,6 +163,18 @@ public sealed class PaymentTransaction : SalesEntity
     public string Provider { get; set; } = string.Empty;
     public string Reference { get; set; } = string.Empty;
     public decimal Amount { get; set; }
+}
+
+public sealed class OrderInventoryReservation : SalesEntity
+{
+    public int OrderItemId { get; set; }
+    public OrderItem OrderItem { get; set; } = null!;
+    public int? ProductInventoryId { get; set; }
+    public ProductInventory? ProductInventory { get; set; }
+    public Guid? VendorUserId { get; set; }
+    public User? VendorUser { get; set; }
+    public int Quantity { get; set; }
+    public int ReleasedQuantity { get; set; }
 }
 
 public sealed class VendorEarning : SalesEntity

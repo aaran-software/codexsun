@@ -33,7 +33,7 @@ public sealed class CartController(SalesService salesService) : ControllerBase
     {
         try
         {
-            var cart = await salesService.UpdateCartItemAsync(id, request, GetActorUserIdOrDefault(), cancellationToken);
+            var cart = await salesService.UpdateCartItemAsync(id, request, GetActorUserIdOrDefault(), GetSessionId(), cancellationToken);
             return cart is null ? NotFound() : Ok(cart);
         }
         catch (InvalidOperationException exception)
@@ -44,7 +44,7 @@ public sealed class CartController(SalesService salesService) : ControllerBase
 
     [HttpDelete("items/{id:int}")]
     public async Task<IActionResult> RemoveItem(int id, CancellationToken cancellationToken)
-        => await salesService.RemoveCartItemAsync(id, GetActorUserIdOrDefault(), cancellationToken) ? NoContent() : NotFound();
+        => await salesService.RemoveCartItemAsync(id, GetActorUserIdOrDefault(), GetSessionId(), cancellationToken) ? NoContent() : NotFound();
 
     [HttpDelete]
     public async Task<IActionResult> Clear([FromQuery] string sessionId = "", CancellationToken cancellationToken = default)
@@ -54,5 +54,15 @@ public sealed class CartController(SalesService salesService) : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : null;
+    }
+
+    private string GetSessionId()
+    {
+        if (Request.Headers.TryGetValue("X-Cart-Session-Id", out var sessionId) && !string.IsNullOrWhiteSpace(sessionId))
+        {
+            return sessionId.ToString().Trim();
+        }
+
+        return string.Empty;
     }
 }

@@ -54,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const settingsItems = getSettingsMenuItems(auth.user?.role)
   const commonItems = getCommonMenuItems(auth.user?.role)
   const portalHome = auth.user?.role === "Admin" ? "/admin" : auth.user?.role === "Vendor" ? "/vendor" : "/dashboard"
-  const displayLogo = company.logoUrl || "/Aspire.png"
+  const displayLogo = company.logoUrl
 
   const navMain = [
     {

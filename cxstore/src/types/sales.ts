@@ -60,6 +60,8 @@ export interface OrderStatusHistory {
 export interface OrderSummary {
   id: number
   orderNumber: string
+  shippingMethod: string
+  paymentMethod: string
   customerContactId?: number | null
   customerName: string
   orderStatus: string
@@ -118,8 +120,32 @@ export interface PaymentSummary {
   amount: number
   status: string
   transactionReference: string
+  provider: string
   paidAt?: string | null
   createdAt: string
+}
+
+export interface RazorpayCheckoutSession {
+  orderId: number
+  orderNumber: string
+  keyId: string
+  razorpayOrderId: string
+  amountInSubunits: number
+  currency: string
+  merchantName: string
+  description: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  themeColor: string
+}
+
+export interface RazorpayPaymentVerification {
+  orderId: number
+  orderNumber: string
+  orderStatus: string
+  paymentStatus: string
+  payment: PaymentSummary
 }
 
 export interface VendorEarning {
@@ -165,10 +191,13 @@ export interface OrderAddressRequest {
 export interface CreateOrderRequest {
   cartId?: number | null
   sessionId: string
+  idempotencyKey: string
   customerContactId?: number | null
   currencyId?: number | null
   discountAmount: number
   invoiceDueDate?: string | null
+  shippingMethod: string
+  paymentMethod: string
   billingAddress: OrderAddressRequest
   shippingAddress: OrderAddressRequest
 }
@@ -180,4 +209,15 @@ export interface RecordPaymentRequest {
   currencyId?: number | null
   transactionReference: string
   provider: string
+}
+
+export interface InitializeRazorpayCheckoutRequest {
+  orderId: number
+}
+
+export interface VerifyRazorpayPaymentRequest {
+  orderId: number
+  razorpayOrderId: string
+  razorpayPaymentId: string
+  razorpaySignature: string
 }

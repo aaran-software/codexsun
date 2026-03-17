@@ -35,6 +35,53 @@ public sealed class VendorService(CodexsunDbContext dbContext)
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<VendorSummaryResponse>> GetStorefrontVendorsAsync(int? limit, CancellationToken cancellationToken)
+    {
+        var publishedProductIds = await dbContext.Products
+            .AsNoTracking()
+            .Where(x => x.IsActive && x.IsPublished)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var vendorIds = await dbContext.Products
+            .AsNoTracking()
+            .Where(x => x.IsActive && x.IsPublished && x.VendorId.HasValue)
+            .Select(x => x.VendorId!.Value)
+            .Union(
+                dbContext.ProductVendorLinks
+                    .AsNoTracking()
+                    .Where(x => x.VendorId.HasValue && publishedProductIds.Contains(x.ProductId))
+                    .Select(x => x.VendorId!.Value))
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var vendors = await dbContext.Vendors
+            .AsNoTracking()
+            .Include(x => x.Users)
+            .Where(x => x.Status == "Active" && vendorIds.Contains(x.Id))
+            .OrderBy(x => x.CompanyName)
+            .Select(x => new VendorSummaryResponse
+            {
+                Id = x.Id,
+                CompanyName = x.CompanyName,
+                LegalName = x.LegalName,
+                GstNumber = x.GstNumber,
+                PanNumber = x.PanNumber,
+                Email = x.Email,
+                Phone = x.Phone,
+                Website = x.Website,
+                LogoUrl = x.LogoUrl,
+                Status = x.Status,
+                UserCount = x.Users.Count,
+                CreatedAt = x.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return limit.HasValue && limit.Value > 0
+            ? vendors.Take(limit.Value).ToList()
+            : vendors;
+    }
+
     public async Task<VendorDetailResponse?> GetVendorDetailsAsync(int vendorId, CancellationToken cancellationToken)
     {
         return await dbContext.Vendors

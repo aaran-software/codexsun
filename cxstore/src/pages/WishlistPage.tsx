@@ -1,23 +1,44 @@
+import { useEffect } from "react"
 import { Link } from "react-router-dom"
 
+import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
+import { useAuth } from "@/state/authStore"
 import { useCartStore } from "@/state/cartStore"
 import { useWishlistStore } from "@/state/wishlistStore"
 import { formatCurrency } from "@/utils/storefront"
 
 export default function WishlistPage() {
+  const auth = useAuth()
   const items = useWishlistStore((state) => state.items)
   const removeItem = useWishlistStore((state) => state.removeItem)
   const clearWishlist = useWishlistStore((state) => state.clearWishlist)
+  const hydrateWishlist = useWishlistStore((state) => state.hydrateWishlist)
   const addItem = useCartStore((state) => state.addItem)
+  const { company } = useCompanyConfig()
 
   usePageMeta({
     title: "Wishlist",
-    description: "Saved customer wishlist items in the Codexsun storefront.",
+    description: `Saved customer wishlist items in the ${company.displayName} storefront.`,
     canonicalPath: "/wishlist",
   })
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      void hydrateWishlist()
+    }
+  }, [auth.isAuthenticated, hydrateWishlist])
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <StorefrontAuthNotice title="Wishlist requires sign-in" description="Sign in to save products to your persistent wishlist across devices." />
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
@@ -25,9 +46,9 @@ export default function WishlistPage() {
         <div className="space-y-1">
           <div className="text-sm uppercase tracking-[0.28em] text-muted-foreground">Wishlist</div>
           <h1 className="text-3xl font-semibold">Saved products</h1>
-          <p className="text-sm text-muted-foreground">Wishlist state is persisted locally today and is ready to move to a future backend wishlist API.</p>
+          <p className="text-sm text-muted-foreground">Wishlist items are now persisted in your customer account through the storefront backend.</p>
         </div>
-        {items.length > 0 ? <Button variant="outline" className="rounded-full" onClick={clearWishlist}>Clear Wishlist</Button> : null}
+        {items.length > 0 ? <Button variant="outline" className="rounded-full" onClick={() => void clearWishlist()}>Clear Wishlist</Button> : null}
       </div>
 
       {items.length === 0 ? (
@@ -43,13 +64,13 @@ export default function WishlistPage() {
                 <div className="space-y-1">
                   <Link to={`/product/${item.slug}`} className="text-lg font-semibold">{item.name}</Link>
                   <div className="text-sm text-muted-foreground">{item.vendorCompanyName || item.vendorName}</div>
-                  <div className="text-base font-semibold">{formatCurrency(item.price)}</div>
+                  <div className="text-base font-semibold">{formatCurrency(item.price, item.currencyName || "INR")}</div>
                 </div>
                 <div className="flex gap-3">
                   <Button className="flex-1 rounded-full" onClick={() => void addItem(item.productId, 1)}>
                     Move to Cart
                   </Button>
-                  <Button variant="outline" className="rounded-full" onClick={() => removeItem(item.productId)}>
+                  <Button variant="outline" className="rounded-full" onClick={() => void removeItem(item.productId)}>
                     Remove
                   </Button>
                 </div>

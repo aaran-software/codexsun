@@ -1,58 +1,74 @@
 import { useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { HeartIcon, ShoppingCartIcon } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 
-import { getProductById, getProducts } from "@/api/productApi"
-import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
-import { Button } from "@/components/ui/button"
+import { getStorefrontProductBySlug, getStorefrontProducts } from "@/api/productApi"
+import { createProductReview, getProductReviews } from "@/api/reviewApi"
 import { ProductGallery } from "@/components/product/ProductGallery"
 import { ProductGrid } from "@/components/product/ProductGrid"
 import { QuantitySelector } from "@/components/product/QuantitySelector"
 import { RatingStars } from "@/components/product/RatingStars"
 import { ReviewForm } from "@/components/product/ReviewForm"
 import { ReviewList } from "@/components/product/ReviewList"
+import { Button } from "@/components/ui/button"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
 import { useCartStore } from "@/state/cartStore"
 import { useAuth } from "@/state/authStore"
 import { useWishlistStore } from "@/state/wishlistStore"
-import { formatCurrency, getAverageRating, getPrimaryProductImage, getProductReviews, getReviewCount, saveProductReview, slugify, toWishlistItem } from "@/utils/storefront"
+import { formatCurrency, getPrimaryProductImage, slugify } from "@/utils/storefront"
 
 export default function ProductPage() {
   const { slug = "" } = useParams()
   const auth = useAuth()
+  const { company } = useCompanyConfig()
+  const queryClient = useQueryClient()
   const addItem = useCartStore((state) => state.addItem)
   const toggleWishlist = useWishlistStore((state) => state.toggleItem)
+  const isInWishlist = useWishlistStore((state) => state.isInWishlist)
   const [quantity, setQuantity] = useState(1)
-
-  const { data: products = [] } = useQuery({
-    queryKey: ["storefront", "products", "detail", slug],
-    queryFn: () => getProducts(false),
-    enabled: auth.isAuthenticated,
-  })
-
-  const summary = products.find((product) => product.slug === slug)
+  const [reviewMessage, setReviewMessage] = useState("")
 
   const { data: product } = useQuery({
-    queryKey: ["storefront", "product", summary?.id],
-    queryFn: () => getProductById(summary!.id),
-    enabled: Boolean(auth.isAuthenticated && summary?.id),
+    queryKey: ["storefront", "product", slug],
+    queryFn: () => getStorefrontProductBySlug(slug),
+    enabled: Boolean(slug),
+  })
+
+  const { data: relatedCatalog = [] } = useQuery({
+    queryKey: ["storefront", "products", "related", product?.categoryId],
+    queryFn: () => getStorefrontProducts({ limit: 36 }),
+  })
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["storefront", "product", product?.id, "reviews"],
+    queryFn: () => getProductReviews(product!.id),
+    enabled: Boolean(product?.id),
+  })
+  const createReviewMutation = useMutation({
+    mutationFn: createProductReview,
+    onSuccess: async () => {
+      setReviewMessage("Review submitted successfully.")
+      await queryClient.invalidateQueries({ queryKey: ["storefront", "product", product?.id, "reviews"] })
+      await queryClient.invalidateQueries({ queryKey: ["storefront", "product", slug] })
+      await queryClient.invalidateQueries({ queryKey: ["storefront", "products"] })
+    },
+    onError: (caught) => {
+      setReviewMessage(caught instanceof Error ? caught.message : "Unable to submit review.")
+    },
   })
 
   const relatedProducts = useMemo(
-    () => products
+    () => relatedCatalog
       .filter((candidate) => candidate.categoryId === product?.categoryId && candidate.id !== (product?.id ?? -1))
       .slice(0, 3),
-    [product?.categoryId, product?.id, products],
+    [product?.categoryId, product?.id, relatedCatalog],
   )
-  const reviews = summary ? getProductReviews(summary.id) : []
-  const rating = summary ? getAverageRating(summary.id) : 0
-  const reviewCount = summary ? getReviewCount(summary.id) : 0
   const vendorSlug = product?.vendorCompanyName ? slugify(product.vendorCompanyName) : ""
 
   usePageMeta({
     title: product ? `${product.name} - Storefront` : "Product",
-    description: product?.shortDescription || "Browse product details in the Codexsun storefront.",
+    description: product?.shortDescription || `Browse product details in the ${company.displayName} storefront.`,
     canonicalPath: `/product/${slug}`,
     structuredData: product ? {
       "@context": "https://schema.org",
@@ -70,15 +86,7 @@ export default function ProductPage() {
     } : undefined,
   })
 
-  if (!auth.isAuthenticated) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <StorefrontAuthNotice title="Product pages require sign-in" description="The current backend exposes product details to authenticated users. Sign in to load the live product record, pricing, inventory, and vendor links." />
-      </div>
-    )
-  }
-
-  if (!summary || !product) {
+  if (!product) {
     return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground sm:px-6">Loading product details...</div>
   }
 
@@ -90,7 +98,7 @@ export default function ProductPage() {
           <div className="space-y-3">
             <div className="text-sm uppercase tracking-[0.26em] text-muted-foreground">{product.categoryName || "Catalog"}</div>
             <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>
-            <RatingStars rating={rating} reviewCount={reviewCount} size="md" />
+            <RatingStars rating={product.averageRating} reviewCount={product.reviewCount} size="md" />
             <div className="text-3xl font-semibold">{formatCurrency(product.basePrice, product.currencyName || "INR")}</div>
             <p className="text-sm text-muted-foreground">{product.shortDescription || product.description}</p>
           </div>
@@ -120,9 +128,9 @@ export default function ProductPage() {
               <ShoppingCartIcon className="size-4" />
               Add to Cart
             </Button>
-            <Button variant="outline" className="rounded-full px-5" onClick={() => toggleWishlist(toWishlistItem(summary, getPrimaryProductImage(product)))}>
+            <Button variant="outline" className="rounded-full px-5" onClick={() => void toggleWishlist(product.id)}>
               <HeartIcon className="size-4" />
-              Wishlist
+              {isInWishlist(product.id) ? "Saved" : "Wishlist"}
             </Button>
           </div>
 
@@ -154,18 +162,20 @@ export default function ProductPage() {
         </div>
         <div className="space-y-4">
           <h2 className="text-3xl font-semibold">Write a Review</h2>
-          <ReviewForm
-            onSubmit={({ rating: reviewRating, title, review }) => saveProductReview({
-              id: crypto.randomUUID(),
-              productId: product.id,
-              userId: auth.user?.id ?? null,
-              username: auth.user?.username ?? "Customer",
-              rating: reviewRating,
-              title,
-              review,
-              createdAt: new Date().toISOString(),
-            })}
-          />
+          {reviewMessage ? <div className="rounded-[1.4rem] border border-border/60 bg-card px-4 py-3 text-sm text-muted-foreground">{reviewMessage}</div> : null}
+          {auth.isAuthenticated ? (
+            <ReviewForm
+              onSubmit={({ rating: reviewRating, title, review }) => {
+                setReviewMessage("")
+                createReviewMutation.mutate({
+                  productId: product.id,
+                  rating: reviewRating,
+                  title,
+                  review,
+                })
+              }}
+            />
+          ) : <div className="text-sm text-muted-foreground">Sign in with a customer account to submit a verified review.</div>}
         </div>
       </section>
 

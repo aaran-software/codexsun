@@ -2,13 +2,12 @@ import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 
-import { getProducts, getProductCategories } from "@/api/productApi"
-import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
-import { ProductGrid } from "@/components/product/ProductGrid"
+import { getStorefrontCategories, getStorefrontProducts } from "@/api/productApi"
 import { FilterSidebar } from "@/components/product/FilterSidebar"
+import { ProductGrid } from "@/components/product/ProductGrid"
 import { SortDropdown } from "@/components/product/SortDropdown"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
-import { useAuth } from "@/state/authStore"
 import type { CatalogFilters, ProductSortOption } from "@/types/storefront"
 import { filterProducts, sortProducts } from "@/utils/storefront"
 
@@ -23,38 +22,27 @@ const initialFilters: CatalogFilters = {
 
 export default function CategoryPage() {
   const { slug = "" } = useParams()
-  const auth = useAuth()
+  const { company } = useCompanyConfig()
   const [filters, setFilters] = useState<CatalogFilters>(initialFilters)
   const [sort, setSort] = useState<ProductSortOption>("featured")
 
   usePageMeta({
     title: `Category - ${slug}`,
-    description: "Browse the current category view in the Codexsun storefront.",
+    description: `Browse the ${company.displayName} category catalog.`,
     canonicalPath: `/category/${slug}`,
   })
 
   const { data: products = [] } = useQuery({
     queryKey: ["storefront", "products", "category", slug],
-    queryFn: () => getProducts(false),
-    enabled: auth.isAuthenticated,
+    queryFn: () => getStorefrontProducts({ categorySlug: slug }),
   })
   const { data: categories = [] } = useQuery({
     queryKey: ["storefront", "categories", slug],
-    queryFn: () => getProductCategories(false),
-    enabled: auth.isAuthenticated,
+    queryFn: getStorefrontCategories,
   })
 
   const category = categories.find((entry) => entry.slug === slug)
-  const categoryProducts = useMemo(() => products.filter((product) => product.categoryId === category?.id), [category?.id, products])
-  const filteredProducts = sortProducts(filterProducts(categoryProducts, filters), sort)
-
-  if (!auth.isAuthenticated) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <StorefrontAuthNotice title="Category browsing requires sign-in" description="The current product and category APIs are authenticated. Sign in to browse live category results." />
-      </div>
-    )
-  }
+  const filteredProducts = useMemo(() => sortProducts(filterProducts(products, filters), sort), [filters, products, sort])
 
   return (
     <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[280px_1fr]">

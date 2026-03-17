@@ -62,6 +62,10 @@ export default defineConfig({
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true
       },
+      '/storefront': {
+        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        changeOrigin: true
+      },
       '/cart': {
         target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
         changeOrigin: true

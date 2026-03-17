@@ -118,6 +118,7 @@ function App() {
 
               <Route element={<AuthLayout />}>
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Navigate to="/login?tab=signup" replace />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={["Admin", "Vendor", "Customer", "Staff"]} />}>

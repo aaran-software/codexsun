@@ -1,5 +1,6 @@
 using cxserver.Modules.Auth.Entities;
 using cxserver.Modules.Common.Entities;
+using cxserver.Modules.Storefront.Entities;
 using cxserver.Modules.Vendors.Entities;
 
 namespace cxserver.Modules.Products.Entities;
@@ -57,6 +58,8 @@ public sealed class Product : ProductEntity
     public ICollection<ProductInventory> Inventory { get; set; } = [];
     public ICollection<ProductVendorLink> VendorLinks { get; set; } = [];
     public ICollection<ProductAttribute> Attributes { get; set; } = [];
+    public ICollection<ProductReview> Reviews { get; set; } = [];
+    public ICollection<WishlistEntry> WishlistEntries { get; set; } = [];
 }
 
 public sealed class ProductVariant : ProductEntity

@@ -5,6 +5,10 @@ export function getShipments() {
   return requestJson<Shipment[]>("/shipments", { method: "GET" })
 }
 
+export function getShipmentsForOrder(orderId: number) {
+  return requestJson<Shipment[]>(`/shipments/order/${orderId}`, { method: "GET" })
+}
+
 export function getShippingMethods() {
   return requestJson<ShippingMethod[]>("/shipments/methods", { method: "GET" })
 }
@@ -13,6 +17,12 @@ export function createShipment(request: ShipmentCreateRequest) {
   return requestJson<Shipment>("/shipments", {
     method: "POST",
     body: JSON.stringify(request),
+  })
+}
+
+export function autoCreateShipment(orderId: number) {
+  return requestJson<Shipment>(`/shipments/auto-create/${orderId}`, {
+    method: "POST",
   })
 }
 

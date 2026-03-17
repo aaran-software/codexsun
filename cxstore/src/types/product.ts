@@ -95,6 +95,8 @@ export interface ProductSummary {
   isPublished: boolean
   isActive: boolean
   totalInventory: number
+  averageRating: number
+  reviewCount: number
   createdAt: string
   updatedAt: string
 }

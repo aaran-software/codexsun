@@ -1,12 +1,6 @@
 import type { ProductDetail, ProductPrice, ProductSummary } from "@/types/product"
-import type {
-  CatalogFilters,
-  ProductReview,
-  ProductSortOption,
-  WishlistItem,
-} from "@/types/storefront"
+import type { CatalogFilters, ProductSortOption } from "@/types/storefront"
 
-const REVIEW_STORAGE_KEY = "cxstore.storefront.reviews"
 const ADDRESS_STORAGE_KEY = "cxstore.storefront.addresses"
 
 function readJson<T>(key: string, fallback: T): T {
@@ -105,32 +99,6 @@ export function getInventoryStatus(product: Pick<ProductSummary, "totalInventory
   return "In stock"
 }
 
-export function getStoredReviews() {
-  return readJson<ProductReview[]>(REVIEW_STORAGE_KEY, [])
-}
-
-export function getProductReviews(productId: number) {
-  return getStoredReviews().filter((review) => review.productId === productId)
-}
-
-export function saveProductReview(review: ProductReview) {
-  const current = getStoredReviews()
-  writeJson(REVIEW_STORAGE_KEY, [review, ...current])
-}
-
-export function getAverageRating(productId: number) {
-  const reviews = getProductReviews(productId)
-  if (reviews.length === 0) {
-    return 0
-  }
-
-  return reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
-}
-
-export function getReviewCount(productId: number) {
-  return getProductReviews(productId).length
-}
-
 export function sortProducts(products: ProductSummary[], sort: ProductSortOption) {
   const sorted = [...products]
 
@@ -159,23 +127,10 @@ export function filterProducts(products: ProductSummary[], filters: CatalogFilte
       || product.vendorCompanyName.toLowerCase().includes(filters.vendor.toLowerCase())
       || product.vendorName.toLowerCase().includes(filters.vendor.toLowerCase())
     const matchesAvailability = !filters.availabilityOnly || product.totalInventory > 0
-    const matchesRating = filters.rating <= 0 || getAverageRating(product.id) >= filters.rating
+    const matchesRating = filters.rating <= 0 || product.averageRating >= filters.rating
 
     return withinPrice && matchesBrand && matchesVendor && matchesAvailability && matchesRating
   })
-}
-
-export function toWishlistItem(product: ProductSummary, imageUrl: string): WishlistItem {
-  return {
-    productId: product.id,
-    slug: product.slug,
-    name: product.name,
-    vendorName: product.vendorName,
-    vendorCompanyName: product.vendorCompanyName,
-    price: product.basePrice,
-    imageUrl,
-    addedAt: new Date().toISOString(),
-  }
 }
 
 export function getStoredAddresses() {

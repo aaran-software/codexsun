@@ -1,17 +1,21 @@
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 
 import { getContacts } from "@/api/contactApi"
+import { getMyReviews } from "@/api/reviewApi"
 import { createReturn } from "@/api/returnsApi"
 import { getOrderById, getOrders, updateOrderStatus } from "@/api/salesApi"
+import { getShipments } from "@/api/shippingApi"
 import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
+import { canRetryRazorpayPayment, launchRazorpayOrderPayment } from "@/lib/razorpay"
 import { useAuth } from "@/state/authStore"
 import { useWishlistStore } from "@/state/wishlistStore"
-import { formatCurrency, getStoredAddresses, getStoredReviews } from "@/utils/storefront"
+import { formatCurrency, getStoredAddresses } from "@/utils/storefront"
 
 const tabs = [
   { label: "Overview", url: "/account" },
@@ -24,12 +28,17 @@ const tabs = [
 
 export default function AccountPage() {
   const auth = useAuth()
+  const navigate = useNavigate()
+  const { company } = useCompanyConfig()
   const location = useLocation()
   const activeTab = tabs.find((tab) => tab.url === location.pathname)?.label ?? "Overview"
   const wishlistItems = useWishlistStore((state) => state.items)
+  const hydrateWishlist = useWishlistStore((state) => state.hydrateWishlist)
   const [message, setMessage] = useState("")
   const shouldLoadOrders = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Orders")
   const shouldLoadContacts = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Profile")
+  const shouldLoadReviews = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Reviews")
+  const shouldLoadShipments = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Orders")
 
   const { data: orders = [] } = useQuery({
     queryKey: ["storefront", "account", "orders"],
@@ -43,13 +52,30 @@ export default function AccountPage() {
     enabled: shouldLoadContacts,
     retry: false,
   })
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["storefront", "account", "reviews"],
+    queryFn: getMyReviews,
+    enabled: shouldLoadReviews,
+    retry: false,
+  })
+  const { data: shipments = [] } = useQuery({
+    queryKey: ["storefront", "account", "shipments"],
+    queryFn: getShipments,
+    enabled: shouldLoadShipments,
+    retry: false,
+  })
 
-  const reviews = useMemo(() => getStoredReviews().filter((review) => review.userId === auth.user?.id || review.username === auth.user?.username), [auth.user?.id, auth.user?.username])
   const storedAddresses = getStoredAddresses()
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      void hydrateWishlist()
+    }
+  }, [auth.isAuthenticated, hydrateWishlist])
 
   usePageMeta({
     title: `Account - ${activeTab}`,
-    description: "Manage your customer account in the Codexsun storefront.",
+    description: `Manage your customer account in the ${company.displayName} storefront.`,
     canonicalPath: location.pathname,
   })
 
@@ -62,6 +88,7 @@ export default function AccountPage() {
   }
 
   const latestOrder = orders[0]
+  const latestShipment = latestOrder ? shipments.find((shipment) => shipment.orderId === latestOrder.id) : undefined
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
@@ -85,8 +112,8 @@ export default function AccountPage() {
       {activeTab === "Overview" ? (
         <div className="grid gap-6 lg:grid-cols-3">
           <MetricCard title="Orders" value={String(orders.length)} subtitle="Completed or in-progress orders from the sales module." />
-          <MetricCard title="Wishlist" value={String(wishlistItems.length)} subtitle="Saved storefront products in local persistent state." />
-          <MetricCard title="Reviews" value={String(reviews.length)} subtitle="Customer-submitted storefront reviews stored locally until a backend review API exists." />
+          <MetricCard title="Wishlist" value={String(wishlistItems.length)} subtitle="Saved storefront products in your customer account." />
+          <MetricCard title="Reviews" value={String(reviews.length)} subtitle="Verified product reviews submitted through the storefront backend." />
           <Card className="rounded-[1.8rem] border-border/60 lg:col-span-2">
             <CardHeader><CardTitle>Latest Order</CardTitle></CardHeader>
             <CardContent className="text-sm">
@@ -95,6 +122,7 @@ export default function AccountPage() {
                   <div className="font-medium">{latestOrder.orderNumber}</div>
                   <div className="text-muted-foreground">{latestOrder.orderStatus} - {latestOrder.paymentStatus}</div>
                   <div>{formatCurrency(latestOrder.totalAmount, latestOrder.currencyName || "INR")}</div>
+                  {latestShipment ? <div className="text-muted-foreground">Shipment: {latestShipment.status} · {latestShipment.trackingNumber}</div> : null}
                 </div>
               ) : "No orders yet."}
             </CardContent>
@@ -137,10 +165,30 @@ export default function AccountPage() {
                   <div className="text-lg font-semibold">{order.orderNumber}</div>
                   <div className="text-sm text-muted-foreground">{order.createdAt ? new Date(order.createdAt).toLocaleString() : ""}</div>
                   <div className="text-sm text-muted-foreground">{order.orderStatus} - {order.paymentStatus}</div>
+                  {shipments.find((shipment) => shipment.orderId === order.id) ? (
+                    <div className="text-sm text-muted-foreground">
+                      Shipment {shipments.find((shipment) => shipment.orderId === order.id)?.status} · {shipments.find((shipment) => shipment.orderId === order.id)?.trackingNumber}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="text-sm font-medium">{formatCurrency(order.totalAmount, order.currencyName || "INR")}</div>
                   <Link to={`/order-success/${order.id}`} className={buttonVariants({ variant: "outline", className: "rounded-full" })}>View</Link>
+                  {canRetryRazorpayPayment(order.createdAt, order.paymentMethod, order.paymentStatus, order.orderStatus) ? (
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => void launchRazorpayOrderPayment({
+                        orderId: order.id,
+                        orderNumber: order.orderNumber,
+                        customerName: auth.user?.username,
+                        customerEmail: auth.user?.email,
+                        navigate,
+                      }).catch((caught) => setMessage(caught instanceof Error ? caught.message : "Unable to reopen Razorpay checkout."))}
+                    >
+                      Pay Now
+                    </Button>
+                  ) : null}
                   <Button variant="outline" className="rounded-full" onClick={() => void updateOrderStatus(order.id, "Cancelled", "Customer cancelled").then(() => setMessage(`Order ${order.orderNumber} cancellation requested.`))}>
                     Cancel
                   </Button>
@@ -196,6 +244,7 @@ export default function AccountPage() {
               <div key={review.id} className="rounded-2xl bg-muted/40 px-4 py-4">
                 <div className="font-medium">{review.title}</div>
                 <div className="mt-1 text-sm text-muted-foreground">{review.review}</div>
+                <div className="mt-2 text-xs text-muted-foreground">{review.rating}/5 · {new Date(review.createdAt).toLocaleDateString()}</div>
               </div>
             )) : <div className="text-sm text-muted-foreground">You have not submitted any storefront reviews yet.</div>}
           </CardContent>

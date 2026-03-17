@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { createShipment, getShippingMethods, getShipments, updateShipmentStatus } from "@/api/shippingApi"
+import { autoCreateShipment, createShipment, getShippingMethods, getShipments, updateShipmentStatus } from "@/api/shippingApi"
 import { getOrders } from "@/api/salesApi"
 import { CommonList, type CommonListColumn } from "@/components/forms/CommonList"
 import { Button } from "@/components/ui/button"
@@ -65,6 +65,9 @@ export default function ShipmentsPage() {
         <div className="space-y-2"><Label>Quantity</Label><Input type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></div>
         <div className="flex items-end">
           <Button onClick={() => void createShipment({ orderId: Number(orderId), shippingMethodId: Number(methodId), trackingNumber, items: [{ orderItemId: Number(orderItemId), quantity: Number(quantity) }] }).then(load)}>Create Shipment</Button>
+        </div>
+        <div className="flex items-end">
+          <Button variant="outline" onClick={() => void autoCreateShipment(Number(orderId)).then(load)}>Auto Create From Order</Button>
         </div>
       </section>
 

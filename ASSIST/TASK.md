@@ -1,1 +1,1 @@
-PROMPT 049 - Normalize non-common admin module UX in `cxstore` so business modules follow the same split list/create/edit pattern and sectioned upsert form tone already used by contacts, vendors, and products.
+PROMPT 054 - Implement customer shipment visibility and tracking as the next production-ready item.

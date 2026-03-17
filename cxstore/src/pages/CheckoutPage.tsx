@@ -12,7 +12,9 @@ import { PaymentSelector } from "@/components/checkout/PaymentSelector"
 import { ShippingOptions } from "@/components/checkout/ShippingOptions"
 import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
 import { Button } from "@/components/ui/button"
+import { useCompanyConfig } from "@/config/company"
 import { usePageMeta } from "@/hooks/usePageMeta"
+import { launchRazorpayOrderPayment } from "@/lib/razorpay"
 import { useCartStore } from "@/state/cartStore"
 import { useAuth } from "@/state/authStore"
 import type { CheckoutAddressDraft, PaymentMethodOption, ShippingMethodOption } from "@/types/storefront"
@@ -26,9 +28,7 @@ const steps = [
 ]
 
 const paymentOptions: PaymentMethodOption[] = [
-  { id: "stripe", label: "Stripe", description: "Card flow placeholder until payment intents are added." },
-  { id: "razorpay", label: "Razorpay", description: "Indian payment flow placeholder for future provider integration." },
-  { id: "paypal", label: "PayPal", description: "Redirect-style payment UI placeholder." },
+  { id: "razorpay", label: "Razorpay", description: "Cards, UPI, netbanking, and wallets through one hosted checkout." },
   { id: "cod", label: "Cash on Delivery", description: "Collect payment at delivery." },
 ]
 
@@ -44,9 +44,18 @@ const blankAddress: CheckoutAddressDraft = {
   postalCode: "",
 }
 
+function createCheckoutIdempotencyKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `checkout-${crypto.randomUUID()}`
+  }
+
+  return `checkout-${Date.now()}`
+}
+
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const auth = useAuth()
+  const { company } = useCompanyConfig()
   const cart = useCartStore((state) => state.cart)
   const sessionId = useCartStore((state) => state.sessionId)
   const discountAmount = useCartStore((state) => state.discountAmount)
@@ -62,12 +71,13 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState("address")
   const [billingAddress, setBillingAddress] = useState<CheckoutAddressDraft>({ ...blankAddress, email: auth.user?.email ?? "", fullName: auth.user?.username ?? "" })
   const [shippingAddress, setShippingAddress] = useState<CheckoutAddressDraft>({ ...blankAddress, email: auth.user?.email ?? "", fullName: auth.user?.username ?? "" })
+  const [idempotencyKey, setIdempotencyKey] = useState(createCheckoutIdempotencyKey)
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   usePageMeta({
     title: "Checkout",
-    description: "Complete your Codexsun storefront order.",
+    description: `Complete your ${company.displayName} storefront order.`,
     canonicalPath: "/checkout",
   })
 
@@ -80,6 +90,12 @@ export default function CheckoutPage() {
   useEffect(() => {
     void hydrateCart()
   }, [hydrateCart])
+
+  useEffect(() => {
+    if (paymentMethod !== "razorpay" && paymentMethod !== "cod") {
+      setPaymentMethod("razorpay")
+    }
+  }, [paymentMethod, setPaymentMethod])
 
   const shippingOptions: ShippingMethodOption[] = useMemo(() => (
     shippingMethods.length > 0
@@ -116,9 +132,12 @@ export default function CheckoutPage() {
     try {
       const order = await createOrder({
         sessionId,
+        idempotencyKey,
         customerContactId: undefined,
         currencyId: cart.currencyId ?? undefined,
         discountAmount,
+        shippingMethod,
+        paymentMethod,
         billingAddress: {
           contactId: undefined,
           addressType: "Billing",
@@ -147,7 +166,22 @@ export default function CheckoutPage() {
 
       saveStoredAddress(`${shippingAddress.addressLine1}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.postalCode}`)
       await clearCart()
-      navigate(`/order-success/${order.id}?payment=${encodeURIComponent(paymentMethod)}`)
+
+      if (paymentMethod === "cod") {
+        setIdempotencyKey(createCheckoutIdempotencyKey())
+        navigate(`/order-success/${order.id}?payment=${encodeURIComponent(paymentMethod)}`)
+        return
+      }
+
+      await launchRazorpayOrderPayment({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        customerName: billingAddress.fullName || auth.user?.username,
+        customerEmail: billingAddress.email || auth.user?.email,
+        customerPhone: billingAddress.phone || shippingAddress.phone,
+        navigate,
+      })
+      setIdempotencyKey(createCheckoutIdempotencyKey())
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to create order.")
     } finally {
@@ -160,7 +194,7 @@ export default function CheckoutPage() {
       <div className="space-y-1">
         <div className="text-sm uppercase tracking-[0.28em] text-muted-foreground">Checkout</div>
         <h1 className="text-3xl font-semibold">Complete your order</h1>
-        <p className="text-sm text-muted-foreground">The UI exposes address, shipping, payment selection, and review steps while mapping the final submission to the existing order API.</p>
+        <p className="text-sm text-muted-foreground">Checkout now submits an idempotent order request, initializes a hosted Razorpay session for online payments, and verifies payment on the backend before marking the order paid.</p>
       </div>
 
       <CheckoutStepper steps={steps} currentStep={currentStep} />
@@ -195,7 +229,7 @@ export default function CheckoutPage() {
               }}
             />
             <p className="mt-4 text-sm text-muted-foreground">
-              Payment provider UIs are present in the storefront, but the backend does not yet expose customer payment-intent flows. Order creation still completes and you can layer provider integration next.
+              Razorpay is the live online payment path here and includes UPI inside the same hosted checkout. Cash on Delivery remains available without an external provider.
             </p>
           </div>
 

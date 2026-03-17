@@ -197,4 +197,51 @@ codexsun.slnx
 - `WebLayout` now hosts a richer commerce shell through `MainLayout`, `storefront-header`, `storefront-footer`, `navbar`, `storefront-mobile-menu`, and `storefront-bottom-nav`, while `AppLayout` remains the authenticated admin or vendor workspace.
 - The storefront data layer adds `api/apiClient.ts` for Axios-based customer requests, `lib/queryClient.ts` for React Query caching, and Zustand-based `cartStore` and `wishlistStore` for local customer state.
 - Public route pages now cover home, category browsing, search, product details, vendor stores, cart, wishlist, checkout, order success, and customer account views, all implemented under the existing `cxstore/src/pages` structure.
-- The implementation intentionally adapts to the current backend API surface: live product and vendor discovery still rely on authenticated backend endpoints, while wishlist and review persistence stay frontend-managed until dedicated backend APIs are added.
+- The initial storefront implementation adapted to the existing backend API surface, and wishlist plus review persistence still remain frontend-managed until dedicated customer APIs are added.
+
+## Go-Live Storefront API Hardening (2026-03-16)
+
+- `cxserver` now exposes additive anonymous storefront endpoints through `Modules/Products/Controllers/StorefrontCatalogController.cs` and `Modules/Vendors/Controllers/StorefrontVendorsController.cs` instead of weakening the existing secured admin or vendor APIs.
+- Public catalog browsing is now served from dedicated `/storefront/products`, `/storefront/products/{slug}`, `/storefront/categories`, and `/storefront/vendors` endpoints backed by published and active product filtering in `ProductService` and active-vendor filtering in `VendorService`.
+- `cxstore` storefront pages for home, category browsing, search, product detail, and vendor stores now consume the public storefront endpoints through `productApi.ts` and `vendorApi.ts`, removing the previous dependency on authenticated discovery APIs for anonymous browsing.
+
+## Storefront Engagement Update (2026-03-16)
+
+- `cxserver/Modules/Storefront` now owns persistent customer wishlist and product-review behavior without changing the modular-monolith structure used by the rest of the backend.
+- Wishlist persistence is customer-authenticated through `/wishlist`, while product reviews are split between anonymous public reads at `/storefront/products/{productId}/reviews` and customer-authenticated writes at `/reviews`.
+- Product list and detail responses now include backend `averageRating` and `reviewCount` values, so storefront cards, vendor-store summaries, and product pages no longer infer engagement metrics from browser-local storage.
+
+## Checkout Resilience Update (2026-03-16)
+
+- `cxserver/Modules/Sales` now persists checkout idempotency keys plus the selected shipping and payment methods directly on the `orders` aggregate.
+- Order placement now writes explicit `order_inventory_reservations` records instead of only inferring reserved stock from aggregate counters, which makes later cancellation and refund release flows deterministic.
+- The current reservation flow first uses available `product_inventory` rows and falls back to vendor-link inventory when warehouse-backed stock is unavailable for that item.
+- Payment recording now rejects duplicate provider-reference submissions, prevents overpayment, and automatically promotes a fully paid pending order to `Confirmed`.
+- `cxstore/src/pages/CheckoutPage.tsx` now sends a generated idempotency key with the selected shipping and payment options so browser refresh or repeated clicks do not create duplicate orders.
+
+## Razorpay Payment Integration Update (2026-03-16)
+
+- The production payment path now stays inside `cxserver/Modules/Sales`; no separate payment module was introduced.
+- `RazorpayGatewayService` creates Razorpay Orders through the official Orders API, verifies checkout signatures server-side, fetches payment details for confirmation, and validates webhook signatures against the raw request body.
+- `RazorpayPaymentsController` exposes three focused endpoints: authenticated checkout initialization, authenticated storefront verification, and an anonymous Razorpay webhook callback.
+- Storefront online payments now use a single hosted provider option, `Razorpay`, which includes UPI inside the same checkout experience. Cash on Delivery remains the second customer-facing option.
+- Webhook and storefront verification both reconcile through the existing Sales payment write path, so invoices, orders, payment summaries, audit logging, and notifications remain in one aggregate flow.
+
+## Razorpay Retry And Expiry Update (2026-03-16)
+
+- `Modules/Sales` now applies a payment-expiry policy to unpaid Razorpay orders through `SalesSettings.PendingPaymentExpiryMinutes` without introducing a scheduler-specific module or background queue dependency.
+- Stale unpaid Razorpay orders are marked `Expired`, their inventory reservations are released, and the order timeline records the expiry reason before the storefront or order APIs return those orders.
+- Storefront retry remains additive: customer account order history can reopen Razorpay Checkout for still-payable orders through the same backend initialization and verification endpoints already used by checkout.
+
+## Payment Reconciliation And Shipping Automation Update (2026-03-16)
+
+- `RazorpayGatewayService` now supports order-payment lookup, allowing the backend to reconcile a local unpaid order against Razorpay even when a webhook is delayed or missed.
+- `RazorpayPaymentsController` now exposes an authenticated reconciliation endpoint that uses the existing Sales payment write path, so repaired orders still flow through the same invoice, order-status, notification, and audit logic.
+- `ShippingService` now supports auto-creating a shipment from a paid or confirmed order using the order's selected shipping method and full order-item quantities.
+- Successful payment completion now provisions a fulfillment shipment record automatically through the existing Shipping module instead of leaving paid orders waiting for manual shipment data entry.
+
+## Customer Shipment Visibility Update (2026-03-16)
+
+- The Shipping module now applies role-aware shipment visibility so customer shipment queries return only the signed-in customer's orders, vendor shipment queries stay vendor-scoped, and admin or staff still see the full shipment dataset.
+- `ShipmentsController` now exposes `GET /shipments/order/{orderId}` for per-order shipment retrieval under the existing authenticated API surface.
+- `cxstore` storefront account and order-success views now consume shipment data directly so customers can see tracking numbers, provider names, and shipment status without leaving the storefront flow.

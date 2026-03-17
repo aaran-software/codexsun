@@ -4,10 +4,14 @@ import type {
   CreateOrderRequest,
   InvoiceDetail,
   InvoiceSummary,
+  InitializeRazorpayCheckoutRequest,
   OrderDetail,
   OrderSummary,
   PaymentSummary,
   RecordPaymentRequest,
+  RazorpayCheckoutSession,
+  RazorpayPaymentVerification,
+  VerifyRazorpayPaymentRequest,
   VendorPayoutSummary,
 } from "@/types/sales"
 
@@ -29,7 +33,7 @@ export function getCartSessionId() {
 }
 
 export function getCart(sessionId = getCartSessionId()) {
-  return requestJson<Cart>(`/cart?sessionId=${encodeURIComponent(sessionId)}`, { method: "GET" }, { auth: false })
+  return requestJson<Cart>(`/cart?sessionId=${encodeURIComponent(sessionId)}`, { method: "GET" })
 }
 
 export function addCartItem(productId: number, quantity = 1, productVariantId?: number | null, vendorUserId?: string | null) {
@@ -42,22 +46,30 @@ export function addCartItem(productId: number, quantity = 1, productVariantId?: 
       quantity,
       vendorUserId,
     }),
-  }, { auth: false })
+  })
 }
 
 export function updateCartItem(id: number, quantity: number) {
   return requestJson<Cart>(`/cart/items/${id}`, {
     method: "PUT",
+    headers: {
+      "X-Cart-Session-Id": getCartSessionId(),
+    },
     body: JSON.stringify({ quantity }),
-  }, { auth: false })
+  })
 }
 
 export function removeCartItem(id: number) {
-  return requestJson<void>(`/cart/items/${id}`, { method: "DELETE" }, { auth: false })
+  return requestJson<void>(`/cart/items/${id}`, {
+    method: "DELETE",
+    headers: {
+      "X-Cart-Session-Id": getCartSessionId(),
+    },
+  })
 }
 
 export function clearCart(sessionId = getCartSessionId()) {
-  return requestJson<void>(`/cart?sessionId=${encodeURIComponent(sessionId)}`, { method: "DELETE" }, { auth: false })
+  return requestJson<void>(`/cart?sessionId=${encodeURIComponent(sessionId)}`, { method: "DELETE" })
 }
 
 export function getOrders() {
@@ -105,6 +117,26 @@ export function recordPayment(request: RecordPaymentRequest) {
   return requestJson<PaymentSummary>("/payments", {
     method: "POST",
     body: JSON.stringify(request),
+  })
+}
+
+export function initializeRazorpayCheckout(request: InitializeRazorpayCheckoutRequest) {
+  return requestJson<RazorpayCheckoutSession>("/payments/razorpay/checkout", {
+    method: "POST",
+    body: JSON.stringify(request),
+  })
+}
+
+export function verifyRazorpayPayment(request: VerifyRazorpayPaymentRequest) {
+  return requestJson<RazorpayPaymentVerification>("/payments/razorpay/verify", {
+    method: "POST",
+    body: JSON.stringify(request),
+  })
+}
+
+export function reconcileRazorpayPayment(orderId: number) {
+  return requestJson<RazorpayPaymentVerification>(`/payments/razorpay/reconcile/${orderId}`, {
+    method: "POST",
   })
 }
 
