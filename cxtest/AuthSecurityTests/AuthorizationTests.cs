@@ -43,7 +43,10 @@ public sealed class AuthorizationTests
         Assert.Equal(HttpStatusCode.Forbidden, customerAdminResponse.StatusCode);
 
         client.DefaultRequestHeaders.Authorization = null;
-        var adminTokens = await AuthSecurityTestSupport.LoginAndReadTokensAsync(client, "sundar@sundar.com", "kalarani");
+        var adminTokens = await AuthSecurityTestSupport.LoginAndReadTokensAsync(
+            client,
+            "sundar@sundar.com",
+            AuthSecurityTestSupport.GetDevelopmentBootstrapPassword());
         AuthSecurityTestSupport.SetBearerToken(client, adminTokens.AccessToken);
 
         var adminResponse = await client.GetAsync("/auth/access/admin");

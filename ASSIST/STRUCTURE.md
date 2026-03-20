@@ -569,3 +569,4 @@ codexsun/
 - Razorpay storefront payments are now shared through `src/lib/razorpay.ts`, which is consumed by both `CheckoutPage.tsx` and `AccountPage.tsx` for initial payment and retry-payment flows.
 - Payment repair now uses `reconcileRazorpayPayment` from `src/api/salesApi.ts`, while shipping fulfillment operations can auto-create shipments through `autoCreateShipment` in `src/api/shippingApi.ts`.
 - Customer shipment visibility now uses `getShipments` and `getShipmentsForOrder` from `src/api/shippingApi.ts`, and is surfaced in `src/pages/AccountPage.tsx` and `src/pages/OrderSuccessPage.tsx`.
+- Customer address persistence now lives in `cxserver/Modules/Storefront` and `src/api/customerAddressApi.ts`, replacing the earlier local-only checkout address helper flow.

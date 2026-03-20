@@ -271,7 +271,9 @@ public sealed partial class SalesService(CodexsunDbContext dbContext, Notificati
             var orderItem = new OrderItem
             {
                 ProductId = cartItem.ProductId,
+                Product = cartItem.Product,
                 ProductVariantId = cartItem.ProductVariantId,
+                ProductVariant = cartItem.ProductVariant,
                 VendorUserId = cartItem.VendorUserId,
                 Quantity = cartItem.Quantity,
                 UnitPrice = cartItem.UnitPrice,
@@ -1831,8 +1833,9 @@ public sealed partial class SalesService(CodexsunDbContext dbContext, Notificati
             .Where(x =>
                 x.PaymentProvider == "Razorpay"
                 && x.CreatedAt <= cutoff
-                && !IsCancelledStatus(x.OrderStatus)
-                && !IsExpiredStatus(x.OrderStatus)
+                && x.OrderStatus != "Cancelled"
+                && x.OrderStatus != "Canceled"
+                && x.OrderStatus != "Expired"
                 && x.PaymentStatus != "Completed"
                 && x.PaymentStatus != "Expired")
             .ToListAsync(cancellationToken);

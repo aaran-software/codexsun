@@ -1,1 +1,1 @@
-PROMPT 054 - Implement customer shipment visibility and tracking as the next production-ready item.
+PROMPT 058 - Read AI_RULES and all files in ASSIST, review the full project toward go-live, create MISSING_TASK.md for missing forms/tables/entities/structure/concepts, and check tone consistency across modules, frontend pages, and structure.

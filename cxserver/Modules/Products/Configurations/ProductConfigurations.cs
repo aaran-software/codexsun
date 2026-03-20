@@ -27,7 +27,6 @@ public sealed class ProductCategoryConfiguration : IEntityTypeConfiguration<Prod
         builder.Property(x => x.Slug).HasMaxLength(160).IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();
         builder.HasIndex(x => x.Slug).IsUnique();
-        builder.HasData(ProductCatalogSeedData.Categories);
     }
 }
 
@@ -60,7 +59,6 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasOne(x => x.GstPercent).WithMany().HasForeignKey(x => x.GstPercentId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Brand).WithMany().HasForeignKey(x => x.BrandId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.HsnCode).WithMany().HasForeignKey(x => x.HsnCodeId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasData(ProductCatalogSeedData.Products);
     }
 }
 
@@ -95,7 +93,6 @@ public sealed class ProductPriceConfiguration : IEntityTypeConfiguration<Product
         builder.HasOne(x => x.Product).WithMany(x => x.Prices).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.ProductVariant).WithMany().HasForeignKey(x => x.ProductVariantId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Currency).WithMany().HasForeignKey(x => x.CurrencyId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasData(ProductCatalogSeedData.Prices);
     }
 }
 
@@ -108,7 +105,6 @@ public sealed class ProductImageConfiguration : IEntityTypeConfiguration<Product
         builder.Property(x => x.ImageUrl).HasMaxLength(1024).IsRequired();
         builder.Property(x => x.AltText).HasMaxLength(256).HasDefaultValue(string.Empty);
         builder.HasOne(x => x.Product).WithMany(x => x.Images).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasData(ProductCatalogSeedData.Images);
     }
 }
 
@@ -121,7 +117,6 @@ public sealed class ProductInventoryConfiguration : IEntityTypeConfiguration<Pro
         builder.HasIndex(x => new { x.ProductId, x.WarehouseId }).IsUnique();
         builder.HasOne(x => x.Product).WithMany(x => x.Inventory).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasData(ProductCatalogSeedData.Inventory);
     }
 }
 
@@ -149,7 +144,6 @@ public sealed class ProductAttributeConfiguration : IEntityTypeConfiguration<Pro
         builder.ConfigureProduct();
         builder.Property(x => x.Name).HasMaxLength(128).IsRequired();
         builder.HasOne(x => x.Product).WithMany(x => x.Attributes).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasData(ProductCatalogSeedData.Attributes);
     }
 }
 
@@ -162,6 +156,5 @@ public sealed class ProductAttributeValueConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.Value).HasMaxLength(256).IsRequired();
         builder.HasOne(x => x.ProductAttribute).WithMany(x => x.Values).HasForeignKey(x => x.ProductAttributeId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.ProductVariant).WithMany(x => x.AttributeValues).HasForeignKey(x => x.ProductVariantId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasData(ProductCatalogSeedData.AttributeValues);
     }
 }

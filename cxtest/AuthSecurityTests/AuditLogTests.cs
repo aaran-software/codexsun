@@ -90,7 +90,10 @@ public sealed class AuditLogTests
         using var factory = AuthSecurityTestSupport.CreateFactory();
         using var client = AuthSecurityTestSupport.CreateClient(factory);
         client.DefaultRequestHeaders.Add("X-Forwarded-For", "203.0.113.13");
-        var adminTokens = await AuthSecurityTestSupport.LoginAndReadTokensAsync(client, "sundar@sundar.com", "kalarani");
+        var adminTokens = await AuthSecurityTestSupport.LoginAndReadTokensAsync(
+            client,
+            "sundar@sundar.com",
+            AuthSecurityTestSupport.GetDevelopmentBootstrapPassword());
         AuthSecurityTestSupport.SetBearerToken(client, adminTokens.AccessToken);
         var startedAt = DateTimeOffset.UtcNow.AddSeconds(-1);
 

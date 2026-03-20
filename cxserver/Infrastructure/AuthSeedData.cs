@@ -13,6 +13,13 @@ internal static class AuthSeedData
     internal static readonly Guid ManagementUserId = Guid.Parse("66666666-6666-6666-6666-666666666666");
     internal static readonly Guid BackOfficeUserId = Guid.Parse("77777777-7777-7777-7777-777777777777");
     internal static readonly Guid StorefrontUserId = Guid.Parse("88888888-8888-8888-8888-888888888888");
+    internal static readonly Guid[] DevelopmentUserIds =
+    [
+        SuperAdminUserId,
+        ManagementUserId,
+        BackOfficeUserId,
+        StorefrontUserId
+    ];
 
     internal static readonly Guid UserCreatePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
     internal static readonly Guid UserReadPermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
@@ -44,9 +51,6 @@ internal static class AuthSeedData
     internal static readonly Guid VendorsUsersManagePermissionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac8");
 
     internal static readonly DateTimeOffset CreatedAt = new(2026, 03, 14, 0, 0, 0, TimeSpan.Zero);
-
-    // Shared local-development password hash for seeded accounts.
-    internal const string SeedPasswordHash = "$2a$11$7EqJtq98hPqEX7fNZaFWo.btro5BXkJEfY8NxIfDUBBYwyCXY7bjW";
 
     internal static readonly Role[] Roles =
     [
@@ -155,14 +159,14 @@ internal static class AuthSeedData
         new RolePermission { RoleId = StaffRoleId, PermissionId = VendorsViewPermissionId }
     ];
 
-    internal static readonly User[] Users =
+    internal static User[] CreateDevelopmentUsers(string passwordHash) =>
     [
         new User
         {
             Id = SuperAdminUserId,
             Username = "sundar",
             Email = "sundar@sundar.com",
-            PasswordHash = SeedPasswordHash,
+            PasswordHash = passwordHash,
             RoleId = AdminRoleId,
             Status = "Active",
             IsDeleted = false,
@@ -174,7 +178,7 @@ internal static class AuthSeedData
             Id = ManagementUserId,
             Username = "management",
             Email = "management@codexsun.com",
-            PasswordHash = SeedPasswordHash,
+            PasswordHash = passwordHash,
             RoleId = AdminRoleId,
             Status = "Active",
             IsDeleted = false,
@@ -186,7 +190,7 @@ internal static class AuthSeedData
             Id = BackOfficeUserId,
             Username = "backoffice",
             Email = "backoffice@codexsun.com",
-            PasswordHash = SeedPasswordHash,
+            PasswordHash = passwordHash,
             RoleId = StaffRoleId,
             Status = "Active",
             IsDeleted = false,
@@ -198,7 +202,7 @@ internal static class AuthSeedData
             Id = StorefrontUserId,
             Username = "storefront",
             Email = "storefront@codexsun.com",
-            PasswordHash = SeedPasswordHash,
+            PasswordHash = passwordHash,
             RoleId = CustomerRoleId,
             Status = "Active",
             IsDeleted = false,

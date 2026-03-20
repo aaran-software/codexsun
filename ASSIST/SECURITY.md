@@ -139,6 +139,7 @@
 - Cart APIs already support anonymous or session-backed usage, while checkout and order-history routes remain protected behind authenticated customer access.
 - Wishlist persistence now uses authenticated `/wishlist` endpoints bound to the signed-in customer account, and anonymous clients can no longer mutate wishlist state without authentication.
 - Product reviews now live in the backend and require a signed-in customer with a verified prior purchase of the reviewed product; duplicate customer reviews for the same product are rejected server-side.
+- Customer addresses now live behind authenticated `/storefront/addresses` endpoints instead of browser-local storage, so address data follows the same customer-bound access rules as wishlist and order history.
 - Checkout now sends an idempotency key and selected shipping or payment methods to the backend, which blocks duplicate order creation for the same customer request.
 - Order creation now performs reservation-backed inventory validation before checkout succeeds, and cancellation or refund flows release reserved stock through persisted reservation records.
 - Razorpay checkout signatures are now verified server-side using the gateway `order_id`, returned `payment_id`, and the configured `key_secret` before the payment is accepted as authentic.
@@ -149,6 +150,7 @@
 - Razorpay reconciliation still requires an authenticated actor with order visibility and only marks an order paid when a captured or authorized gateway payment matching the expected order amount is found.
 - Shipment auto-creation is restricted to paid or confirmed orders and returns the existing shipment if one is already present, preventing duplicate fulfillment records from repeated retries.
 - Shipment listing and per-order shipment retrieval are now role-aware: customers can only see shipments tied to their own orders, vendors can only see shipments for their order items, and admin or staff retain full access.
+- Commerce notification coverage is now integration-tested against real workflows, which reduces the risk of silent regression in order, payment, shipment, return, vendor payout, and low-inventory alert hooks.
 
 ## Error Monitoring
 

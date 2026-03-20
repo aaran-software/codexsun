@@ -53,8 +53,16 @@ builder.Services.AddDbContext<CodexsunDbContext>(options => options.UseNpgsql(po
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 builder.Services.Configure<SalesSettings>(builder.Configuration.GetSection(SalesSettings.SectionName));
 builder.Services.Configure<RazorpaySettings>(builder.Configuration.GetSection(RazorpaySettings.SectionName));
+builder.Services.Configure<BootstrapOptions>(builder.Configuration.GetSection(BootstrapOptions.SectionName));
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JWT settings are required.");
+var bootstrapOptions = builder.Configuration.GetSection(BootstrapOptions.SectionName).Get<BootstrapOptions>()
+    ?? new BootstrapOptions();
+
+if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) || jwtSettings.SecretKey.Length < 32)
+{
+    throw new InvalidOperationException("JWT secret key must be configured and at least 32 characters long.");
+}
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey));
 
@@ -126,6 +134,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<JwtTokenGenerator>();
 builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<DevelopmentBootstrapService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<AuthService>();
@@ -162,7 +171,14 @@ Directory.CreateDirectory(Path.Combine(uploadsRoot, "media"));
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CodexsunDbContext>();
-    await dbContext.Database.MigrateAsync();
+    if (bootstrapOptions.ApplyMigrationsOnStartup)
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+
+    var developmentBootstrapService = scope.ServiceProvider.GetRequiredService<DevelopmentBootstrapService>();
+    await developmentBootstrapService.SeedDevelopmentUsersAsync(dbContext, CancellationToken.None);
+
     var systemLogService = scope.ServiceProvider.GetRequiredService<ISystemLogService>();
     await systemLogService.LogAsync("Program", "ApplicationStarted", "Application startup completed.", "Info", app.Environment.EnvironmentName, CancellationToken.None);
 }

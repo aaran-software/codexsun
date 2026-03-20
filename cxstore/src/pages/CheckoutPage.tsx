@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 
+import { createCustomerAddress, getCustomerAddresses, updateCustomerAddress, type CustomerAddressUpsertRequest } from "@/api/customerAddressApi"
 import { applyCoupon } from "@/api/promotionApi"
 import { createOrder } from "@/api/salesApi"
 import { getShippingMethods } from "@/api/shippingApi"
@@ -18,7 +19,6 @@ import { launchRazorpayOrderPayment } from "@/lib/razorpay"
 import { useCartStore } from "@/state/cartStore"
 import { useAuth } from "@/state/authStore"
 import type { CheckoutAddressDraft, PaymentMethodOption, ShippingMethodOption } from "@/types/storefront"
-import { saveStoredAddress } from "@/utils/storefront"
 
 const steps = [
   { id: "address", label: "Address" },
@@ -86,10 +86,51 @@ export default function CheckoutPage() {
     queryFn: getShippingMethods,
     enabled: auth.isAuthenticated,
   })
+  const { data: customerAddresses = [] } = useQuery({
+    queryKey: ["storefront", "customer-addresses"],
+    queryFn: getCustomerAddresses,
+    enabled: auth.isAuthenticated,
+    retry: false,
+  })
 
   useEffect(() => {
     void hydrateCart()
   }, [hydrateCart])
+
+  useEffect(() => {
+    const defaultAddress = customerAddresses.find((address) => address.isDefault) ?? customerAddresses[0]
+    if (!defaultAddress) {
+      return
+    }
+
+    setBillingAddress((current) => current.addressLine1
+      ? current
+      : {
+          fullName: defaultAddress.fullName,
+          phone: defaultAddress.phone,
+          email: defaultAddress.email,
+          addressLine1: defaultAddress.addressLine1,
+          addressLine2: defaultAddress.addressLine2,
+          city: defaultAddress.city,
+          state: defaultAddress.state,
+          country: defaultAddress.country,
+          postalCode: defaultAddress.postalCode,
+        })
+
+    setShippingAddress((current) => current.addressLine1
+      ? current
+      : {
+          fullName: defaultAddress.fullName,
+          phone: defaultAddress.phone,
+          email: defaultAddress.email,
+          addressLine1: defaultAddress.addressLine1,
+          addressLine2: defaultAddress.addressLine2,
+          city: defaultAddress.city,
+          state: defaultAddress.state,
+          country: defaultAddress.country,
+          postalCode: defaultAddress.postalCode,
+        })
+  }, [customerAddresses])
 
   useEffect(() => {
     if (paymentMethod !== "razorpay" && paymentMethod !== "cod") {
@@ -111,6 +152,30 @@ export default function CheckoutPage() {
           { id: "express", label: "Express Delivery", description: "Faster delivery placeholder", cost: 199, eta: "1-2 days" },
         ]
   ), [shippingMethods])
+
+  const persistCheckoutAddress = async () => {
+    const defaultAddress = customerAddresses.find((address) => address.isDefault) ?? customerAddresses[0]
+    const request: CustomerAddressUpsertRequest = {
+      label: defaultAddress?.label || "Primary",
+      fullName: shippingAddress.fullName,
+      phone: shippingAddress.phone,
+      email: shippingAddress.email,
+      addressLine1: shippingAddress.addressLine1,
+      addressLine2: shippingAddress.addressLine2,
+      city: shippingAddress.city,
+      state: shippingAddress.state,
+      country: shippingAddress.country,
+      postalCode: shippingAddress.postalCode,
+      isDefault: true,
+    }
+
+    if (defaultAddress) {
+      await updateCustomerAddress(defaultAddress.id, request)
+      return
+    }
+
+    await createCustomerAddress(request)
+  }
 
   if (!auth.isAuthenticated) {
     return (
@@ -164,7 +229,12 @@ export default function CheckoutPage() {
         await applyCoupon({ code: couponCode, orderId: order.id })
       }
 
-      saveStoredAddress(`${shippingAddress.addressLine1}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.postalCode}`)
+      try {
+        await persistCheckoutAddress()
+      } catch {
+        // Address-book persistence should not invalidate a successfully created order.
+      }
+
       await clearCart()
 
       if (paymentMethod === "cod") {

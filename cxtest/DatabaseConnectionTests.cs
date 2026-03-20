@@ -4,14 +4,11 @@ namespace cxtest;
 
 public sealed class DatabaseConnectionTests
 {
-    private const string DefaultConnectionString =
-        "Host=localhost;Port=7025;Database=codexsun;Username=cxadmin;Password=DbPass1@@";
-
     [Fact]
     public async Task Connects_to_postgresql_and_executes_select_1()
     {
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__codexsun")
-            ?? DefaultConnectionString;
+            ?? throw new InvalidOperationException("Set ConnectionStrings__codexsun to run database connection tests.");
 
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();

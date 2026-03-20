@@ -43,6 +43,22 @@ export interface ProductReview {
   createdAt: string
 }
 
+export interface CustomerAddress {
+  id: number
+  label: string
+  fullName: string
+  phone: string
+  email: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  state: string
+  country: string
+  postalCode: string
+  isDefault: boolean
+  createdAt: string
+}
+
 export interface CheckoutAddressDraft {
   fullName: string
   phone: string

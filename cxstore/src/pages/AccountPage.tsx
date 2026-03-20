@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
 import { getContacts } from "@/api/contactApi"
+import { createCustomerAddress, deleteCustomerAddress, getCustomerAddresses, updateCustomerAddress, type CustomerAddressUpsertRequest } from "@/api/customerAddressApi"
 import { getMyReviews } from "@/api/reviewApi"
 import { createReturn } from "@/api/returnsApi"
 import { getOrderById, getOrders, updateOrderStatus } from "@/api/salesApi"
 import { getShipments } from "@/api/shippingApi"
+import { AddressFormCard } from "@/components/checkout/AddressFormCard"
 import { StorefrontAuthNotice } from "@/components/layout/storefront-auth-notice"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +17,8 @@ import { usePageMeta } from "@/hooks/usePageMeta"
 import { canRetryRazorpayPayment, launchRazorpayOrderPayment } from "@/lib/razorpay"
 import { useAuth } from "@/state/authStore"
 import { useWishlistStore } from "@/state/wishlistStore"
-import { formatCurrency, getStoredAddresses } from "@/utils/storefront"
+import type { CheckoutAddressDraft } from "@/types/storefront"
+import { formatCurrency } from "@/utils/storefront"
 
 const tabs = [
   { label: "Overview", url: "/account" },
@@ -25,6 +28,18 @@ const tabs = [
   { label: "Wishlist", url: "/account/wishlist" },
   { label: "Reviews", url: "/account/reviews" },
 ]
+
+const blankAddress: CheckoutAddressDraft = {
+  fullName: "",
+  phone: "",
+  email: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  country: "",
+  postalCode: "",
+}
 
 export default function AccountPage() {
   const auth = useAuth()
@@ -39,6 +54,11 @@ export default function AccountPage() {
   const shouldLoadContacts = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Profile")
   const shouldLoadReviews = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Reviews")
   const shouldLoadShipments = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Orders")
+  const shouldLoadAddresses = auth.isAuthenticated && (activeTab === "Overview" || activeTab === "Addresses")
+  const [addressForm, setAddressForm] = useState<CheckoutAddressDraft>({ ...blankAddress })
+  const [addressLabel, setAddressLabel] = useState("Primary")
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null)
+  const [isDefaultAddress, setIsDefaultAddress] = useState(true)
 
   const { data: orders = [] } = useQuery({
     queryKey: ["storefront", "account", "orders"],
@@ -64,8 +84,12 @@ export default function AccountPage() {
     enabled: shouldLoadShipments,
     retry: false,
   })
-
-  const storedAddresses = getStoredAddresses()
+  const { data: customerAddresses = [], refetch: refetchCustomerAddresses } = useQuery({
+    queryKey: ["storefront", "customer-addresses"],
+    queryFn: getCustomerAddresses,
+    enabled: shouldLoadAddresses,
+    retry: false,
+  })
 
   useEffect(() => {
     if (auth.isAuthenticated) {
@@ -89,6 +113,26 @@ export default function AccountPage() {
 
   const latestOrder = orders[0]
   const latestShipment = latestOrder ? shipments.find((shipment) => shipment.orderId === latestOrder.id) : undefined
+  const resetAddressForm = () => {
+    setAddressForm({ ...blankAddress, email: auth.user?.email ?? "", fullName: auth.user?.username ?? "" })
+    setAddressLabel("Primary")
+    setEditingAddressId(null)
+    setIsDefaultAddress(true)
+  }
+
+  const mapAddressRequest = (): CustomerAddressUpsertRequest => ({
+    label: addressLabel,
+    fullName: addressForm.fullName,
+    phone: addressForm.phone,
+    email: addressForm.email,
+    addressLine1: addressForm.addressLine1,
+    addressLine2: addressForm.addressLine2,
+    city: addressForm.city,
+    state: addressForm.state,
+    country: addressForm.country,
+    postalCode: addressForm.postalCode,
+    isDefault: isDefaultAddress,
+  })
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
@@ -130,7 +174,7 @@ export default function AccountPage() {
           <Card className="rounded-[1.8rem] border-border/60">
             <CardHeader><CardTitle>Saved Addresses</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              {storedAddresses.length > 0 ? storedAddresses.slice(0, 3).map((address) => <div key={address}>{address}</div>) : "No checkout addresses stored yet."}
+              {customerAddresses.length > 0 ? customerAddresses.slice(0, 3).map((address) => <div key={address.id}>{address.label}: {address.addressLine1}, {address.city}, {address.state}, {address.postalCode}</div>) : "No saved addresses yet."}
             </CardContent>
           </Card>
         </div>
@@ -146,14 +190,99 @@ export default function AccountPage() {
       ) : null}
 
       {activeTab === "Addresses" ? (
-        <Card className="rounded-[1.8rem] border-border/60">
-          <CardHeader><CardTitle>Address Book</CardTitle></CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            {storedAddresses.length > 0 ? storedAddresses.map((address) => (
-              <div key={address} className="rounded-2xl bg-muted/40 px-4 py-3">{address}</div>
-            )) : <div className="text-muted-foreground">Addresses are captured during checkout and persisted locally until a dedicated customer-address backend API is added.</div>}
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <Card className="rounded-[1.8rem] border-border/60">
+            <CardHeader><CardTitle>Address Book</CardTitle></CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              {customerAddresses.length > 0 ? customerAddresses.map((address) => (
+                <div key={address.id} className="rounded-2xl border border-border/60 bg-muted/30 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="font-medium">{address.label}{address.isDefault ? " · Default" : ""}</div>
+                      <div>{address.fullName}</div>
+                      <div className="text-muted-foreground">{address.phone} · {address.email}</div>
+                      <div className="text-muted-foreground">{address.addressLine1}{address.addressLine2 ? `, ${address.addressLine2}` : ""}, {address.city}, {address.state}, {address.country} - {address.postalCode}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="rounded-full"
+                        onClick={() => {
+                          setEditingAddressId(address.id)
+                          setAddressLabel(address.label)
+                          setIsDefaultAddress(address.isDefault)
+                          setAddressForm({
+                            fullName: address.fullName,
+                            phone: address.phone,
+                            email: address.email,
+                            addressLine1: address.addressLine1,
+                            addressLine2: address.addressLine2,
+                            city: address.city,
+                            state: address.state,
+                            country: address.country,
+                            postalCode: address.postalCode,
+                          })
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="rounded-full"
+                        onClick={() => void deleteCustomerAddress(address.id)
+                          .then(() => refetchCustomerAddresses())
+                          .then(() => {
+                            setMessage("Address removed.")
+                            if (editingAddressId === address.id) {
+                              resetAddressForm()
+                            }
+                          })
+                          .catch((caught) => setMessage(caught instanceof Error ? caught.message : "Unable to delete address."))}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )) : <div className="text-muted-foreground">No saved addresses yet.</div>}
+            </CardContent>
+          </Card>
+          <div className="space-y-4">
+            <Card className="rounded-[1.8rem] border-border/60">
+              <CardHeader><CardTitle>{editingAddressId ? "Edit Address" : "Add Address"}</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2 text-sm">
+                    <span className="font-medium">Label</span>
+                    <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={addressLabel} onChange={(event) => setAddressLabel(event.target.value)} />
+                  </label>
+                  <label className="mt-7 flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={isDefaultAddress} onChange={(event) => setIsDefaultAddress(event.target.checked)} />
+                    <span>Set as default address</span>
+                  </label>
+                </div>
+                <AddressFormCard title="Customer Address" value={addressForm} onChange={setAddressForm} />
+                <div className="flex flex-wrap justify-end gap-2">
+                  {editingAddressId ? <Button variant="outline" className="rounded-full" onClick={resetAddressForm}>Cancel</Button> : null}
+                  <Button
+                    className="rounded-full"
+                    onClick={() => void (editingAddressId
+                      ? updateCustomerAddress(editingAddressId, mapAddressRequest())
+                      : createCustomerAddress(mapAddressRequest()))
+                      .then(() => refetchCustomerAddresses())
+                      .then(() => {
+                        setMessage(editingAddressId ? "Address updated." : "Address saved.")
+                        resetAddressForm()
+                      })
+                      .catch((caught) => setMessage(caught instanceof Error ? caught.message : "Unable to save address."))}
+                  >
+                    {editingAddressId ? "Update Address" : "Save Address"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       ) : null}
 
       {activeTab === "Orders" ? (

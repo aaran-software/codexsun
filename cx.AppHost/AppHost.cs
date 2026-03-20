@@ -1,11 +1,15 @@
+using Microsoft.Extensions.Configuration;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-const string RedisConnectionString = "localhost:7024";
-const string PostgresConnectionString = "Host=localhost;Port=7025;Database=codexsun;Username=cxadmin;Password=DbPass1@@";
+var redisConnectionString = builder.Configuration["ConnectionStrings:cache"]
+    ?? "localhost:7024";
+var postgresConnectionString = builder.Configuration["ConnectionStrings:codexsun"]
+    ?? throw new InvalidOperationException("Connection string 'codexsun' must be configured for AppHost.");
 
 var server = builder.AddProject<Projects.cxserver>("server")
-    .WithEnvironment("ConnectionStrings__cache", RedisConnectionString)
-    .WithEnvironment("ConnectionStrings__codexsun", PostgresConnectionString)
+    .WithEnvironment("ConnectionStrings__cache", redisConnectionString)
+    .WithEnvironment("ConnectionStrings__codexsun", postgresConnectionString)
     .WithHttpHealthCheck("/health")
     .WithExternalHttpEndpoints();
 

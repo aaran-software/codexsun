@@ -492,3 +492,28 @@ Common master seeds:
 - Number series: `-`, `Sales Order`
 
 Dynamic SQL from user input is forbidden.
+
+## Storefront Customer Addresses
+
+- `customer_addresses`
+  - `id`
+  - `user_id -> users.id`
+  - `label`
+  - `full_name`
+  - `phone`
+  - `email`
+  - `address_line1`
+  - `address_line2`
+  - `city`
+  - `state`
+  - `country`
+  - `postal_code`
+  - `is_default`
+  - `created_at`
+  - `updated_at`
+
+Purpose:
+
+- persistent customer checkout and address-book storage for the storefront
+- default-address hydration during checkout
+- removal of browser-local-only address persistence from the production commerce path

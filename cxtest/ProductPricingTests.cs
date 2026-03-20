@@ -102,10 +102,16 @@ public sealed class ProductPricingTests
         var addedItem = Assert.Single(addedCart.Items);
         Assert.Equal(80m, addedItem.UnitPrice);
 
-        var updateResponse = await client.PutAsJsonAsync($"/cart/items/{addedItem.Id}", new
+        using var updateRequest = new HttpRequestMessage(HttpMethod.Put, $"/cart/items/{addedItem.Id}")
         {
-            quantity = 60
-        });
+            Content = JsonContent.Create(new
+            {
+                quantity = 60
+            })
+        };
+        updateRequest.Headers.Add("X-Cart-Session-Id", sessionId);
+
+        var updateResponse = await client.SendAsync(updateRequest);
 
         updateResponse.EnsureSuccessStatusCode();
         var updatedCart = await AuthSecurityTestSupport.ReadRequiredAsync<CartEnvelope>(updateResponse);

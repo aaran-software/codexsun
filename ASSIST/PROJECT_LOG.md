@@ -256,5 +256,25 @@ CX-054
 - Updated storefront account and order-success pages to display shipment status, provider, and tracking details directly from backend shipping data.
 - Captured prompt 054, updated task tracking, and revalidated backend and frontend production builds after stopping a stale backend process lock.
 
+CX-055
+- Replaced storefront local-only address storage with a backend-backed customer address book in `Modules/Storefront`, including the `customer_addresses` table, authenticated `/storefront/addresses` CRUD endpoints, and the `AddStorefrontCustomerAddresses` migration.
+- Updated checkout to hydrate from the saved default address and persist the current shipping address back to the backend after successful order creation instead of using browser local storage.
+- Extended the storefront account page with a lightweight customer address-book editor, updated go-live documentation for the new production-ready address flow, and revalidated backend and frontend builds.
+
+CX-056
+- Captured prompt 056 and added integration coverage in `cxtest/NotificationsModuleTests.cs` for the required commerce notification events: order created, payment success, shipment shipped, shipment delivered, return approved, vendor payout created, and low inventory alert.
+- Fixed a real `SalesService.CreateOrderAsync` invoice-generation bug by attaching product navigation data to new order items before building invoice lines.
+- Fixed the Razorpay pending-order expiry query to use SQL-translatable status predicates, then revalidated the notification test suite and backend build.
+
+CX-057
+- Captured prompt 057, reviewed `ASSIST/AI_RULES.md` plus the supporting `ASSIST` documentation, and documented the actual project shape and workflow from the live repository state.
+- Added `GO_LIVE_TASK.md` with prioritized launch blockers, readiness work, and repository-cleanup findings based on code, config, documentation drift, build results, and test results.
+- Revalidated the current runtime state: backend build passed, frontend production build passed, and the test suite currently fails because EF Core reports pending model changes during application startup migration.
+
+CX-058
+- Captured prompt 058, re-read the `ASSIST` guidance, and reviewed the implemented backend, frontend, and documentation layers against go-live readiness with focus on missing forms, tables, entities, concepts, and structural drift.
+- Added `MISSING_TASK.md` with a project-wide gap report covering persistence-only finance and system modules, missing shipping and vendor lifecycle surfaces, incomplete admin workflows, public-form gaps, tone inconsistencies, and stale documentation alignment issues.
+- Revalidated the current runtime state: frontend production build passed, `dotnet test codexsun.slnx` passed with 48 tests, and one concurrent `dotnet build codexsun.slnx` run hit a transient `MvcTestingAppManifest.json` file-lock under `cxtest/obj`.
+
 
 

@@ -129,6 +129,7 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
     public DbSet<RefundTransaction> RefundTransactions => Set<RefundTransaction>();
     public DbSet<WishlistEntry> WishlistEntries => Set<WishlistEntry>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -149,7 +150,6 @@ public sealed class CodexsunDbContext(DbContextOptions<CodexsunDbContext> option
                 .WithMany(x => x.Users)
                 .HasForeignKey(x => x.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
-            entity.HasData(AuthSeedData.Users);
         });
 
         modelBuilder.Entity<Role>(entity =>

@@ -12,6 +12,7 @@ public sealed class CartItemUpsertRequest
 
 public sealed class CartItemUpdateRequest
 {
+    public string SessionId { get; set; } = string.Empty;
     public int Quantity { get; set; }
 }
 

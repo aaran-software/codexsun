@@ -46,3 +46,26 @@ public sealed class ProductReviewConfiguration : IEntityTypeConfiguration<Produc
         builder.HasOne(x => x.Product).WithMany(x => x.Reviews).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public sealed class CustomerAddressConfiguration : IEntityTypeConfiguration<CustomerAddress>
+{
+    public void Configure(EntityTypeBuilder<CustomerAddress> builder)
+    {
+        builder.ToTable("customer_addresses");
+        builder.ConfigureStorefront();
+        builder.Property(x => x.Label).HasMaxLength(80).IsRequired();
+        builder.Property(x => x.FullName).HasMaxLength(120).IsRequired();
+        builder.Property(x => x.Phone).HasMaxLength(32).IsRequired();
+        builder.Property(x => x.Email).HasMaxLength(256).IsRequired();
+        builder.Property(x => x.AddressLine1).HasMaxLength(256).IsRequired();
+        builder.Property(x => x.AddressLine2).HasMaxLength(256);
+        builder.Property(x => x.City).HasMaxLength(128).IsRequired();
+        builder.Property(x => x.State).HasMaxLength(128).IsRequired();
+        builder.Property(x => x.Country).HasMaxLength(128).IsRequired();
+        builder.Property(x => x.PostalCode).HasMaxLength(32).IsRequired();
+        builder.Property(x => x.IsDefault).HasDefaultValue(false);
+        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => new { x.UserId, x.IsDefault });
+        builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

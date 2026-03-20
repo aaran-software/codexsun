@@ -15,12 +15,29 @@ namespace cxtest.AuthSecurityTests;
 
 internal static class AuthSecurityTestSupport
 {
+    private static string RequireEnvironmentVariable(string key) =>
+        Environment.GetEnvironmentVariable(key)
+        ?? throw new InvalidOperationException($"Set {key} to run authentication integration tests.");
+
+    internal static string GetDevelopmentBootstrapPassword() =>
+        RequireEnvironmentVariable("Bootstrap__DevelopmentPassword");
+
     internal static WebApplicationFactory<Program> CreateFactory(
         IReadOnlyDictionary<string, string?>? overrides = null)
     {
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
+            builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+                configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:codexsun"] = RequireEnvironmentVariable("ConnectionStrings__codexsun"),
+                    ["Jwt:SecretKey"] = RequireEnvironmentVariable("Jwt__SecretKey"),
+                    ["Bootstrap:ApplyMigrationsOnStartup"] = "true",
+                    ["Bootstrap:SeedDevelopmentUsers"] = "true",
+                    ["Bootstrap:DevelopmentPassword"] = GetDevelopmentBootstrapPassword()
+                }));
+
             if (overrides is not null && overrides.Count > 0)
             {
                 builder.ConfigureAppConfiguration((_, configurationBuilder) =>

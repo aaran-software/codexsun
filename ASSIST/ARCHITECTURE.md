@@ -245,3 +245,15 @@ codexsun.slnx
 - The Shipping module now applies role-aware shipment visibility so customer shipment queries return only the signed-in customer's orders, vendor shipment queries stay vendor-scoped, and admin or staff still see the full shipment dataset.
 - `ShipmentsController` now exposes `GET /shipments/order/{orderId}` for per-order shipment retrieval under the existing authenticated API surface.
 - `cxstore` storefront account and order-success views now consume shipment data directly so customers can see tracking numbers, provider names, and shipment status without leaving the storefront flow.
+
+## Storefront Customer Address Update (2026-03-17)
+
+- `cxserver/Modules/Storefront` now also owns persistent customer address-book data through the new `customer_addresses` table and authenticated `/storefront/addresses` endpoints.
+- Checkout address capture no longer depends on browser-local storage; signed-in storefront customers now reuse and update backend-backed addresses from checkout and account pages.
+- `cxstore/src/pages/AccountPage.tsx` now provides a lightweight customer address-book editor while `CheckoutPage.tsx` hydrates from the default saved address when available.
+
+## Commerce Notification Coverage Validation (2026-03-17)
+
+- Commerce notification coverage is now protected by an integration test in `cxtest/NotificationsModuleTests.cs` that exercises the real order, payment, shipment, return, vendor-payout, and low-inventory workflows.
+- The validated event set is: `ORDER_CREATED`, `PAYMENT_SUCCESS`, `SHIPMENT_SHIPPED`, `SHIPMENT_DELIVERED`, `RETURN_APPROVED`, `VENDOR_PAYOUT_CREATED`, and `LOW_INVENTORY_ALERT`.
+- While adding that coverage, `SalesService.CreateOrderAsync` was corrected to attach product navigation data before invoice-line generation, and the Razorpay expiry query was corrected to use SQL-translatable predicates.

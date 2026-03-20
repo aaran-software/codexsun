@@ -33,7 +33,7 @@ public sealed class CartController(SalesService salesService) : ControllerBase
     {
         try
         {
-            var cart = await salesService.UpdateCartItemAsync(id, request, GetActorUserIdOrDefault(), GetSessionId(), cancellationToken);
+            var cart = await salesService.UpdateCartItemAsync(id, request, GetActorUserIdOrDefault(), ResolveSessionId(request.SessionId), cancellationToken);
             return cart is null ? NotFound() : Ok(cart);
         }
         catch (InvalidOperationException exception)
@@ -43,8 +43,8 @@ public sealed class CartController(SalesService salesService) : ControllerBase
     }
 
     [HttpDelete("items/{id:int}")]
-    public async Task<IActionResult> RemoveItem(int id, CancellationToken cancellationToken)
-        => await salesService.RemoveCartItemAsync(id, GetActorUserIdOrDefault(), GetSessionId(), cancellationToken) ? NoContent() : NotFound();
+    public async Task<IActionResult> RemoveItem(int id, [FromQuery] string sessionId = "", CancellationToken cancellationToken = default)
+        => await salesService.RemoveCartItemAsync(id, GetActorUserIdOrDefault(), ResolveSessionId(sessionId), cancellationToken) ? NoContent() : NotFound();
 
     [HttpDelete]
     public async Task<IActionResult> Clear([FromQuery] string sessionId = "", CancellationToken cancellationToken = default)
@@ -56,13 +56,13 @@ public sealed class CartController(SalesService salesService) : ControllerBase
         return Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : null;
     }
 
-    private string GetSessionId()
+    private string ResolveSessionId(string fallbackSessionId = "")
     {
         if (Request.Headers.TryGetValue("X-Cart-Session-Id", out var sessionId) && !string.IsNullOrWhiteSpace(sessionId))
         {
             return sessionId.ToString().Trim();
         }
 
-        return string.Empty;
+        return fallbackSessionId.Trim();
     }
 }

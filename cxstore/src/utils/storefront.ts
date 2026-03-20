@@ -1,29 +1,6 @@
 import type { ProductDetail, ProductPrice, ProductSummary } from "@/types/product"
 import type { CatalogFilters, ProductSortOption } from "@/types/storefront"
 
-const ADDRESS_STORAGE_KEY = "cxstore.storefront.addresses"
-
-function readJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") {
-    return fallback
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? JSON.parse(raw) as T : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function writeJson<T>(key: string, value: T) {
-  if (typeof window === "undefined") {
-    return
-  }
-
-  window.localStorage.setItem(key, JSON.stringify(value))
-}
-
 export function slugify(value: string) {
   return value
     .trim()
@@ -135,15 +112,4 @@ export function filterProducts(products: ProductSummary[], filters: CatalogFilte
 
     return withinPrice && matchesBrand && matchesVendor && matchesAvailability && matchesRating
   })
-}
-
-export function getStoredAddresses() {
-  return readJson<string[]>(ADDRESS_STORAGE_KEY, [])
-}
-
-export function saveStoredAddress(address: string) {
-  const current = getStoredAddresses()
-  if (!current.includes(address)) {
-    writeJson(ADDRESS_STORAGE_KEY, [address, ...current])
-  }
 }
