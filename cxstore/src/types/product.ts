@@ -97,6 +97,7 @@ export interface ProductSummary {
   totalInventory: number
   averageRating: number
   reviewCount: number
+  primaryImageUrl: string
   createdAt: string
   updatedAt: string
 }

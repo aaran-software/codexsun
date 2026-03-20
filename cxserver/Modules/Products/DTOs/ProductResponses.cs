@@ -108,6 +108,7 @@ public class ProductListItemResponse
     public int TotalInventory { get; init; }
     public decimal AverageRating { get; init; }
     public int ReviewCount { get; init; }
+    public string PrimaryImageUrl { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

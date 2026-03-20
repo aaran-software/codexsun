@@ -3,6 +3,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+const backendTarget = process.env.SERVER_HTTPS || process.env.SERVER_HTTP || "http://localhost:7021"
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -43,95 +45,95 @@ export default defineConfig({
     proxy: {
       // Proxy API calls to the app service
       '/api': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/auth': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/common': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/contacts': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/products': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/storefront': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/cart': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/orders': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/invoices': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/payments': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/vendor-payouts': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/vendors': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/company': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/inventory': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/analytics': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/promotions': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/coupons': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/shipments': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/returns': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/refunds': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/notifications': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/media': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       },
       '/monitoring': {
-        target: process.env.SERVER_HTTPS || process.env.SERVER_HTTP,
+        target: backendTarget,
         changeOrigin: true
       }
     }

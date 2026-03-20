@@ -684,6 +684,11 @@ public sealed class ProductService(CodexsunDbContext dbContext)
             TotalInventory = x.Inventory.Sum(inventory => inventory.Quantity - inventory.ReservedQuantity) + x.VendorLinks.Sum(link => link.VendorInventory),
             AverageRating = x.Reviews.Where(review => review.IsApproved).Select(review => (decimal?)review.Rating).Average() ?? 0m,
             ReviewCount = x.Reviews.Count(review => review.IsApproved),
+            PrimaryImageUrl = x.Images
+                .OrderByDescending(image => image.IsPrimary)
+                .ThenBy(image => image.SortOrder)
+                .Select(image => image.ImageUrl)
+                .FirstOrDefault() ?? string.Empty,
             CreatedAt = x.CreatedAt,
             UpdatedAt = x.UpdatedAt
         };

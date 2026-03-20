@@ -59,11 +59,15 @@ export function formatCurrency(amount: number, currencyValue = "INR") {
   }).format(amount || 0)
 }
 
-export function getPrimaryProductImage(product: Pick<ProductDetail, "images"> | Pick<ProductSummary, "id">) {
+export function getPrimaryProductImage(product: Pick<ProductDetail, "images"> | Pick<ProductSummary, "id" | "primaryImageUrl">) {
   if ("images" in product) {
     return product.images.find((image) => image.isPrimary)?.imageUrl
       ?? product.images[0]?.imageUrl
       ?? `https://placehold.co/800x800/f4f1ea/2d2418?text=Product+${product.images.length || ""}`
+  }
+
+  if ("primaryImageUrl" in product && product.primaryImageUrl) {
+    return product.primaryImageUrl
   }
 
   return `https://placehold.co/800x800/f4f1ea/2d2418?text=Product+${product.id}`
