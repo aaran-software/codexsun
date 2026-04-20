@@ -25,6 +25,7 @@ export default defineConfig({
     include: [
       'cxsun/web/src/**/*.test.{ts,tsx}',
       'cxsun/src/**/*.test.ts',
+      'apps/cli/src/**/*.test.ts',
       'apps/sites/src/**/*.test.ts',
       'apps/sites/web/src/**/*.test.{ts,tsx}',
       'packages/core/src/**/*.test.ts',

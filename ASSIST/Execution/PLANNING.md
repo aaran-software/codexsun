@@ -1,6 +1,21 @@
 # Planning
 
 ## Active Work
+- `#022` Fix helper and documentation misconfiguration after the host/plugin refactor
+  - Goal:
+    remove the practical misconfiguration left after the host/plugin refactor by making `github:now` truly non-interactive, improving push-target validation, and bringing stale docs back in line with the current architecture
+  - Scope:
+    patch `apps/cli` helper flow, improve error handling for missing remotes, update architecture and overview docs that still describe `apps/sites` as standalone, and keep the validation pipeline green
+  - Constraints:
+    keep the helper simple, do not add broad git automation beyond the current workflow, and keep current-state docs honest instead of rewriting target-state plans
+  - Validation:
+    run `npm run lint`
+    run `npm run typecheck`
+    run `npm run test`
+    run `npm run build`
+  - Residual risk:
+    the helper still depends on local git configuration and intentionally does not create or manage remotes automatically
+
 - `#021` Make `cxsun` the only host entrypoint and move apps to plugin ownership
   - Goal:
     make `cxsun` the single orchestration host for backend and frontend startup, keep apps under `apps/` as plugins only, centralize API composition under `apps/api`, and add the first real `apps/cli` operational helper

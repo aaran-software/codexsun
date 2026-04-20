@@ -34,14 +34,14 @@ Current runtime reality:
 
 1. the frontend starting app now lives under `cxsun/web`
 2. `cxsun/src` now has the first backend orchestration bootstrap runtime
-3. `apps/sites` now exists as the first standalone website app with its own backend and frontend
+3. `apps/sites` now exists as the first website plugin app mounted through the `cxsun` host
 4. scaffold folders now exist for `apps`, `packages`, `services`, and `docs`
 5. `packages/ui` is now a real workspace package consumed by package name
 6. `packages/core` is now a real workspace package for shell contracts and registry helpers
 7. `cxsun/web` now has a live shell registry and route composition foundation
 8. `packages/core` now also owns the first typed in-process event bus
 9. no worker runtime yet in this repo
-10. no active domain runtime wiring yet in the new scaffold
+10. domain apps are still mounted statically through the host and remain minimal today
 
 ## Approved Target Direction
 
@@ -76,7 +76,7 @@ The first major structural move should evolve the repository toward:
 Recommended intent:
 
 1. `apps/`
-   product-facing app surfaces such as shell, api, admin, and domain-facing UI apps
+   plugin app surfaces such as api, cli, admin, and domain-facing app modules mounted by the host
 2. `packages/`
    shared UI, contracts, config, database, auth, and observability packages
 3. `services/`
@@ -122,6 +122,7 @@ Scope:
 3. visibility resolution
 4. shell routing
 5. base frontend and backend application starting point
+6. backend and frontend mounting for plugin apps
 
 Non-goal:
 
@@ -142,6 +143,7 @@ Current backend bootstrap foundation now includes:
 2. in-process typed event bus wiring
 3. health module registration
 4. startup event emission through the shared core package
+5. centralized HTTP route mounting for internal and external app APIs
 
 ## Approved Domain Boundaries
 

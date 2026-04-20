@@ -2,9 +2,17 @@
 
 ## Version State
 
-- Current package version: `1.0.021`
-- Current release tag: `v-1.0.021`
+- Current package version: `1.0.022`
+- Current release tag: `v-1.0.022`
 - Reference format: changelog labels use `v 1.0.<number>`, task refs use `#<number>`, and release tags use `v-1.0.<number>`
+
+## v-1.0.022
+
+### [v 1.0.022] 2026-04-20 - Fix helper and documentation misconfiguration after the host/plugin refactor
+
+- fixed `apps/cli` so `github:now` can use the changelog title without opening an interactive prompt
+- made the git helper fail fast with a clear error when no push remote is configured
+- aligned stale architecture and overview docs with the current cxsun-hosted plugin model
 
 ## v-1.0.021
 

@@ -339,10 +339,13 @@ async function promptWithDefault(
   label: string,
   defaultValue: string,
   predefinedValue: string | null = null,
+  autoYes = false,
 ) {
-  if (predefinedValue && predefinedValue.trim()) {
-    output.write(`${label} [${defaultValue}]: ${predefinedValue.trim()}\n`)
-    return predefinedValue.trim()
+  const resolvedValue = resolvePromptValue(defaultValue, predefinedValue, autoYes)
+
+  if (resolvedValue) {
+    output.write(`${label} [${defaultValue}]: ${resolvedValue}\n`)
+    return resolvedValue
   }
 
   while (true) {
@@ -359,6 +362,22 @@ async function promptWithDefault(
 
     output.write('A value is required.\n')
   }
+}
+
+function resolvePromptValue(
+  defaultValue: string,
+  predefinedValue: string | null,
+  autoYes: boolean,
+) {
+  if (predefinedValue && predefinedValue.trim()) {
+    return predefinedValue.trim()
+  }
+
+  if (autoYes && defaultValue.trim()) {
+    return defaultValue.trim()
+  }
+
+  return null
 }
 
 async function createCommitIfNeeded(
@@ -388,6 +407,7 @@ async function createCommitIfNeeded(
     `Commit message body for #${reference.number} -`,
     reference.title,
     options.messageBody,
+    options.yes,
   )
   const message = formatCommitMessage(reference.number, messageBody)
 
@@ -409,6 +429,16 @@ async function createCommitIfNeeded(
   }
 
   output.write('Commit created successfully.\n')
+}
+
+function ensurePushConfiguration(state: GitRepositoryState) {
+  if (state.upstream || state.remoteName) {
+    return
+  }
+
+  throw new Error(
+    'No git remote is configured. Add a remote with `git remote add origin <url>` and rerun the helper.',
+  )
 }
 
 async function rebaseIfNeeded(
@@ -497,6 +527,8 @@ async function runGitHubHelper(
       )
     }
 
+    ensurePushConfiguration(state)
+
     await createCommitIfNeeded(state, rl, options)
     state = await inspectRepository(state.rootDir)
     await rebaseIfNeeded(state, rl, options)
@@ -531,5 +563,6 @@ export {
   parseCliOptions,
   parseGitStatusPorcelain,
   parseLatestReference,
+  resolvePromptValue,
   runGitHubHelper,
 }

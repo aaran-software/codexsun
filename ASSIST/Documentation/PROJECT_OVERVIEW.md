@@ -37,7 +37,7 @@ The repository is still in the planning and structure-foundation stage.
 Current priorities are:
 
 1. extend the backend bootstrap from `cxsun/src` into real platform modules
-2. grow `apps/sites` from the first portfolio surface into a repeatable standalone app pattern
+2. grow `apps/sites` from the first portfolio surface into a repeatable plugin app pattern mounted by `cxsun`
 3. define event model and module communication rules
 4. add the first domain registrations on top of the shell and core foundation
 5. define deployment and auto-update posture
