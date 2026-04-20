@@ -1,21 +1,13 @@
-import type { ReactNode } from 'react'
-import { defineShellModule, type ShellModuleDefinition } from '@codexsun/core'
+import { defineShellModule } from '@codexsun/core'
+import type {
+  ShellChildRouteRegistration,
+  ShellModuleRegistration,
+} from '@cxsun/app/shell/registration'
 import { SiteShell } from './app/site-shell'
 import { AboutPage } from './pages/about-page'
 import { ContactPage } from './pages/contact-page'
 import { HomePage } from './pages/home-page'
 import { ServicePage } from './pages/service-page'
-
-type ShellChildRouteRegistration = {
-  index?: boolean
-  path?: string
-  element: ReactNode
-}
-
-type ShellModuleRegistration = ShellModuleDefinition & {
-  element: ReactNode
-  children?: readonly ShellChildRouteRegistration[]
-}
 
 const sitesShellModule: ShellModuleRegistration = {
   ...defineShellModule({

@@ -1,0 +1,32 @@
+name: codexsun
+
+networks:
+  codexion:
+    external: true
+    name: codexion
+
+services:
+  app:
+    image: codexsun:v2
+    pull_policy: never
+    build:
+      context: ../../..
+      dockerfile: .container/Dockerfile
+    container_name: codexsun
+    environment:
+      CXSUN_SERVER_HOST: 0.0.0.0
+      CXSUN_SERVER_PORT: '4173'
+      CXSUN_WEB_ORIGIN: ${CXSUN_WEB_ORIGIN:-http://127.0.0.1:${APP_HTTP_HOST_PORT:-4173}}
+      CXSUN_PUBLIC_DIR: /app/dist
+      DB_DRIVER: mariadb
+      DB_HOST: ${CLIENT_DB_HOST:-mariadb}
+      DB_PORT: ${CLIENT_DB_PORT:-3306}
+      DB_NAME: ${CLIENT_BOOTSTRAP_DB_NAME:-codexsun_demo}
+      DB_USER: ${CLIENT_DB_USER:-root}
+      DB_PASSWORD: ${CLIENT_DB_PASSWORD:-}
+      DB_SSL: ${CLIENT_DB_SSL:-false}
+    ports:
+      - '${APP_BIND_IP:-0.0.0.0}:${APP_HTTP_HOST_PORT:-4173}:4173'
+    restart: unless-stopped
+    networks:
+      - codexion

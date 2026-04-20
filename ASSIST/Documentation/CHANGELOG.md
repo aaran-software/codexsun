@@ -2,9 +2,33 @@
 
 ## Version State
 
-- Current package version: `1.0.022`
-- Current release tag: `v-1.0.022`
+- Current package version: `1.0.025`
+- Current release tag: `v-1.0.025`
 - Reference format: changelog labels use `v 1.0.<number>`, task refs use `#<number>`, and release tags use `v-1.0.<number>`
+
+## v-1.0.025
+
+### [v 1.0.025] 2026-04-20 - Build the client-style container deployment server
+
+- moved container deployment into a `.container` client layout with shared bash orchestration and a first `codexsun` demo client
+- aligned docker compose with the external `codexion` network so the app can run beside an existing MariaDB container
+- changed cleanup to remove only app containers and the `codexsun:v2` image while preserving networks, volumes, and database state
+
+## v-1.0.024
+
+### [v 1.0.024] 2026-04-20 - Build the single-space container deployment path
+
+- made the `cxsun` host serve built frontend assets so one runtime can serve the full application
+- added one-container deployment assets with `Dockerfile`, `docker-compose.yml`, and `.container` helpers for local docker deployment without runtime bind mounts
+- added CI/CD image automation and docker-backed e2e deployment validation
+
+## v-1.0.023
+
+### [v 1.0.023] 2026-04-20 - Build a real plugin registry for host composition
+
+- added centralized backend and frontend plugin registries so host composition no longer depends on scattered hardcoded app imports
+- moved current app manifest and route composition behind registry-backed host wiring
+- aligned the docs and tests with the new registry-backed plugin model
 
 ## v-1.0.022
 

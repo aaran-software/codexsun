@@ -1,7 +1,5 @@
 import type { AppManifest } from '@codexsun/core'
-import { apiAppManifest } from '../../../apps/api/src/app-manifest'
-import { cliAppManifest } from '../../../apps/cli/src/app-manifest'
-import { sitesAppManifest } from '../../../apps/sites/src/app-manifest'
+import { backendPlugins } from './plugins'
 
 const cxsunAppManifest: AppManifest = {
   id: 'cxsun',
@@ -18,7 +16,7 @@ const cxsunAppManifest: AppManifest = {
 }
 
 function createAppSuite() {
-  const apps = [apiAppManifest, cliAppManifest, sitesAppManifest] as const
+  const apps = backendPlugins.map((plugin) => plugin.manifest)
 
   return {
     host: cxsunAppManifest,

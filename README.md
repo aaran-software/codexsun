@@ -9,6 +9,8 @@ Current repo baseline:
 - `apps/sites` is the first website plugin app mounted through `cxsun`
 - `apps/api` owns internal and external API composition
 - `apps/cli` is the first operational plugin app and owns `github` and `github:now`
+- `cxsun` now uses explicit backend and frontend plugin registry files for host composition
+- deployment is now packaged as one container with `Dockerfile`, `docker-compose.yml`, and CI/CD image automation
 - `packages/core` is the shared workspace package for shell contracts and registry helpers
 - `packages/ui` is a real npm workspace package exposed as `@codexsun/ui`
 
@@ -20,6 +22,7 @@ npm run typecheck
 npm run test
 npm run build
 npm run test:e2e
+npm run test:e2e:docker
 ```
 
 Primary architecture and workflow rules live under `ASSIST/`.

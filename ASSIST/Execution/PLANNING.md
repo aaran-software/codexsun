@@ -1,6 +1,39 @@
 # Planning
 
 ## Active Work
+- `#024` Build the single-space container deployment path
+  - Goal:
+    package the current host into one deployable container that serves both frontend and backend from one runtime, provide local docker deployment assets with no bind volumes, and add a CI/CD path that can rebuild and publish on GitHub pushes
+  - Scope:
+    extend the host server to serve built frontend assets, add `Dockerfile`, `docker-compose.yml`, `.container` deployment assets, local docker e2e automation, and a GitHub Actions workflow for image build and publish
+  - Constraints:
+    keep deployment as one app space, do not add runtime bind mounts, do not split frontend and backend into separate containers, and prefer CI/CD-driven updates over in-container self-mutation
+  - Validation:
+    run `npm run lint`
+    run `npm run typecheck`
+    run `npm run test`
+    run `npm run build`
+    run `npm run test:e2e`
+    run `npm run test:e2e:docker`
+  - Residual risk:
+    local docker deployment proves the packaging path, but production rollout policy still depends on your registry credentials and deployment target wiring
+
+- `#023` Build a real plugin registry for host composition
+  - Goal:
+    make app registration a first-class host concern by replacing scattered hardcoded imports with a centralized plugin registry that drives backend manifests, backend routes, and frontend shell modules
+  - Scope:
+    add backend and frontend plugin registry layers, move current app registration into those registries, keep app-owned behavior inside the apps, update docs to describe the new composition model, and validate the repository
+  - Constraints:
+    keep the registry static and explicit for now, avoid dynamic filesystem discovery, and do not mix backend-only and frontend-only contracts into one leaky type layer
+  - Validation:
+    run `npm run lint`
+    run `npm run typecheck`
+    run `npm run test`
+    run `npm run build`
+    run `npm run test:e2e`
+  - Residual risk:
+    the first registry is still static code registration, so later permission-aware loading and installation-time plugin discovery remain future work
+
 - `#022` Fix helper and documentation misconfiguration after the host/plugin refactor
   - Goal:
     remove the practical misconfiguration left after the host/plugin refactor by making `github:now` truly non-interactive, improving push-target validation, and bringing stale docs back in line with the current architecture

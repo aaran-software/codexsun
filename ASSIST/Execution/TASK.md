@@ -53,3 +53,15 @@
   - [x] Phase 1: define the cleanup scope in tracking and changelog
   - [x] Phase 2: fix the non-interactive git helper flow and fail fast on missing push configuration
   - [x] Phase 3: align stale architecture and overview docs with the actual host-mounted plugin model and validate the repo
+- [x] `#023` Build a real plugin registry for host composition
+  - [x] Phase 1: define the registry refactor scope in tracking and changelog
+  - [x] Phase 2: replace scattered hardcoded app imports with centralized backend and frontend plugin registries
+  - [x] Phase 3: update tests and documentation for the registry-backed host model and validate the repo
+- [x] `#024` Build the single-space container deployment path
+  - [x] Phase 1: define the container and deployment scope in tracking and changelog
+  - [x] Phase 2: make the host runtime serve the built frontend and add one-container deploy assets with no runtime volumes
+  - [x] Phase 3: add CI/CD image automation, docker e2e validation, and align setup docs with the live local docker path
+- [x] `#025` Build the client-style container deployment server
+  - [x] Phase 1: read the reference `.container` client deployment layout and define the Codexsun demo client scope
+  - [x] Phase 2: move compose ownership into `.container/clients/codexsun`, keep shared setup under `.container/bash`, and remove the top-level setup wrapper
+  - [x] Phase 3: ensure cleanup removes only app containers and image, then validate setup, compose config, and docker e2e

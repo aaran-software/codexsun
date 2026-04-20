@@ -1,7 +1,21 @@
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createPlatformRuntime, type PlatformRuntime } from './runtime'
 
 let activeRuntime: PlatformRuntime | null = null
+
+function createPublicDirFixture() {
+  const publicDir = mkdtempSync(path.join(tmpdir(), 'codexsun-runtime-'))
+  writeFileSync(
+    path.join(publicDir, 'index.html'),
+    '<!doctype html><html><body><div id="root">host</div></body></html>',
+    'utf8',
+  )
+
+  return publicDir
+}
 
 afterEach(async () => {
   if (!activeRuntime) {
@@ -14,10 +28,13 @@ afterEach(async () => {
 
 describe('createPlatformRuntime', () => {
   it('registers the health module and emits startup events', async () => {
+    const publicDir = createPublicDirFixture()
+
     activeRuntime = createPlatformRuntime('test-runtime', {
       host: '127.0.0.1',
       port: 4290,
       allowedOrigin: 'http://127.0.0.1:4173',
+      publicDir,
     })
     const healthHandler = vi.fn()
 
@@ -40,10 +57,13 @@ describe('createPlatformRuntime', () => {
   })
 
   it('mounts internal app routes and plugin external routes through the host', async () => {
+    const publicDir = createPublicDirFixture()
+
     activeRuntime = createPlatformRuntime('api-runtime', {
       host: '127.0.0.1',
       port: 4291,
       allowedOrigin: 'http://127.0.0.1:4173',
+      publicDir,
     })
 
     await activeRuntime.start()
@@ -90,5 +110,11 @@ describe('createPlatformRuntime', () => {
 
     expect(contactResponse.status).toBe(202)
     expect(contactPayload.status).toBe('accepted')
+
+    const pageResponse = await fetch(`${activeRuntime.getUrl()}/sites`)
+    const pageHtml = await pageResponse.text()
+
+    expect(pageResponse.status).toBe(200)
+    expect(pageHtml).toContain('<div id="root">host</div>')
   })
 })

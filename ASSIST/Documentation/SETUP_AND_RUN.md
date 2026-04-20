@@ -10,11 +10,15 @@ npm run dev
 npm run typecheck
 npm run test
 npm run test:e2e
+npm run test:e2e:docker
 npm run build
 npm run lint
 npm run preview
 npm run github
 npm run github:now
+npm run docker:build
+npm run docker:up
+npm run docker:down
 ```
 
 Current frontend entry now lives under:
@@ -36,12 +40,26 @@ Current backend starting point scaffold now lives under:
 2. `cxsun/src/server.ts`
 3. `cxsun/src/platform/runtime.ts`
 4. `cxsun/src/modules/health/health-module.ts`
+5. `cxsun/src/platform/plugins.ts`
+6. `cxsun/src/platform/http/static.ts`
 
 Current plugin apps live under:
 
 1. `apps/api`
 2. `apps/cli`
 3. `apps/sites`
+
+Current frontend plugin registration now lives under:
+
+1. `cxsun/web/src/app/shell/plugins.tsx`
+2. `cxsun/web/src/app/shell/registration.ts`
+
+Current deployment assets now live under:
+
+1. `Dockerfile`
+2. `docker-compose.yml`
+3. `.container/`
+4. `.github/workflows/ci-cd.yml`
 
 ## Current Validation Commands
 
@@ -52,6 +70,7 @@ Current working validation commands:
 3. `npm run test`
 4. `npm run build`
 5. `npm run test:e2e`
+6. `npm run test:e2e:docker`
 
 Current frontend local alias rule:
 

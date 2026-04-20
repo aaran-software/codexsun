@@ -1,17 +1,13 @@
 import { createExternalApiRoutes } from '../../../apps/api/src/external/routes'
 import { createInternalApiRoutes } from '../../../apps/api/src/internal/routes'
-import { createSitesApiRoutes } from '../../../apps/sites/src/api-routes'
 import type { PlatformRouteDefinition } from './http/routes'
 import { createAppSuite } from './app-suite'
+import { createBackendPluginRegistry } from './plugins'
 
 function createPlatformRoutes(startedAt: Date) {
   const appSuite = createAppSuite()
-  const siteRoutes = createSitesApiRoutes(startedAt)
-
-  const appRoutes: PlatformRouteDefinition[] = [
-    ...siteRoutes.internalRoutes,
-    ...siteRoutes.externalRoutes,
-  ]
+  const pluginRegistry = createBackendPluginRegistry(startedAt)
+  const appRoutes: PlatformRouteDefinition[] = pluginRegistry.appRoutes
 
   return [
     {
@@ -25,7 +21,7 @@ function createPlatformRoutes(startedAt: Date) {
             app: appSuite.host.id,
             status: 'ok',
             startedAt: startedAt.toISOString(),
-            apps: appSuite.apps.map((app) => app.id),
+            apps: pluginRegistry.apps.map((app) => app.id),
           },
         }
       },

@@ -42,6 +42,8 @@ Current runtime reality:
 8. `packages/core` now also owns the first typed in-process event bus
 9. no worker runtime yet in this repo
 10. domain apps are still mounted statically through the host and remain minimal today
+11. current host composition now flows through explicit backend and frontend plugin registry files
+12. the host can now serve built frontend assets directly for one-container deployment
 
 ## Approved Target Direction
 
@@ -144,6 +146,7 @@ Current backend bootstrap foundation now includes:
 3. health module registration
 4. startup event emission through the shared core package
 5. centralized HTTP route mounting for internal and external app APIs
+6. registry-backed plugin composition instead of scattered app imports
 
 ## Approved Domain Boundaries
 

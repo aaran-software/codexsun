@@ -5,6 +5,11 @@ import { createHealthModule, type HealthStatus } from '../modules/health/health-
 import { getPlatformServerConfig, type PlatformServerConfig } from './config'
 import type { PlatformEvents } from './events'
 import { applyCorsHeaders, readJsonBody, sendJson } from './http/response'
+import {
+  canServeStaticFile,
+  resolveStaticAssetPath,
+  serveStaticFile,
+} from './http/static'
 import type { PlatformModule } from './modules'
 import { createPlatformRoutes } from './routes'
 
@@ -50,6 +55,25 @@ function createPlatformRuntime(
       )
 
       if (!route) {
+        const assetPath = resolveStaticAssetPath(config.publicDir, url.pathname)
+
+        if (request.method === 'GET' && assetPath && canServeStaticFile(assetPath)) {
+          serveStaticFile(response, assetPath)
+          return
+        }
+
+        const spaEntryPath = resolveStaticAssetPath(config.publicDir, '/index.html')
+
+        if (
+          request.method === 'GET' &&
+          spaEntryPath &&
+          canServeStaticFile(spaEntryPath) &&
+          !url.pathname.startsWith('/api/')
+        ) {
+          serveStaticFile(response, spaEntryPath)
+          return
+        }
+
         sendJson(response, 404, {
           error: 'Route not found.',
         })

@@ -1,0 +1,10 @@
+.git
+.github
+.idea
+.container
+node_modules
+dist
+playwright-report
+test-results
+temp
+*.log
