@@ -49,7 +49,7 @@
   - [x] Phase 1: define the host-orchestration rules, execution tracking, and changelog scope
   - [x] Phase 2: move server and frontend startup ownership into `cxsun`, build `apps/api` internal and external surfaces, and convert `apps/sites` into a plugin app
   - [x] Phase 3: add `apps/cli` from the temp helper baseline, wire `github:now`, and validate lint, typecheck, test, and build
-- [ ] `#022` Fix helper and documentation misconfiguration after the host/plugin refactor
-  - [ ] Phase 1: define the cleanup scope in tracking and changelog
-  - [ ] Phase 2: fix the non-interactive git helper flow and fail fast on missing push configuration
-  - [ ] Phase 3: align stale architecture and overview docs with the actual host-mounted plugin model and validate the repo
+- [x] `#022` Fix helper and documentation misconfiguration after the host/plugin refactor
+  - [x] Phase 1: define the cleanup scope in tracking and changelog
+  - [x] Phase 2: fix the non-interactive git helper flow and fail fast on missing push configuration
+  - [x] Phase 3: align stale architecture and overview docs with the actual host-mounted plugin model and validate the repo
