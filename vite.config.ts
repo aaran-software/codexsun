@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -8,10 +9,16 @@ import tailwindcss from '@tailwindcss/vite'
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const cxsunWebDir = path.resolve(rootDir, './cxsun/web')
 const corePackageEntry = path.resolve(rootDir, './packages/core/src/index.ts')
+const packageManifest = JSON.parse(
+  readFileSync(path.resolve(rootDir, './package.json'), 'utf8')
+) as { version: string }
 
 // https://vite.dev/config/
 export default defineConfig({
   root: cxsunWebDir,
+  define: {
+    __CXSUN_APP_VERSION__: JSON.stringify(packageManifest.version),
+  },
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),

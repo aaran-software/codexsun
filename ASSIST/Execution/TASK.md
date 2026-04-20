@@ -65,3 +65,7 @@
   - [x] Phase 1: read the reference `.container` client deployment layout and define the Codexsun demo client scope
   - [x] Phase 2: move compose ownership into `.container/clients/codexsun`, keep shared setup under `.container/bash`, and remove the top-level setup wrapper
   - [x] Phase 3: ensure cleanup removes only app containers and image, then validate setup, compose config, and docker e2e
+- [x] `#026` Add the visible application version footer label
+  - [x] Phase 1: identify the shell-owned home frame and choose a package-version-backed label source
+  - [x] Phase 2: expose the package version to Vite and Vitest, then render it in the bottom-right shell footer
+  - [x] Phase 3: cover the version label in home e2e and validate typecheck, unit tests, and docker e2e

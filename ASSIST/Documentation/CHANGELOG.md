@@ -2,9 +2,17 @@
 
 ## Version State
 
-- Current package version: `1.0.025`
-- Current release tag: `v-1.0.025`
+- Current package version: `1.0.026`
+- Current release tag: `v-1.0.026`
 - Reference format: changelog labels use `v 1.0.<number>`, task refs use `#<number>`, and release tags use `v-1.0.<number>`
+
+## v-1.0.026
+
+### [v 1.0.026] 2026-04-20 - Add the visible application version footer label
+
+- exposed the package version to the frontend build and test environments
+- added a bottom-right shell footer label so the home page shows the active application version
+- covered the visible version label in the home e2e baseline
 
 ## v-1.0.025
 

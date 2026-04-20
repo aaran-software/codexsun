@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
@@ -7,8 +8,14 @@ const cxsunWebDir = path.resolve(rootDir, './cxsun/web')
 const corePackageEntry = path.resolve(rootDir, './packages/core/src/index.ts')
 const sitesWebDir = path.resolve(rootDir, './apps/sites/web')
 const sitesSharedDir = path.resolve(rootDir, './apps/sites/shared')
+const packageManifest = JSON.parse(
+  readFileSync(path.resolve(rootDir, './package.json'), 'utf8')
+) as { version: string }
 
 export default defineConfig({
+  define: {
+    __CXSUN_APP_VERSION__: JSON.stringify(packageManifest.version),
+  },
   resolve: {
     alias: {
       '@codexsun/core': corePackageEntry,
