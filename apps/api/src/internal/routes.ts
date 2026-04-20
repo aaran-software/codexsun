@@ -1,5 +1,10 @@
 import type { AppManifest } from '@codexsun/core'
 import type { PlatformRouteDefinition } from '../../../../cxsun/src/platform/http/routes'
+import {
+  getSystemUpdateStatus,
+  runSystemUpdateCommand,
+  verifyUpdateSecret,
+} from '../system-update/service'
 
 type CreateInternalApiRoutesInput = {
   host: AppManifest
@@ -44,6 +49,34 @@ function createInternalApiRoutes({
             })),
           },
         }
+      },
+    },
+    {
+      method: 'GET',
+      path: '/api/internal/system-update/status',
+      summary: 'Internal deployment update status for host-side operations.',
+      handler() {
+        return {
+          statusCode: 200,
+          payload: getSystemUpdateStatus(),
+        }
+      },
+    },
+    {
+      method: 'POST',
+      path: '/api/internal/system-update/run',
+      summary: 'Internal deployment update trigger when explicitly enabled.',
+      async handler({ request }) {
+        if (!verifyUpdateSecret(request.headers['x-codexsun-update-key'])) {
+          return {
+            statusCode: 403,
+            payload: {
+              error: 'A valid x-codexsun-update-key header is required.',
+            },
+          }
+        }
+
+        return runSystemUpdateCommand()
       },
     },
   ]

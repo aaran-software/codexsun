@@ -4,6 +4,7 @@ import {
   AuthDashboardPage,
   DashboardPage,
   DeskPage,
+  SystemUpdatePage,
   WorkspacePage,
 } from './module-pages'
 import type { ShellModuleRegistration } from './registration'
@@ -48,6 +49,19 @@ const hostShellModules: readonly ShellModuleRegistration[] = [
       group: 'operations',
     }),
     element: <DeskPage />,
+  },
+  {
+    ...defineShellModule({
+      id: 'system-update',
+      title: 'System Update',
+      navLabel: 'System Update',
+      path: '/system-update',
+      summary: 'Manual deployment update and release automation bridge.',
+      description:
+        'The update surface exposes host-side Git sync, Docker rebuild guidance, and guarded API-triggered update hooks.',
+      group: 'operations',
+    }),
+    element: <SystemUpdatePage />,
   },
   {
     ...defineShellModule({

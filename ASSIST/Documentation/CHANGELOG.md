@@ -2,9 +2,17 @@
 
 ## Version State
 
-- Current package version: `1.0.028`
-- Current release tag: `v-1.0.028`
+- Current package version: `1.0.029`
+- Current release tag: `v-1.0.029`
 - Reference format: changelog labels use `v 1.0.<number>`, task refs use `#<number>`, and release tags use `v-1.0.<number>`
+
+## v-1.0.029
+
+### [v 1.0.029] 2026-04-20 - Add the manual production update system
+
+- added a host-side deployment update script and CLI commands for forced Git sync, Docker rebuild, and app container recreation without removing networks, volumes, or databases
+- added guarded internal and external system-update APIs plus a frontend update page for status, manual command guidance, and future release automation
+- documented `.env`-driven deployment update settings and wired compose to expose update status configuration
 
 ## v-1.0.028
 

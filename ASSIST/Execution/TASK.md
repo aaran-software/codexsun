@@ -77,3 +77,7 @@
   - [x] Phase 1: identify why live `curl -I /` returned 404 while GET worked
   - [x] Phase 2: make static file and SPA fallback serving handle HEAD with headers only
   - [x] Phase 3: validate typecheck, unit tests, rebuild the live compose container, and confirm `HEAD /` returns 200
+- [x] `#029` Add the manual production update system
+  - [x] Phase 1: adapt the reference update model into a host-side manual update flow
+  - [x] Phase 2: add update CLI, guarded APIs, frontend update tooling, and `.env` deployment settings
+  - [x] Phase 3: validate typecheck, unit tests, build, and live compose rebuild

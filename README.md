@@ -25,4 +25,15 @@ npm run test:e2e
 npm run test:e2e:docker
 ```
 
+Production update commands:
+
+```bash
+npm run deploy:status
+npm run deploy:update
+```
+
+`deploy:update` is the current manual production path. It runs from the host
+checkout, reads `.env`, force-syncs tracked files to the configured GitHub
+branch, rebuilds `codexsun:v2`, and recreates only the app container.
+
 Primary architecture and workflow rules live under `ASSIST/`.

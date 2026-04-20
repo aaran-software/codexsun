@@ -5,11 +5,13 @@ import {
   KeyRound,
   LayoutDashboard,
   MonitorCog,
+  RefreshCw,
   ShieldCheck,
+  ShipWheel,
   TerminalSquare,
   UsersRound,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@codexsun/ui/components/ui/button'
 
@@ -36,7 +38,27 @@ const dashboardApps = [
     summary: 'Desktop-style execution board for operators and support teams.',
     icon: MonitorCog,
   },
+  {
+    title: 'System Update',
+    route: '/system-update',
+    badge: 'Deploy',
+    summary: 'Manual Git sync, Docker rebuild, and release automation bridge.',
+    icon: ShipWheel,
+  },
 ]
+
+type SystemUpdateStatus = {
+  version: string
+  mode: string
+  apiUpdateEnabled: boolean
+  branch: string
+  repositoryUrl: string
+  localHead: string
+  originHead: string | null
+  dirty: boolean
+  command: string
+  nextMode: string
+}
 
 function WorkspacePage() {
   return (
@@ -268,6 +290,148 @@ function AuthDashboardPage() {
   )
 }
 
+function SystemUpdatePage() {
+  const [status, setStatus] = useState<SystemUpdateStatus | null>(null)
+  const [secret, setSecret] = useState('')
+  const [message, setMessage] = useState('Load update status to inspect the deployment state.')
+  const [isLoading, setIsLoading] = useState(false)
+
+  async function loadStatus() {
+    setIsLoading(true)
+    setMessage('Loading update status...')
+
+    try {
+      const response = await fetch('/api/internal/system-update/status')
+      const payload = (await response.json()) as SystemUpdateStatus
+
+      setStatus(payload)
+      setMessage('Update status loaded.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Failed to load status.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function requestApiUpdate() {
+    setIsLoading(true)
+    setMessage('Requesting API-triggered update...')
+
+    try {
+      const response = await fetch('/api/internal/system-update/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-codexsun-update-key': secret,
+        },
+        body: JSON.stringify({ action: 'update' }),
+      })
+      const payload = (await response.json()) as { error?: string; status?: string }
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Update request failed.')
+      }
+
+      setMessage(payload.status ?? 'Update request accepted.')
+      await loadStatus()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Update request failed.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadStatus()
+    })
+  }, [])
+
+  return (
+    <section className="space-y-6">
+      <div className="border-border/70 bg-card rounded-[2rem] border p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-muted-foreground text-xs font-semibold tracking-[0.22em] uppercase">
+              Deployment
+            </p>
+            <h1 className="text-foreground mt-3 text-3xl font-semibold tracking-tight">
+              Manual update now, release automation later.
+            </h1>
+            <p className="text-muted-foreground mt-3 max-w-3xl text-sm leading-7">
+              Production keeps Docker setup as a one-time action. Updates run
+              from the host checkout, reset to GitHub, rebuild the image, and
+              recreate only the application container.
+            </p>
+          </div>
+          <Button onClick={() => void loadStatus()} disabled={isLoading}>
+            <RefreshCw className="mr-2 size-4" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <WorkspaceStat
+          title="Current version"
+          value={status?.version ?? '...'}
+          note={`branch ${status?.branch ?? 'loading'}`}
+        />
+        <WorkspaceStat
+          title="Local head"
+          value={status?.localHead ?? '...'}
+          note={`origin ${status?.originHead ?? 'not fetched'}`}
+        />
+        <WorkspaceStat
+          title="Update mode"
+          value={status?.apiUpdateEnabled ? 'API ready' : 'Manual'}
+          note={status?.dirty ? 'local changes detected' : 'clean or unknown'}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+        <Panel title="Manual host command" icon={TerminalSquare}>
+          <div className="border-border/70 bg-background/70 rounded-2xl border p-4">
+            <p className="text-muted-foreground text-sm leading-7">
+              Run this on the production server from the repository root:
+            </p>
+            <code className="text-foreground mt-3 block rounded-xl bg-black px-4 py-3 text-sm text-white">
+              {status?.command ?? 'npm run deploy:update'}
+            </code>
+          </div>
+          <div className="border-border/70 bg-background/70 text-muted-foreground rounded-2xl border px-4 py-3 text-sm leading-7">
+            This force-syncs tracked files to GitHub and preserves ignored
+            `.env`, Docker volumes, the `codexion` network, and the database.
+          </div>
+        </Panel>
+
+        <Panel title="API update bridge" icon={ShipWheel}>
+          <input
+            value={secret}
+            onChange={(event) => setSecret(event.target.value)}
+            type="password"
+            placeholder="x-codexsun-update-key"
+            className="border-border/70 bg-background/70 text-foreground placeholder:text-muted-foreground rounded-2xl border px-4 py-3 text-sm outline-none"
+          />
+          <Button
+            onClick={() => void requestApiUpdate()}
+            disabled={isLoading || !secret}
+          >
+            Request API update
+          </Button>
+          <div className="border-border/70 bg-background/70 text-muted-foreground rounded-2xl border px-4 py-3 text-sm leading-7">
+            {message}
+          </div>
+          <div className="border-border/70 bg-background/70 text-muted-foreground rounded-2xl border px-4 py-3 text-sm leading-7">
+            {status?.nextMode ??
+              'GitHub release workflow can SSH to the server and run the same command.'}
+          </div>
+        </Panel>
+      </div>
+    </section>
+  )
+}
+
 function Panel({
   children,
   icon: Icon,
@@ -347,4 +511,10 @@ function WorkspaceCard({
   )
 }
 
-export { AuthDashboardPage, DashboardPage, DeskPage, WorkspacePage }
+export {
+  AuthDashboardPage,
+  DashboardPage,
+  DeskPage,
+  SystemUpdatePage,
+  WorkspacePage,
+}

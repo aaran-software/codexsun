@@ -3,7 +3,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 function applyCorsHeaders(response: ServerResponse, origin: string) {
   response.setHeader('Access-Control-Allow-Origin', origin)
   response.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  response.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, x-codexsun-update-key'
+  )
 }
 
 function sendJson(response: ServerResponse, statusCode: number, payload: unknown) {

@@ -84,6 +84,33 @@ describe('createPlatformRuntime', () => {
       'sites',
     ])
 
+    const updateStatusResponse = await fetch(
+      `${activeRuntime.getUrl()}/api/internal/system-update/status`
+    )
+    const updateStatusPayload = (await updateStatusResponse.json()) as {
+      app: string
+      command: string
+    }
+
+    expect(updateStatusResponse.status).toBe(200)
+    expect(updateStatusPayload).toMatchObject({
+      app: 'codexsun',
+      command: 'npm run deploy:update',
+    })
+
+    const blockedUpdateResponse = await fetch(
+      `${activeRuntime.getUrl()}/api/external/system-update/run`,
+      {
+        method: 'POST',
+      }
+    )
+    const blockedUpdatePayload = (await blockedUpdateResponse.json()) as {
+      error: string
+    }
+
+    expect(blockedUpdateResponse.status).toBe(403)
+    expect(blockedUpdatePayload.error).toContain('x-codexsun-update-key')
+
     const siteHealthResponse = await fetch(
       `${activeRuntime.getUrl()}/api/external/sites/health`
     )

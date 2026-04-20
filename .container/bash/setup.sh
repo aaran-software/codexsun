@@ -21,6 +21,15 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
 }
 
+load_env() {
+  if [ -f "$REPO_ROOT/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    . <(sed 's/\r$//' "$REPO_ROOT/.env")
+    set +a
+  fi
+}
+
 normalize_env_prefix() {
   printf '%s' "$1" | tr '[:lower:]-.' '[:upper:]__'
 }
@@ -276,6 +285,7 @@ deploy_client() {
   log "${CURRENT_CLIENT_NAME} is running at http://127.0.0.1:${CURRENT_APP_HTTP_HOST_PORT}"
 }
 
+load_env
 discover_clients
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

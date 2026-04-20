@@ -1,7 +1,7 @@
 {
   "name": "codexsun",
   "private": true,
-  "version": "1.0.028",
+  "version": "1.0.029",
   "type": "module",
   "workspaces": [
     "packages/*"
@@ -22,6 +22,8 @@
     "docker:up": "docker compose -f .container/clients/codexsun/docker-compose.yml up -d",
     "docker:down": "docker compose -f .container/clients/codexsun/docker-compose.yml down --remove-orphans",
     "docker:clean": "bash .container/bash/clean.sh",
+    "deploy:status": "tsx apps/cli/src/deploy-update-helper.ts status",
+    "deploy:update": "tsx apps/cli/src/deploy-update-helper.ts update --force",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
