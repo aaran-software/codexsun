@@ -1,0 +1,11 @@
+{
+  "name": "@codexsun/core",
+  "version": "1.0.019",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./event-bus": "./src/event-bus.ts",
+    "./shell": "./src/shell.ts"
+  }
+}

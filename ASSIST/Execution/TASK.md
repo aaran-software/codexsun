@@ -1,0 +1,51 @@
+# Task
+
+## Active Work
+- [x] `#010` Move the current root app into `cxsun` as the base orchestration app
+  - [x] Phase 1: define the scope and execution tracking
+  - [x] Phase 2: move the frontend into `cxsun/web`, create `cxsun/src`, and update tooling
+  - [x] Phase 3: rename shell ownership docs from `cxapp` to `cxsun`, align changelog, and validate the repository
+- [x] `#011` Consolidate the TypeScript config files without losing behavior
+  - [x] Phase 1: inspect the current tsconfig graph and define the consolidation path
+  - [x] Phase 2: extract the shared compiler baseline and keep app/node-specific configs minimal
+  - [x] Phase 3: align changelog and validate lint, typecheck, test, build, and e2e
+- [x] `#012` Add the requested application and platform package baseline
+  - [x] Phase 1: define the package scope and execution tracking
+  - [x] Phase 2: install the requested libraries and add the minimum supporting config
+  - [x] Phase 3: align changelog and validate lint, typecheck, test, build, and e2e
+- [x] `#013` Collapse TypeScript config to one frontend config and one backend config
+  - [x] Phase 1: define the consolidation target and execution tracking
+  - [x] Phase 2: replace the current tsconfig graph with exactly two configs
+  - [x] Phase 3: align changelog and validate lint, typecheck, test, build, and e2e
+- [x] `#014` Consolidate frontend styles into a single Tailwind and shadcn CSS entry
+  - [x] Phase 1: define the scope and execution tracking
+  - [x] Phase 2: move CSS into a valid styles folder, remove unwanted template CSS, and rewire frontend references
+  - [x] Phase 3: align changelog and validate lint, typecheck, test, build, and e2e
+- [x] `#015` Move shared UI components and styles into `packages/ui`
+  - [x] Phase 1: define the scope and execution tracking
+  - [x] Phase 2: move the current shared UI primitives and stylesheet into `packages/ui` and rewire aliases
+  - [x] Phase 3: align changelog and validate lint, typecheck, test, build, and e2e
+- [x] `#016` Harden package boundaries for shared UI and the `cxsun` frontend
+  - [x] Phase 1: define the scope and execution tracking
+  - [x] Phase 2: turn `packages/ui` into a real workspace package, update frontend imports to package-based consumption, and make the app alias explicit
+  - [x] Phase 3: remove stale local UI folders, align docs and changelog, and validate lint, typecheck, test, build, and e2e
+- [x] `#017` Clean unwanted empty folders and stale placeholder files
+  - [x] Phase 1: define cleanup scope and execution tracking
+  - [x] Phase 2: remove truly unwanted empty folders and stale placeholder files while preserving intentional scaffold placeholders
+  - [x] Phase 3: align changelog and validate lint, typecheck, test, build, and e2e
+- [x] `#018` Build `packages/core` and the `cxsun` shell registry and routing foundation
+  - [x] Phase 1: define scope and execution tracking
+  - [x] Phase 2: add the shared core shell contracts and registry package, then wire `cxsun/web` to module-driven routing
+  - [x] Phase 3: align docs and changelog, then validate lint, typecheck, test, build, and e2e
+- [x] `#019` Add the typed event bus to `packages/core` and bootstrap `cxsun/src`
+  - [x] Phase 1: define scope and execution tracking
+  - [x] Phase 2: add the shared event bus contracts and implementation, then create the first backend orchestration runtime scaffold in `cxsun/src`
+  - [x] Phase 3: align docs and changelog, then validate lint, typecheck, test, build, and e2e
+- [x] `#020` Build the first `apps/sites` portfolio app with wired frontend and backend
+  - [x] Phase 1: define scope and execution tracking
+  - [x] Phase 2: create the `apps/sites` web pages app and backend server, wire frontend to backend APIs, and add concurrent dev scripts
+  - [x] Phase 3: align docs and changelog, then validate lint, typecheck, test, build, and e2e
+- [x] `#021` Make `cxsun` the only host entrypoint and move apps to plugin ownership
+  - [x] Phase 1: define the host-orchestration rules, execution tracking, and changelog scope
+  - [x] Phase 2: move server and frontend startup ownership into `cxsun`, build `apps/api` internal and external surfaces, and convert `apps/sites` into a plugin app
+  - [x] Phase 3: add `apps/cli` from the temp helper baseline, wire `github:now`, and validate lint, typecheck, test, and build

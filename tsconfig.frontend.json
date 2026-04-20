@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.frontend.tsbuildinfo",
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client"],
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@codexsun/core": ["packages/core/src/index.ts"],
+      "@codexsun/core/*": ["packages/core/src/*"],
+      "@sites/*": ["apps/sites/web/src/*"],
+      "@sites/plugin": ["apps/sites/web/src/plugin.tsx"],
+      "@sites-shared/*": ["apps/sites/shared/*"],
+      "@cxsun/*": ["cxsun/web/src/*"],
+      "@codexsun/ui/*": ["packages/ui/src/*"]
+    },
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "cxsun/web/src",
+    "apps/sites/web/src",
+    "apps/sites/src/**/*.ts",
+    "apps/sites/shared/**/*.ts",
+    "packages/core/src",
+    "packages/ui/src"
+  ]
+}
