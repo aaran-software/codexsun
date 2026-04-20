@@ -73,3 +73,7 @@
   - [x] Phase 1: read the reference `.env`, app layout, home, login, desk, auth, dashboard, topbar, and footer files
   - [x] Phase 2: add root env handling, public home/login surfaces, dashboard/desk/auth/workspace modules, and a public sites shell
   - [x] Phase 3: update tests and validate typecheck, unit tests, build, and docker e2e
+- [x] `#028` Support HEAD probes for static frontend routes
+  - [x] Phase 1: identify why live `curl -I /` returned 404 while GET worked
+  - [x] Phase 2: make static file and SPA fallback serving handle HEAD with headers only
+  - [x] Phase 3: validate typecheck, unit tests, rebuild the live compose container, and confirm `HEAD /` returns 200

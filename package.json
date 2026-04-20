@@ -1,7 +1,7 @@
 {
   "name": "codexsun",
   "private": true,
-  "version": "1.0.027",
+  "version": "1.0.028",
   "type": "module",
   "workspaces": [
     "packages/*"

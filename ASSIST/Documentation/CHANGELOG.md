@@ -2,9 +2,17 @@
 
 ## Version State
 
-- Current package version: `1.0.027`
-- Current release tag: `v-1.0.027`
+- Current package version: `1.0.028`
+- Current release tag: `v-1.0.028`
 - Reference format: changelog labels use `v 1.0.<number>`, task refs use `#<number>`, and release tags use `v-1.0.<number>`
+
+## v-1.0.028
+
+### [v 1.0.028] 2026-04-20 - Support HEAD probes for static frontend routes
+
+- added HEAD support for static asset and SPA fallback responses so reverse-proxy probes can validate the live frontend
+- kept GET responses streaming the frontend body while HEAD returns headers only
+- covered HEAD static route behavior in the platform runtime tests
 
 ## v-1.0.027
 

@@ -11,7 +11,7 @@ function createPublicDirFixture() {
   writeFileSync(
     path.join(publicDir, 'index.html'),
     '<!doctype html><html><body><div id="root">host</div></body></html>',
-    'utf8',
+    'utf8'
   )
 
   return publicDir
@@ -42,9 +42,9 @@ describe('createPlatformRuntime', () => {
 
     await activeRuntime.start()
 
-    expect(activeRuntime.modules.map((platformModule) => platformModule.id)).toEqual([
-      'health',
-    ])
+    expect(
+      activeRuntime.modules.map((platformModule) => platformModule.id)
+    ).toEqual(['health'])
     expect(healthHandler).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'health.checked',
@@ -52,7 +52,7 @@ describe('createPlatformRuntime', () => {
           runtimeId: 'test-runtime',
           status: 'ok',
         },
-      }),
+      })
     )
   })
 
@@ -68,7 +68,9 @@ describe('createPlatformRuntime', () => {
 
     await activeRuntime.start()
 
-    const appsResponse = await fetch(`${activeRuntime.getUrl()}/api/internal/apps`)
+    const appsResponse = await fetch(
+      `${activeRuntime.getUrl()}/api/internal/apps`
+    )
     const appsPayload = (await appsResponse.json()) as {
       host: { id: string }
       apps: Array<{ id: string }>
@@ -76,10 +78,14 @@ describe('createPlatformRuntime', () => {
 
     expect(appsResponse.status).toBe(200)
     expect(appsPayload.host.id).toBe('cxsun')
-    expect(appsPayload.apps.map((app) => app.id)).toEqual(['api', 'cli', 'sites'])
+    expect(appsPayload.apps.map((app) => app.id)).toEqual([
+      'api',
+      'cli',
+      'sites',
+    ])
 
     const siteHealthResponse = await fetch(
-      `${activeRuntime.getUrl()}/api/external/sites/health`,
+      `${activeRuntime.getUrl()}/api/external/sites/health`
     )
     const siteHealthPayload = (await siteHealthResponse.json()) as {
       app: string
@@ -102,9 +108,10 @@ describe('createPlatformRuntime', () => {
         body: JSON.stringify({
           name: 'Studio Client',
           email: 'client@example.com',
-          message: 'We need a portfolio launch site with a maintainable backend handoff.',
+          message:
+            'We need a portfolio launch site with a maintainable backend handoff.',
         }),
-      },
+      }
     )
     const contactPayload = (await contactResponse.json()) as { status: string }
 
@@ -116,5 +123,14 @@ describe('createPlatformRuntime', () => {
 
     expect(pageResponse.status).toBe(200)
     expect(pageHtml).toContain('<div id="root">host</div>')
+
+    const headResponse = await fetch(`${activeRuntime.getUrl()}/sites`, {
+      method: 'HEAD',
+    })
+    const headBody = await headResponse.text()
+
+    expect(headResponse.status).toBe(200)
+    expect(headResponse.headers.get('content-type')).toContain('text/html')
+    expect(headBody).toBe('')
   })
 })

@@ -39,10 +39,19 @@ function canServeStaticFile(filePath: string) {
   return existsSync(filePath) && statSync(filePath).isFile()
 }
 
-function serveStaticFile(response: ServerResponse, filePath: string) {
+function serveStaticFile(
+  response: ServerResponse,
+  filePath: string,
+  includeBody = true
+) {
   response.writeHead(200, {
     'Content-Type': getContentType(filePath),
   })
+
+  if (!includeBody) {
+    response.end()
+    return
+  }
 
   createReadStream(filePath).pipe(response)
 }

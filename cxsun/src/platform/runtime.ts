@@ -1,7 +1,10 @@
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { createEventBus, type EventBus } from '@codexsun/core'
-import { createHealthModule, type HealthStatus } from '../modules/health/health-module'
+import {
+  createHealthModule,
+  type HealthStatus,
+} from '../modules/health/health-module'
 import { getPlatformServerConfig, type PlatformServerConfig } from './config'
 import type { PlatformEvents } from './events'
 import { applyCorsHeaders, readJsonBody, sendJson } from './http/response'
@@ -26,7 +29,7 @@ type PlatformRuntime = {
 
 function createPlatformRuntime(
   runtimeId = 'cxsun-runtime',
-  config: PlatformServerConfig = getPlatformServerConfig(),
+  config: PlatformServerConfig = getPlatformServerConfig()
 ): PlatformRuntime {
   const eventBus = createEventBus<PlatformEvents>()
   const modules: readonly PlatformModule[] = [createHealthModule()]
@@ -49,28 +52,37 @@ function createPlatformRuntime(
 
       const url = new URL(request.url ?? '/', `http://${request.headers.host}`)
       const body = request.method === 'POST' ? await readJsonBody(request) : {}
+      const canServeStaticMethod =
+        request.method === 'GET' || request.method === 'HEAD'
       const route = routes.find(
         (candidate) =>
-          candidate.method === request.method && candidate.path === url.pathname,
+          candidate.method === request.method && candidate.path === url.pathname
       )
 
       if (!route) {
         const assetPath = resolveStaticAssetPath(config.publicDir, url.pathname)
 
-        if (request.method === 'GET' && assetPath && canServeStaticFile(assetPath)) {
-          serveStaticFile(response, assetPath)
+        if (
+          canServeStaticMethod &&
+          assetPath &&
+          canServeStaticFile(assetPath)
+        ) {
+          serveStaticFile(response, assetPath, request.method === 'GET')
           return
         }
 
-        const spaEntryPath = resolveStaticAssetPath(config.publicDir, '/index.html')
+        const spaEntryPath = resolveStaticAssetPath(
+          config.publicDir,
+          '/index.html'
+        )
 
         if (
-          request.method === 'GET' &&
+          canServeStaticMethod &&
           spaEntryPath &&
           canServeStaticFile(spaEntryPath) &&
           !url.pathname.startsWith('/api/')
         ) {
-          serveStaticFile(response, spaEntryPath)
+          serveStaticFile(response, spaEntryPath, request.method === 'GET')
           return
         }
 
@@ -90,7 +102,8 @@ function createPlatformRuntime(
       sendJson(response, result.statusCode, result.payload)
     } catch (error) {
       sendJson(response, 500, {
-        error: error instanceof Error ? error.message : 'Unexpected server error.',
+        error:
+          error instanceof Error ? error.message : 'Unexpected server error.',
       })
     }
   })
