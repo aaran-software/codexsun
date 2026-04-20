@@ -2,9 +2,17 @@
 
 ## Version State
 
-- Current package version: `1.0.026`
-- Current release tag: `v-1.0.026`
+- Current package version: `1.0.027`
+- Current release tag: `v-1.0.027`
 - Reference format: changelog labels use `v 1.0.<number>`, task refs use `#<number>`, and release tags use `v-1.0.<number>`
+
+## v-1.0.027
+
+### [v 1.0.027] 2026-04-20 - Build the reference-inspired system frontend and site shell
+
+- added root environment files from the reference baseline, kept local `.env` ignored, and wired root env loading into Vite and the backend runtime
+- rebuilt the `cxsun` frontend around public home, login, dashboard, desk, auth, and workspace surfaces inspired by the reference app layout
+- converted the sites plugin into a public website shell with top navigation, content sections, backend health context, and footer
 
 ## v-1.0.026
 

@@ -1,6 +1,7 @@
 .git
 .github
 .idea
+.env
 .container
 node_modules
 dist

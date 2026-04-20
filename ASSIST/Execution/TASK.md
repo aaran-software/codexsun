@@ -69,3 +69,7 @@
   - [x] Phase 1: identify the shell-owned home frame and choose a package-version-backed label source
   - [x] Phase 2: expose the package version to Vite and Vitest, then render it in the bottom-right shell footer
   - [x] Phase 3: cover the version label in home e2e and validate typecheck, unit tests, and docker e2e
+- [x] `#027` Build the reference-inspired system frontend and site shell
+  - [x] Phase 1: read the reference `.env`, app layout, home, login, desk, auth, dashboard, topbar, and footer files
+  - [x] Phase 2: add root env handling, public home/login surfaces, dashboard/desk/auth/workspace modules, and a public sites shell
+  - [x] Phase 3: update tests and validate typecheck, unit tests, build, and docker e2e
